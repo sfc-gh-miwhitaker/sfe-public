@@ -3,7 +3,8 @@
  * PROJECT_NAME: Streamlit DR Replication Cost Calculator
  * AUTHOR: SE Community
  * CREATED: 2025-12-08
- * EXPIRES: 2026-04-10
+ * LAST UPDATED: 2026-03-02
+ * EXPIRES: 2026-05-01
  * GITHUB_REPO: https://github.com/sfc-gh-miwhitaker/sfe-public
  * PURPOSE: Snowflake-native replication/DR cost calculator (Streamlit)
  *
@@ -22,25 +23,42 @@
  *****************************************************************************/
 
 -- ============================================================================
--- CONTEXT SETTING (MANDATORY - must precede DECLARE block)
+-- CONTEXT SETTING (MANDATORY - must precede all operations)
 -- ============================================================================
--- Bootstrap script: Creates project warehouse, so uses COMPUTE_WH initially.
 -- ACCOUNTADMIN required for: API Integration only (no external access needed)
 -- Drops to SYSADMIN immediately after account-level objects are created.
 -- ============================================================================
 USE ROLE ACCOUNTADMIN;
-USE WAREHOUSE COMPUTE_WH;
+
+-- Ensure a warehouse is available (creates one if user has no default)
+EXECUTE IMMEDIATE $$
+BEGIN
+    IF (CURRENT_WAREHOUSE() IS NULL) THEN
+        CREATE WAREHOUSE IF NOT EXISTS SFE_DEMO_DEPLOY_WH
+            WAREHOUSE_SIZE = 'XSMALL'
+            AUTO_SUSPEND = 60
+            AUTO_RESUME = TRUE
+            INITIALLY_SUSPENDED = FALSE
+            COMMENT = 'Temporary warehouse for demo deployment - safe to drop after deployment';
+        USE WAREHOUSE SFE_DEMO_DEPLOY_WH;
+    END IF;
+END;
+$$;
 
 -- SSOT: Change ONLY here, then run: sync-expiration
-SET DEMO_EXPIRES = '2026-04-10';
+SET DEMO_EXPIRES = '2026-05-01';
 
-DECLARE
-  demo_expired EXCEPTION (-20001, 'DEMO EXPIRED on ' || $DEMO_EXPIRES || ' - contact owner to extend');
-BEGIN
-  IF (CURRENT_DATE() > $DEMO_EXPIRES::DATE) THEN
-    RAISE demo_expired;
-  END IF;
-END;
+SELECT
+    $DEMO_EXPIRES::DATE AS expiration_date,
+    CURRENT_DATE() AS current_date,
+    DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) AS days_remaining,
+    CASE
+        WHEN DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) < 0
+        THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
+        WHEN DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) || ' days remaining'
+    END AS demo_status;
 
 /*****************************************************************************
  * SECTION 1: Database & Account-Level Objects (ACCOUNTADMIN required)
@@ -48,7 +66,7 @@ END;
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
 USE DATABASE SNOWFLAKE_EXAMPLE;
 
-CREATE SCHEMA IF NOT EXISTS GIT_REPOS COMMENT = 'DEMO: Shared Git repos (Expires: 2026-04-10)';
+CREATE SCHEMA IF NOT EXISTS GIT_REPOS COMMENT = 'DEMO: Shared Git repos (Expires: 2026-05-01)';
 
 -- API Integration (account-level, no DB context needed)
 CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
@@ -62,7 +80,7 @@ CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
 CREATE OR REPLACE GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.REPLICATE_THIS_REPO
     API_INTEGRATION = SFE_GIT_API_INTEGRATION
     ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
-    COMMENT = 'Source repo for replication cost calc (Expires: 2026-04-10)';
+    COMMENT = 'Source repo for replication cost calc (Expires: 2026-05-01)';
 
 -- Fetch latest code from GitHub
 ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.REPLICATE_THIS_REPO FETCH;
@@ -80,13 +98,13 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_REPLICATION_CALC_WH
     AUTO_SUSPEND = 60
     AUTO_RESUME = TRUE
     INITIALLY_SUSPENDED = TRUE
-    COMMENT = 'DEMO: Replication cost calculator WH (Expires: 2026-04-10)';
+    COMMENT = 'DEMO: Replication cost calculator WH (Expires: 2026-05-01)';
 
 -- Set warehouse context for all subsequent operations
 USE WAREHOUSE SFE_REPLICATION_CALC_WH;
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.REPLICATION_CALC
-    COMMENT = 'DEMO: Replication/DR cost calculator (Expires: 2026-04-10)';
+    COMMENT = 'DEMO: Replication/DR cost calculator (Expires: 2026-05-01)';
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.REPLICATION_CALC;
 USE WAREHOUSE SFE_REPLICATION_CALC_WH;
@@ -99,7 +117,7 @@ CREATE OR REPLACE STREAMLIT REPLICATION_CALCULATOR
     FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.REPLICATE_THIS_REPO/branches/main/tool-replication-cost-calculator/streamlit
     MAIN_FILE = 'app.py'
     QUERY_WAREHOUSE = SFE_REPLICATION_CALC_WH
-    COMMENT = 'DEMO: DR/Replication Cost Calculator (Expires: 2026-04-10)';
+    COMMENT = 'DEMO: DR/Replication Cost Calculator (Expires: 2026-05-01)';
 
 /*****************************************************************************
  * SECTION 4: Tables and Views
@@ -113,10 +131,10 @@ CREATE OR REPLACE TABLE PRICING_CURRENT (
     CURRENCY STRING,
     UPDATED_AT TIMESTAMP_TZ DEFAULT CURRENT_TIMESTAMP(),
     UPDATED_BY STRING DEFAULT CURRENT_USER()
-) COMMENT = 'Replication pricing rates (BC) - Managed by admins (Expires: 2026-04-10)';
+) COMMENT = 'Replication pricing rates (BC) - Managed by admins (Expires: 2026-05-01)';
 
 CREATE OR REPLACE VIEW DB_METADATA
-    COMMENT = 'DEMO: Database sizes from ACCOUNT_USAGE for replication sizing (Expires: 2026-04-10)'
+    COMMENT = 'DEMO: Database sizes from ACCOUNT_USAGE for replication sizing (Expires: 2026-05-01)'
 AS
 WITH ALL_DBS AS (
     SELECT DATABASE_NAME

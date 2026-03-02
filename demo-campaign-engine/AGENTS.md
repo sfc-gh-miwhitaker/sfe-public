@@ -19,6 +19,8 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 - VECTOR_COSINE_SIMILARITY for lookalike player matching
 - SNOWFLAKE.ML.CLASSIFICATION for campaign audience scoring
 - SNOWFLAKE.CORTEX.COMPLETE for campaign recommendation generation
+- Semantic views: FACTS before DIMENSIONS (clause order matters)
+- CREATE AGENT with YAML spec; tool type `cortex_analyst_text_to_sql`; semantic view in `tool_resources`
 - Python stored procedures for vector aggregation logic
 
 ## Development Standards

@@ -1,6 +1,7 @@
 # Contact Form (Streamlit in Snowflake)
 
-> **Expires:** 2026-01-09 (30 days from creation)
+> **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days)
+> After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before deploying.
 
 A simple contact form built with Streamlit in Snowflake that collects user information and writes directly to a Snowflake table.
 
@@ -102,4 +103,4 @@ See `diagrams/` for:
 
 ---
 
-*SE Community • Contact Form Tool • Created: 2025-12-10*
+*SE Community • Contact Form Tool • Last Updated: 2026-03-02*

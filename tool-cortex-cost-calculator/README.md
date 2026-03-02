@@ -1,16 +1,16 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-See%20deploy__all.sql-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 
 # Snowflake Cortex Cost Calculator v3.3
 
 > **DEMONSTRATION PROJECT** - Expiration date in [`deploy_all.sql` line 6](deploy_all.sql) (SSOT)
-> This demo uses Snowflake features current as of February 2026.
+> This demo uses Snowflake features current as of March 2026.
 > After expiration, this repository will be archived and made private.
 
 **Author:** SE Community
 **Purpose:** Reference implementation for Cortex spend attribution and 12-month forecasting
-**Expiration:** See [`deploy_all.sql` line 6](deploy_all.sql) | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
 ---
 
@@ -559,23 +559,6 @@ Determine how many users you can support with a given budget:
 - License/user capacity planning
 - Budget allocation decisions
 
-#### Scenario Comparison
-
-**Side-by-Side Analysis:**
-- Compare all scenarios at once
-- Adjustable parameters per scenario
-- Export comparison table
-
-**Custom Scenario Builder:**
-- User growth rate (adoption)
-- Usage intensity growth (per-user consumption)
-- Separate modeling for different growth drivers
-
-**Use this to:**
-- Present multiple options to stakeholders
-- Model best/worst/likely cases
-- Understand sensitivity to growth assumptions
-
 #### Summary Report
 
 **Credit Estimate Export:**
@@ -1040,7 +1023,7 @@ This tool is provided as-is for cost estimation purposes. Projections are estima
 
 This demonstration project includes mandatory expiration controls:
 
-**Expiration Date:** See [`deploy_all.sql` line 6](deploy_all.sql) (SSOT - Single Source of Truth)
+**Expiration Date:** 2026-05-01 (SSOT in [`deploy_all.sql` line 7](deploy_all.sql))
 
 **Enforcement Mechanisms:**
 1. **Deployment Check:** `deploy_all.sql` blocks execution after expiration date
@@ -1062,7 +1045,7 @@ This demonstration project includes mandatory expiration controls:
 ---
 
 **Maintained by:** SE Community
-**Last Updated:** January 20, 2026
+**Last Updated:** 2026-03-02
 
 ---
 

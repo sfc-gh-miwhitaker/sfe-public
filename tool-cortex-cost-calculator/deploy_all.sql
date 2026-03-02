@@ -3,7 +3,8 @@
  *
  * AUTHOR: SE Community
  * CREATED: 2026-01-05
- * EXPIRES: 2026-04-18 (SSOT - update ONLY this line when extending)
+ * LAST UPDATED: 2026-03-02
+ * EXPIRES: 2026-05-01 (SSOT - update ONLY this line when extending)
  *
  * NOT FOR PRODUCTION USE - REFERENCE IMPLEMENTATION ONLY
  *
@@ -60,7 +61,7 @@
 -- All subsequent operations require an active warehouse for compute.
 -- This block ensures a warehouse is available before proceeding.
 
-SET demo_expiration_date = '2026-04-18';  -- SSOT: mirrors line 6
+SET demo_expiration_date = '2026-05-01';  -- SSOT: mirrors line 7
 
 -- Capture current warehouse (may be NULL if user has no default)
 SET _current_wh = (SELECT CURRENT_WAREHOUSE());
@@ -81,29 +82,19 @@ END;
 $$;
 
 -- ===========================================================================
--- EXPIRATION CHECK (MANDATORY)
+-- EXPIRATION CHECK (Informational — warns but does not block deployment)
 -- ===========================================================================
 -- SINGLE SOURCE OF TRUTH: Update ONLY the date on line 6 of this file header.
 -- All object COMMENTs below reference this date dynamically where possible.
--- If expired, deployment is halted. Fork the repository and refresh the dates and syntax.
+-- If expired, fork the repository and refresh the dates and syntax.
 
--- Hard stop if expired
-DECLARE
-    demo_expired EXCEPTION (-20001, 'DEMO EXPIRED: Do not deploy. Fork the repository and update expiration + syntax.');
-BEGIN
-    IF (CURRENT_DATE() > $demo_expiration_date::DATE) THEN
-        RAISE demo_expired;
-    END IF;
-END;
-
--- Display expiration status (review result before proceeding)
 SELECT
     $demo_expiration_date::DATE AS expiration_date,
     CURRENT_DATE() AS current_date,
     DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE) AS days_remaining,
     CASE
         WHEN DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE) < 0
-        THEN 'EXPIRED - Do not deploy. Fork repository and update expiration date.'
+        THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
         WHEN DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE) <= 7
         THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE) || ' days remaining'
         ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE) || ' days remaining'

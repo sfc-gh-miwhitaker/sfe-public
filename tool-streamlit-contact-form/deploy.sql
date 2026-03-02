@@ -3,7 +3,8 @@
  * File: deploy.sql
  * Author: SE Community
  * Created: 2025-12-10
- * Expires: 2026-01-09
+ * Last Updated: 2026-03-02
+ * Expires: 2026-05-01
  *
  * Prerequisites:
  *   1. Run shared/sql/00_shared_setup.sql first
@@ -20,20 +21,19 @@
  ******************************************************************************/
 
 -- ============================================================================
--- EXPIRATION CHECK (MANDATORY)
+-- EXPIRATION CHECK (Informational — warns but does not block deployment)
 -- ============================================================================
-EXECUTE IMMEDIATE
-$$
-DECLARE
-    v_expiration_date DATE := '2026-01-09';
-    tool_expired EXCEPTION (-20001, 'TOOL EXPIRED: This tool expired on 2026-01-09. Please check for an updated version.');
-BEGIN
-    IF (CURRENT_DATE() > v_expiration_date) THEN
-        RAISE tool_expired;
-    END IF;
-    RETURN 'Expiration check passed. Tool valid until ' || v_expiration_date::STRING;
-END;
-$$;
+SELECT
+    '2026-05-01'::DATE AS expiration_date,
+    CURRENT_DATE() AS current_date,
+    DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) AS days_remaining,
+    CASE
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) < 0
+        THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+    END AS tool_status;
 
 -- ============================================================================
 -- CONTEXT SETTING (MANDATORY)
@@ -55,7 +55,7 @@ USE DATABASE SNOWFLAKE_EXAMPLE;
 -- CREATE TOOL SCHEMA
 -- ============================================================================
 CREATE SCHEMA IF NOT EXISTS SFE_CONTACT_FORM
-    COMMENT = 'TOOL: Streamlit contact form demo | Author: SE Community | Expires: 2026-01-09';
+    COMMENT = 'TOOL: Streamlit contact form demo | Author: SE Community | Expires: 2026-05-01';
 
 USE SCHEMA SFE_CONTACT_FORM;
 
@@ -70,20 +70,20 @@ CREATE OR REPLACE TABLE SFE_SUBMISSIONS (
     submitted_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
     PRIMARY KEY (submission_id)
 )
-COMMENT = 'TOOL: Contact form submissions | Author: SE Community | Expires: 2026-01-09';
+COMMENT = 'TOOL: Contact form submissions | Author: SE Community | Expires: 2026-05-01';
 
 -- ============================================================================
 -- CREATE STREAMLIT STAGE AND APP
 -- ============================================================================
 CREATE OR REPLACE STAGE SFE_STREAMLIT_STAGE
     DIRECTORY = (ENABLE = TRUE)
-    COMMENT = 'TOOL: Stage for Streamlit app files | Author: SE Community | Expires: 2026-01-09';
+    COMMENT = 'TOOL: Stage for Streamlit app files | Author: SE Community | Expires: 2026-05-01';
 
 CREATE OR REPLACE STREAMLIT SFE_CONTACT_FORM
     FROM '@SNOWFLAKE_EXAMPLE.SFE_CONTACT_FORM.SFE_STREAMLIT_STAGE'
     MAIN_FILE = 'streamlit_app.py'
     QUERY_WAREHOUSE = SFE_TOOLS_WH
-    COMMENT = 'TOOL: Contact form Streamlit app | Author: SE Community | Expires: 2026-01-09';
+    COMMENT = 'TOOL: Contact form Streamlit app | Author: SE Community | Expires: 2026-05-01';
 
 -- ============================================================================
 -- UPLOAD STREAMLIT APP CODE
@@ -94,7 +94,7 @@ CREATE OR REPLACE PROCEDURE SFE_SETUP_APP()
     RUNTIME_VERSION = '3.11'
     PACKAGES = ('snowflake-snowpark-python')
     HANDLER = 'setup_app'
-    COMMENT = 'TOOL: Sets up Streamlit app files | Author: SE Community | Expires: 2026-01-09'
+    COMMENT = 'TOOL: Sets up Streamlit app files | Author: SE Community | Expires: 2026-05-01'
 AS
 $$
 from io import BytesIO
@@ -146,15 +146,10 @@ with st.form("contact_form", clear_on_submit=True):
             st.error("Please enter a valid email address")
         else:
             try:
-                safe_name = full_name.replace("'", "''")
-                safe_email = email.replace("'", "''")
-                safe_address = address.replace("'", "''") if address else ""
-
-                insert_sql = f"""
-                INSERT INTO SFE_SUBMISSIONS (full_name, email, address)
-                VALUES ('{safe_name}', '{safe_email}', '{safe_address}')
-                """
-                session.sql(insert_sql).collect()
+                session.sql(
+                    "INSERT INTO SFE_SUBMISSIONS (full_name, email, address) VALUES (?, ?, ?)",
+                    params=[full_name, email, address or ""]
+                ).collect()
 
                 st.success(f"Thank you, {full_name}! Your submission has been saved.")
                 st.balloons()
@@ -191,7 +186,7 @@ except Exception as e:
 
 # Footer
 st.markdown("---")
-st.caption("Streamlit in Snowflake | SE Community | Expires: 2026-01-09")
+st.caption("Streamlit in Snowflake | SE Community | Expires: 2026-05-01")
 '''
 
     # Wrap bytes in BytesIO for put_stream
@@ -220,5 +215,5 @@ SELECT
     '✅ DEPLOYMENT COMPLETE' AS status,
     CURRENT_TIMESTAMP() AS completed_at,
     'Contact Form (Streamlit)' AS tool,
-    '2026-01-09' AS expires,
+    '2026-05-01' AS expires,
     'Navigate to Projects -> Streamlit -> SFE_CONTACT_FORM' AS next_step;

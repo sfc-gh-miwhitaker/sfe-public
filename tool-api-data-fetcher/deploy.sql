@@ -3,7 +3,8 @@
  * File: deploy.sql
  * Author: SE Community
  * Created: 2025-12-10
- * Expires: 2026-01-09
+ * Last Updated: 2026-03-02
+ * Expires: 2026-05-01
  *
  * Prerequisites:
  *   1. Run shared/sql/00_shared_setup.sql first
@@ -22,20 +23,19 @@
  ******************************************************************************/
 
 -- ============================================================================
--- EXPIRATION CHECK (MANDATORY)
+-- EXPIRATION CHECK (Informational — warns but does not block deployment)
 -- ============================================================================
-EXECUTE IMMEDIATE
-$$
-DECLARE
-    v_expiration_date DATE := '2026-01-09';
-    tool_expired EXCEPTION (-20001, 'TOOL EXPIRED: This tool expired on 2026-01-09. Please check for an updated version.');
-BEGIN
-    IF (CURRENT_DATE() > v_expiration_date) THEN
-        RAISE tool_expired;
-    END IF;
-    RETURN 'Expiration check passed. Tool valid until ' || v_expiration_date::STRING;
-END;
-$$;
+SELECT
+    '2026-05-01'::DATE AS expiration_date,
+    CURRENT_DATE() AS current_date,
+    DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) AS days_remaining,
+    CASE
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) < 0
+        THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+    END AS tool_status;
 
 -- ============================================================================
 -- CONTEXT SETTING (MANDATORY)
@@ -57,7 +57,7 @@ USE DATABASE SNOWFLAKE_EXAMPLE;
 -- CREATE TOOL SCHEMA
 -- ============================================================================
 CREATE SCHEMA IF NOT EXISTS SFE_API_FETCHER
-    COMMENT = 'TOOL: API Data Fetcher demo | Author: SE Community | Expires: 2026-01-09';
+    COMMENT = 'TOOL: API Data Fetcher demo | Author: SE Community | Expires: 2026-05-01';
 
 USE SCHEMA SFE_API_FETCHER;
 
@@ -76,7 +76,7 @@ CREATE OR REPLACE TABLE SFE_USERS (
     fetched_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
     PRIMARY KEY (user_id)
 )
-COMMENT = 'TOOL: Users fetched from JSONPlaceholder API | Author: SE Community | Expires: 2026-01-09';
+COMMENT = 'TOOL: Users fetched from JSONPlaceholder API | Author: SE Community | Expires: 2026-05-01';
 
 -- ============================================================================
 -- CREATE EXTERNAL ACCESS INTEGRATION
@@ -87,13 +87,13 @@ CREATE OR REPLACE NETWORK RULE SFE_API_NETWORK_RULE
     MODE = EGRESS
     TYPE = HOST_PORT
     VALUE_LIST = ('jsonplaceholder.typicode.com:443')
-    COMMENT = 'TOOL: Allow egress to JSONPlaceholder API | Author: SE Community | Expires: 2026-01-09';
+    COMMENT = 'TOOL: Allow egress to JSONPlaceholder API | Author: SE Community | Expires: 2026-05-01';
 
 -- External access integration
 CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION SFE_API_ACCESS
     ALLOWED_NETWORK_RULES = (SFE_API_NETWORK_RULE)
     ENABLED = TRUE
-    COMMENT = 'TOOL: External access for JSONPlaceholder API | Author: SE Community | Expires: 2026-01-09';
+    COMMENT = 'TOOL: External access for JSONPlaceholder API | Author: SE Community | Expires: 2026-05-01';
 
 -- ============================================================================
 -- CREATE STORED PROCEDURE
@@ -105,12 +105,12 @@ CREATE OR REPLACE PROCEDURE SFE_FETCH_USERS()
     PACKAGES = ('snowflake-snowpark-python', 'requests')
     HANDLER = 'fetch_users'
     EXTERNAL_ACCESS_INTEGRATIONS = (SFE_API_ACCESS)
-    COMMENT = 'TOOL: Fetches user data from JSONPlaceholder API | Author: SE Community | Expires: 2026-01-09'
+    COMMENT = 'TOOL: Fetches user data from JSONPlaceholder API | Author: SE Community | Expires: 2026-05-01'
 AS
 $$
 import requests
 from snowflake.snowpark import Session
-from datetime import datetime
+from snowflake.snowpark.types import StructType, StructField, IntegerType, StringType
 
 def fetch_users(session: Session):
     """
@@ -119,7 +119,6 @@ def fetch_users(session: Session):
     API: https://jsonplaceholder.typicode.com/users
     Returns: Table of fetched user data
     """
-    # Fetch from API
     response = requests.get(
         'https://jsonplaceholder.typicode.com/users',
         timeout=30
@@ -127,27 +126,35 @@ def fetch_users(session: Session):
     response.raise_for_status()
     users = response.json()
 
-    # Clear existing data first
+    rows = []
+    for user in users:
+        rows.append([
+            user['id'],
+            user['name'],
+            user['username'],
+            user['email'],
+            user['phone'],
+            user['website'],
+            user.get('company', {}).get('name', ''),
+            user.get('address', {}).get('city', '')
+        ])
+
+    schema = StructType([
+        StructField("USER_ID", IntegerType()),
+        StructField("NAME", StringType()),
+        StructField("USERNAME", StringType()),
+        StructField("EMAIL", StringType()),
+        StructField("PHONE", StringType()),
+        StructField("WEBSITE", StringType()),
+        StructField("COMPANY_NAME", StringType()),
+        StructField("CITY", StringType())
+    ])
+
     session.sql("DELETE FROM SFE_USERS").collect()
 
-    # Insert each user using SQL (handles DEFAULT columns properly)
-    for user in users:
-        # Escape single quotes for SQL safety
-        name = user['name'].replace("'", "''")
-        username = user['username'].replace("'", "''")
-        email = user['email'].replace("'", "''")
-        phone = user['phone'].replace("'", "''")
-        website = user['website'].replace("'", "''")
-        company_name = user.get('company', {}).get('name', '').replace("'", "''")
-        city = user.get('address', {}).get('city', '').replace("'", "''")
+    df = session.create_dataframe(rows, schema=schema)
+    df.write.mode("append").save_as_table("SFE_USERS")
 
-        insert_sql = f"""
-        INSERT INTO SFE_USERS (user_id, name, username, email, phone, website, company_name, city)
-        VALUES ({user['id']}, '{name}', '{username}', '{email}', '{phone}', '{website}', '{company_name}', '{city}')
-        """
-        session.sql(insert_sql).collect()
-
-    # Return results
     return session.table("SFE_USERS").select(
         "USER_ID", "NAME", "USERNAME", "EMAIL",
         "PHONE", "WEBSITE", "COMPANY_NAME", "CITY"
@@ -161,7 +168,7 @@ SELECT
     '✅ DEPLOYMENT COMPLETE' AS status,
     CURRENT_TIMESTAMP() AS completed_at,
     'API Data Fetcher' AS tool,
-    '2026-01-09' AS expires,
+    '2026-05-01' AS expires,
     'Run: CALL SNOWFLAKE_EXAMPLE.SFE_API_FETCHER.SFE_FETCH_USERS();' AS next_step;
 
 -- =============================================================================

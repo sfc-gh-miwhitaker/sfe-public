@@ -1,6 +1,7 @@
 # API Data Fetcher
 
-> **Expires:** 2026-01-09 (30 days from creation)
+> **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days)
+> After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before deploying.
 
 A Python stored procedure that fetches data from a public REST API and stores it in a Snowflake table, demonstrating External Access Integration.
 
@@ -156,4 +157,4 @@ See `diagrams/` for:
 
 ---
 
-*SE Community • API Data Fetcher Tool • Created: 2025-12-10*
+*SE Community • API Data Fetcher Tool • Last Updated: 2026-03-02*

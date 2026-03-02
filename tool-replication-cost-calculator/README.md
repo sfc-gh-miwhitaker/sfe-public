@@ -2,15 +2,15 @@
 
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--04--10-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-04-10
-> This demo uses Snowflake features current as of February 2026.
-> After expiration, this repository will be archived and made private.
+> **DEMONSTRATION PROJECT** | **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01
+> This demo uses Snowflake features current as of March 2026.
+> After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before deploying.
 
 **Author:** SE Community
 **Purpose:** Reference implementation for a Snowflake-native Streamlit cost calculator for database replication/DR
-**Created:** 2025-12-08 | **Expires:** 2026-04-10 (60 days) | **Status:** ACTIVE
+**Created:** 2025-12-08 | **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days) | **Status:** ACTIVE
 
 ## First Time Here?
 

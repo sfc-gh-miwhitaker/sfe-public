@@ -77,6 +77,12 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 
 After Streamlit and Cortex Agent. The AI has complete project knowledge.
 
+Key additions in v4:
+- Semantic view clause order: FACTS before DIMENSIONS (Snowflake syntax requirement)
+- CREATE AGENT with YAML specification (not the older JSON-based CREATE CORTEX AGENT)
+- Tool type `cortex_analyst_text_to_sql` with semantic view in `tool_resources`
+- Streamlit deployed FROM Git repo stage with ADD LIVE VERSION FROM LAST
+
 This is the version committed as the final `AGENTS.md` in the repository.
 
 See the root `AGENTS.md` file for the full content of v4.

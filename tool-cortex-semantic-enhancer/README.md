@@ -4,8 +4,8 @@
 
 **Author:** SE Community
 **Purpose:** Enhance Snowflake semantic views with AI-improved descriptions using Cortex
-**Expires:** 2026-01-15 (30 days)
-**Status:** ✅ Active
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days)
+**Status:** ACTIVE
 
 ---
 
@@ -166,7 +166,7 @@ BUSINESS RULES:
 |------------|------|---------|
 | Warehouse | `SFE_ENHANCEMENT_WH` | X-SMALL, 60s auto-suspend |
 | Schema | `SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS` | Container for enhancement objects |
-| Procedure | `SFE_ENHANCE_SEMANTIC_VIEW` | Main enhancement procedure (Python 3.12) |
+| Procedure | `SFE_ENHANCE_SEMANTIC_VIEW` | Main enhancement procedure (Python 3.11) |
 | Function | `SFE_ESTIMATE_ENHANCEMENT_COST` | Cost estimation for views |
 | Procedure | `SFE_DIAGNOSE_ENVIRONMENT` | Environment diagnostics |
 
@@ -297,4 +297,4 @@ See `diagrams/` folder for detailed architecture diagrams:
 
 ---
 
-*SE Community • Tools Collection • Last Updated: 2025-12-15*
+*SE Community • Tools Collection • Last Updated: 2026-03-02*

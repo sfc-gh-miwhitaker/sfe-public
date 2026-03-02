@@ -1,17 +1,17 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=flat&logo=snowflake&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
-![Expires](https://img.shields.io/badge/Expires-2026--01--14-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 
 # Cortex Agent Chat - React Integration Example
 
-> **DEMONSTRATION PROJECT - EXPIRES: 2026-01-14**
-> This demo uses Snowflake features current as of December 2024.
-> After expiration, this repository will be archived and made private.
+> **DEMONSTRATION PROJECT** | **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01
+> This demo uses Snowflake features current as of March 2026.
+> After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before deploying.
 
 **Author:** SE Community
 **Purpose:** Reference implementation showing React.js integration with Snowflake Cortex Agents
-**Created:** 2025-12-15 | **Expires:** 2026-01-14 (30 days) | **Status:** ACTIVE
+**Created:** 2025-12-15 | **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days) | **Status:** ACTIVE
 
 ---
 
@@ -356,7 +356,7 @@ cortex-agent-chat/
 │   │   ├── MessageInput.js        # ⌨️  User input field
 │   │   └── Message.js             # 💬 Individual message bubble
 │   ├── services/
-│   │   ├── jwtGenerator.js        # (legacy) Client-side JWT generator (not used; backend signs now)
+│   │   ├── jwtGenerator.js        # DEPRECATED: Client-side signing reference (not used; backend signs now)
 │   │   └── snowflakeApi.js        # 🌐 Client → backend proxy (threads + agent:run, SSE)
 │   ├── App.js                     # 🏠 Root component
 │   ├── App.css                    # 🎨 Global Snowflake color variables
@@ -386,7 +386,7 @@ cortex-agent-chat/
 |------|---------|-------------|
 | `server/index.js` | Backend proxy + KEYPAIR_JWT signing | Signs JWTs server-side; proxies to Snowflake |
 | `snowflakeApi.js` | Client → backend proxy calls | Threads + agent:run (+ streaming) |
-| `jwtGenerator.js` | (Legacy) Client-side signing reference | Kept for reference; not used in flow |
+| `jwtGenerator.js` | DEPRECATED: Client-side signing reference | Not used; backend proxy signs JWTs. Remove in next version. |
 | `ChatInterface.js` | Main UI component | Manages chat state, displays messages |
 | `ThinkingIndicator.js` | Loading animation | Visual feedback during agent processing |
 | `App.css` | Global styles | Snowflake color palette (cyan, charcoal, white) |
@@ -472,7 +472,7 @@ USE SCHEMA SFE_CORTEX_AGENT_CHAT;
 SHOW AGENTS;
 
 -- Describe agent
-DESC CORTEX AGENT SFE_REACT_DEMO_AGENT;
+DESC AGENT SFE_REACT_DEMO_AGENT;
 ```
 
 ### Check Public Key Assignment
@@ -936,7 +936,7 @@ npm install
 
 **Author:** SE Community
 **Created:** 2025-12-15
-**Expires:** 2026-01-14 (30 days)
+**Expires:** 2026-05-01 (60 days)
 **Status:** Active Reference Implementation
 
 **Reference Implementation Notice:**
@@ -955,4 +955,4 @@ This is a reference implementation maintained by the Snowflake SE Community. For
 
 ---
 
-*Last Updated: 2025-12-15 | Next Review: 2026-01-14 | Version: 1.0*
+*Last Updated: 2026-03-02 | Expires: 2026-05-01 | Version: 1.1*

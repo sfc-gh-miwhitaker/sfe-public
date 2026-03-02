@@ -12,7 +12,10 @@
 ## Key Decisions Made by AI
 
 - Semantic view spans DT_PLAYER_FEATURES, RAW_CAMPAIGNS, RAW_CAMPAIGN_RESPONSES
-- Dimensions: loyalty tier, campaign type, game type, device, age band
-- Facts: wager amounts, session counts, response counts
-- Metrics: response rate, average wagering, player count, campaign ROI
+- Clause order matters: FACTS before DIMENSIONS (Snowflake syntax requirement)
+- Dimensions: loyalty tier, campaign type, campaign name, target segment, responded
+- Facts: wager amounts, session frequency, lifetime wagered, game diversity, slots/table pct, redemption
+- Metrics: response rate, average wagering, player count, total redemption
+- Agent uses CREATE AGENT with YAML specification (not the older JSON format)
+- Tool type is `cortex_analyst_text_to_sql` with semantic view in `tool_resources`
 - Agent sample questions mapped to verified queries

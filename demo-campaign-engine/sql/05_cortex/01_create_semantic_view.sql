@@ -35,30 +35,6 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_CAMPAIGN_EN
       campaign_responses (campaign_id) REFERENCES campaigns
   )
 
-  DIMENSIONS (
-    player_features.loyalty_tier AS loyalty_tier
-      WITH SYNONYMS = ('tier', 'loyalty level', 'VIP level')
-      COMMENT = 'Player loyalty program tier: Bronze, Silver, Gold, Platinum, Diamond',
-
-    player_features.loyalty_tier_num AS loyalty_tier_numeric
-      COMMENT = 'Numeric encoding of loyalty tier (1=Bronze through 5=Diamond)',
-
-    campaigns.campaign_type AS campaign_type
-      WITH SYNONYMS = ('type', 'campaign category')
-      COMMENT = 'Campaign category: RETENTION, ACQUISITION, UPSELL, or REACTIVATION',
-
-    campaigns.campaign_name AS campaign_name
-      WITH SYNONYMS = ('name', 'promotion name')
-      COMMENT = 'Human-readable campaign name',
-
-    campaigns.target_segment AS target_segment
-      WITH SYNONYMS = ('segment', 'audience segment')
-      COMMENT = 'Target audience segment for the campaign',
-
-    campaign_responses.responded AS responded
-      COMMENT = 'Whether the player responded positively to the campaign (TRUE/FALSE)'
-  )
-
   FACTS (
     player_features.avg_daily_wager AS player_features.avg_daily_wager
       COMMENT = 'Average amount wagered per active day in dollars',
@@ -86,6 +62,30 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_CAMPAIGN_EN
 
     campaign_responses.redemption_amount AS campaign_responses.redemption_amount
       COMMENT = 'Dollar amount redeemed when player responded to campaign'
+  )
+
+  DIMENSIONS (
+    player_features.loyalty_tier AS loyalty_tier
+      WITH SYNONYMS = ('tier', 'loyalty level', 'VIP level')
+      COMMENT = 'Player loyalty program tier: Bronze, Silver, Gold, Platinum, Diamond',
+
+    player_features.loyalty_tier_num AS loyalty_tier_numeric
+      COMMENT = 'Numeric encoding of loyalty tier (1=Bronze through 5=Diamond)',
+
+    campaigns.campaign_type AS campaign_type
+      WITH SYNONYMS = ('type', 'campaign category')
+      COMMENT = 'Campaign category: RETENTION, ACQUISITION, UPSELL, or REACTIVATION',
+
+    campaigns.campaign_name AS campaign_name
+      WITH SYNONYMS = ('name', 'promotion name')
+      COMMENT = 'Human-readable campaign name',
+
+    campaigns.target_segment AS target_segment
+      WITH SYNONYMS = ('segment', 'audience segment')
+      COMMENT = 'Target audience segment for the campaign',
+
+    campaign_responses.responded AS responded
+      COMMENT = 'Whether the player responded positively to the campaign (TRUE/FALSE)'
   )
 
   METRICS (

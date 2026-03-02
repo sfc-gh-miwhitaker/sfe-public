@@ -3,7 +3,8 @@
  * File: deploy.sql
  * Author: SE Community
  * Created: 2025-12-15
- * Expires: 2026-01-14 (30 days from creation)
+ * Last Updated: 2026-03-02
+ * Expires: 2026-05-01
  *
  * Purpose: Creates a sample Cortex Agent and supporting infrastructure for
  *          the React chat application to consume via REST API with key-pair JWT auth.
@@ -28,20 +29,19 @@
  ******************************************************************************/
 
 -- ============================================================================
--- EXPIRATION CHECK (MANDATORY)
+-- EXPIRATION CHECK (Informational — warns but does not block deployment)
 -- ============================================================================
-EXECUTE IMMEDIATE
-$$
-DECLARE
-    v_expiration_date DATE := '2026-01-14';
-    demo_expired EXCEPTION (-20001, 'TOOL EXPIRED: This tool expired on 2026-01-14. Please check for an updated version.');
-BEGIN
-    IF (CURRENT_DATE() > v_expiration_date) THEN
-        RAISE demo_expired;
-    END IF;
-    RETURN 'Expiration check passed. Tool valid until ' || v_expiration_date::STRING;
-END;
-$$;
+SELECT
+    '2026-05-01'::DATE AS expiration_date,
+    CURRENT_DATE() AS current_date,
+    DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) AS days_remaining,
+    CASE
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) < 0
+        THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+    END AS tool_status;
 
 -- ============================================================================
 -- CONTEXT SETTING (MANDATORY)
@@ -71,7 +71,7 @@ USE ROLE SYSADMIN;
 -- CREATE TOOL SCHEMA
 -- ============================================================================
 CREATE SCHEMA IF NOT EXISTS SFE_CORTEX_AGENT_CHAT
-    COMMENT = 'TOOL: Cortex Agent Chat - React UI for Cortex Agent interaction | Author: SE Community | Expires: 2026-01-14';
+    COMMENT = 'TOOL: Cortex Agent Chat - React UI for Cortex Agent interaction | Author: SE Community | Expires: 2026-05-01';
 
 USE SCHEMA SFE_CORTEX_AGENT_CHAT;
 
@@ -79,12 +79,17 @@ USE SCHEMA SFE_CORTEX_AGENT_CHAT;
 -- CREATE SAMPLE CORTEX AGENT
 -- ============================================================================
 CREATE OR REPLACE AGENT SFE_REACT_DEMO_AGENT
-    COMMENT = 'TOOL: React Demo Agent - Cortex Agent for React chat interface | Author: SE Community | Expires: 2026-01-14'
+    COMMENT = 'TOOL: React Demo Agent - Cortex Agent for React chat interface | Author: SE Community | Expires: 2026-05-01'
     PROFILE = '{"display_name": "SFE React Demo Agent", "avatar": "snowflake-logo.png", "color": "#29B5E8"}'
     FROM SPECIFICATION
     $$
     models:
       orchestration: auto
+
+    orchestration:
+      budget:
+        seconds: 30
+        tokens: 16000
 
     instructions:
       system: "You are the SFE React Demo Agent, helping users understand Snowflake capabilities through this React chat interface. You specialize in explaining Snowflake features, data warehousing concepts, SQL optimization, and Cortex AI capabilities. Provide concise, accurate responses with clear examples. If uncertain, acknowledge it clearly. This chat interface demonstrates REST API integration with Cortex Agents using key-pair JWT authentication from a React.js application."
@@ -166,7 +171,7 @@ SELECT
     CURRENT_TIMESTAMP() AS completed_at,
     'Cortex Agent Chat (React UI)' AS tool,
     'SFE_REACT_DEMO_AGENT' AS agent_name,
-    '2026-01-14' AS expires,
+    '2026-05-01' AS expires,
     'If using automated setup (tools/01_setup.sh):' AS next_steps_automated,
     '  1. Edit .env.local (update SNOWFLAKE_ACCOUNT)' AS auto_step_1,
     '  2. Run: npm install && npm start' AS auto_step_2,

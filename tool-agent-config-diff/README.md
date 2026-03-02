@@ -1,5 +1,8 @@
 # Agent Config Diff Tool
 
+> **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days)
+> After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before use.
+
 Extract Cortex Agent specifications for configuration management, comparison, and version control.
 
 ## Usage

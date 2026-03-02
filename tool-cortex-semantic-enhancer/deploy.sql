@@ -3,7 +3,8 @@
  *
  * ⚠️  NOT FOR PRODUCTION USE - EXAMPLE IMPLEMENTATION ONLY
  *
- * EXPIRES: 2026-01-15 (30 days from creation)
+ * LAST UPDATED: 2026-03-02
+ * EXPIRES: 2026-05-01
  * Author: SE Community
  * Status: ACTIVE
  *
@@ -29,7 +30,7 @@
  *     - SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS schema
  *     - SFE_ESTIMATE_ENHANCEMENT_COST function
  *     - SFE_DIAGNOSE_ENVIRONMENT procedure
- *     - SFE_ENHANCE_SEMANTIC_VIEW stored procedure (Python 3.11)
+ *     - SFE_ENHANCE_SEMANTIC_VIEW stored procedure (Python 3.11, GA)
  *
  * CLEANUP:
  *   See teardown.sql in this folder
@@ -39,17 +40,20 @@
  ******************************************************************************/
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- STEP 0: Expiration Check (MANDATORY)
+-- STEP 0: Expiration Check (Informational — warns but does not block)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 SELECT
+    '2026-05-01'::DATE AS expiration_date,
+    CURRENT_DATE() AS current_date,
+    DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) AS days_remaining,
     CASE
-        WHEN CURRENT_DATE > '2026-01-15'::DATE
-        THEN 1 / 0  -- Force error: "Division by zero"
-        ELSE 1
-    END AS expiration_check,
-    '✓ Tool is active (expires: 2026-01-15)' AS status,
-    DATEDIFF(DAY, CURRENT_DATE, '2026-01-15'::DATE) AS days_remaining;
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) < 0
+        THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+    END AS tool_status;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- STEP 1: Create Database and Schema
@@ -59,7 +63,7 @@ CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
   COMMENT = 'DEMO: Repository for example/demo projects - NOT FOR PRODUCTION';
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS
-  COMMENT = 'DEMO: semantic-view-enhancer - Cortex AI semantic view enhancement | Author: SE Community | Expires: 2026-01-15';
+  COMMENT = 'DEMO: semantic-view-enhancer - Cortex AI semantic view enhancement | Author: SE Community | Expires: 2026-05-01';
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS;
 
@@ -72,7 +76,7 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_ENHANCEMENT_WH
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
   INITIALLY_SUSPENDED = TRUE
-  COMMENT = 'DEMO: semantic-view-enhancer - Dedicated warehouse for semantic view enhancement | Author: SE Community | Expires: 2026-01-15';
+  COMMENT = 'DEMO: semantic-view-enhancer - Dedicated warehouse for semantic view enhancement | Author: SE Community | Expires: 2026-05-01';
 
 USE WAREHOUSE SFE_ENHANCEMENT_WH;
 
@@ -190,10 +194,10 @@ CREATE OR REPLACE PROCEDURE SFE_ENHANCE_SEMANTIC_VIEW(
 )
 RETURNS STRING
 LANGUAGE PYTHON
-RUNTIME_VERSION = '3.12'
+RUNTIME_VERSION = '3.11'
 PACKAGES = ('snowflake-snowpark-python')
 HANDLER = 'enhance_view'
-COMMENT = 'DEMO: semantic-view-enhancer - Creates enhanced copy of semantic view with AI-improved comments | Author: SE Community | Expires: 2026-01-15'
+COMMENT = 'DEMO: semantic-view-enhancer - Creates enhanced copy of semantic view with AI-improved comments | Author: SE Community | Expires: 2026-05-01'
 AS
 $$
 import re
