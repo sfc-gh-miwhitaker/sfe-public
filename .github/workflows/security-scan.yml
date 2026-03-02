@@ -53,7 +53,7 @@ jobs:
           EXIT_CODE=0
 
           echo "--- Checking for private key files ---"
-          KEYS=$(find . -type f \( -name "*.pem" -o -name "*.key" -o -name "*.p8" -o -name "*.p12" -o -name "*.pfx" \) -not -path './.git/*')
+          KEYS=$(find . -not -path './.git/*' -type f \( -name "*.pem" -o -name "*.key" -o -name "*.p8" -o -name "*.p12" -o -name "*.pfx" \) || true)
           if [ -n "$KEYS" ]; then
             echo "FAIL: Private key files found in repository:"
             echo "$KEYS"
@@ -63,7 +63,7 @@ jobs:
           fi
 
           echo "--- Checking for .env files ---"
-          ENVS=$(find . -type f -name ".env" -o -name ".env.local" -o -name ".env.*.local" | grep -v '.git/')
+          ENVS=$(find . -not -path './.git/*' -type f \( -name ".env" -o -name ".env.local" -o -name ".env.*.local" \) || true)
           if [ -n "$ENVS" ]; then
             echo "FAIL: .env files found in repository:"
             echo "$ENVS"
@@ -73,7 +73,7 @@ jobs:
           fi
 
           echo "--- Checking for .DS_Store files ---"
-          DS=$(find . -name ".DS_Store" -not -path './.git/*')
+          DS=$(find . -not -path './.git/*' -name ".DS_Store" || true)
           if [ -n "$DS" ]; then
             echo "FAIL: .DS_Store files found:"
             echo "$DS"
