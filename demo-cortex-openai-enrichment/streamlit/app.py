@@ -41,7 +41,7 @@ if approach == "Cortex Enrichment":
         try:
             df = session.sql("SELECT * FROM DT_ENRICHED_COMPLETIONS").to_pandas()
             st.dataframe(df, use_container_width=True)
-            
+
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric("Total Responses", len(df))

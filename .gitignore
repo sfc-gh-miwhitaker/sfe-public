@@ -1,0 +1,88 @@
+# =============================================================================
+# SFE-Public Repository .gitignore
+# Defense-in-depth: protects contributors who lack the team's global gitignore.
+# =============================================================================
+
+# ---- Operating System ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---- IDE / Editor State ----
+.cursor/
+.vscode/
+.idea/
+*.code-workspace
+
+# ---- Cortex Code (personal state only; .cortex/skills/ tracked on purpose) ----
+.cortex/conversations/
+.cortex/permissions.json
+.cortex/settings.json
+.cortex/settings.local.json
+.cortex/mcp.json
+.cortex/logs/
+.cortex/mcp_oauth/
+.cortex/memory/
+
+# ---- Secrets & Credentials (CRITICAL) ----
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.sample
+.envrc
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.cer
+*.crt
+*.der
+*.csr
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+secrets.yaml
+secrets.yml
+secrets.json
+*.secret
+*-secret.*
+.apikey
+apikey.txt
+*.token
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+.venv-*/
+venv/
+env/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- Node.js ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+.pnpm-debug.log*
+package-lock.json
+
+# ---- Build State (local-only, contains paths and usernames) ----
+.builddemo-state.json
+.demo-config
+
+# ---- Logs & Temp ----
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~

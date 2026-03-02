@@ -1,0 +1,85 @@
+# =============================================================================
+# Root pre-commit config for the sfe-public mono-repo.
+# Runs detect-secrets, gitleaks, and policy checks across ALL sub-projects.
+#
+# Setup:  pip install pre-commit && pre-commit install
+# Manual: pre-commit run --all-files
+# =============================================================================
+
+repos:
+  # -- Secret detection (two independent scanners for defense-in-depth) --
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: package-lock\.json|\.secrets\.baseline$
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  # -- Standard hygiene hooks --
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: \.md$
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=5000"]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-case-conflict
+      - id: check-symlinks
+
+  # -- Repo-specific policy checks --
+
+  - repo: local
+    hooks:
+      - id: block-env-files
+        name: Block .env files (secrets)
+        entry: >-
+          bash -c 'if git diff --cached --name-only | grep -E "^\.env$|\.env\.(local|development|production|test)$|\.env\.server\.local$"; then echo "BLOCKED: .env files must never be committed"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: block-private-keys
+        name: Block private key files
+        entry: >-
+          bash -c 'if git diff --cached --name-only | grep -iE "\.(pem|key|p8|p12|pfx)$"; then echo "BLOCKED: Private key files must never be committed"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: block-cursor-state
+        name: Block .cursor/ state files
+        entry: >-
+          bash -c 'if git diff --cached --name-only | grep -q "^\.cursor/"; then echo "BLOCKED: .cursor/ files must not be committed"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: block-builddemo-state
+        name: Block .builddemo-state.json (contains local paths)
+        entry: >-
+          bash -c 'if git diff --cached --diff-filter=ACMR --name-only | grep -q "builddemo-state\.json"; then echo "BLOCKED: .builddemo-state.json contains local paths and usernames"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: scan-hardcoded-passwords
+        name: Scan for hardcoded password assignments
+        entry: >-
+          bash -c 'if git diff --cached -U0 | grep -iE "^\+.*(password|passwd|pwd)\s*=\s*\S{8,}" | grep -viE "placeholder|example|<YOUR_|getenv|os\.environ|CHANGE_ME|YOUR_PASSWORD_HERE"; then echo "WARNING: Possible hardcoded password detected"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: scan-snowflake-accounts
+        name: Scan for Snowflake account identifiers
+        entry: >-
+          bash -c 'if git diff --cached -U0 | grep -E "^\+" | grep -iE "[a-z]{2,8}-[a-z0-9]{5,10}\.snowflakecomputing\.com" | grep -viE "example|placeholder|your.org|account_identifier|\$\{|<YOUR_|xy12345"; then echo "WARNING: Possible real Snowflake account identifier detected"; exit 1; fi'
+        language: system
+        pass_filenames: false

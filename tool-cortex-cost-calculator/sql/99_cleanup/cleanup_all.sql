@@ -11,7 +11,7 @@
  * WHAT GETS REMOVED:
  *   - Streamlit app: CORTEX_COST_CALCULATOR
  *   - Git repository: SFE_CORTEX_TRAIL_REPO
- *   - API integration: SFE_CORTEX_TRAIL_GIT_API
+ *   - API integration: SFE_GIT_API_INTEGRATION
  *   - Schema: CORTEX_USAGE (all views, tables, tasks)
  *
  * WHAT STAYS (Protected shared infrastructure):
@@ -72,7 +72,7 @@ DROP GIT REPOSITORY IF EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO;
 -- ===========================================================================
 -- Requires ACCOUNTADMIN or role with CREATE INTEGRATION privilege
 
-DROP API INTEGRATION IF EXISTS SFE_CORTEX_TRAIL_GIT_API;
+DROP API INTEGRATION IF EXISTS SFE_GIT_API_INTEGRATION;
 
 -- ===========================================================================
 -- CLEANUP COMPLETE
@@ -82,7 +82,7 @@ DROP API INTEGRATION IF EXISTS SFE_CORTEX_TRAIL_GIT_API;
 --   - Streamlit App: CORTEX_COST_CALCULATOR
 --   - Schema: CORTEX_USAGE (22 views + table + task)
 --   - Git Repository: SFE_CORTEX_TRAIL_REPO
---   - API Integration: SFE_CORTEX_TRAIL_GIT_API
+--   - API Integration: SFE_GIT_API_INTEGRATION
 --
 -- Protected (Not Removed):
 --   - Database: SNOWFLAKE_EXAMPLE (may contain other demos)
@@ -98,7 +98,7 @@ DROP API INTEGRATION IF EXISTS SFE_CORTEX_TRAIL_GIT_API;
 -- All queries should return 0 rows or show "does not exist"
 
 -- Check 1: API Integration should NOT exist
-SHOW API INTEGRATIONS LIKE 'SFE_CORTEX_TRAIL_GIT_API';
+SHOW API INTEGRATIONS LIKE 'SFE_GIT_API_INTEGRATION';
 
 -- Check 2: Schema should NOT exist
 SELECT
@@ -137,4 +137,4 @@ SHOW GIT REPOSITORIES LIKE 'SFE_CORTEX_TRAIL_REPO' IN ACCOUNT;
 --
 -- For complete manual cleanup (removes ALL demos):
 --    DROP DATABASE SNOWFLAKE_EXAMPLE CASCADE;
---    DROP API INTEGRATION SFE_CORTEX_TRAIL_GIT_API;
+--    DROP API INTEGRATION SFE_GIT_API_INTEGRATION;

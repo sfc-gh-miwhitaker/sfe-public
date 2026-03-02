@@ -10,7 +10,7 @@ INSTRUCTIONS: Open in Snowsight -> Click "Run All"
  * AUTHOR: SE Community
  * CREATED: 2026-03-02
  * EXPIRES: 2026-04-01
- * GITHUB_REPO: teams-agent-uni
+ * GITHUB_REPO: sfe-public
  * PURPOSE: Snowflake Cortex Agents for Microsoft Teams & M365 Copilot demo
  *
  * PREREQUISITES:

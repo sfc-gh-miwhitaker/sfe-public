@@ -999,7 +999,7 @@ if approach == "Cortex Enrichment":
         try:
             df = session.sql("SELECT * FROM DT_ENRICHED_COMPLETIONS").to_pandas()
             st.dataframe(df, use_container_width=True)
-            
+
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric("Total Responses", len(df))
@@ -1211,7 +1211,7 @@ else:
         row_idx = st.slider("Record Index", 0, len(df) - 1, 0)
         st.json(df.iloc[row_idx]["RAW"])
 '''
-    
+
     # Write the app to the stage
     session.file.put_stream(
         input_stream=__import__('io').BytesIO(app_code.encode('utf-8')),
@@ -1219,7 +1219,7 @@ else:
         auto_compress=False,
         overwrite=True
     )
-    
+
     return 'Streamlit app.py written to @streamlit_stage'
 $$;
 

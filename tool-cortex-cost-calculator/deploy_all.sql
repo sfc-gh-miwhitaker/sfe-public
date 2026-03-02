@@ -22,7 +22,7 @@
  * OBJECTS CREATED:
  *
  *   Account-Level:
- *   - API Integration: SFE_CORTEX_TRAIL_GIT_API
+ *   - API Integration: SFE_GIT_API_INTEGRATION
  *
  *   Database-Level (SNOWFLAKE_EXAMPLE):
  *   - Database: SNOWFLAKE_EXAMPLE
@@ -35,7 +35,7 @@
  *   - 1 Streamlit app (CORTEX_COST_CALCULATOR)
  *
  * GITHUB REPOSITORY:
- *   https://github.com/sfc-gh-miwhitaker/cortex-trail
+ *   https://github.com/sfc-gh-miwhitaker/sfe-public
  *
  * PREREQUISITES:
  *   - ACCOUNTADMIN role OR role with:
@@ -111,7 +111,7 @@ SELECT
 
 -- This demo uses Snowflake features current as of February 2026.
 -- To use after expiration:
---   1. Fork: https://github.com/sfc-gh-miwhitaker/cortex-trail
+--   1. Fork: https://github.com/sfc-gh-miwhitaker/sfe-public
 --   2. Update expiration_date in this file
 --   3. Review/update for latest Snowflake syntax and features
 
@@ -119,13 +119,13 @@ SELECT
 -- STEP 1: CREATE API INTEGRATION (Account-level object for GitHub access)
 -- ===========================================================================
 -- Requires ACCOUNTADMIN or CREATE API INTEGRATION privilege
--- Creates: CORTEX_TRAIL_GIT_API
+-- Creates: SFE_GIT_API_INTEGRATION (shared across sfe-public projects)
 
-CREATE OR REPLACE API INTEGRATION SFE_CORTEX_TRAIL_GIT_API
+CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
     API_PROVIDER = git_https_api
-    API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-miwhitaker')
+    API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-miwhitaker/sfe-public')
     ENABLED = TRUE
-    COMMENT = 'DEMO: cortex-trail - GitHub API integration for public repository access | See deploy_all.sql for expiration';
+    COMMENT = 'Shared Git integration for sfe-public monorepo | Author: SE Community';
 
 -- ===========================================================================
 -- STEP 2: CREATE DATABASE & SCHEMAS
@@ -146,13 +146,13 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.GIT_REPOS;
 -- ===========================================================================
 -- STEP 3: CREATE GIT REPOSITORY
 -- ===========================================================================
--- Creates: CORTEX_TRAIL_REPO in GIT_REPOS schema
--- Connects to: https://github.com/sfc-gh-miwhitaker/cortex-trail
+-- Creates: SFE_CORTEX_TRAIL_REPO in GIT_REPOS schema
+-- Connects to: https://github.com/sfc-gh-miwhitaker/sfe-public
 
 CREATE OR REPLACE GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO
-    API_INTEGRATION = SFE_CORTEX_TRAIL_GIT_API
-    ORIGIN = 'https://github.com/sfc-gh-miwhitaker/cortex-trail.git'
-    COMMENT = 'DEMO: cortex-trail - Cortex Cost Calculator toolkit public repository | See deploy_all.sql for expiration';
+    API_INTEGRATION = SFE_GIT_API_INTEGRATION
+    ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
+    COMMENT = 'DEMO: cortex-trail - Cortex Cost Calculator toolkit repository | See deploy_all.sql for expiration';
 
 ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO FETCH;
 
@@ -163,7 +163,7 @@ ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO FETCH;
 -- Creates: CORTEX_USAGE schema, 22 views, 1 table, 1 task (forecast model optional)
 -- Pattern: EXECUTE IMMEDIATE FROM Git stage (Snowflake native)
 
-EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO/branches/main/sql/01_deployment/deploy_cortex_monitoring.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO/branches/main/tool-cortex-cost-calculator/sql/01_deployment/deploy_cortex_monitoring.sql;
 
 -- ===========================================================================
 -- STEP 5: DEPLOY STREAMLIT APP FROM GIT
@@ -179,7 +179,7 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.CORTEX_USAGE;
 SET streamlit_warehouse = (SELECT CURRENT_WAREHOUSE());
 
 CREATE OR REPLACE STREAMLIT SNOWFLAKE_EXAMPLE.CORTEX_USAGE.CORTEX_COST_CALCULATOR
-    FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO/branches/main/streamlit/cortex_cost_calculator/
+    FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO/branches/main/tool-cortex-cost-calculator/streamlit/cortex_cost_calculator/
     MAIN_FILE = 'streamlit_app.py'
     QUERY_WAREHOUSE = $streamlit_warehouse
     TITLE = 'Cortex Cost Calculator'
@@ -194,7 +194,7 @@ ALTER STREAMLIT SNOWFLAKE_EXAMPLE.CORTEX_USAGE.CORTEX_COST_CALCULATOR ADD LIVE V
 -- Objects Created:
 --
 -- Account-Level:
---   - API Integration: SFE_CORTEX_TRAIL_GIT_API
+--   - API Integration: SFE_GIT_API_INTEGRATION
 --   - Warehouse: SFE_DEMO_DEPLOY_WH (only if no warehouse was active)
 --
 -- Database-Level (SNOWFLAKE_EXAMPLE):
@@ -223,7 +223,7 @@ ALTER STREAMLIT SNOWFLAKE_EXAMPLE.CORTEX_USAGE.CORTEX_COST_CALCULATOR ADD LIVE V
 -- ===========================================================================
 
 -- Check 1: Git repository accessible and contains SQL files
-LIST @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO/branches/main/sql/ PATTERN='.*\.sql';
+LIST @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO/branches/main/tool-cortex-cost-calculator/sql/ PATTERN='.*\.sql';
 
 -- Check 2: Views created (should be 21)
 SELECT
@@ -272,17 +272,17 @@ FROM SNOWFLAKE_EXAMPLE.CORTEX_USAGE.V_CORTEX_DAILY_SUMMARY;
 --    -> Switch role: USE ROLE ACCOUNTADMIN;
 --
 -- 2. "Git repository fetch failed"
---    -> Verify repo is public: https://github.com/sfc-gh-miwhitaker/cortex-trail
+--    -> Verify repo is public: https://github.com/sfc-gh-miwhitaker/sfe-public
 --    -> Check network connectivity to GitHub
 --
 -- 3. "EXECUTE IMMEDIATE FROM failed"
 --    -> Verify warehouse is running
 --    -> Verify Git fetch completed successfully
---    -> Check file exists: LIST @SNOWFLAKE_EXAMPLE.GIT_REPOS.CORTEX_TRAIL_REPO/branches/main/sql/01_deployment/;
+--    -> Check file exists: LIST @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CORTEX_TRAIL_REPO/branches/main/tool-cortex-cost-calculator/sql/01_deployment/;
 --
 -- 4. "Streamlit app creation failed"
 --    -> Verify streamlit_app.py exists in Git repo
---    -> Check path: LIST @...SFE_CORTEX_TRAIL_REPO/branches/main/streamlit/cortex_cost_calculator/;
+--    -> Check path: LIST @...SFE_CORTEX_TRAIL_REPO/branches/main/tool-cortex-cost-calculator/streamlit/cortex_cost_calculator/;
 --
 -- 5. "Views return no data"
 --    -> Normal if account has no Cortex usage yet

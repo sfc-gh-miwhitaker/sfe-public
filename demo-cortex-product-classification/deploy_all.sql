@@ -29,50 +29,53 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_GLAZE_AND_CLASSIFY_WH
 USE WAREHOUSE SFE_GLAZE_AND_CLASSIFY_WH;
 
 -- 4. Fetch latest from Git
-CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO
+CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
+  COMMENT = 'Shared schema for Git repository stages across demo projects';
+
+CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO
   API_INTEGRATION = SFE_GIT_API_INTEGRATION
-  ORIGIN = 'https://github.com/sfc-gh-miwhitaker/glaze-and-classify.git'
+  ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
   COMMENT = 'DEMO: Glaze & Classify Git repo (Expires: 2026-03-20)';
 
-ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO FETCH;
+ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO FETCH;
 
 -- 5. Execute scripts in order
 -- 5a. Setup
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/01_setup/01_create_schema.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/01_setup/01_create_schema.sql';
 
 -- 5b. Data model & sample data
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/02_data/01_create_tables.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/02_data/02_load_sample_data.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/02_data/01_create_tables.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/02_data/02_load_sample_data.sql';
 
 -- 5c. Classification approaches
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/03_classification/01_traditional_sql.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/03_classification/02_cortex_simple.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/03_classification/03_cortex_robust.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/03_classification/04_comparison_view.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/03_classification/01_traditional_sql.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/03_classification/02_cortex_simple.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/03_classification/03_cortex_robust.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/03_classification/04_comparison_view.sql';
 
 -- 5d. SPCS Vision — infrastructure (optional, requires CREATE COMPUTE POOL)
 --     Service starts async; steps 5e-5f run while the container comes up.
 BEGIN
-  EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/05_spcs/01_create_image_service.sql';
+  EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/05_spcs/01_create_image_service.sql';
 EXCEPTION
   WHEN OTHER THEN
     SYSTEM$LOG_INFO('Skipping SPCS vision service: ' || SQLERRM);
 END;
 
 -- 5e. Cortex Intelligence (runs while SPCS service starts in the background)
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/04_cortex/01_create_semantic_view.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/04_cortex/02_create_agent.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/04_cortex/01_create_semantic_view.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/04_cortex/02_create_agent.sql';
 
 -- 5f. SPCS Vision — populate (waits for service READY, then classifies)
 BEGIN
-  EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/05_spcs/02_populate_vision.sql';
+  EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/05_spcs/02_populate_vision.sql';
 EXCEPTION
   WHEN OTHER THEN
     SYSTEM$LOG_INFO('Skipping SPCS vision populate: ' || SQLERRM);
 END;
 
 -- 5g. Streamlit Dashboard
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.TOOLS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/sql/06_streamlit/01_create_dashboard.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/06_streamlit/01_create_dashboard.sql';
 
 -- 6. Final summary (ONLY visible result in Run All)
 SELECT

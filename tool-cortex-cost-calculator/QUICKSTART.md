@@ -263,7 +263,7 @@ To remove all project objects:
 ```
 
 **What's removed:**
-- API Integration: SFE_CORTEX_TRAIL_GIT_API
+- API Integration: SFE_GIT_API_INTEGRATION
 - Git Repository: SFE_CORTEX_TRAIL_REPO
 - Streamlit App: CORTEX_COST_CALCULATOR
 - CORTEX_USAGE schema (22 views, 1 table, 1 task)

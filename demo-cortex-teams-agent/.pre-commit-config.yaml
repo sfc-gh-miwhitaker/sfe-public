@@ -5,21 +5,19 @@
 repos:
   # Detect secrets and credentials
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
-        exclude: package-lock.json
+        exclude: package-lock\.json|\.secrets\.baseline$
 
-  # Additional secret detection (gitleaks)
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.0
+    rev: v8.21.2
     hooks:
       - id: gitleaks
 
-  # Standard pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer

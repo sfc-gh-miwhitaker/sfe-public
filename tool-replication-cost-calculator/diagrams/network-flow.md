@@ -35,7 +35,7 @@ graph TB
 
 ### External Services
 - **GitHub**: Source repository for deployment scripts and Streamlit app
-  - Repository: `github.com/sfc-gh-miwhitaker/replicatethis`
+  - Repository: `github.com/sfc-gh-miwhitaker/sfe-public`
   - Accessed via `SFE_GIT_API_INTEGRATION`
 
 ### Snowflake Components

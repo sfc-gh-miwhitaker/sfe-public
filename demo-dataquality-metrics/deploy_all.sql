@@ -4,7 +4,7 @@
  * AUTHOR: SE Community
  * CREATED: 2026-01-15
  * EXPIRES: 2026-02-14
- * GITHUB_REPO: https://github.com/sfc-gh-miwhitaker/alwaysgolden
+ * GITHUB_REPO: https://github.com/sfc-gh-miwhitaker/sfe-public
  * PURPOSE: Reference implementation for automated data quality monitoring and reporting using Snowflake native features.
  *
  * DEPLOYMENT INSTRUCTIONS:
@@ -75,9 +75,9 @@ USE DATABASE SNOWFLAKE_EXAMPLE;
 -- Create API Integration for GitHub access (public repos, no authentication)
 CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
   API_PROVIDER = git_https_api
-  API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-miwhitaker/')
+  API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-miwhitaker/sfe-public')
   ENABLED = TRUE
-  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Git integration for public repo access | Author: SE Community | Expires: 2026-02-14';
+  COMMENT = 'Shared Git integration for sfe-public monorepo | Author: SE Community';
 
 -- Create schema for Git repository
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
@@ -86,7 +86,7 @@ CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
 -- Create Git Repository stage (requires warehouse for initial fetch)
 CREATE OR REPLACE GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO
   API_INTEGRATION = SFE_GIT_API_INTEGRATION
-  ORIGIN = 'https://github.com/sfc-gh-miwhitaker/alwaysgolden'
+  ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
   COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Source repository for deployment scripts | Author: SE Community | Expires: 2026-02-14';
 
 /*******************************************************************************
@@ -95,14 +95,14 @@ CREATE OR REPLACE GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_RE
  * Pattern: EXECUTE IMMEDIATE FROM @database.schema.git_repo/branches/main/path/to/file.sql
  ******************************************************************************/
 
-EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/sql/01_setup/01_create_database.sql;
-EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/sql/01_setup/02_create_schemas.sql;
-EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/sql/02_data/01_create_tables.sql;
-EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/sql/02_data/02_load_sample_data.sql;
-EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/sql/03_transformations/01_create_streams.sql;
-EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/sql/03_transformations/02_create_views.sql;
-EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/sql/03_transformations/03_create_tasks.sql;
-EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/sql/04_streamlit/01_create_dashboard.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/01_setup/01_create_database.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/01_setup/02_create_schemas.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/02_data/01_create_tables.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/02_data/02_load_sample_data.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/03_transformations/01_create_streams.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/03_transformations/02_create_views.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/03_transformations/03_create_tasks.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/04_streamlit/01_create_dashboard.sql;
 
 /*******************************************************************************
  * DEPLOYMENT COMPLETE
@@ -126,9 +126,9 @@ SHOW STREAMLITS;
 
 -- If you encounter errors:
 -- 1. Check that you have ACCOUNTADMIN role or appropriate grants
--- 2. Verify the GitHub repository is accessible: https://github.com/sfc-gh-miwhitaker/alwaysgolden
+-- 2. Verify the GitHub repository is accessible: https://github.com/sfc-gh-miwhitaker/sfe-public
 -- 3. Review error messages in the output pane
 -- 4. Check README.md for additional troubleshooting steps
 --
 -- To clean up all objects created by this demo:
--- Run: @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/sql/99_cleanup/teardown_all.sql
+-- Run: @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/99_cleanup/teardown_all.sql

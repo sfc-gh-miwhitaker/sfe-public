@@ -1,0 +1,98 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Secret & Credential Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run pre-commit (detect-secrets + gitleaks + policy hooks)
+        uses: pre-commit/action@v3.0.1
+
+  gitleaks-full-history:
+    name: Gitleaks Full History Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  file-policy:
+    name: Dangerous File Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for files that must never be committed
+        run: |
+          EXIT_CODE=0
+
+          echo "--- Checking for private key files ---"
+          KEYS=$(find . -type f \( -name "*.pem" -o -name "*.key" -o -name "*.p8" -o -name "*.p12" -o -name "*.pfx" \) -not -path './.git/*')
+          if [ -n "$KEYS" ]; then
+            echo "FAIL: Private key files found in repository:"
+            echo "$KEYS"
+            EXIT_CODE=1
+          else
+            echo "PASS: No private key files"
+          fi
+
+          echo "--- Checking for .env files ---"
+          ENVS=$(find . -type f -name ".env" -o -name ".env.local" -o -name ".env.*.local" | grep -v '.git/')
+          if [ -n "$ENVS" ]; then
+            echo "FAIL: .env files found in repository:"
+            echo "$ENVS"
+            EXIT_CODE=1
+          else
+            echo "PASS: No .env files"
+          fi
+
+          echo "--- Checking for .DS_Store files ---"
+          DS=$(find . -name ".DS_Store" -not -path './.git/*')
+          if [ -n "$DS" ]; then
+            echo "FAIL: .DS_Store files found:"
+            echo "$DS"
+            EXIT_CODE=1
+          else
+            echo "PASS: No .DS_Store files"
+          fi
+
+          echo "--- Checking for hardcoded Snowflake account URLs ---"
+          ACCTS=$(grep -rIl --include='*.sql' --include='*.py' --include='*.js' --include='*.yaml' \
+            -E '[a-z]{2,8}-[a-z0-9]{5,10}\.snowflakecomputing\.com' . \
+            | grep -v '.git/' \
+            | grep -v 'node_modules/' \
+            | xargs grep -lv -E 'example|placeholder|your.org|\$\{|<YOUR_|xy12345|account_identifier|account\.snowflakecomputing' 2>/dev/null || true)
+          if [ -n "$ACCTS" ]; then
+            echo "WARNING: Files may contain real Snowflake account identifiers:"
+            echo "$ACCTS"
+          else
+            echo "PASS: No suspicious Snowflake account identifiers"
+          fi
+
+          exit $EXIT_CODE

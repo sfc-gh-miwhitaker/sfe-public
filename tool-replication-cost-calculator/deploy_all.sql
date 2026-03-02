@@ -4,7 +4,7 @@
  * AUTHOR: SE Community
  * CREATED: 2025-12-08
  * EXPIRES: 2026-04-10
- * GITHUB_REPO: https://github.com/sfc-gh-miwhitaker/replicatethis
+ * GITHUB_REPO: https://github.com/sfc-gh-miwhitaker/sfe-public
  * PURPOSE: Snowflake-native replication/DR cost calculator (Streamlit)
  *
  * DEPLOYMENT INSTRUCTIONS:
@@ -51,17 +51,17 @@ USE DATABASE SNOWFLAKE_EXAMPLE;
 CREATE SCHEMA IF NOT EXISTS GIT_REPOS COMMENT = 'DEMO: Shared Git repos (Expires: 2026-04-10)';
 
 -- API Integration (account-level, no DB context needed)
-CREATE OR REPLACE API INTEGRATION SFE_GIT_API_INTEGRATION
+CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
     API_PROVIDER = git_https_api
     API_ALLOWED_PREFIXES = (
-        'https://github.com/sfc-gh-miwhitaker/replicatethis'
+        'https://github.com/sfc-gh-miwhitaker/sfe-public'
     )
     ENABLED = TRUE
-    COMMENT = 'DEMO: Replication cost calc (Expires: 2026-04-10)';
+    COMMENT = 'Shared Git integration for sfe-public monorepo | Author: SE Community';
 
 CREATE OR REPLACE GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.REPLICATE_THIS_REPO
     API_INTEGRATION = SFE_GIT_API_INTEGRATION
-    ORIGIN = 'https://github.com/sfc-gh-miwhitaker/replicatethis'
+    ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
     COMMENT = 'Source repo for replication cost calc (Expires: 2026-04-10)';
 
 -- Fetch latest code from GitHub
@@ -96,7 +96,7 @@ USE WAREHOUSE SFE_REPLICATION_CALC_WH;
  *****************************************************************************/
 -- Create Streamlit app from Git repository clone (avoid legacy ROOT_LOCATION)
 CREATE OR REPLACE STREAMLIT REPLICATION_CALCULATOR
-    FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.REPLICATE_THIS_REPO/branches/main/streamlit
+    FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.REPLICATE_THIS_REPO/branches/main/tool-replication-cost-calculator/streamlit
     MAIN_FILE = 'app.py'
     QUERY_WAREHOUSE = SFE_REPLICATION_CALC_WH
     COMMENT = 'DEMO: DR/Replication Cost Calculator (Expires: 2026-04-10)';

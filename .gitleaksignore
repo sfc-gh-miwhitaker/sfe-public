@@ -1,0 +1,10 @@
+# Gitleaks false-positive allowlist for sfe-public mono-repo.
+#
+# Only add entries here after confirming the match is NOT a real secret.
+# Format: commit-hash:file:rule:line-number  (or just the fingerprint hash)
+#
+# --- Known safe patterns ---
+# Placeholder OAuth client_secret values using <YOUR_...> pattern: safe by design
+# Slack webhook placeholders using T00000000/B00000000/XXX pattern: safe by design
+# Microsoft Entra ID published application IDs (public docs): safe
+# xy12345.us-east-1 example account identifiers in documentation: safe
