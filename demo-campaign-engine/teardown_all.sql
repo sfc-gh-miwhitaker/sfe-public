@@ -1,0 +1,35 @@
+/*==============================================================================
+TEARDOWN ALL - Casino Campaign Recommendation Engine
+WARNING: This will DELETE all demo objects. Cannot be undone.
+==============================================================================*/
+
+USE ROLE SYSADMIN;
+
+-- Drop Streamlit app
+DROP STREAMLIT IF EXISTS SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE.CAMPAIGN_ENGINE_DASHBOARD;
+
+-- Drop Cortex Agent
+DROP CORTEX AGENT IF EXISTS SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE.CAMPAIGN_ANALYTICS_AGENT;
+
+-- Drop ML model
+DROP SNOWFLAKE.ML.CLASSIFICATION IF EXISTS SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE.CAMPAIGN_RESPONSE_MODEL;
+
+-- Drop project schema (CASCADE removes all tables, views, procs, dynamic tables)
+DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE CASCADE;
+
+-- Drop project warehouse
+DROP WAREHOUSE IF EXISTS SFE_CAMPAIGN_ENGINE_WH;
+
+-- Drop semantic view (keep SEMANTIC_MODELS schema)
+DROP SEMANTIC VIEW IF EXISTS SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_CAMPAIGN_ENGINE_ANALYTICS;
+
+-- Drop Git repository for this demo (keep GIT_REPOS schema)
+DROP GIT REPOSITORY IF EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CAMPAIGN_ENGINE_REPO;
+
+-- PROTECTED - NEVER DROP:
+-- SNOWFLAKE_EXAMPLE database
+-- SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS schema
+-- SNOWFLAKE_EXAMPLE.GIT_REPOS schema
+-- SFE_GIT_API_INTEGRATION
+
+SELECT 'Teardown complete!' AS status;
