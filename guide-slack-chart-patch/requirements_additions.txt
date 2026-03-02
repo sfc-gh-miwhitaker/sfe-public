@@ -1,0 +1,2 @@
+# Additional requirements for chart support
+vl-convert-python>=1.0.0
