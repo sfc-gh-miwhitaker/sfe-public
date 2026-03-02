@@ -58,7 +58,7 @@ jobs:
             const body = [
               `This demo repository is scheduled to expire on **${expires}**.`,
               ``,
-              `- Deployment is blocked after expiration by \`deploy_all.sql\`.`,
+              `- After expiration, validate against current Snowflake docs before deploying.`,
               `- If you still need this demo, extend the expiration by updating the **EXPIRES** line in \`deploy_all.sql\` (single source of truth).`,
               `- If this repo is public, archive it after expiration to reduce stale-demo discovery.`,
             ].join('\n')

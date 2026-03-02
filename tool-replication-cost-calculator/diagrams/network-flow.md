@@ -1,7 +1,7 @@
 # Network Flow - Streamlit DR Replication Cost Calculator
 Author: SE Community
 Last Updated: 2025-12-08
-Expires: 2026-04-10
+Expires: 2026-05-01
 Status: Reference Implementation
 
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)

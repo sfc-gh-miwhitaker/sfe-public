@@ -69,7 +69,7 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_CAMPAIGN_EN
       WITH SYNONYMS = ('tier', 'loyalty level', 'VIP level')
       COMMENT = 'Player loyalty program tier: Bronze, Silver, Gold, Platinum, Diamond',
 
-    player_features.loyalty_tier_num AS loyalty_tier_numeric
+    player_features.loyalty_tier_num AS loyalty_tier_num
       COMMENT = 'Numeric encoding of loyalty tier (1=Bronze through 5=Diamond)',
 
     campaigns.campaign_type AS campaign_type

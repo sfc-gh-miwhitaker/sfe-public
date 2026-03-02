@@ -2,7 +2,7 @@
 
 Author: SE Community
 Last Updated: 2025-12-15
-Expires: 2026-01-14 (30 days from creation)
+Expires: 2026-05-01 (30 days from creation)
 Status: Reference Implementation
 
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)
@@ -34,7 +34,7 @@ erDiagram
         string database_name FK "SNOWFLAKE_EXAMPLE"
         string owner "SYSADMIN"
         timestamp created_on
-        date expires "2026-01-14"
+        date expires "2026-05-01"
         string comment "Tool schema"
     }
 
@@ -46,7 +46,7 @@ erDiagram
         string instructions "Agent behavior"
         string owner "SYSADMIN"
         timestamp created_on
-        date expires "2026-01-14"
+        date expires "2026-05-01"
         string comment "Demo Cortex Agent"
     }
 
@@ -55,7 +55,7 @@ erDiagram
         string allowed_ip_list "IP ranges"
         string blocked_ip_list "Blocked IPs"
         timestamp created_on
-        date expires "2026-01-14"
+        date expires "2026-05-01"
         string comment "Network policy for PAT"
     }
 
@@ -279,12 +279,12 @@ await storeConversation(conversationId, messages);
 CREATE CORTEX AGENT SFE_SALES_AGENT
     LANGUAGE = 'ENGLISH'
     INSTRUCTIONS = 'Sales-focused assistant...'
-    COMMENT = 'DEMO: Sales agent | Expires: 2026-01-14';
+    COMMENT = 'DEMO: Sales agent | Expires: 2026-05-01';
 
 CREATE CORTEX AGENT SFE_SUPPORT_AGENT
     LANGUAGE = 'ENGLISH'
     INSTRUCTIONS = 'Support-focused assistant...'
-    COMMENT = 'DEMO: Support agent | Expires: 2026-01-14';
+    COMMENT = 'DEMO: Support agent | Expires: 2026-05-01';
 
 -- React app: Add agent selector dropdown
 ```
@@ -308,4 +308,4 @@ See `.cursor/DIAGRAM_CHANGELOG.md` for version history.
 
 ---
 
-*SE Community • Cortex Agent Chat Tool • Created: 2025-12-15 • Expires: 2026-01-14*
+*SE Community • Cortex Agent Chat Tool • Created: 2025-12-15 • Expires: 2026-05-01*

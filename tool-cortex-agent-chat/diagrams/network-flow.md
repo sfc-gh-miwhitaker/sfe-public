@@ -2,7 +2,7 @@
 
 Author: SE Community
 Last Updated: 2025-12-15
-Expires: 2026-01-14 (30 days from creation)
+Expires: 2026-05-01 (30 days from creation)
 Status: Reference Implementation
 
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)
@@ -290,4 +290,4 @@ See `.cursor/DIAGRAM_CHANGELOG.md` for version history.
 
 ---
 
-*SE Community • Cortex Agent Chat Tool • Created: 2025-12-15 • Expires: 2026-01-14*
+*SE Community • Cortex Agent Chat Tool • Created: 2025-12-15 • Expires: 2026-05-01*

@@ -2,6 +2,8 @@
 -- Extract Cortex Agent Specification for Configuration Management
 -- =============================================================================
 -- Author: SE Community
+-- Last Updated: 2026-03-02
+-- Expires: 2026-05-01
 -- Purpose: Reliably extract agent specs for comparison and version control
 --
 -- DESCRIBE AGENT Output Columns (per Snowflake docs):

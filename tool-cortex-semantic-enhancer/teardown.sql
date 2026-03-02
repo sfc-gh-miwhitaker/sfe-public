@@ -2,7 +2,7 @@
  * SNOWFLAKE TOOL: Semantic View Enhancer - Complete Cleanup
  *
  * ⚠️  NOT FOR PRODUCTION USE - EXAMPLE IMPLEMENTATION ONLY
- * Author: SE Community | Expires: 2026-01-15
+ * Author: SE Community | Expires: 2026-05-01
  *
  * NOTE: NO EXPIRATION CHECK (intentional - cleanup must work even after expiration)
  *

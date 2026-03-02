@@ -20,7 +20,7 @@ import hashlib
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 import snowflake.connector
 
@@ -72,7 +72,7 @@ def extract_agent_spec(conn, agent_fqn: str, output_format: str = "export") -> d
             }
         else:  # export
             return {
-                "extracted_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "extracted_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "agent_fqn": f"{data['database_name']}.{data['schema_name']}.{data['name']}",
                 "config_hash": config_hash,
                 "metadata": {
