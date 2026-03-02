@@ -39,10 +39,11 @@ with tab_targeting:
                 scored_df = session.sql(
                     f"CALL CAMPAIGN_ENGINE.SCORE_CAMPAIGN_AUDIENCE('{selected_type}')"
                 ).to_pandas()
+                scored_df.columns = scored_df.columns.str.upper()
 
                 if len(scored_df) > 0:
                     col1, col2, col3 = st.columns(3)
-                    col1.metric("Candidates Found", len(scored_df))
+                    col1.metric("Predicted Audience Size", len(scored_df))
                     col2.metric(
                         "Avg Response Probability",
                         f"{scored_df['RESPONSE_PROBABILITY'].mean():.1%}",
@@ -52,9 +53,9 @@ with tab_targeting:
                         f"${scored_df['AVG_DAILY_WAGER'].mean():,.0f}",
                     )
 
-                    st.subheader("Top Candidates")
+                    st.subheader(f"Top {min(50, len(scored_df))} Candidates")
                     st.dataframe(
-                        scored_df.rename(
+                        scored_df.head(50).rename(
                             columns={
                                 "PLAYER_ID": "Player ID",
                                 "NAME": "Name",
@@ -138,6 +139,7 @@ with tab_lookalike:
                 similar_df = session.sql(
                     f"CALL CAMPAIGN_ENGINE.FIND_SIMILAR_PLAYERS(PARSE_JSON('{array_str}'))"
                 ).to_pandas()
+                similar_df.columns = similar_df.columns.str.upper()
 
                 if len(similar_df) > 0:
                     col1, col2 = st.columns(2)

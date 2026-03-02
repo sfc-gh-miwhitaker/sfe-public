@@ -137,7 +137,6 @@ BEGIN
         FROM predictions
         WHERE prediction:class::BOOLEAN = TRUE
         ORDER BY response_probability DESC
-        LIMIT 50
     );
     RETURN TABLE(res);
 END;

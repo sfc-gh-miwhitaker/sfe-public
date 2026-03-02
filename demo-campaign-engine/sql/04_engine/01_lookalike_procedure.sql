@@ -35,37 +35,29 @@ def find_similar(session, seed_player_ids):
     ids_str = ','.join(str(int(i)) for i in id_list)
 
     query = f"""
-    WITH seed_avg AS (
-        SELECT
-            ARRAY_CONSTRUCT(
-                AVG(behavior_vector[0]),
-                AVG(behavior_vector[1]),
-                AVG(behavior_vector[2]),
-                AVG(behavior_vector[3]),
-                AVG(behavior_vector[4]),
-                AVG(behavior_vector[5]),
-                AVG(behavior_vector[6]),
-                AVG(behavior_vector[7]),
-                AVG(behavior_vector[8]),
-                AVG(behavior_vector[9]),
-                AVG(behavior_vector[10]),
-                AVG(behavior_vector[11]),
-                AVG(behavior_vector[12]),
-                AVG(behavior_vector[13]),
-                AVG(behavior_vector[14]),
-                AVG(behavior_vector[15])
-            )::VECTOR(FLOAT, 16) AS avg_vector
+    WITH seed_vectors AS (
+        SELECT behavior_vector::ARRAY AS bv
         FROM SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE.DT_PLAYER_VECTORS
         WHERE player_id IN ({ids_str})
+    ),
+    seed_avg AS (
+        SELECT
+            ARRAY_CONSTRUCT(
+                AVG(bv[0]::FLOAT),  AVG(bv[1]::FLOAT),  AVG(bv[2]::FLOAT),  AVG(bv[3]::FLOAT),
+                AVG(bv[4]::FLOAT),  AVG(bv[5]::FLOAT),  AVG(bv[6]::FLOAT),  AVG(bv[7]::FLOAT),
+                AVG(bv[8]::FLOAT),  AVG(bv[9]::FLOAT),  AVG(bv[10]::FLOAT), AVG(bv[11]::FLOAT),
+                AVG(bv[12]::FLOAT), AVG(bv[13]::FLOAT), AVG(bv[14]::FLOAT), AVG(bv[15]::FLOAT)
+            )::VECTOR(FLOAT, 16) AS avg_vector
+        FROM seed_vectors
     )
     SELECT
         v.player_id,
         p.name,
         p.loyalty_tier,
-        VECTOR_COSINE_SIMILARITY(v.behavior_vector, s.avg_vector) AS similarity_score,
-        f.avg_daily_wager,
-        f.session_frequency,
-        f.lifetime_wagered,
+        VECTOR_COSINE_SIMILARITY(v.behavior_vector, s.avg_vector)::FLOAT AS similarity_score,
+        f.avg_daily_wager::FLOAT AS avg_daily_wager,
+        f.session_frequency::FLOAT AS session_frequency,
+        f.lifetime_wagered::FLOAT AS lifetime_wagered,
         f.game_diversity
     FROM SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE.DT_PLAYER_VECTORS v
     CROSS JOIN seed_avg s
