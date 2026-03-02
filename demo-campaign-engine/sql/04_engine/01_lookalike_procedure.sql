@@ -4,7 +4,7 @@ Generated from prompt: "Create a stored procedure FIND_SIMILAR_PLAYERS that
   takes an array of up to 10 player IDs, computes their average behavior
   vector, and returns the 10 most similar players using VECTOR_COSINE_SIMILARITY."
 Tool: Cursor + Claude | Refined: 2 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
@@ -25,7 +25,7 @@ LANGUAGE PYTHON
 RUNTIME_VERSION = '3.11'
 PACKAGES = ('snowflake-snowpark-python')
 HANDLER = 'find_similar'
-COMMENT = 'DEMO: Find 10 players most similar to seed set via vector cosine similarity (Expires: 2026-04-01)'
+COMMENT = 'DEMO: Find 10 players most similar to seed set via vector cosine similarity (Expires: 2026-05-01)'
 AS
 $$
 def find_similar(session, seed_player_ids):

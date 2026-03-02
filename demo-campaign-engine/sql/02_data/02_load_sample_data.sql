@@ -3,7 +3,7 @@ LOAD SAMPLE DATA
 Generated from prompt: "Generate realistic synthetic casino data: 500 players,
   ~10K activities, 8 campaigns, ~2K responses. Use GENERATOR and UNIFORM."
 Tool: Cursor + Claude | Refined: 2 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;

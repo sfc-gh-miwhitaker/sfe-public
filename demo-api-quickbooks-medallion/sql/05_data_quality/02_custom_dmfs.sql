@@ -9,7 +9,7 @@ Patterns demonstrated:
   2. Positive amount validation
   3. Date sequence validation (due_date >= txn_date)
 
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
@@ -23,7 +23,7 @@ CREATE OR REPLACE DATA METRIC FUNCTION DMF_FK_CHECK(
     arg_t2 TABLE(arg_c2 VARCHAR)
 )
 RETURNS NUMBER
-COMMENT = 'DEMO: Count orphan FK references (Expires: 2026-03-29)'
+COMMENT = 'DEMO: Count orphan FK references (Expires: 2026-05-01)'
 AS
 $$
     SELECT COUNT(*)
@@ -62,7 +62,7 @@ CREATE OR REPLACE DATA METRIC FUNCTION DMF_POSITIVE_AMOUNT(
     arg_t TABLE(arg_c NUMBER)
 )
 RETURNS NUMBER
-COMMENT = 'DEMO: Count non-positive amounts (Expires: 2026-03-29)'
+COMMENT = 'DEMO: Count non-positive amounts (Expires: 2026-05-01)'
 AS
 $$
     SELECT COUNT(*)
@@ -93,7 +93,7 @@ CREATE OR REPLACE DATA METRIC FUNCTION DMF_DATE_SEQUENCE(
     arg_t TABLE(arg_txn DATE, arg_due DATE)
 )
 RETURNS NUMBER
-COMMENT = 'DEMO: Count rows where due date precedes transaction date (Expires: 2026-03-29)'
+COMMENT = 'DEMO: Count rows where due date precedes transaction date (Expires: 2026-05-01)'
 AS
 $$
     SELECT COUNT(*)

@@ -1,6 +1,6 @@
 /*==============================================================================
 Grant Permissions for Cortex Agent Access
-teams-agent-uni | Expires: 2026-04-01
+teams-agent-uni | Expires: 2026-05-01
 
 Grants: PUBLIC access to database, schema, warehouse, function, and agent
 Depends: All previous setup scripts (01-04)

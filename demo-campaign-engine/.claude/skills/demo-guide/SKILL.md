@@ -21,7 +21,7 @@ Casino campaign recommendation engine with two core capabilities:
 - Database: `SNOWFLAKE_EXAMPLE`
 - Schema: `CAMPAIGN_ENGINE`
 - Warehouse: `SFE_CAMPAIGN_ENGINE_WH`
-- All objects get COMMENT = 'DEMO: ... (Expires: 2026-04-01)'
+- All objects get COMMENT = 'DEMO: ... (Expires: 2026-05-01)'
 
 ### Data Flow
 1. Raw tables (RAW_PLAYERS, RAW_PLAYER_ACTIVITY, RAW_CAMPAIGNS, RAW_CAMPAIGN_RESPONSES)

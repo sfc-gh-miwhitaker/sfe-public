@@ -10,7 +10,7 @@ Three patterns demonstrated:
   2. AI_COMPLETE   -- structured output extraction (schema-drift-resistant)
   3. AI_CLASSIFY   -- multi-label customer profile classification
 
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
@@ -24,7 +24,7 @@ CREATE OR REPLACE DYNAMIC TABLE ENRICHED_INVOICE_NOTES
     TARGET_LAG = DOWNSTREAM
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Invoice notes enriched with AI_SENTIMENT (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Invoice notes enriched with AI_SENTIMENT (Expires: 2026-05-01)'
 AS
 SELECT
     invoice_id,
@@ -52,7 +52,7 @@ CREATE OR REPLACE DYNAMIC TABLE CORTEX_PARSED_INVOICE
     TARGET_LAG = DOWNSTREAM
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Cortex AI_COMPLETE structured extraction from raw JSON (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Cortex AI_COMPLETE structured extraction from raw JSON (Expires: 2026-05-01)'
 AS
 SELECT
     qbo_id,
@@ -83,7 +83,7 @@ CREATE OR REPLACE DYNAMIC TABLE ENRICHED_CUSTOMER_PROFILE
     TARGET_LAG = DOWNSTREAM
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Customer profiles enriched with AI_CLASSIFY (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Customer profiles enriched with AI_CLASSIFY (Expires: 2026-05-01)'
 AS
 SELECT
     customer_id,

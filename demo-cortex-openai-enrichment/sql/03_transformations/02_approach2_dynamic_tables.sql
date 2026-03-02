@@ -17,7 +17,7 @@ One row per choice with all fields extracted to native types.
 CREATE OR REPLACE DYNAMIC TABLE DT_COMPLETIONS
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Silver - typed chat completions (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Silver - typed chat completions (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                              AS completion_id,
@@ -56,7 +56,7 @@ Downstream can query argument keys/values without re-parsing.
 CREATE OR REPLACE DYNAMIC TABLE DT_TOOL_CALLS
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Silver - parsed tool calls (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Silver - parsed tool calls (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                              AS completion_id,
@@ -88,7 +88,7 @@ Clean separation of response metadata from completion content.
 CREATE OR REPLACE DYNAMIC TABLE DT_BATCH_OUTCOMES
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Silver - batch outcomes with error handling (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Silver - batch outcomes with error handling (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                              AS batch_request_id,
@@ -121,7 +121,7 @@ Foundation for all Gold-layer aggregations.
 CREATE OR REPLACE DYNAMIC TABLE DT_USAGE_FLAT
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Silver - flattened usage records (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Silver - flattened usage records (Expires: 2026-05-01)'
 AS
 SELECT
     TO_TIMESTAMP(raw:start_time::NUMBER)                        AS bucket_start,
@@ -149,7 +149,7 @@ Pricing is illustrative; adjust rates to match your contract.
 CREATE OR REPLACE DYNAMIC TABLE DT_DAILY_TOKEN_SUMMARY
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Gold - daily token spend estimates (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Gold - daily token spend estimates (Expires: 2026-05-01)'
 AS
 SELECT
     bucket_date,
@@ -184,7 +184,7 @@ Useful for understanding which tools get used and how.
 CREATE OR REPLACE DYNAMIC TABLE DT_TOOL_CALL_ANALYTICS
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Gold - tool call analytics (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Gold - tool call analytics (Expires: 2026-05-01)'
 AS
 SELECT
     function_name,
@@ -209,7 +209,7 @@ Track success rates, error patterns, and token efficiency.
 CREATE OR REPLACE DYNAMIC TABLE DT_BATCH_SUMMARY
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Gold - batch health summary (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Gold - batch health summary (Expires: 2026-05-01)'
 AS
 SELECT
     outcome,

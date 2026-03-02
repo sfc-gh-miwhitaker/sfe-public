@@ -12,7 +12,7 @@ Handles: text content, refusals, multi-choice (n>1), polymorphic content field.
 ------------------------------------------------------------------------------*/
 
 CREATE OR REPLACE VIEW V_COMPLETIONS
-  COMMENT = 'DEMO: Approach 1 - Flattened chat completions, one row per choice (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Flattened chat completions, one row per choice (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                          AS completion_id,
@@ -45,7 +45,7 @@ Parses the JSON arguments string into a traversable VARIANT.
 ------------------------------------------------------------------------------*/
 
 CREATE OR REPLACE VIEW V_TOOL_CALLS
-  COMMENT = 'DEMO: Approach 1 - Flattened tool calls with parsed arguments (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Flattened tool calls with parsed arguments (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                          AS completion_id,
@@ -71,7 +71,7 @@ Extracts the parsed content as a traversable object.
 ------------------------------------------------------------------------------*/
 
 CREATE OR REPLACE VIEW V_STRUCTURED_OUTPUTS
-  COMMENT = 'DEMO: Approach 1 - Structured JSON outputs parsed from content (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Structured JSON outputs parsed from content (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                          AS completion_id,
@@ -92,7 +92,7 @@ Separates successes from errors for clean downstream consumption.
 ------------------------------------------------------------------------------*/
 
 CREATE OR REPLACE VIEW V_BATCH_RESULTS
-  COMMENT = 'DEMO: Approach 1 - Unwrapped batch results with error handling (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Unwrapped batch results with error handling (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                          AS batch_request_id,
@@ -122,7 +122,7 @@ Converts Unix timestamps to proper TIMESTAMP_NTZ for time-series analysis.
 ------------------------------------------------------------------------------*/
 
 CREATE OR REPLACE VIEW V_TOKEN_USAGE
-  COMMENT = 'DEMO: Approach 1 - Flattened usage buckets for time-series analysis (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Flattened usage buckets for time-series analysis (Expires: 2026-05-01)'
 AS
 SELECT
     TO_TIMESTAMP(raw:start_time::NUMBER)                    AS bucket_start,

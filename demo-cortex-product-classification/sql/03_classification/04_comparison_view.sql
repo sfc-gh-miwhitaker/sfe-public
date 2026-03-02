@@ -7,7 +7,7 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.GLAZE_AND_CLASSIFY;
 USE WAREHOUSE SFE_GLAZE_AND_CLASSIFY_WH;
 
 CREATE OR REPLACE VIEW CLASSIFICATION_COMPARISON
-  COMMENT = 'DEMO: Side-by-side classification accuracy across all four approaches (Expires: 2026-03-20)'
+  COMMENT = 'DEMO: Side-by-side classification accuracy across all four approaches (Expires: 2026-05-01)'
 AS
 SELECT
     p.product_id,
@@ -76,7 +76,7 @@ LEFT JOIN STG_CLASSIFIED_VISION v
 
 -- Accuracy summary view for quick dashboard access
 CREATE OR REPLACE VIEW ACCURACY_SUMMARY
-  COMMENT = 'DEMO: Aggregated accuracy metrics by approach and market (Expires: 2026-03-20)'
+  COMMENT = 'DEMO: Aggregated accuracy metrics by approach and market (Expires: 2026-05-01)'
 AS
 SELECT
     market_code,

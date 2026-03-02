@@ -1,13 +1,13 @@
 # Glaze & Classify
 
-![Expires](https://img.shields.io/badge/Expires-2026--03--20-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 
-> **Warning:** This demo expires on 2026-03-20. After expiration, deployment will fail.
+> **Warning:** This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
 
 Product classification showdown: four progressively sophisticated approaches to classifying an international bakery catalog — from brittle SQL to production-ready Cortex AI pipelines and custom SPCS vision models.
 
 **Author:** SE Community
-**Created:** 2026-02-18 | **Expires:** 2026-03-20 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
 ## First Time Here?
 

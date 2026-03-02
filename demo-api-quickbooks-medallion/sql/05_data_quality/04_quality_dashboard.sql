@@ -7,7 +7,7 @@ Run these interactively after sample data is loaded and DMFs have evaluated.
 For the Cortex Data Quality (AI-suggested checks) walkthrough, see
 docs/03-ARCHITECTURE.md.
 
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
@@ -122,7 +122,7 @@ FROM TABLE(SYSTEM$EVALUATE_DATA_QUALITY_EXPECTATIONS(
     across all monitored Silver tables into a single pane.
 -----------------------------------------------------------------------------*/
 CREATE OR REPLACE VIEW DQ_EXPECTATION_SUMMARY
-    COMMENT = 'DEMO: Aggregated DQ expectation status across Silver tables (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Aggregated DQ expectation status across Silver tables (Expires: 2026-05-01)'
 AS
 WITH invoice_status AS (
     SELECT * FROM TABLE(SNOWFLAKE.LOCAL.DATA_QUALITY_MONITORING_EXPECTATION_STATUS(

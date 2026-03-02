@@ -3,7 +3,7 @@ PLAYER VECTORS (Dynamic Table)
 Generated from prompt: "Normalize all 16 features to 0-1 range using min-max
   scaling and store as VECTOR(FLOAT,16) for cosine similarity search."
 Tool: Cursor + Claude | Refined: 2 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
@@ -12,7 +12,7 @@ USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;
 CREATE OR REPLACE DYNAMIC TABLE DT_PLAYER_VECTORS
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_CAMPAIGN_ENGINE_WH
-    COMMENT = 'DEMO: Min-max normalized behavior vectors VECTOR(FLOAT,16) (Expires: 2026-04-01)'
+    COMMENT = 'DEMO: Min-max normalized behavior vectors VECTOR(FLOAT,16) (Expires: 2026-05-01)'
 AS
 WITH bounds AS (
     SELECT

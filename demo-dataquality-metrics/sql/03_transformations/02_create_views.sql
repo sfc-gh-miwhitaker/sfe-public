@@ -18,7 +18,7 @@ CREATE OR REPLACE DATA METRIC FUNCTION SNOWFLAKE_EXAMPLE.DATA_QUALITY.DMF_METRIC
   t TABLE (metric_value FLOAT)
 )
 RETURNS NUMBER
-COMMENT = 'DEMO: Metric value validity percent | Author: SE Community | Expires: 2026-02-14'
+COMMENT = 'DEMO: Metric value validity percent | Author: SE Community | Expires: 2026-05-01'
 AS
 $$
   SELECT ROUND(
@@ -32,7 +32,7 @@ CREATE OR REPLACE DATA METRIC FUNCTION SNOWFLAKE_EXAMPLE.DATA_QUALITY.DMF_SESSIO
   t TABLE (session_duration INTEGER)
 )
 RETURNS NUMBER
-COMMENT = 'DEMO: Session duration validity percent | Author: SE Community | Expires: 2026-02-14'
+COMMENT = 'DEMO: Session duration validity percent | Author: SE Community | Expires: 2026-05-01'
 AS
 $$
   SELECT ROUND(
@@ -72,7 +72,7 @@ $$;
 -- These provide a "golden" dataset for downstream analytics.
 
 CREATE OR REPLACE VIEW SNOWFLAKE_EXAMPLE.DATA_QUALITY.V_ATHLETE_PERFORMANCE
-  COMMENT = 'DEMO: Cleaned athlete performance view (valid metric_value only) | Author: SE Community | Expires: 2026-02-14'
+  COMMENT = 'DEMO: Cleaned athlete performance view (valid metric_value only) | Author: SE Community | Expires: 2026-05-01'
 AS
 SELECT
   athlete_id,
@@ -88,7 +88,7 @@ WHERE metric_value IS NOT NULL
   AND metric_value BETWEEN 0 AND 100;
 
 CREATE OR REPLACE VIEW SNOWFLAKE_EXAMPLE.DATA_QUALITY.V_FAN_ENGAGEMENT
-  COMMENT = 'DEMO: Cleaned fan engagement view (valid session_duration only) | Author: SE Community | Expires: 2026-02-14'
+  COMMENT = 'DEMO: Cleaned fan engagement view (valid session_duration only) | Author: SE Community | Expires: 2026-05-01'
 AS
 SELECT
   engagement_id,
@@ -103,7 +103,7 @@ WHERE session_duration IS NOT NULL
   AND session_duration BETWEEN 0 AND 14400;
 
 CREATE OR REPLACE VIEW SNOWFLAKE_EXAMPLE.DATA_QUALITY.V_DATA_QUALITY_METRICS
-  COMMENT = 'DEMO: Data quality metrics view | Author: SE Community | Expires: 2026-02-14'
+  COMMENT = 'DEMO: Data quality metrics view | Author: SE Community | Expires: 2026-05-01'
 AS
 SELECT
   metric_date,
@@ -115,7 +115,7 @@ SELECT
 FROM SNOWFLAKE_EXAMPLE.DATA_QUALITY.STG_DATA_QUALITY_METRICS;
 
 CREATE OR REPLACE VIEW SNOWFLAKE_EXAMPLE.DATA_QUALITY.V_QUALITY_SCORE_TREND
-  COMMENT = 'DEMO: Quality score trend view | Author: SE Community | Expires: 2026-02-14'
+  COMMENT = 'DEMO: Quality score trend view | Author: SE Community | Expires: 2026-05-01'
 AS
 SELECT
   metric_date,

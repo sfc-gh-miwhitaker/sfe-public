@@ -1,8 +1,8 @@
 # Operational Flow - Approach 2: Medallion Architecture
 
 Author: SE Community
-Last Updated: 2026-02-26
-Expires: 2026-03-28
+Last Updated: 2026-03-02
+Expires: 2026-05-01
 Status: Reference Implementation
 
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)

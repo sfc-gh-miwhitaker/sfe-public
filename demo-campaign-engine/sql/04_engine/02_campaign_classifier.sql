@@ -4,7 +4,7 @@ Generated from prompt: "Train a SNOWFLAKE.ML.CLASSIFICATION model on historical
   campaign responses joined to player features. Create a procedure that scores
   all players for a given campaign type."
 Tool: Cursor + Claude | Refined: 2 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
@@ -14,7 +14,7 @@ USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;
 -- 1. Training view: campaign responses joined to player features
 ----------------------------------------------------------------------
 CREATE OR REPLACE VIEW V_CLASSIFICATION_TRAINING
-    COMMENT = 'DEMO: Training data for campaign response classifier (Expires: 2026-04-01)'
+    COMMENT = 'DEMO: Training data for campaign response classifier (Expires: 2026-05-01)'
 AS
 SELECT
     f.avg_daily_wager,
@@ -46,7 +46,7 @@ CREATE OR REPLACE SNOWFLAKE.ML.CLASSIFICATION CAMPAIGN_RESPONSE_MODEL(
     INPUT_DATA => SYSTEM$REFERENCE('VIEW', 'V_CLASSIFICATION_TRAINING'),
     TARGET_COLNAME => 'RESPONDED'
 )
-COMMENT = 'DEMO: Predicts player campaign response probability (Expires: 2026-04-01)';
+COMMENT = 'DEMO: Predicts player campaign response probability (Expires: 2026-05-01)';
 
 ----------------------------------------------------------------------
 -- 3. Scoring procedure: rank players by predicted response probability
@@ -63,7 +63,7 @@ RETURNS TABLE (
     days_since_last_visit NUMBER
 )
 LANGUAGE SQL
-COMMENT = 'DEMO: Score all players for campaign targeting, return top 50 (Expires: 2026-04-01)'
+COMMENT = 'DEMO: Score all players for campaign targeting, return top 50 (Expires: 2026-05-01)'
 AS
 DECLARE
     res RESULTSET;
@@ -131,8 +131,8 @@ BEGIN
             loyalty_tier,
             prediction:class::BOOLEAN AS predicted_response,
             prediction:probability:True::FLOAT AS response_probability,
-            avg_daily_wager,
-            lifetime_wagered,
+            avg_daily_wager::FLOAT AS avg_daily_wager,
+            lifetime_wagered::FLOAT AS lifetime_wagered,
             days_since_last_visit
         FROM predictions
         WHERE prediction:class::BOOLEAN = TRUE

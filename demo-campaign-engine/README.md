@@ -2,7 +2,7 @@
 
 ![Expires](https://img.shields.io/badge/Expires-2026--04--01-orange)
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-04-01
+> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
 > This demo uses Snowflake features current as of March 2026.
 > After expiration, a warning banner will be added to this README and deploy_all.sql.
 
@@ -11,7 +11,7 @@
 A production-grade campaign recommendation engine for casino operators -- audience targeting via ML classification and player lookalike matching via vector similarity -- built entirely through AI-pair development.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-02 | **Expires:** 2026-04-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
 ### Complexity Card
 

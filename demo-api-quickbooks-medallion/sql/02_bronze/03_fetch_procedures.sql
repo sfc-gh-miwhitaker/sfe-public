@@ -2,7 +2,7 @@
 02_BRONZE / 03_FETCH_PROCEDURES
 Generic Python stored procedure that calls the QuickBooks Online REST API.
 Handles OAuth 2.0 token refresh, pagination, and CDC via LastUpdatedTime.
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS _QBO_FETCH_WATERMARK (
     last_fetched  TIMESTAMP_NTZ,
     rows_fetched  NUMBER,
     updated_at    TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
-) COMMENT = 'DEMO: CDC watermark for QBO incremental fetches (Expires: 2026-03-29)';
+) COMMENT = 'DEMO: CDC watermark for QBO incremental fetches (Expires: 2026-05-01)';
 
 -------------------------------------------------------------------------------
 -- FETCH_QBO_ENTITY: one procedure handles all 7 entities
@@ -36,7 +36,7 @@ PACKAGES = ('snowflake-snowpark-python', 'requests')
 HANDLER = 'run'
 EXTERNAL_ACCESS_INTEGRATIONS = (SFE_QBO_API_INTEGRATION)
 SECRETS = ('qbo_cred' = SFE_QBO_OAUTH_SECRET)
-COMMENT = 'DEMO: Fetch a single QBO entity with pagination + CDC (Expires: 2026-03-29)'
+COMMENT = 'DEMO: Fetch a single QBO entity with pagination + CDC (Expires: 2026-05-01)'
 AS
 $$
 import _snowflake
@@ -137,7 +137,7 @@ CREATE OR REPLACE PROCEDURE FETCH_ALL_QBO_ENTITIES(
 )
 RETURNS VARCHAR
 LANGUAGE SQL
-COMMENT = 'DEMO: Fetch all 7 QBO entities sequentially (Expires: 2026-03-29)'
+COMMENT = 'DEMO: Fetch all 7 QBO entities sequentially (Expires: 2026-05-01)'
 AS
 DECLARE
     result VARCHAR DEFAULT '';

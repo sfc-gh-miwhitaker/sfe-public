@@ -1,6 +1,6 @@
 /*==============================================================================
 Create Cortex Agent via DDL
-teams-agent-uni | Expires: 2026-04-01
+teams-agent-uni | Expires: 2026-05-01
 
 Creates: JOKE_ASSISTANT agent with custom_tool linked to GENERATE_SAFE_JOKE UDF
 Depends: 01_create_demo_objects.sql, 02_create_joke_function.sql
@@ -17,7 +17,7 @@ USE SCHEMA TEAMS_AGENT_UNI;
 -- ============================================================================
 
 CREATE OR REPLACE AGENT JOKE_ASSISTANT
-    COMMENT = 'DEMO: teams-agent-uni - AI joke bot powered by Cortex Agent (Expires: 2026-04-01)'
+    COMMENT = 'DEMO: teams-agent-uni - AI joke bot powered by Cortex Agent (Expires: 2026-05-01)'
     PROFILE = '{"display_name": "Joke Assistant", "color": "blue"}'
     FROM SPECIFICATION
     $$

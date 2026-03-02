@@ -7,7 +7,7 @@ When any expectation is violated or anomaly detection fires, Snowflake
 automatically sends notifications through the configured integrations.
 
 IMPORTANT: Requires ACCOUNTADMIN for notification integration creation.
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE ROLE ACCOUNTADMIN;
@@ -21,7 +21,7 @@ CREATE OR REPLACE NOTIFICATION INTEGRATION SFE_DQ_EMAIL_INT
     TYPE = EMAIL
     ENABLED = TRUE
     ALLOWED_RECIPIENTS = ('data-team@example.com')
-    COMMENT = 'DEMO: DQ email notifications (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: DQ email notifications (Expires: 2026-05-01)';
 
 -------------------------------------------------------------------------------
 -- 2. Slack Webhook Notification Integration (optional)
@@ -31,7 +31,7 @@ CREATE OR REPLACE NOTIFICATION INTEGRATION SFE_DQ_EMAIL_INT
 CREATE OR REPLACE SECRET SFE_DQ_SLACK_SECRET
     TYPE = GENERIC_STRING
     SECRET_STRING = 'T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX'  -- pragma: allowlist secret
-    COMMENT = 'DEMO: Slack webhook token for DQ alerts (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: Slack webhook token for DQ alerts (Expires: 2026-05-01)';
 
 CREATE OR REPLACE NOTIFICATION INTEGRATION SFE_DQ_SLACK_INT
     TYPE = WEBHOOK
@@ -40,7 +40,7 @@ CREATE OR REPLACE NOTIFICATION INTEGRATION SFE_DQ_SLACK_INT
     WEBHOOK_SECRET = SNOWFLAKE_EXAMPLE.QB_API.SFE_DQ_SLACK_SECRET
     WEBHOOK_BODY_TEMPLATE = '{"text": "SNOWFLAKE_WEBHOOK_MESSAGE"}'
     WEBHOOK_HEADERS = ('Content-Type'='application/json')
-    COMMENT = 'DEMO: DQ Slack webhook notifications (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: DQ Slack webhook notifications (Expires: 2026-05-01)';
 
 -------------------------------------------------------------------------------
 -- 3. Enable DQ Notifications at the Database Level

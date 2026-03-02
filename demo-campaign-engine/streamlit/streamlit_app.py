@@ -2,7 +2,7 @@
 Casino Campaign Recommendation Engine -- Streamlit Dashboard
 Generated from prompt: "Create an interactive dashboard with campaign targeting
   and player lookalike tabs."
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 """
 
 from snowflake.snowpark.context import get_active_session

@@ -7,7 +7,7 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.GLAZE_AND_CLASSIFY;
 USE WAREHOUSE SFE_GLAZE_AND_CLASSIFY_WH;
 
 CREATE OR REPLACE AGENT GLAZE_CLASSIFIER_AGENT
-  COMMENT = 'DEMO: Conversational agent for bakery product classification analysis (Expires: 2026-03-20)'
+  COMMENT = 'DEMO: Conversational agent for bakery product classification analysis (Expires: 2026-05-01)'
   PROFILE = '{"display_name": "Glaze & Classify Assistant", "avatar": "donut", "color": "green"}'
   FROM SPECIFICATION
   $$

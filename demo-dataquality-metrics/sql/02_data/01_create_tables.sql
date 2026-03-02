@@ -16,7 +16,7 @@ CREATE OR REPLACE TRANSIENT TABLE SNOWFLAKE_EXAMPLE.DATA_QUALITY.RAW_ATHLETE_PER
   data_source VARCHAR NOT NULL,
   load_timestamp TIMESTAMP_NTZ NOT NULL
 )
-COMMENT = 'DEMO: Raw athlete performance events | Author: SE Community | Expires: 2026-02-14';
+COMMENT = 'DEMO: Raw athlete performance events | Author: SE Community | Expires: 2026-05-01';
 
 CREATE OR REPLACE TRANSIENT TABLE SNOWFLAKE_EXAMPLE.DATA_QUALITY.RAW_FAN_ENGAGEMENT (
   engagement_id VARCHAR NOT NULL,
@@ -27,7 +27,7 @@ CREATE OR REPLACE TRANSIENT TABLE SNOWFLAKE_EXAMPLE.DATA_QUALITY.RAW_FAN_ENGAGEM
   session_duration INTEGER,
   conversion_flag BOOLEAN
 )
-COMMENT = 'DEMO: Raw fan engagement events | Author: SE Community | Expires: 2026-02-14';
+COMMENT = 'DEMO: Raw fan engagement events | Author: SE Community | Expires: 2026-05-01';
 
 CREATE OR REPLACE TRANSIENT TABLE SNOWFLAKE_EXAMPLE.DATA_QUALITY.STG_DATA_QUALITY_METRICS (
   metric_date DATE NOT NULL,
@@ -38,4 +38,4 @@ CREATE OR REPLACE TRANSIENT TABLE SNOWFLAKE_EXAMPLE.DATA_QUALITY.STG_DATA_QUALIT
   failures_detected INTEGER NOT NULL,
   created_at TIMESTAMP_NTZ NOT NULL DEFAULT CURRENT_TIMESTAMP()
 )
-COMMENT = 'DEMO: Data quality metric results | Author: SE Community | Expires: 2026-02-14';
+COMMENT = 'DEMO: Data quality metric results | Author: SE Community | Expires: 2026-05-01';

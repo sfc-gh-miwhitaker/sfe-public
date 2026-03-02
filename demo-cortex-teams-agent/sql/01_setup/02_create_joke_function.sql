@@ -1,6 +1,6 @@
 /*==============================================================================
 Create AI-Powered Joke Generation Function
-teams-agent-uni | Expires: 2026-04-01
+teams-agent-uni | Expires: 2026-05-01
 
 Creates: GENERATE_SAFE_JOKE(VARCHAR) using AI_COMPLETE with Cortex Guard
 Depends: 01_create_demo_objects.sql
@@ -14,7 +14,7 @@ USE WAREHOUSE SFE_TEAMS_AGENT_UNI_WH;
 CREATE OR REPLACE FUNCTION GENERATE_SAFE_JOKE(subject VARCHAR)
 RETURNS VARCHAR
 LANGUAGE SQL
-COMMENT = 'DEMO: teams-agent-uni - Generate safe-for-work jokes using AI_COMPLETE with Cortex Guard (Expires: 2026-04-01)'
+COMMENT = 'DEMO: teams-agent-uni - Generate safe-for-work jokes using AI_COMPLETE with Cortex Guard (Expires: 2026-05-01)'
 AS
 $$
   SELECT AI_COMPLETE(

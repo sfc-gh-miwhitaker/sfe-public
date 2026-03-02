@@ -4,12 +4,12 @@
 
 # Snowflake Cortex Agents for Microsoft Teams & M365 Copilot
 
-> **DEMONSTRATION PROJECT - EXPIRES: 2026-04-01**
+> **DEMONSTRATION PROJECT - EXPIRES: 2026-05-01**
 > This demo uses Snowflake features current as of March 2026.
 > After expiration, a warning banner will be added to this README and deploy_all.sql.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-02 | **Expires:** 2026-04-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
 ---
 

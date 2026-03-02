@@ -8,7 +8,7 @@ Features demonstrated:
 
 DMFs run on serverless compute -- no warehouse cost for scheduled evaluations.
 Results flow to SNOWFLAKE.LOCAL event table views.
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;

@@ -3,7 +3,7 @@ PLAYER FEATURES (Dynamic Table)
 Generated from prompt: "Create a feature engineering pipeline that computes
   16 behavioral metrics per player using Dynamic Tables."
 Tool: Cursor + Claude | Refined: 2 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
@@ -12,7 +12,7 @@ USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;
 CREATE OR REPLACE DYNAMIC TABLE DT_PLAYER_FEATURES
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_CAMPAIGN_ENGINE_WH
-    COMMENT = 'DEMO: 16 behavioral features per player, auto-refreshed (Expires: 2026-04-01)'
+    COMMENT = 'DEMO: 16 behavioral features per player, auto-refreshed (Expires: 2026-05-01)'
 AS
 WITH activity_stats AS (
     SELECT

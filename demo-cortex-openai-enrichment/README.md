@@ -1,15 +1,15 @@
 # AI-First Data Engineering: OpenAI + Snowflake Cortex
 
-![Expires](https://img.shields.io/badge/Expires-2026--03--28-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-03-28
-> This demo uses Snowflake features current as of February 2026.
+> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
+> This demo uses Snowflake features current as of March 2026.
 
 Transform complex OpenAI API responses using Snowflake's native Cortex AI functions
 for classification, sentiment analysis, and summarization - no external API calls required.
 
 **Author:** SE Community
-**Created:** 2026-02-26 | **Expires:** 2026-03-28 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
 ## First Time Here?
 

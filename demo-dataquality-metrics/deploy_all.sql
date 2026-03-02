@@ -3,7 +3,7 @@
  * PROJECT_NAME: Data Quality Metrics & Reporting Demo
  * AUTHOR: SE Community
  * CREATED: 2026-01-15
- * EXPIRES: 2026-02-14
+ * EXPIRES: 2026-05-01
  * GITHUB_REPO: https://github.com/sfc-gh-miwhitaker/sfe-public
  * PURPOSE: Reference implementation for automated data quality monitoring and reporting using Snowflake native features.
  *
@@ -36,35 +36,32 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_DATA_QUALITY_WH
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
   INITIALLY_SUSPENDED = TRUE
-  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Dedicated compute for demo workloads | Author: SE Community | Expires: 2026-02-14';
+  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Dedicated compute for demo workloads | Author: SE Community | Expires: 2026-05-01';
 
 -- Set warehouse context IMMEDIATELY (all subsequent commands need compute)
 USE WAREHOUSE SFE_DATA_QUALITY_WH;
 
 /*******************************************************************************
- * SECTION 1: Expiration Check
+ * SECTION 1: Expiration Check (informational — warns but does not block)
  ******************************************************************************/
--- This demo expires 30 days after creation.
--- Expiration date: 2026-02-14
-
-EXECUTE IMMEDIATE
-$$
-DECLARE
-    v_expiration_date DATE := '2026-02-14';
-    demo_expired EXCEPTION (-20001, 'DEMO EXPIRED: This project expired. Please contact the SE team for an updated version.');
-BEGIN
-    IF (CURRENT_DATE() > v_expiration_date) THEN
-        RAISE demo_expired;
-    END IF;
-END;
-$$;
+SELECT
+    '2026-05-01'::DATE                                           AS expiration_date,
+    CURRENT_DATE()                                               AS current_date,
+    DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE)          AS days_remaining,
+    CASE
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) < 0
+        THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+    END AS demo_status;
 
 /*******************************************************************************
  * SECTION 2: Database Setup
  ******************************************************************************/
 
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
-  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo | Author: SE Community | Expires: 2026-02-14';
+  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo | Author: SE Community | Expires: 2026-05-01';
 
 USE DATABASE SNOWFLAKE_EXAMPLE;
 
@@ -81,13 +78,13 @@ CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
 
 -- Create schema for Git repository
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
-  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Git repositories and deployment objects | Author: SE Community | Expires: 2026-02-14';
+  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Git repositories and deployment objects | Author: SE Community | Expires: 2026-05-01';
 
 -- Create Git Repository stage (requires warehouse for initial fetch)
 CREATE OR REPLACE GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO
   API_INTEGRATION = SFE_GIT_API_INTEGRATION
   ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
-  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Source repository for deployment scripts | Author: SE Community | Expires: 2026-02-14';
+  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Source repository for deployment scripts | Author: SE Community | Expires: 2026-05-01';
 
 /*******************************************************************************
  * SECTION 3: Execute Deployment Scripts from Git

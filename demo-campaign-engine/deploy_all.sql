@@ -1,22 +1,26 @@
 /*==============================================================================
 DEPLOY ALL - Casino Campaign Recommendation Engine
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 INSTRUCTIONS: Open in Snowsight -> Click "Run All"
 
 ML-powered campaign targeting + vector-based player lookalike matching.
 ==============================================================================*/
 
--- 1. SSOT: Expiration date -- change ONLY here, then run: sync-expiration
-SET DEMO_EXPIRES = '2026-04-01';
+-- 1. SSOT: Expiration date -- change ONLY here
+SET DEMO_EXPIRES = '2026-05-01';
 
--- 2. Expiration check
-DECLARE
-  demo_expired EXCEPTION (-20001, 'DEMO EXPIRED - contact owner');
-BEGIN
-  IF (CURRENT_DATE() > $DEMO_EXPIRES::DATE) THEN
-    RAISE demo_expired;
-  END IF;
-END;
+-- 2. Expiration check (informational — warns but does not block)
+SELECT
+    $DEMO_EXPIRES::DATE                                          AS expiration_date,
+    CURRENT_DATE()                                               AS current_date,
+    DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE)         AS days_remaining,
+    CASE
+        WHEN DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) < 0
+        THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
+        WHEN DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) || ' days remaining'
+    END AS demo_status;
 
 -- 3. Bootstrap warehouse (required before EXECUTE IMMEDIATE FROM)
 USE ROLE SYSADMIN;
@@ -25,7 +29,7 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_CAMPAIGN_ENGINE_WH
   WAREHOUSE_SIZE = 'XSMALL'
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
-  COMMENT = 'DEMO: Campaign engine compute (Expires: 2026-04-01)';
+  COMMENT = 'DEMO: Campaign engine compute (Expires: 2026-05-01)';
 USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;
 
 -- 4. Fetch latest from Git
@@ -35,7 +39,7 @@ CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
 CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CAMPAIGN_ENGINE_REPO
   API_INTEGRATION = SFE_GIT_API_INTEGRATION
   ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
-  COMMENT = 'DEMO: Campaign engine Git repo (Expires: 2026-04-01)';
+  COMMENT = 'DEMO: Campaign engine Git repo (Expires: 2026-05-01)';
 
 ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CAMPAIGN_ENGINE_REPO FETCH;
 

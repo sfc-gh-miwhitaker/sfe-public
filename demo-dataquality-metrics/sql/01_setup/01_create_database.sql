@@ -6,4 +6,4 @@
 -- ============================================================================
 
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
-  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo | Author: SE Community | Expires: 2026-02-14';
+  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo | Author: SE Community | Expires: 2026-05-01';

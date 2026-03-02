@@ -33,7 +33,7 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 - Follow SFE naming conventions (SFE_ prefix for account-level objects)
 - Use QUALIFY instead of subqueries for window function filtering
 - Keep deploy_all.sql as the single entry point
-- All new objects need COMMENT = 'DEMO: ... (Expires: 2026-04-01)'
+- All new objects need COMMENT = 'DEMO: ... (Expires: 2026-05-01)'
 - Dynamic Tables use TARGET_LAG = '1 hour' for demo cadence
 - VECTOR columns are VECTOR(FLOAT, 16) -- 16 behavioral features
 - ML models are created with SNOWFLAKE.ML.CLASSIFICATION

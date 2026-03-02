@@ -3,7 +3,7 @@ CREATE TABLES
 Generated from prompt: "Create the four core tables for the casino campaign
   recommendation engine: players, activity, campaigns, responses."
 Tool: Cursor + Claude | Refined: 1 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
@@ -18,7 +18,7 @@ CREATE OR REPLACE TABLE RAW_PLAYERS (
     registration_date DATE          NOT NULL,
     home_property   VARCHAR(50)     NOT NULL,
     CONSTRAINT pk_players PRIMARY KEY (player_id)
-) COMMENT = 'DEMO: Casino player demographics and loyalty info (Expires: 2026-04-01)';
+) COMMENT = 'DEMO: Casino player demographics and loyalty info (Expires: 2026-05-01)';
 
 CREATE OR REPLACE TABLE RAW_PLAYER_ACTIVITY (
     activity_id         NUMBER(38,0)    NOT NULL,
@@ -32,7 +32,7 @@ CREATE OR REPLACE TABLE RAW_PLAYER_ACTIVITY (
     device              VARCHAR(10)     NOT NULL,
     CONSTRAINT pk_activity PRIMARY KEY (activity_id),
     CONSTRAINT fk_activity_player FOREIGN KEY (player_id) REFERENCES RAW_PLAYERS(player_id)
-) COMMENT = 'DEMO: Player game session events across game types and devices (Expires: 2026-04-01)';
+) COMMENT = 'DEMO: Player game session events across game types and devices (Expires: 2026-05-01)';
 
 CREATE OR REPLACE TABLE RAW_CAMPAIGNS (
     campaign_id     NUMBER(38,0)    NOT NULL,
@@ -43,7 +43,7 @@ CREATE OR REPLACE TABLE RAW_CAMPAIGNS (
     end_date        DATE            NOT NULL,
     offer_description VARCHAR(500)  NOT NULL,
     CONSTRAINT pk_campaigns PRIMARY KEY (campaign_id)
-) COMMENT = 'DEMO: Marketing campaign definitions (Expires: 2026-04-01)';
+) COMMENT = 'DEMO: Marketing campaign definitions (Expires: 2026-05-01)';
 
 CREATE OR REPLACE TABLE RAW_CAMPAIGN_RESPONSES (
     response_id       NUMBER(38,0)    NOT NULL,
@@ -55,4 +55,4 @@ CREATE OR REPLACE TABLE RAW_CAMPAIGN_RESPONSES (
     CONSTRAINT pk_responses PRIMARY KEY (response_id),
     CONSTRAINT fk_response_campaign FOREIGN KEY (campaign_id) REFERENCES RAW_CAMPAIGNS(campaign_id),
     CONSTRAINT fk_response_player FOREIGN KEY (player_id) REFERENCES RAW_PLAYERS(player_id)
-) COMMENT = 'DEMO: Historical campaign response data for ML training (Expires: 2026-04-01)';
+) COMMENT = 'DEMO: Historical campaign response data for ML training (Expires: 2026-05-01)';

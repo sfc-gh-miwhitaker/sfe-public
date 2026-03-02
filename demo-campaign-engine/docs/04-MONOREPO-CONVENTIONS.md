@@ -63,7 +63,7 @@ Demo expiration is enforced at deploy time by the SQL-level check in
 `deploy_all.sql`:
 
 ```sql
-SET DEMO_EXPIRES = '2026-04-01';
+SET DEMO_EXPIRES = '2026-05-01';
 DECLARE
   demo_expired EXCEPTION (-20001, 'DEMO EXPIRED - contact owner');
 BEGIN

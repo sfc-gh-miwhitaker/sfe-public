@@ -1,7 +1,7 @@
 # Data Model - Data Quality Metrics & Reporting Demo
 
 Author: SE Community
-Last Updated: 2026-01-15
+Last Updated: 2026-03-02
 Status: Reference Implementation
 
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)

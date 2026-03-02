@@ -3,7 +3,7 @@
 Typed dynamic tables that flatten raw QBO JSON into relational columns.
 Uses traditional JSON path extraction with QUALIFY for deduplication.
 Incremental refresh processes only new/changed rows from Bronze.
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 
 TEACHING NOTE: Compare this approach with 02_cortex_enrichment.sql which
 uses AI_COMPLETE structured outputs to achieve similar extraction without
@@ -19,7 +19,7 @@ CREATE OR REPLACE DYNAMIC TABLE STG_CUSTOMER
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Staged customers from QBO (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Staged customers from QBO (Expires: 2026-05-01)'
 AS
 SELECT
     raw_payload:Id::VARCHAR                                       AS customer_id,
@@ -45,7 +45,7 @@ CREATE OR REPLACE DYNAMIC TABLE STG_VENDOR
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Staged vendors from QBO (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Staged vendors from QBO (Expires: 2026-05-01)'
 AS
 SELECT
     raw_payload:Id::VARCHAR                                       AS vendor_id,
@@ -67,7 +67,7 @@ CREATE OR REPLACE DYNAMIC TABLE STG_ITEM
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Staged items/products from QBO (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Staged items/products from QBO (Expires: 2026-05-01)'
 AS
 SELECT
     raw_payload:Id::VARCHAR                                       AS item_id,
@@ -90,7 +90,7 @@ CREATE OR REPLACE DYNAMIC TABLE STG_ACCOUNT
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Staged chart of accounts from QBO (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Staged chart of accounts from QBO (Expires: 2026-05-01)'
 AS
 SELECT
     raw_payload:Id::VARCHAR                                       AS account_id,
@@ -112,7 +112,7 @@ CREATE OR REPLACE DYNAMIC TABLE STG_INVOICE
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Staged invoices from QBO (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Staged invoices from QBO (Expires: 2026-05-01)'
 AS
 SELECT
     raw_payload:Id::VARCHAR                                       AS invoice_id,
@@ -136,7 +136,7 @@ CREATE OR REPLACE DYNAMIC TABLE STG_INVOICE_LINE
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Staged invoice line items from QBO (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Staged invoice line items from QBO (Expires: 2026-05-01)'
 AS
 SELECT
     raw_payload:Id::VARCHAR                                       AS invoice_id,
@@ -163,7 +163,7 @@ CREATE OR REPLACE DYNAMIC TABLE STG_PAYMENT
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Staged payments from QBO (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Staged payments from QBO (Expires: 2026-05-01)'
 AS
 SELECT
     raw_payload:Id::VARCHAR                                       AS payment_id,
@@ -183,7 +183,7 @@ CREATE OR REPLACE DYNAMIC TABLE STG_BILL
     TARGET_LAG = '1 hour'
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: Staged vendor bills from QBO (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Staged vendor bills from QBO (Expires: 2026-05-01)'
 AS
 SELECT
     raw_payload:Id::VARCHAR                                       AS bill_id,

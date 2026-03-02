@@ -7,7 +7,7 @@ Intentionally includes quality issues so DMFs light up:
   - Negative amount on INV-008
   - due_date < txn_date on INV-009
   - Orphan customer_id on INV-010 (references non-existent customer)
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;

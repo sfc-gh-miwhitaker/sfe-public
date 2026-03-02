@@ -1,6 +1,6 @@
 # QuickBooks API Medallion Architecture Demo
 
-> **Expires: 2026-03-29** | Snowflake Example
+> **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | Snowflake Example
 
 Pull accounting data from QuickBooks Online directly into Snowflake using native features -- no external ETL tools needed. Walks through every layer of the medallion pattern with Cortex AI enrichment and Data Metric Functions for continuous quality monitoring.
 

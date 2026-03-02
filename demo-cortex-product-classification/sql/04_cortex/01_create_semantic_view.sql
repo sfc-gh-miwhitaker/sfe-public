@@ -125,7 +125,7 @@ CREATE OR REPLACE SEMANTIC VIEW SV_GLAZE_PRODUCTS
       COMMENT = 'Average confidence score from the robust Cortex pipeline'
   )
 
-  COMMENT = 'DEMO: Semantic view for bakery product classification comparison across 4 approaches (Expires: 2026-03-20)'
+  COMMENT = 'DEMO: Semantic view for bakery product classification comparison across 4 approaches (Expires: 2026-05-01)'
 
   AI_SQL_GENERATION
     'This semantic view covers an international bakery product catalog classified by four different approaches:

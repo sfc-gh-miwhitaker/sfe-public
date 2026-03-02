@@ -8,13 +8,13 @@ Usage modes:
      Skip section 2 (network/auth) and use 04_sample_data.sql instead
   2. LIVE API: Run all sections in order, then configure OAuth and task
 
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 -------------------------------------------------------------------------------
 -- 0. EXPIRATION CHECK
 -------------------------------------------------------------------------------
-SET demo_expiry = '2026-03-29'::DATE;
+SET demo_expiry = '2026-05-01'::DATE;
 SELECT
     CASE
         WHEN CURRENT_DATE() > $demo_expiry
@@ -32,13 +32,13 @@ USE ROLE SYSADMIN;
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.QB_API
-    COMMENT = 'DEMO: QuickBooks API medallion architecture with Cortex AI enrichment and DMF quality monitoring (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: QuickBooks API medallion architecture with Cortex AI enrichment and DMF quality monitoring (Expires: 2026-05-01)';
 
 CREATE WAREHOUSE IF NOT EXISTS SFE_QB_API_WH
     WAREHOUSE_SIZE = 'XSMALL'
     AUTO_SUSPEND = 60
     AUTO_RESUME = TRUE
-    COMMENT = 'DEMO: QuickBooks API demo compute (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: QuickBooks API demo compute (Expires: 2026-05-01)';
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
 USE WAREHOUSE SFE_QB_API_WH;
@@ -63,7 +63,7 @@ CREATE OR REPLACE NETWORK RULE SFE_QBO_NETWORK_RULE
         'quickbooks.api.intuit.com',
         'oauth.platform.intuit.com'
     )
-    COMMENT = 'DEMO: Egress to QBO REST API and OAuth (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: Egress to QBO REST API and OAuth (Expires: 2026-05-01)';
 
 CREATE OR REPLACE SECURITY INTEGRATION SFE_QBO_OAUTH_INTEGRATION
     TYPE = API_AUTHENTICATION
@@ -74,18 +74,18 @@ CREATE OR REPLACE SECURITY INTEGRATION SFE_QBO_OAUTH_INTEGRATION
     OAUTH_AUTHORIZATION_ENDPOINT = 'https://appcenter.intuit.com/connect/oauth2'
     OAUTH_ALLOWED_SCOPES = ('com.intuit.quickbooks.accounting')
     ENABLED = TRUE
-    COMMENT = 'DEMO: QBO OAuth2 security integration (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: QBO OAuth2 security integration (Expires: 2026-05-01)';
 
 CREATE OR REPLACE SECRET SFE_QBO_OAUTH_SECRET
     TYPE = OAUTH2
     API_AUTHENTICATION = SFE_QBO_OAUTH_INTEGRATION
-    COMMENT = 'DEMO: QBO OAuth2 refresh token (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: QBO OAuth2 refresh token (Expires: 2026-05-01)';
 
 CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION SFE_QBO_API_INTEGRATION
     ALLOWED_NETWORK_RULES = (SFE_QBO_NETWORK_RULE)
     ALLOWED_AUTHENTICATION_SECRETS = (SFE_QBO_OAUTH_SECRET)
     ENABLED = TRUE
-    COMMENT = 'DEMO: External access for QBO API calls (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: External access for QBO API calls (Expires: 2026-05-01)';
 
 GRANT READ ON SECRET SFE_QBO_OAUTH_SECRET TO ROLE SYSADMIN;
 GRANT USAGE ON INTEGRATION SFE_QBO_API_INTEGRATION TO ROLE SYSADMIN;
@@ -102,37 +102,37 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
 CREATE TABLE IF NOT EXISTS RAW_CUSTOMER (
     qbo_id VARCHAR NOT NULL, raw_payload VARIANT NOT NULL,
     fetched_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(), api_endpoint VARCHAR
-) COMMENT = 'DEMO: Raw QuickBooks Customer JSON (Expires: 2026-03-29)';
+) COMMENT = 'DEMO: Raw QuickBooks Customer JSON (Expires: 2026-05-01)';
 
 CREATE TABLE IF NOT EXISTS RAW_VENDOR (
     qbo_id VARCHAR NOT NULL, raw_payload VARIANT NOT NULL,
     fetched_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(), api_endpoint VARCHAR
-) COMMENT = 'DEMO: Raw QuickBooks Vendor JSON (Expires: 2026-03-29)';
+) COMMENT = 'DEMO: Raw QuickBooks Vendor JSON (Expires: 2026-05-01)';
 
 CREATE TABLE IF NOT EXISTS RAW_ITEM (
     qbo_id VARCHAR NOT NULL, raw_payload VARIANT NOT NULL,
     fetched_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(), api_endpoint VARCHAR
-) COMMENT = 'DEMO: Raw QuickBooks Item JSON (Expires: 2026-03-29)';
+) COMMENT = 'DEMO: Raw QuickBooks Item JSON (Expires: 2026-05-01)';
 
 CREATE TABLE IF NOT EXISTS RAW_ACCOUNT (
     qbo_id VARCHAR NOT NULL, raw_payload VARIANT NOT NULL,
     fetched_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(), api_endpoint VARCHAR
-) COMMENT = 'DEMO: Raw QuickBooks Account JSON (Expires: 2026-03-29)';
+) COMMENT = 'DEMO: Raw QuickBooks Account JSON (Expires: 2026-05-01)';
 
 CREATE TABLE IF NOT EXISTS RAW_INVOICE (
     qbo_id VARCHAR NOT NULL, raw_payload VARIANT NOT NULL,
     fetched_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(), api_endpoint VARCHAR
-) COMMENT = 'DEMO: Raw QuickBooks Invoice JSON (Expires: 2026-03-29)';
+) COMMENT = 'DEMO: Raw QuickBooks Invoice JSON (Expires: 2026-05-01)';
 
 CREATE TABLE IF NOT EXISTS RAW_PAYMENT (
     qbo_id VARCHAR NOT NULL, raw_payload VARIANT NOT NULL,
     fetched_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(), api_endpoint VARCHAR
-) COMMENT = 'DEMO: Raw QuickBooks Payment JSON (Expires: 2026-03-29)';
+) COMMENT = 'DEMO: Raw QuickBooks Payment JSON (Expires: 2026-05-01)';
 
 CREATE TABLE IF NOT EXISTS RAW_BILL (
     qbo_id VARCHAR NOT NULL, raw_payload VARIANT NOT NULL,
     fetched_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(), api_endpoint VARCHAR
-) COMMENT = 'DEMO: Raw QuickBooks Bill JSON (Expires: 2026-03-29)';
+) COMMENT = 'DEMO: Raw QuickBooks Bill JSON (Expires: 2026-05-01)';
 
 -------------------------------------------------------------------------------
 -- 4. BRONZE: Sample data (for offline demo mode)

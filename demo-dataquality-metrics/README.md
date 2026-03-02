@@ -1,17 +1,17 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--02--14-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Data Quality Metrics & Reporting Demo
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-02-14
-> This demo uses Snowflake features current as of January 2026.
+> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
+> This demo uses Snowflake features current as of March 2026.
 > After expiration, this repository will be archived and made private.
 
 **Author:** SE Community
 **Purpose:** Reference implementation for automated data quality monitoring and reporting using Snowflake native features.
-**Created:** 2026-01-15 | **Expires:** 2026-02-14 (30 days) | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)
 

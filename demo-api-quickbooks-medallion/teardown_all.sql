@@ -2,7 +2,7 @@
 TEARDOWN_ALL.SQL
 QuickBooks API Medallion Architecture Demo
 Complete cleanup of all demo objects. Run when the demo is no longer needed.
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE ROLE ACCOUNTADMIN;

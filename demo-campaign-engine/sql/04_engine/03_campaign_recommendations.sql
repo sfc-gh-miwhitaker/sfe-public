@@ -3,7 +3,7 @@ CAMPAIGN RECOMMENDATIONS (Cortex COMPLETE)
 Generated from prompt: "Use SNOWFLAKE.CORTEX.COMPLETE to generate campaign
   messaging and channel strategy recommendations given an audience profile."
 Tool: Cursor + Claude | Refined: 1 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
@@ -22,7 +22,7 @@ CREATE OR REPLACE FUNCTION GENERATE_CAMPAIGN_RECOMMENDATION(
 )
 RETURNS VARCHAR
 LANGUAGE SQL
-COMMENT = 'DEMO: LLM-powered campaign recommendation generator (Expires: 2026-04-01)'
+COMMENT = 'DEMO: LLM-powered campaign recommendation generator (Expires: 2026-05-01)'
 AS
 $$
     SNOWFLAKE.CORTEX.COMPLETE(
@@ -43,7 +43,7 @@ $$;
 -- View: campaign recommendations with audience profiles
 ----------------------------------------------------------------------
 CREATE OR REPLACE VIEW V_CAMPAIGN_RECOMMENDATIONS
-    COMMENT = 'DEMO: Aggregated audience profiles per campaign type for LLM recommendations (Expires: 2026-04-01)'
+    COMMENT = 'DEMO: Aggregated audience profiles per campaign type for LLM recommendations (Expires: 2026-05-01)'
 AS
 WITH audience_profiles AS (
     SELECT

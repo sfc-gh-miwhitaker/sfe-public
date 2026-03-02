@@ -31,7 +31,7 @@ CREATE OR REPLACE DYNAMIC TABLE DT_ENRICHED_COMPLETIONS
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
   REFRESH_MODE = AUTO
   INITIALIZE = ON_CREATE
-  COMMENT = 'DEMO: Approach 3 - Cortex-enriched completions (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 3 - Cortex-enriched completions (Expires: 2026-05-01)'
 AS
 WITH classified AS (
     SELECT
@@ -94,7 +94,7 @@ CREATE OR REPLACE DYNAMIC TABLE DT_BATCH_ENRICHED
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
   REFRESH_MODE = AUTO
   INITIALIZE = ON_CREATE
-  COMMENT = 'DEMO: Approach 3 - Cortex QA of batch classifications (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 3 - Cortex QA of batch classifications (Expires: 2026-05-01)'
 AS
 WITH classified AS (
     SELECT
@@ -156,7 +156,7 @@ CREATE OR REPLACE DYNAMIC TABLE DT_PII_SCAN
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
   REFRESH_MODE = AUTO
   INITIALIZE = ON_CREATE
-  COMMENT = 'DEMO: Approach 3 - PII detection in AI outputs (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 3 - PII detection in AI outputs (Expires: 2026-05-01)'
 AS
 WITH completion_texts AS (
     SELECT
@@ -211,7 +211,7 @@ Combines topic distribution, sentiment trends, and PII alerts.
 ------------------------------------------------------------------------------*/
 
 CREATE OR REPLACE VIEW V_ENRICHMENT_DASHBOARD
-  COMMENT = 'DEMO: Approach 3 - Enrichment dashboard aggregations (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 3 - Enrichment dashboard aggregations (Expires: 2026-05-01)'
 AS
 SELECT
     topic_classification,

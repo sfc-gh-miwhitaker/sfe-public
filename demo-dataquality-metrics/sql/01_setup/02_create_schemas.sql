@@ -6,4 +6,4 @@
 -- ============================================================================
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.DATA_QUALITY
-  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Project schema | Author: SE Community | Expires: 2026-02-14';
+  COMMENT = 'DEMO: Data Quality Metrics & Reporting Demo - Project schema | Author: SE Community | Expires: 2026-05-01';

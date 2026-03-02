@@ -3,14 +3,14 @@ CORTEX INTELLIGENCE AGENT
 Generated from prompt: "Create a Cortex Intelligence Agent for natural-language
   queries about campaign performance, player behavior, and audience segments."
 Tool: Cursor + Claude | Refined: 1 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
 USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;
 
 CREATE OR REPLACE AGENT SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE.CAMPAIGN_ANALYTICS_AGENT
-  COMMENT = 'DEMO: NL analytics agent for campaign and player data (Expires: 2026-04-01)'
+  COMMENT = 'DEMO: NL analytics agent for campaign and player data (Expires: 2026-05-01)'
   FROM SPECIFICATION
   $$
   instructions:

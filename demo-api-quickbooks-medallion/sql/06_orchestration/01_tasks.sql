@@ -5,7 +5,7 @@ Only ONE task is needed -- the rest of the pipeline is fully declarative:
   - DMFs run on their own cron schedule (serverless compute)
 
 This task calls the Python stored procedure to fetch new data from QBO.
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
@@ -25,7 +25,7 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
 CREATE OR REPLACE TASK FETCH_QBO_ENTITIES_TASK
     WAREHOUSE = SFE_QB_API_WH
     SCHEDULE = 'USING CRON 0 * * * * UTC'
-    COMMENT = 'DEMO: Hourly incremental fetch from QBO API (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Hourly incremental fetch from QBO API (Expires: 2026-05-01)'
 AS
     CALL FETCH_ALL_QBO_ENTITIES('<YOUR_REALM_ID>', FALSE);
 

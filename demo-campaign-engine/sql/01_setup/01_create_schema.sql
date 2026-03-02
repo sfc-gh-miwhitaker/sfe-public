@@ -3,7 +3,7 @@ CREATE SCHEMA
 Generated from prompt: "Set up the project schema and warehouse for the
   casino campaign recommendation engine."
 Tool: Cursor + Claude | Refined: 1 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE ROLE SYSADMIN;
@@ -11,13 +11,13 @@ USE ROLE SYSADMIN;
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE
-  COMMENT = 'DEMO: Casino campaign recommendation engine with ML targeting and vector lookalike (Expires: 2026-04-01)';
+  COMMENT = 'DEMO: Casino campaign recommendation engine with ML targeting and vector lookalike (Expires: 2026-05-01)';
 
 CREATE WAREHOUSE IF NOT EXISTS SFE_CAMPAIGN_ENGINE_WH
   WAREHOUSE_SIZE = 'XSMALL'
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
-  COMMENT = 'DEMO: Campaign engine compute (Expires: 2026-04-01)';
+  COMMENT = 'DEMO: Campaign engine compute (Expires: 2026-05-01)';
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
 USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;

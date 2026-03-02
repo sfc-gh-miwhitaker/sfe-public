@@ -2,7 +2,7 @@
 04_GOLD / 01_ANALYTICS_VIEWS
 Business-ready analytics views built on Silver dynamic tables.
 These are standard SQL views (no Cortex) -- fast, deterministic, zero AI cost.
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
@@ -11,7 +11,7 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
 -- AR_AGING: Outstanding invoices bucketed by days past due
 -------------------------------------------------------------------------------
 CREATE OR REPLACE VIEW AR_AGING
-    COMMENT = 'DEMO: Accounts receivable aging buckets (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Accounts receivable aging buckets (Expires: 2026-05-01)'
 AS
 SELECT
     i.invoice_id,
@@ -38,7 +38,7 @@ LEFT JOIN STG_CUSTOMER c ON i.customer_id = c.customer_id;
 -- REVENUE_BY_MONTH: Monthly revenue trend from invoices
 -------------------------------------------------------------------------------
 CREATE OR REPLACE VIEW REVENUE_BY_MONTH
-    COMMENT = 'DEMO: Monthly revenue from invoices (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Monthly revenue from invoices (Expires: 2026-05-01)'
 AS
 SELECT
     DATE_TRUNC('month', i.txn_date)                               AS revenue_month,
@@ -56,7 +56,7 @@ ORDER BY revenue_month;
 -- VENDOR_SPEND: Spend by vendor from bills
 -------------------------------------------------------------------------------
 CREATE OR REPLACE VIEW VENDOR_SPEND
-    COMMENT = 'DEMO: Spend by vendor from bills (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Spend by vendor from bills (Expires: 2026-05-01)'
 AS
 SELECT
     b.vendor_id,
@@ -76,7 +76,7 @@ ORDER BY total_spend DESC;
 -- CASH_FLOW_SUMMARY: Payments received vs bills owed over time
 -------------------------------------------------------------------------------
 CREATE OR REPLACE VIEW CASH_FLOW_SUMMARY
-    COMMENT = 'DEMO: Cash flow - payments received vs bills due (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Cash flow - payments received vs bills due (Expires: 2026-05-01)'
 AS
 WITH inflows AS (
     SELECT
@@ -105,7 +105,7 @@ ORDER BY flow_month;
 -- CUSTOMER_LIFETIME_VALUE: Revenue and payment patterns per customer
 -------------------------------------------------------------------------------
 CREATE OR REPLACE VIEW CUSTOMER_LIFETIME_VALUE
-    COMMENT = 'DEMO: Customer lifetime value metrics (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: Customer lifetime value metrics (Expires: 2026-05-01)'
 AS
 WITH invoice_stats AS (
     SELECT

@@ -3,7 +3,7 @@ SEMANTIC VIEW
 Generated from prompt: "Create a semantic view over player features, campaigns,
   and responses for natural-language analytics via Cortex Intelligence."
 Tool: Cursor + Claude | Refined: 2 iteration(s)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
@@ -112,4 +112,4 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_CAMPAIGN_EN
       COMMENT = 'Total dollar value of campaign redemptions'
   )
 
-  COMMENT = 'DEMO: Semantic view for casino campaign analytics with player behavior and response data (Expires: 2026-04-01)';
+  COMMENT = 'DEMO: Semantic view for casino campaign analytics with player behavior and response data (Expires: 2026-05-01)';

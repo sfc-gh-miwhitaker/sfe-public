@@ -8,7 +8,7 @@
 CREATE OR REPLACE TASK SNOWFLAKE_EXAMPLE.DATA_QUALITY.refresh_data_quality_metrics_task
   WAREHOUSE = SFE_DATA_QUALITY_WH
   SCHEDULE = '5 MINUTE'
-  COMMENT = 'DEMO: Refresh data quality metrics | Author: SE Community | Expires: 2026-02-14'
+  COMMENT = 'DEMO: Refresh data quality metrics | Author: SE Community | Expires: 2026-05-01'
 AS
 INSERT INTO SNOWFLAKE_EXAMPLE.DATA_QUALITY.STG_DATA_QUALITY_METRICS (
   metric_date,

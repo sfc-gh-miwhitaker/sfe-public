@@ -8,7 +8,7 @@ Three patterns:
   2. TRANSACTION_ANOMALIES    -- AI_COMPLETE structured output for anomaly reasoning
   3. PAYMENT_RISK             -- AI_COMPLETE structured output for late payment risk
 
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.QB_API;
@@ -22,7 +22,7 @@ CREATE OR REPLACE DYNAMIC TABLE CUSTOMER_CLASSIFICATION
     TARGET_LAG = DOWNSTREAM
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: AI-powered customer health classification (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: AI-powered customer health classification (Expires: 2026-05-01)'
 AS
 WITH customer_invoice_agg AS (
     SELECT
@@ -86,7 +86,7 @@ CREATE OR REPLACE DYNAMIC TABLE TRANSACTION_ANOMALIES
     TARGET_LAG = DOWNSTREAM
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: AI-powered transaction anomaly detection (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: AI-powered transaction anomaly detection (Expires: 2026-05-01)'
 AS
 SELECT
     i.invoice_id,
@@ -128,7 +128,7 @@ CREATE OR REPLACE DYNAMIC TABLE PAYMENT_RISK
     TARGET_LAG = DOWNSTREAM
     WAREHOUSE = SFE_QB_API_WH
     REFRESH_MODE = INCREMENTAL
-    COMMENT = 'DEMO: AI-powered payment risk scoring (Expires: 2026-03-29)'
+    COMMENT = 'DEMO: AI-powered payment risk scoring (Expires: 2026-05-01)'
 AS
 WITH customer_pay_history AS (
     SELECT

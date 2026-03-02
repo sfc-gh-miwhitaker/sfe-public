@@ -1,6 +1,6 @@
 /*==============================================================================
 DEPLOY ALL - OpenAI Data Engineering with Cortex AI
-Author: SE Community | Expires: 2026-03-28
+Author: SE Community | Expires: 2026-05-01
 INSTRUCTIONS: Open in Snowsight → Click "Run All"
 
 AI-first data engineering: Transform complex OpenAI API responses using
@@ -15,15 +15,15 @@ Three approaches demonstrated:
 
 -- Expiration check (informational — warns but does not block)
 SELECT
-    '2026-03-28'::DATE AS expiration_date,
+    '2026-05-01'::DATE AS expiration_date,
     CURRENT_DATE() AS current_date,
-    DATEDIFF('day', CURRENT_DATE(), '2026-03-28'::DATE) AS days_remaining,
+    DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) AS days_remaining,
     CASE
-        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-03-28'::DATE) < 0
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) < 0
         THEN 'EXPIRED - Code may use outdated syntax. Remove expiration banner to continue.'
-        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-03-28'::DATE) <= 7
-        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-03-28'::DATE) || ' days remaining'
-        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-03-28'::DATE) || ' days remaining'
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
     END AS demo_status;
 
 -------------------------------------------------------------------------------
@@ -36,14 +36,14 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_OPENAI_DATA_ENG_WH
   WAREHOUSE_SIZE = 'XSMALL'
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
-  COMMENT = 'DEMO: OpenAI data engineering compute (Expires: 2026-03-28)';
+  COMMENT = 'DEMO: OpenAI data engineering compute (Expires: 2026-05-01)';
 
 USE WAREHOUSE SFE_OPENAI_DATA_ENG_WH;
 
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.OPENAI_DATA_ENG
-  COMMENT = 'DEMO: OpenAI API data engineering patterns (Expires: 2026-03-28)';
+  COMMENT = 'DEMO: OpenAI API data engineering patterns (Expires: 2026-05-01)';
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.OPENAI_DATA_ENG;
 
@@ -55,12 +55,12 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.OPENAI_DATA_ENG;
 CREATE OR REPLACE FILE FORMAT openai_jsonl_ff
   TYPE = 'JSON'
   STRIP_OUTER_ARRAY = TRUE
-  COMMENT = 'DEMO: JSON format for OpenAI API response files (Expires: 2026-03-28)';
+  COMMENT = 'DEMO: JSON format for OpenAI API response files (Expires: 2026-05-01)';
 
 CREATE OR REPLACE STAGE openai_raw_stage
   FILE_FORMAT = openai_jsonl_ff
   DIRECTORY = (ENABLE = TRUE)
-  COMMENT = 'DEMO: Landing zone for OpenAI API export files (Expires: 2026-03-28)';
+  COMMENT = 'DEMO: Landing zone for OpenAI API export files (Expires: 2026-05-01)';
 
 -------------------------------------------------------------------------------
 -- 3. RAW TABLES
@@ -70,19 +70,19 @@ CREATE OR REPLACE TABLE RAW_CHAT_COMPLETIONS (
   loaded_at   TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
   source_file VARCHAR,
   raw         VARIANT
-) COMMENT = 'DEMO: Raw OpenAI Chat Completions API responses (Expires: 2026-03-28)';
+) COMMENT = 'DEMO: Raw OpenAI Chat Completions API responses (Expires: 2026-05-01)';
 
 CREATE OR REPLACE TABLE RAW_BATCH_OUTPUTS (
   loaded_at   TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
   source_file VARCHAR,
   raw         VARIANT
-) COMMENT = 'DEMO: Raw OpenAI Batch API output records (Expires: 2026-03-28)';
+) COMMENT = 'DEMO: Raw OpenAI Batch API output records (Expires: 2026-05-01)';
 
 CREATE OR REPLACE TABLE RAW_USAGE_BUCKETS (
   loaded_at   TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
   source_file VARCHAR,
   raw         VARIANT
-) COMMENT = 'DEMO: Raw OpenAI Usage API bucket records (Expires: 2026-03-28)';
+) COMMENT = 'DEMO: Raw OpenAI Usage API bucket records (Expires: 2026-05-01)';
 
 -------------------------------------------------------------------------------
 -- 4. GENERATE SYNTHETIC DATA → STAGE FILES
@@ -516,7 +516,7 @@ UNION ALL SELECT 'RAW_USAGE_BUCKETS', COUNT(*) FROM RAW_USAGE_BUCKETS;
 -------------------------------------------------------------------------------
 
 CREATE OR REPLACE VIEW V_COMPLETIONS
-  COMMENT = 'DEMO: Approach 1 - Flattened chat completions, one row per choice (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Flattened chat completions, one row per choice (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                          AS completion_id,
@@ -543,7 +543,7 @@ FROM RAW_CHAT_COMPLETIONS,
      LATERAL FLATTEN(INPUT => raw:choices) c;
 
 CREATE OR REPLACE VIEW V_TOOL_CALLS
-  COMMENT = 'DEMO: Approach 1 - Flattened tool calls with parsed arguments (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Flattened tool calls with parsed arguments (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                          AS completion_id,
@@ -563,7 +563,7 @@ FROM RAW_CHAT_COMPLETIONS,
 WHERE c.value:message:tool_calls IS NOT NULL;
 
 CREATE OR REPLACE VIEW V_STRUCTURED_OUTPUTS
-  COMMENT = 'DEMO: Approach 1 - Structured JSON outputs parsed from content (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Structured JSON outputs parsed from content (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                          AS completion_id,
@@ -578,7 +578,7 @@ WHERE TRY_PARSE_JSON(c.value:message:content::STRING) IS NOT NULL
   AND c.value:message:refusal IS NULL;
 
 CREATE OR REPLACE VIEW V_BATCH_RESULTS
-  COMMENT = 'DEMO: Approach 1 - Unwrapped batch results with error handling (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Unwrapped batch results with error handling (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                          AS batch_request_id,
@@ -602,7 +602,7 @@ FROM RAW_BATCH_OUTPUTS,
      LATERAL FLATTEN(INPUT => raw:response:body:choices, OUTER => TRUE) c;
 
 CREATE OR REPLACE VIEW V_TOKEN_USAGE
-  COMMENT = 'DEMO: Approach 1 - Flattened usage buckets for time-series analysis (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 1 - Flattened usage buckets for time-series analysis (Expires: 2026-05-01)'
 AS
 SELECT
     TO_TIMESTAMP(raw:start_time::NUMBER)                    AS bucket_start,
@@ -630,7 +630,7 @@ FROM RAW_USAGE_BUCKETS,
 CREATE OR REPLACE DYNAMIC TABLE DT_COMPLETIONS
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Silver - typed chat completions (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Silver - typed chat completions (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                              AS completion_id,
@@ -664,7 +664,7 @@ FROM RAW_CHAT_COMPLETIONS,
 CREATE OR REPLACE DYNAMIC TABLE DT_TOOL_CALLS
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Silver - parsed tool calls (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Silver - parsed tool calls (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                              AS completion_id,
@@ -691,7 +691,7 @@ FROM RAW_CHAT_COMPLETIONS,
 CREATE OR REPLACE DYNAMIC TABLE DT_BATCH_OUTCOMES
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Silver - batch outcomes with error handling (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Silver - batch outcomes with error handling (Expires: 2026-05-01)'
 AS
 SELECT
     raw:id::STRING                                              AS batch_request_id,
@@ -719,7 +719,7 @@ FROM RAW_BATCH_OUTPUTS,
 CREATE OR REPLACE DYNAMIC TABLE DT_USAGE_FLAT
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Silver - flattened usage records (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Silver - flattened usage records (Expires: 2026-05-01)'
 AS
 SELECT
     TO_TIMESTAMP(raw:start_time::NUMBER)                        AS bucket_start,
@@ -742,7 +742,7 @@ FROM RAW_USAGE_BUCKETS,
 CREATE OR REPLACE DYNAMIC TABLE DT_DAILY_TOKEN_SUMMARY
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Gold - daily token spend estimates (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Gold - daily token spend estimates (Expires: 2026-05-01)'
 AS
 SELECT
     bucket_date,
@@ -772,7 +772,7 @@ GROUP BY bucket_date, model, project_id, is_batch;
 CREATE OR REPLACE DYNAMIC TABLE DT_TOOL_CALL_ANALYTICS
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Gold - tool call analytics (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Gold - tool call analytics (Expires: 2026-05-01)'
 AS
 SELECT
     function_name,
@@ -792,7 +792,7 @@ GROUP BY function_name, model;
 CREATE OR REPLACE DYNAMIC TABLE DT_BATCH_SUMMARY
   TARGET_LAG = '5 minutes'
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: Approach 2 Gold - batch health summary (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 2 Gold - batch health summary (Expires: 2026-05-01)'
 AS
 SELECT
     outcome,
@@ -817,7 +817,7 @@ CREATE OR REPLACE DYNAMIC TABLE DT_ENRICHED_COMPLETIONS
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
   REFRESH_MODE = AUTO
   INITIALIZE = ON_CREATE
-  COMMENT = 'DEMO: Approach 3 - Cortex-enriched completions (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 3 - Cortex-enriched completions (Expires: 2026-05-01)'
 AS
 WITH classified AS (
     SELECT
@@ -853,7 +853,7 @@ CREATE OR REPLACE DYNAMIC TABLE DT_BATCH_ENRICHED
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
   REFRESH_MODE = AUTO
   INITIALIZE = ON_CREATE
-  COMMENT = 'DEMO: Approach 3 - Cortex QA of batch classifications (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 3 - Cortex QA of batch classifications (Expires: 2026-05-01)'
 AS
 WITH classified AS (
     SELECT
@@ -893,7 +893,7 @@ CREATE OR REPLACE DYNAMIC TABLE DT_PII_SCAN
   WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
   REFRESH_MODE = AUTO
   INITIALIZE = ON_CREATE
-  COMMENT = 'DEMO: Approach 3 - PII detection in AI outputs (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 3 - PII detection in AI outputs (Expires: 2026-05-01)'
 AS
 WITH completion_texts AS (
     SELECT completion_id AS source_id, 'completion' AS source_type,
@@ -924,7 +924,7 @@ FROM scanned;
 
 -- V_ENRICHMENT_DASHBOARD: Aggregated view for Streamlit
 CREATE OR REPLACE VIEW V_ENRICHMENT_DASHBOARD
-  COMMENT = 'DEMO: Approach 3 - Enrichment dashboard aggregations (Expires: 2026-03-28)'
+  COMMENT = 'DEMO: Approach 3 - Enrichment dashboard aggregations (Expires: 2026-05-01)'
 AS
 SELECT
     topic_classification,
@@ -945,7 +945,7 @@ GROUP BY topic_classification;
 
 CREATE OR REPLACE STAGE streamlit_stage
   DIRECTORY = (ENABLE = TRUE)
-  COMMENT = 'DEMO: Stage for Streamlit app files (Expires: 2026-03-28)';
+  COMMENT = 'DEMO: Stage for Streamlit app files (Expires: 2026-05-01)';
 
 -- Write the Streamlit app code to stage via stored procedure
 CREATE OR REPLACE PROCEDURE _deploy_streamlit_app()
@@ -1230,7 +1230,7 @@ CREATE OR REPLACE STREAMLIT OPENAI_DATA_EXPLORER
   ROOT_LOCATION = '@streamlit_stage'
   MAIN_FILE = 'app.py'
   QUERY_WAREHOUSE = SFE_OPENAI_DATA_ENG_WH
-  COMMENT = 'DEMO: OpenAI + Cortex AI Data Engineering Explorer (Expires: 2026-03-28)';
+  COMMENT = 'DEMO: OpenAI + Cortex AI Data Engineering Explorer (Expires: 2026-05-01)';
 
 -- Clean up the helper procedure
 DROP PROCEDURE IF EXISTS _deploy_streamlit_app();

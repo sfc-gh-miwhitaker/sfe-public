@@ -1,6 +1,6 @@
 /*==============================================================================
 DEPLOY ALL - Snowflake Cortex Agents for Microsoft Teams & M365 Copilot
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-01
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 INSTRUCTIONS: Open in Snowsight -> Click "Run All"
 ==============================================================================*/
 
@@ -9,7 +9,7 @@ INSTRUCTIONS: Open in Snowsight -> Click "Run All"
  * PROJECT_NAME: teams-agent-uni
  * AUTHOR: SE Community
  * CREATED: 2026-03-02
- * EXPIRES: 2026-04-01
+ * EXPIRES: 2026-05-01
  * GITHUB_REPO: sfe-public
  * PURPOSE: Snowflake Cortex Agents for Microsoft Teams & M365 Copilot demo
  *
@@ -26,15 +26,15 @@ INSTRUCTIONS: Open in Snowsight -> Click "Run All"
 -- ============================================================================
 
 SELECT
-    TO_DATE('2026-04-01') AS expiration_date,
+    TO_DATE('2026-05-01') AS expiration_date,
     CURRENT_DATE() AS current_date,
-    DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-04-01')) AS days_remaining,
+    DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-05-01')) AS days_remaining,
     CASE
-        WHEN DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-04-01')) < 0
+        WHEN DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-05-01')) < 0
         THEN 'EXPIRED - Code may use outdated syntax. Remove expiration banner to continue.'
-        WHEN DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-04-01')) <= 7
-        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-04-01')) || ' days remaining'
-        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-04-01')) || ' days remaining'
+        WHEN DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-05-01')) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-05-01')) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), TO_DATE('2026-05-01')) || ' days remaining'
     END AS demo_status;
 
 -- ============================================================================
@@ -48,14 +48,14 @@ USE ROLE ACCOUNTADMIN;
 -- ============================================================================
 
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
-    COMMENT = 'DEMO: Repository for example/demo projects - NOT FOR PRODUCTION (Expires: 2026-04-01)';
+    COMMENT = 'DEMO: Repository for example/demo projects - NOT FOR PRODUCTION (Expires: 2026-05-01)';
 
 -- ============================================================================
 -- 3. CREATE SCHEMA
 -- ============================================================================
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.TEAMS_AGENT_UNI
-    COMMENT = 'DEMO: teams-agent-uni - Cortex Agents for Microsoft Teams & M365 Copilot (Expires: 2026-04-01)';
+    COMMENT = 'DEMO: teams-agent-uni - Cortex Agents for Microsoft Teams & M365 Copilot (Expires: 2026-05-01)';
 
 -- ============================================================================
 -- 4. CREATE WAREHOUSE
@@ -66,7 +66,7 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_TEAMS_AGENT_UNI_WH WITH
     AUTO_SUSPEND = 60
     AUTO_RESUME = TRUE
     INITIALLY_SUSPENDED = TRUE
-    COMMENT = 'DEMO: teams-agent-uni - Compute for Cortex Agent queries (Expires: 2026-04-01)';
+    COMMENT = 'DEMO: teams-agent-uni - Compute for Cortex Agent queries (Expires: 2026-05-01)';
 
 -- ============================================================================
 -- 5. SET CONTEXT
@@ -83,7 +83,7 @@ USE WAREHOUSE SFE_TEAMS_AGENT_UNI_WH;
 CREATE OR REPLACE FUNCTION GENERATE_SAFE_JOKE(subject VARCHAR)
 RETURNS VARCHAR
 LANGUAGE SQL
-COMMENT = 'DEMO: teams-agent-uni - Generate safe-for-work jokes using AI_COMPLETE with Cortex Guard (Expires: 2026-04-01)'
+COMMENT = 'DEMO: teams-agent-uni - Generate safe-for-work jokes using AI_COMPLETE with Cortex Guard (Expires: 2026-05-01)'
 AS
 $$
   SELECT AI_COMPLETE(
@@ -116,7 +116,7 @@ $$;
 -- ============================================================================
 
 CREATE OR REPLACE AGENT JOKE_ASSISTANT
-    COMMENT = 'DEMO: teams-agent-uni - AI joke bot powered by Cortex Agent (Expires: 2026-04-01)'
+    COMMENT = 'DEMO: teams-agent-uni - AI joke bot powered by Cortex Agent (Expires: 2026-05-01)'
     PROFILE = '{"display_name": "Joke Assistant", "color": "blue"}'
     FROM SPECIFICATION
     $$
@@ -187,7 +187,7 @@ EXECUTE IMMEDIATE
      EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM = (''email'', ''upn'')
      EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = ''EMAIL_ADDRESS''
      EXTERNAL_OAUTH_ANY_ROLE_MODE = ''ENABLE''
-     COMMENT = ''DEMO: teams-agent-uni - OAuth integration for Microsoft Teams (Expires: 2026-04-01)'';';
+     COMMENT = ''DEMO: teams-agent-uni - OAuth integration for Microsoft Teams (Expires: 2026-05-01)'';';
 
 -- ============================================================================
 -- 9. GRANT PERMISSIONS
@@ -217,7 +217,7 @@ SELECT
     CURRENT_DATABASE() AS database,
     CURRENT_SCHEMA() AS schema,
     CURRENT_WAREHOUSE() AS warehouse,
-    '2026-04-01' AS expires;
+    '2026-05-01' AS expires;
 
 /*******************************************************************************
  * POST-DEPLOYMENT STEPS:

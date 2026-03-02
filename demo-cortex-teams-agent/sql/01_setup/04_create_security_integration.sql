@@ -1,6 +1,6 @@
 /*==============================================================================
 Create Entra ID OAuth Security Integration
-teams-agent-uni | Expires: 2026-04-01
+teams-agent-uni | Expires: 2026-05-01
 
 Creates: SFE_ENTRA_ID_CORTEX_AGENTS_INTEGRATION
 Depends: Microsoft Entra ID tenant with consent granted for BOTH apps
@@ -38,7 +38,7 @@ EXECUTE IMMEDIATE
      EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM = (''email'', ''upn'')
      EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = ''EMAIL_ADDRESS''
      EXTERNAL_OAUTH_ANY_ROLE_MODE = ''ENABLE''
-     COMMENT = ''DEMO: teams-agent-uni - OAuth integration for Microsoft Teams (Expires: 2026-04-01)'';';
+     COMMENT = ''DEMO: teams-agent-uni - OAuth integration for Microsoft Teams (Expires: 2026-05-01)'';';
 
 -- ============================================================================
 -- VERIFICATION

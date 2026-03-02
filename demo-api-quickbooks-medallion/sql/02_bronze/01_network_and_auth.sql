@@ -1,7 +1,7 @@
 /*==============================================================================
 02_BRONZE / 01_NETWORK_AND_AUTH
 External Access Integration for QuickBooks Online OAuth 2.0
-Author: SE Community | Expires: 2026-03-29
+Author: SE Community | Expires: 2026-05-01
 
 Requires ACCOUNTADMIN for security integration + network rule.
 After running, switch back to SYSADMIN for the rest of the demo.
@@ -21,7 +21,7 @@ CREATE OR REPLACE NETWORK RULE SFE_QBO_NETWORK_RULE
         'quickbooks.api.intuit.com',
         'oauth.platform.intuit.com'
     )
-    COMMENT = 'DEMO: Egress to QuickBooks Online REST API and OAuth token endpoint (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: Egress to QuickBooks Online REST API and OAuth token endpoint (Expires: 2026-05-01)';
 
 -------------------------------------------------------------------------------
 -- 2. Security Integration: OAuth 2.0 for Intuit/QBO
@@ -36,7 +36,7 @@ CREATE OR REPLACE SECURITY INTEGRATION SFE_QBO_OAUTH_INTEGRATION
     OAUTH_AUTHORIZATION_ENDPOINT = 'https://appcenter.intuit.com/connect/oauth2'
     OAUTH_ALLOWED_SCOPES = ('com.intuit.quickbooks.accounting')
     ENABLED = TRUE
-    COMMENT = 'DEMO: QBO OAuth2 security integration (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: QBO OAuth2 security integration (Expires: 2026-05-01)';
 
 -------------------------------------------------------------------------------
 -- 3. Secret: stores OAuth refresh token (managed by Snowflake)
@@ -46,7 +46,7 @@ CREATE OR REPLACE SECURITY INTEGRATION SFE_QBO_OAUTH_INTEGRATION
 CREATE OR REPLACE SECRET SFE_QBO_OAUTH_SECRET
     TYPE = OAUTH2
     API_AUTHENTICATION = SFE_QBO_OAUTH_INTEGRATION
-    COMMENT = 'DEMO: QBO OAuth2 refresh token (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: QBO OAuth2 refresh token (Expires: 2026-05-01)';
 
 -- To populate the secret with a refresh token:
 -- CALL SYSTEM$START_OAUTH_FLOW('SNOWFLAKE_EXAMPLE.QB_API.SFE_QBO_OAUTH_SECRET');
@@ -60,7 +60,7 @@ CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION SFE_QBO_API_INTEGRATION
     ALLOWED_NETWORK_RULES = (SFE_QBO_NETWORK_RULE)
     ALLOWED_AUTHENTICATION_SECRETS = (SFE_QBO_OAUTH_SECRET)
     ENABLED = TRUE
-    COMMENT = 'DEMO: External access for QuickBooks API calls (Expires: 2026-03-29)';
+    COMMENT = 'DEMO: External access for QuickBooks API calls (Expires: 2026-05-01)';
 
 -------------------------------------------------------------------------------
 -- 5. Grant usage to SYSADMIN so stored procedures can reference these objects

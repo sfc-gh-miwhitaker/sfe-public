@@ -69,17 +69,19 @@
  ******************************************************************************/
 
 -- ===========================================================================
--- EXPIRATION CHECK (MANDATORY)
+-- EXPIRATION CHECK (informational — warns but does not block)
 -- ===========================================================================
--- This demo expires 30 days after creation. If expired, deployment is halted.
-DECLARE
-    demo_expired EXCEPTION (-20001, 'DEMO EXPIRED: Do not deploy. Fork the repository and update expiration + syntax.');
-    expiration_date DATE := $demo_expiration_date::DATE;
-BEGIN
-    IF (CURRENT_DATE() > expiration_date) THEN
-        RAISE demo_expired;
-    END IF;
-END;
+SELECT
+    $demo_expiration_date::DATE                                          AS expiration_date,
+    CURRENT_DATE()                                                       AS current_date,
+    DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE)         AS days_remaining,
+    CASE
+        WHEN DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE) < 0
+        THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
+        WHEN DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), $demo_expiration_date::DATE) || ' days remaining'
+    END AS demo_status;
 
 -- ===========================================================================
 -- SETUP: CREATE DATABASE & SCHEMA
