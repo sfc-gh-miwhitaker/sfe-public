@@ -1,0 +1,10 @@
+{
+  "current_checkpoint": 11,
+  "completed": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "plan_path": "~/.cursor/plans/glaze_and_classify_demo_26529851.plan.md",
+  "expiration_date": "2026-03-20",
+  "project_name": "glaze-and-classify",
+  "schema": "GLAZE_AND_CLASSIFY",
+  "github_url": "https://github.com/sfc-gh-miwhitaker/glaze-and-classify",
+  "status": "complete"
+}

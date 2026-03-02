@@ -1,0 +1,10 @@
+[sqlfluff]
+dialect = snowflake
+# Relaxed rules for demo projects
+max_line_length = 120
+
+[sqlfluff:rules]
+# Disable overly strict layout rules for demos
+LT05 = disabled
+# Allow flexible indentation for multi-line statements
+LT02 = disabled

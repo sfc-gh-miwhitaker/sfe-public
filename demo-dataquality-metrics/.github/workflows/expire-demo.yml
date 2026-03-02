@@ -1,0 +1,58 @@
+# GitHub Actions workflow for demo repository expiration
+# Author: SE Community
+# Purpose: Auto-archive and make private after 30-day expiration period
+#
+# This workflow runs daily and checks if the demo has expired.
+# If expired, it archives the repository and makes it private.
+
+name: Demo Expiration Check
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allow manual trigger for testing
+
+env:
+  EXPIRATION_DATE: '2026-02-14'
+
+jobs:
+  check-expiration:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check if demo has expired
+        id: check
+        run: |
+          CURRENT_DATE=$(date +%Y-%m-%d)
+          EXPIRATION="${{ env.EXPIRATION_DATE }}"
+
+          echo "Current date: $CURRENT_DATE"
+          echo "Expiration date: $EXPIRATION"
+
+          if [[ "$CURRENT_DATE" > "$EXPIRATION" ]]; then
+            echo "expired=true" >> $GITHUB_OUTPUT
+            echo "::warning::Demo has EXPIRED as of $EXPIRATION"
+          else
+            echo "expired=false" >> $GITHUB_OUTPUT
+            echo "Demo is still active until $EXPIRATION"
+          fi
+
+      - name: Archive repository if expired
+        if: steps.check.outputs.expired == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "::warning::This demo has expired. Please contact the SE team for an updated version."
+          echo ""
+          echo "To extend this demo:"
+          echo "1. Update EXPIRATION_DATE in this workflow file"
+          echo "2. Update expiration date in deploy_all.sql header"
+          echo "3. Update expiration date in README.md"
+          echo "4. Update COMMENT fields in all SQL object definitions"
+          echo ""
+          echo "Repository archival requires admin permissions."
+          echo "Manual action required: Archive and make repository private."

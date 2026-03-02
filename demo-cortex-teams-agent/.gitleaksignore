@@ -1,0 +1,10 @@
+# Public Microsoft application IDs for Cortex Agents Teams integration
+# Published in Snowflake official documentation (not secrets):
+# https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-teams-integration
+
+.cortex/skills/demo-guide/SKILL.md:generic-api-key:33
+.cortex/skills/demo-guide/SKILL.md:generic-api-key:34
+deploy_all.sql:generic-api-key:232
+deploy_all.sql:generic-api-key:234
+docs/02-ENTRA-ID-SETUP.md:generic-api-key:43
+sql/01_setup/04_create_security_integration.sql:generic-api-key:52

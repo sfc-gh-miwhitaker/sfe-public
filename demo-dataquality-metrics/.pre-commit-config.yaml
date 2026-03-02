@@ -1,0 +1,48 @@
+# Pre-commit security configuration for Snowflake demos
+# Author: SE Community
+# Purpose: Prevent credential leaks and security violations
+
+repos:
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package-lock.json
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=5000']
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-case-conflict
+
+  - repo: local
+    hooks:
+      - id: check-cursor-files
+        name: Block .cursor/ files
+        entry: bash -c "if git diff --cached --name-only | grep -q '^\.cursor/'; then echo 'ERROR - .cursor/ files must not be committed (stealth violation)'; exit 1; fi"
+        language: system
+        pass_filenames: false
+
+      - id: check-gitignore-exists
+        name: Block .gitignore files
+        entry: bash -c "if git diff --cached --name-only | grep -q '^\.gitignore$'; then echo 'ERROR - .gitignore must not be committed (use global ignore)'; exit 1; fi"
+        language: system
+        pass_filenames: false
+
+      - id: check-personal-names
+        name: Check for personal names (anonymization)
+        entry: bash -c "if git diff --cached | grep -iE '(yourfirstname|yourlastname)' | grep -v 'SE Community'; then echo 'WARNING - Personal name detected - ensure SE Community attribution'; exit 0; fi"
+        language: system
+        pass_filenames: false

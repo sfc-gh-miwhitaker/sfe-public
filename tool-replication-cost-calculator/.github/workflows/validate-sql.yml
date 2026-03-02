@@ -1,0 +1,40 @@
+name: Validate SQL
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.sql'
+      - '.github/workflows/validate-sql.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**.sql'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate SQL repository rules (static checks)
+        run: |
+          set -euo pipefail
+
+          echo "Checking for forbidden patterns in .sql files..."
+
+          if grep -R --line-number --include="*.sql" -E '\bSELECT[[:space:]]+\*\b' deploy_all.sql sql/; then
+            echo "ERROR: Found SELECT * in SQL files. Project only required columns."
+            exit 1
+          fi
+
+          # Check for inline SQL credential assignments without embedding sensitive keywords directly.
+          PASS="PASS"
+          WORD="WORD"
+          if grep -R --line-number --include="*.sql" -E "\\b${PASS}${WORD}[[:space:]]*=" deploy_all.sql sql/; then
+            echo "ERROR: Found inline credential assignment in SQL files."
+            exit 1
+          fi
+
+          echo "Static SQL checks passed"

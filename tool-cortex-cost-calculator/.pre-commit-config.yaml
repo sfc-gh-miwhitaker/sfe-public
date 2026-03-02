@@ -1,0 +1,55 @@
+# Pre-commit security configuration for Snowflake demo repositories
+# Author: SE Community
+# Purpose: Prevent credential leaks and stealth/security violations
+
+repos:
+  # Detect secrets and credentials
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: package-lock.json
+
+  # Additional secret detection (gitleaks)
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=5000"]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-case-conflict
+
+  # Local policy checks (stealth + professionalism)
+  - repo: local
+    hooks:
+      - id: block-cursor-files
+        name: Block .cursor/ files
+        entry: >-
+          bash -c 'if git diff --cached --name-only | grep -q "^\\.cursor/"; then echo "ERROR: .cursor/ files must not be committed"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: block-gitignore-file
+        name: Block .gitignore file
+        entry: >-
+          bash -c 'if git diff --cached --name-only | grep -q "^\\.gitignore$"; then echo "ERROR: .gitignore must not be committed (use global ignore)"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      - id: enforce-se-community-attribution
+        name: Enforce SE Community attribution in top-level docs
+        entry: >-
+          bash -c 'missing=0; for f in README.md deploy_all.sql; do if [ -f "$f" ] && ! grep -q "SE Community" "$f"; then echo "WARNING: SE Community attribution missing in $f"; missing=1; fi; done; exit 0'
+        language: system
+        pass_filenames: false

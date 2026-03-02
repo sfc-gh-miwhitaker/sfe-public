@@ -1,0 +1,14 @@
+spec:
+  containers:
+    - name: vision-classifier
+      image: /SNOWFLAKE_EXAMPLE/GLAZE_AND_CLASSIFY/GLAZE_IMAGE_REPO/glaze-vision:latest
+      resources:
+        requests:
+          cpu: "0.5"
+          memory: 256M
+        limits:
+          cpu: "1"
+          memory: 512M
+  endpoints:
+    - name: classify
+      port: 8080
