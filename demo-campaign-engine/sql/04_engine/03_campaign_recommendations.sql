@@ -26,7 +26,7 @@ COMMENT = 'DEMO: LLM-powered campaign recommendation generator (Expires: 2026-05
 AS
 $$
     SNOWFLAKE.CORTEX.COMPLETE(
-        'mistral-large2',
+        'claude-4-sonnet',
         'You are a casino marketing strategist. Generate a concise campaign recommendation '
         || '(3-4 sentences) for a ' || campaign_type || ' campaign targeting '
         || audience_size::VARCHAR || ' players. '
