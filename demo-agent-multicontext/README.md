@@ -16,11 +16,22 @@ instead of stuffing context into user messages.
 
 ## First Time Here?
 
-1. **Deploy** -- Copy `deploy_all.sql` into Snowsight, click "Run All"
-2. **Start backend** -- `cd backend && npm install && npm start`
-3. **Start frontend** -- `cd frontend && npm install && npm run dev`
+1. **Deploy Snowflake objects** -- Copy `deploy_all.sql` into Snowsight, click "Run All"
+
+2. **Set environment variables** -- The backend needs your Snowflake account and a Personal Access Token:
+
+   ```bash
+   export SNOWFLAKE_ACCOUNT="myorg-myaccount"
+   export SNOWFLAKE_PAT="your-personal-access-token"
+   ```
+
+   Get a PAT: Snowsight -> Settings -> Authentication -> Personal Access Tokens
+
+3. **Start services** -- `./tools/02_start.sh` (installs deps, starts backend on :3001 and frontend on :3000)
+
 4. **Open** -- Navigate to `http://localhost:3000`
-5. **Cleanup** -- Run `teardown_all.sql` when done
+
+5. **Cleanup** -- Run `teardown_all.sql` in Snowsight, then `./tools/04_stop.sh`
 
 ## What This Demo Shows
 
@@ -93,22 +104,38 @@ AI & ML > Agents > Monitoring. Logs are stored in
 `SNOWFLAKE.LOCAL.AI_OBSERVABILITY_EVENTS`. Threads tie conversations
 together regardless of which endpoint is used.
 
-## Environment Variables
+## Operations
 
-### Backend
+| Script | Purpose |
+|--------|---------|
+| `./tools/02_start.sh` | Install deps, start backend + frontend |
+| `./tools/03_status.sh` | Check service health and port status |
+| `./tools/04_stop.sh` | Stop all services |
 
-```bash
-export SNOWFLAKE_ACCOUNT="myorg-myaccount"
-export SNOWFLAKE_PAT="your-personal-access-token"
-```
+- **Backend:** http://localhost:3001 (Express proxy to Snowflake)
+- **Frontend:** http://localhost:3000 (Vite dev server, proxies `/api` to backend)
+- **Health check:** http://localhost:3001/health
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| Backend exits immediately | `SNOWFLAKE_ACCOUNT` or `SNOWFLAKE_PAT` not set. Run `./tools/03_status.sh` to check. |
+| Port 3000/3001 already in use | Another process is using the port. Run `lsof -ti :3000` to find it, or `./tools/04_stop.sh` if it's a previous run. |
+| "Failed to create thread" in chat | Verify PAT is valid and not expired. Check `http://localhost:3001/health` for account connectivity. |
+| Agent returns empty responses | Cortex Search service needs time to index after deploy. Wait a few minutes and retry. |
+| Analyst tool errors | Verify `SFE_AGENT_MULTICONTEXT_WH` is running and the semantic view exists in `SEMANTIC_MODELS`. |
 
 ## Development Tools
 
 This project is designed for AI-pair development.
 
 - **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
+- **.claude/skills/** -- Project-specific AI skills (Cursor + Claude Code)
 - **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
 - **Cursor** -- Open locally with Cursor for AI-pair coding
+
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ## References
 

@@ -8,6 +8,8 @@ Demonstrates per-request context injection using the Snowflake Agent Run API "wi
 - `sql/` -- Individual SQL scripts (numbered 01-06)
 - `backend/` -- Node.js/Express proxy with context builder
 - `frontend/` -- React app with chat UI and API inspector
+- `tools/` -- Operational scripts (start, status, stop)
+- `.claude/skills/` -- Project-specific AI skills
 
 ## Snowflake Environment
 - Database: SNOWFLAKE_EXAMPLE

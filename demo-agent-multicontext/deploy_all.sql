@@ -11,7 +11,7 @@ Demonstrates:
   - Cortex Search for knowledge base + Cortex Analyst for viewership data
   - Row Access Policies for station-scoped data isolation
 
-Usage: Copy into Snowsight and click "Run All"
+INSTRUCTIONS: Open in Snowsight -> Click "Run All"
 ==============================================================================*/
 
 -- Expiration check (informational — warns but does not block deployment)
@@ -30,6 +30,7 @@ SELECT
 ----------------------------------------------------------------------
 -- 01: Schema and warehouse
 ----------------------------------------------------------------------
+USE ROLE SYSADMIN;
 USE DATABASE SNOWFLAKE_EXAMPLE;
 
 CREATE SCHEMA IF NOT EXISTS AGENT_MULTICONTEXT
