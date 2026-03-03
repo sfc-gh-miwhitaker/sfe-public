@@ -4,6 +4,7 @@ Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-02
 ==============================================================================*/
 
 USE ROLE SYSADMIN;
+CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
 USE DATABASE SNOWFLAKE_EXAMPLE;
 
 CREATE SCHEMA IF NOT EXISTS AGENT_MULTICONTEXT
