@@ -65,6 +65,20 @@ This project is designed for AI-pair development.
 3. **Query** -- Ask the Cortex Intelligence Agent natural-language questions
 4. **Cleanup** -- Run `teardown_all.sql` when done
 
+## Build It Yourself
+
+Want to learn AI-pair programming instead of just deploying the finished product? The **[Guided Build](GUIDED_BUILD.md)** walks you through constructing this entire project from scratch -- one prompt at a time, with validation at every step.
+
+You'll learn 7 AI-pair techniques (one per step), evolve AGENTS.md from 3 lines to full project context, and see how each prompting pattern avoids a specific anti-pattern that would break the build. Takes ~90 minutes and produces ~1,200 lines of working code.
+
+| What You'll Learn | Example |
+|---|---|
+| Describe the problem, not the solution | Business domain -> schema with ML-ready columns |
+| Specify constraints, not code | Statistical distributions -> GENERATOR() logic |
+| Name the Snowflake feature | "Dynamic Tables with TARGET_LAG" -> auto-refresh pipeline |
+| State platform constraints | "Python because VECTOR not in SQL scripting" -> correct proc |
+| Evolve AGENTS.md progressively | 3 lines -> 40 lines across 7 steps |
+
 ## Snowflake Features Demonstrated
 
 | Feature | Usage |
