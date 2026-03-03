@@ -7,52 +7,105 @@ USE DATABASE SNOWFLAKE_EXAMPLE;
 USE SCHEMA SEMANTIC_MODELS;
 
 CREATE OR REPLACE SEMANTIC VIEW SV_AGENT_MULTICONTEXT_VIEWERSHIP
-  COMMENT = 'DEMO: TV network viewership semantic view (Expires: 2026-04-02)'
-AS
-  SELECT
-    vm.metric_id,
-    vm.station_id,
-    si.station_name,
-    si.call_sign,
-    si.market,
-    si.region,
-    vm.program_title,
-    vm.air_date,
-    vm.viewers_total,
-    vm.viewers_18_49,
-    vm.rating,
-    vm.share,
-    vm.stream_starts,
-    vm.avg_watch_min,
-    ps.genre,
-    ps.is_premiere,
-    ps.duration_min
-  FROM SNOWFLAKE_EXAMPLE.AGENT_MULTICONTEXT.VIEWERSHIP_METRICS vm
-  JOIN SNOWFLAKE_EXAMPLE.AGENT_MULTICONTEXT.STATION_INFO si
-    ON vm.station_id = si.station_id
-  LEFT JOIN SNOWFLAKE_EXAMPLE.AGENT_MULTICONTEXT.PROGRAMMING_SCHEDULE ps
-    ON vm.station_id = ps.station_id
-    AND vm.program_title = ps.program_title
-    AND vm.air_date = ps.air_date
-  ANNOTATE (
-    vm.metric_id IS 'Unique identifier for each viewership record',
-    vm.station_id IS 'Station identifier, e.g. STN001',
-    si.station_name IS 'Full station name, e.g. WETA Washington',
-    si.call_sign IS 'Station call sign, e.g. WETA, KQED',
-    si.market IS 'Broadcast market city',
-    si.region IS 'Geographic region: Northeast, Mid-Atlantic, Midwest, West',
-    vm.program_title IS 'Name of the program that aired',
-    vm.air_date IS 'Date the program aired',
-    vm.viewers_total IS 'Total estimated viewers for the broadcast',
-    vm.viewers_18_49 IS 'Viewers in the 18-49 advertising demographic',
-    vm.rating IS 'Nielsen rating (percentage of TV households tuned in)',
-    vm.share IS 'Nielsen share (percentage of TVs in use tuned to this program)',
-    vm.stream_starts IS 'Number of digital streaming sessions started',
-    vm.avg_watch_min IS 'Average minutes watched per viewer',
-    ps.genre IS 'Program genre: Nature, News, Documentary, Science, Drama, etc.',
-    ps.is_premiere IS 'Whether this was a premiere episode',
-    ps.duration_min IS 'Scheduled program duration in minutes'
-  );
+
+  TABLES (
+    viewership AS SNOWFLAKE_EXAMPLE.AGENT_MULTICONTEXT.VIEWERSHIP_METRICS
+      PRIMARY KEY (metric_id)
+      WITH SYNONYMS = ('viewership', 'ratings', 'audience data')
+      COMMENT = 'Broadcast and streaming viewership metrics per program airing',
+
+    stations AS SNOWFLAKE_EXAMPLE.AGENT_MULTICONTEXT.STATION_INFO
+      PRIMARY KEY (station_id)
+      WITH SYNONYMS = ('stations', 'TV stations', 'channels')
+      COMMENT = 'TV station directory with market and region info',
+
+    schedule AS SNOWFLAKE_EXAMPLE.AGENT_MULTICONTEXT.PROGRAMMING_SCHEDULE
+      PRIMARY KEY (schedule_id)
+      WITH SYNONYMS = ('schedule', 'programming', 'shows', 'programs')
+      COMMENT = 'Program schedule with genre, air times, and premiere flags'
+  )
+
+  RELATIONSHIPS (
+    viewership_to_station AS
+      viewership (station_id) REFERENCES stations,
+    schedule_to_station AS
+      schedule (station_id) REFERENCES stations
+  )
+
+  FACTS (
+    viewership.viewers_total AS viewership.viewers_total
+      COMMENT = 'Total estimated viewers for the broadcast',
+
+    viewership.viewers_18_49 AS viewership.viewers_18_49
+      COMMENT = 'Viewers in the 18-49 advertising demographic',
+
+    viewership.rating AS viewership.rating
+      COMMENT = 'Nielsen rating (percentage of TV households tuned in)',
+
+    viewership.share AS viewership.share
+      COMMENT = 'Nielsen share (percentage of TVs in use tuned to this program)',
+
+    viewership.stream_starts AS viewership.stream_starts
+      COMMENT = 'Number of digital streaming sessions started',
+
+    viewership.avg_watch_min AS viewership.avg_watch_min
+      COMMENT = 'Average minutes watched per viewer',
+
+    schedule.duration_min AS schedule.duration_min
+      COMMENT = 'Scheduled program duration in minutes'
+  )
+
+  DIMENSIONS (
+    viewership.station_id AS station_id
+      COMMENT = 'Station identifier, e.g. STN001',
+
+    viewership.program_title AS program_title
+      WITH SYNONYMS = ('show', 'program', 'title')
+      COMMENT = 'Name of the program that aired',
+
+    viewership.air_date AS air_date
+      COMMENT = 'Date the program aired',
+
+    stations.station_name AS station_name
+      WITH SYNONYMS = ('station', 'channel name')
+      COMMENT = 'Full station name, e.g. WETA Washington',
+
+    stations.call_sign AS call_sign
+      COMMENT = 'Station call sign, e.g. WETA, KQED',
+
+    stations.market AS market
+      WITH SYNONYMS = ('city', 'broadcast market')
+      COMMENT = 'Broadcast market city',
+
+    stations.region AS region
+      COMMENT = 'Geographic region: Northeast, Mid-Atlantic, Midwest, West',
+
+    schedule.genre AS genre
+      WITH SYNONYMS = ('category', 'program type')
+      COMMENT = 'Program genre: Nature, News, Documentary, Science, Drama, etc.',
+
+    schedule.is_premiere AS is_premiere
+      COMMENT = 'Whether this was a premiere episode'
+  )
+
+  METRICS (
+    viewership.broadcast_count AS COUNT(viewership.metric_id)
+      COMMENT = 'Total number of broadcast airings',
+
+    viewership.total_viewers AS SUM(viewership.viewers_total)
+      COMMENT = 'Sum of total viewers across airings',
+
+    viewership.avg_rating AS AVG(viewership.rating)
+      COMMENT = 'Average Nielsen rating across airings',
+
+    viewership.avg_share AS AVG(viewership.share)
+      COMMENT = 'Average Nielsen share across airings',
+
+    viewership.total_streams AS SUM(viewership.stream_starts)
+      COMMENT = 'Sum of digital streaming sessions across airings'
+  )
+
+  COMMENT = 'DEMO: TV network viewership semantic view (Expires: 2026-04-02)';
 
 GRANT SELECT ON SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AGENT_MULTICONTEXT_VIEWERSHIP
   TO ROLE PUBLIC;
