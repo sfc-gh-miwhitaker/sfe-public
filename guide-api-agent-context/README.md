@@ -1,42 +1,72 @@
 # Agent:Run API with Context - Examples
 
-This directory contains working examples of calling the Snowflake `agent:run` API with execution context (role and warehouse).
+Working examples of calling the Snowflake `agent:run` API with execution context (role and warehouse).
+
+## Quick Test (curl)
+
+Verify your setup before integrating into an application.
+
+### Prerequisites
+
+```bash
+export SNOWFLAKE_ACCOUNT="myorg-myaccount"
+export SNOWFLAKE_PAT="your-personal-access-token"
+```
+
+### 1. Create a Thread
+
+```bash
+THREAD_ID=$(curl -s -X POST \
+  "https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com/api/v2/cortex/threads" \
+  -H "Authorization: Bearer ${SNOWFLAKE_PAT}" \
+  -H "Content-Type: application/json" \
+  -d '{"origin_application": "quick_test"}' | jq -r '.id')
+
+echo "Thread ID: $THREAD_ID"
+```
+
+### 2. Call Agent with Role Context
+
+```bash
+curl -X POST \
+  "https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com/api/v2/databases/MYDB/schemas/MYSCHEMA/agents/my_agent:run" \
+  -H "Authorization: Bearer ${SNOWFLAKE_PAT}" \
+  -H "Content-Type: application/json" \
+  -H "X-Snowflake-Role: ANALYST_ROLE" \
+  -H "X-Snowflake-Warehouse: COMPUTE_WH" \
+  -d '{
+    "thread_id": "'"$THREAD_ID"'",
+    "parent_message_id": 0,
+    "messages": [{
+      "role": "user",
+      "content": [{"type": "text", "text": "What were the top 5 products by revenue last month?"}]
+    }]
+  }' --no-buffer
+```
 
 ## Files
 
-### `agent_run_with_context.py`
-
-Complete Python example demonstrating:
-
-1. **Setting execution context (role and warehouse)**
-   - Using `X-Snowflake-Context` header for role
-   - Specifying warehouse in `execution_environment` for tool resources
-
-2. **Two approaches:**
-   - **With agent object**: Call existing agent with context override
-   - **Without agent object**: Inline agent configuration with context
-
-3. **Thread management** for multi-turn conversations
-
-4. **Streaming response handling** for real-time feedback
+| File | Description |
+|------|-------------|
+| `agent_run_with_context.py` | Complete Python example with PAT and OAuth authentication |
+| `agent_run_react.md` | React integration guide with backend proxy pattern |
 
 ## Key Concepts
 
-### Setting Role
+### Setting Role and Warehouse
 
-Use the `X-Snowflake-Context` header:
+Use dedicated HTTP headers ([official documentation](https://docs.snowflake.com/en/developer-guide/snowflake-rest-api/setting-context)):
 
 ```python
 headers = {
     "Authorization": f"Bearer {token}",
     "Content-Type": "application/json",
-    "X-Snowflake-Context": json.dumps({"currentRole": "ANALYST_ROLE"})
+    "X-Snowflake-Role": "ANALYST_ROLE",      # Role for authorization
+    "X-Snowflake-Warehouse": "COMPUTE_WH",   # Warehouse for execution
 }
 ```
 
-### Setting Warehouse
-
-Specify in the tool's `execution_environment`:
+For tool-specific warehouse configuration, use `execution_environment`:
 
 ```python
 "tool_resources": {
@@ -44,8 +74,8 @@ Specify in the tool's `execution_environment`:
         "semantic_view": "DB.SCHEMA.VIEW",
         "execution_environment": {
             "type": "warehouse",
-            "warehouse": "ANALYTICS_WH",  # Warehouse name (case-sensitive, UPPERCASE if unquoted)
-            "query_timeout": 60            # Optional timeout in seconds
+            "warehouse": "ANALYTICS_WH",  # Warehouse name (UPPERCASE for unquoted identifiers)
+            "query_timeout": 60           # Optional timeout in seconds
         }
     }
 }
@@ -155,12 +185,46 @@ The example handles these event types:
 
 ## Error Handling
 
-Common errors:
+### HTTP Status Codes
 
-1. **Invalid role**: Check role exists and user has access
-2. **Invalid warehouse**: Check warehouse exists and is accessible
-3. **Permission denied**: Verify role has USAGE on agent and underlying resources
-4. **Timeout**: Increase `query_timeout` in execution environment
+| Status | Meaning | Resolution |
+|--------|---------|------------|
+| **401 Unauthorized** | Invalid or expired token | Verify PAT is valid and not expired. For OAuth, refresh the access token. Check `SNOWFLAKE_PAT` env var is set correctly. |
+| **403 Forbidden** | Role lacks required privileges | Verify the role has `USAGE` on the agent, database, schema, warehouse, and underlying semantic views/tables. Check PAT's `ROLE_RESTRICTION` if using scoped tokens. |
+| **404 Not Found** | Agent, database, or schema doesn't exist | Verify the agent path: `databases/{DB}/schemas/{SCHEMA}/agents/{NAME}`. Check spelling and case sensitivity. |
+| **429 Too Many Requests** | Rate limit exceeded | Implement exponential backoff. Wait and retry. Consider batching requests or increasing delays between calls. |
+| **500 Internal Server Error** | Server-side error | Retry with exponential backoff. If persistent, check Snowflake status page. |
+
+### Common Application Errors
+
+| Error | Resolution |
+|-------|------------|
+| Invalid role | Check role exists (`SHOW ROLES`) and is granted to user (`SHOW GRANTS TO USER <user>`) |
+| Invalid warehouse | Check warehouse exists and role has `USAGE` privilege |
+| Permission denied | Verify role has `USAGE` on agent and underlying resources (semantic views, tables) |
+| Query timeout | Increase `query_timeout` in `execution_environment` (default: 60s, max: 3600s) |
+| Thread not found | Thread IDs expire. Create a new thread if the old one is no longer valid. |
+
+### Retry Example
+
+```python
+import time
+from requests.exceptions import HTTPError
+
+def call_with_retry(func, max_retries=3, base_delay=1.0):
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except HTTPError as e:
+            if e.response.status_code == 429:
+                delay = base_delay * (2 ** attempt)
+                time.sleep(delay)
+            elif e.response.status_code >= 500:
+                time.sleep(base_delay)
+            else:
+                raise
+    raise Exception("Max retries exceeded")
+```
 
 ## References
 

@@ -557,7 +557,7 @@ npm install @azure/msal-browser @azure/msal-react
 
 ```typescript
 // src/auth/msalConfig.ts
-import { Configuration, PublicClientApplication } from '@azure/msal-browser';
+import { Configuration, PublicClientApplication, LogLevel } from '@azure/msal-browser';
 
 export const msalConfig: Configuration = {
   auth: {
@@ -566,10 +566,39 @@ export const msalConfig: Configuration = {
     redirectUri: window.location.origin,
   },
   cache: {
-    cacheLocation: 'localStorage',
+    // Use sessionStorage for better security in multi-tenant applications
+    // sessionStorage is cleared when the browser tab closes, reducing token exposure
+    cacheLocation: 'sessionStorage',
     storeAuthStateInCookie: false,
   },
+  system: {
+    loggerOptions: {
+      logLevel: LogLevel.Warning,
+      piiLoggingEnabled: false, // Never log PII in production
+    },
+  },
 };
+
+/*
+ * Storage Tradeoffs for Multi-Tenant Apps:
+ * 
+ * sessionStorage (RECOMMENDED for multi-tenant):
+ *   ✓ Tokens cleared when tab closes - reduces exposure window
+ *   ✓ Isolated per tab - prevents cross-tab token leakage
+ *   ✓ Better for shared/public computers
+ *   ✗ Users must re-authenticate in new tabs
+ *   ✗ Tokens lost on page refresh in some edge cases
+ * 
+ * localStorage:
+ *   ✓ Tokens persist across tabs and sessions
+ *   ✓ Better UX for single-user devices
+ *   ✗ Tokens persist until explicit logout - larger attack window
+ *   ✗ Vulnerable to XSS attacks that can read all stored tokens
+ *   ✗ NOT recommended for multi-tenant apps with sensitive data
+ * 
+ * For multi-tenant applications handling customer data, sessionStorage
+ * provides better security isolation at the cost of some UX convenience.
+ */
 
 export const loginRequest = {
   scopes: ['openid', 'profile', 'email', 'User.Read'],
@@ -1407,15 +1436,16 @@ npm start
 ## Security Best Practices
 
 ### 1. Token Management
-- Never store tokens in localStorage (use httpOnly cookies for refresh tokens)
-- Implement token refresh logic
-- Set appropriate token expiration times
+- Use sessionStorage for MSAL token caching in multi-tenant apps (see Section 4.2 for tradeoffs)
+- Implement silent token refresh with fallback to interactive login
+- Set appropriate token expiration times (Azure AD default: 1 hour for access tokens)
+- Clear tokens on logout and session timeout
 
 ### 2. API Security
-- Implement rate limiting
-- Add request logging and monitoring
-- Use HTTPS in production
-- Validate all inputs
+- Implement per-customer rate limiting to prevent abuse
+- Add comprehensive request logging and monitoring
+- Use HTTPS in production (mandatory)
+- Validate and sanitize all inputs
 
 ### 3. Database Security
 - Use least privilege principle for roles
@@ -1425,15 +1455,471 @@ npm start
 
 ### 4. Customer Isolation
 - Test cross-customer data access
-- Implement audit logging for all data access
+- Implement audit logging for all data access (see implementation below)
 - Monitor for suspicious queries
 - Regular security audits
 
 ### 5. Error Handling
 - Don't expose sensitive info in errors
-- Log errors server-side
+- Log errors server-side with context
 - Provide user-friendly messages
 - Implement error alerting
+
+---
+
+## Security Implementations
+
+### Token Refresh with Silent Renewal
+
+Add this hook to handle automatic token refresh:
+
+```typescript
+// src/hooks/useTokenRefresh.ts
+import { useCallback, useEffect, useRef } from 'react';
+import { useMsal } from '@azure/msal-react';
+import { InteractionRequiredAuthError } from '@azure/msal-browser';
+import { loginRequest } from '../auth/msalConfig';
+
+interface UseTokenRefreshOptions {
+  refreshBeforeExpiryMs?: number; // Refresh token this many ms before expiry
+  onTokenRefreshed?: (token: string) => void;
+  onRefreshFailed?: (error: Error) => void;
+}
+
+export const useTokenRefresh = ({
+  refreshBeforeExpiryMs = 5 * 60 * 1000, // 5 minutes before expiry
+  onTokenRefreshed,
+  onRefreshFailed,
+}: UseTokenRefreshOptions = {}) => {
+  const { instance, accounts } = useMsal();
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const getTokenSilently = useCallback(async (): Promise<string | null> => {
+    if (accounts.length === 0) {
+      return null;
+    }
+
+    try {
+      const response = await instance.acquireTokenSilent({
+        ...loginRequest,
+        account: accounts[0],
+        forceRefresh: false,
+      });
+
+      onTokenRefreshed?.(response.accessToken);
+      return response.accessToken;
+    } catch (error) {
+      if (error instanceof InteractionRequiredAuthError) {
+        // Token refresh failed - user interaction required
+        // This can happen if refresh token expired or was revoked
+        console.warn('Silent token refresh failed, interaction required');
+        onRefreshFailed?.(error);
+        return null;
+      }
+      throw error;
+    }
+  }, [instance, accounts, onTokenRefreshed, onRefreshFailed]);
+
+  const scheduleTokenRefresh = useCallback(async () => {
+    if (accounts.length === 0) return;
+
+    try {
+      const response = await instance.acquireTokenSilent({
+        ...loginRequest,
+        account: accounts[0],
+      });
+
+      // Calculate time until token expires
+      const expiresOn = response.expiresOn?.getTime() || 0;
+      const now = Date.now();
+      const timeUntilExpiry = expiresOn - now;
+      const refreshIn = Math.max(timeUntilExpiry - refreshBeforeExpiryMs, 0);
+
+      // Clear any existing timer
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+
+      // Schedule refresh
+      refreshTimerRef.current = setTimeout(async () => {
+        console.log('Refreshing token before expiry...');
+        await getTokenSilently();
+        // Schedule next refresh after successful refresh
+        scheduleTokenRefresh();
+      }, refreshIn);
+
+      console.log(`Token refresh scheduled in ${Math.round(refreshIn / 1000 / 60)} minutes`);
+    } catch (error) {
+      console.error('Failed to schedule token refresh:', error);
+      onRefreshFailed?.(error as Error);
+    }
+  }, [instance, accounts, refreshBeforeExpiryMs, getTokenSilently, onRefreshFailed]);
+
+  // Start refresh schedule when component mounts or accounts change
+  useEffect(() => {
+    scheduleTokenRefresh();
+
+    return () => {
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
+    };
+  }, [scheduleTokenRefresh]);
+
+  return {
+    getTokenSilently,
+    scheduleTokenRefresh,
+  };
+};
+```
+
+Usage in your app:
+
+```tsx
+// In App.tsx or a top-level component
+import { useTokenRefresh } from './hooks/useTokenRefresh';
+
+function App() {
+  const { getTokenSilently } = useTokenRefresh({
+    onTokenRefreshed: (token) => {
+      console.log('Token refreshed successfully');
+    },
+    onRefreshFailed: (error) => {
+      // Redirect to login or show re-auth prompt
+      console.error('Token refresh failed:', error);
+    },
+  });
+
+  // ... rest of app
+}
+```
+
+### Rate Limiting per Customer
+
+Add rate limiting middleware to protect against abuse:
+
+```javascript
+// middleware/rateLimiter.js
+const rateLimit = require('express-rate-limit');
+const RedisStore = require('rate-limit-redis');
+const Redis = require('ioredis');
+
+// Redis client for distributed rate limiting (use in production)
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+
+// Per-customer rate limiter
+// Each customer gets their own rate limit bucket
+const customerRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute window
+  max: 30, // 30 requests per minute per customer
+  message: {
+    error: 'Too many requests',
+    message: 'Rate limit exceeded. Please wait before making more requests.',
+    retryAfter: 60,
+  },
+  standardHeaders: true, // Return rate limit info in headers
+  legacyHeaders: false,
+  
+  // Use customer ID as the key for rate limiting
+  keyGenerator: (req) => {
+    // Ensure customer ID exists (validateAzureToken middleware should run first)
+    const customerId = req.user?.customerId || 'anonymous';
+    return `rate-limit:customer:${customerId}`;
+  },
+  
+  // Optional: Use Redis for distributed rate limiting in production
+  store: process.env.NODE_ENV === 'production'
+    ? new RedisStore({
+        client: redis,
+        prefix: 'rl:',
+      })
+    : undefined, // In-memory store for development
+  
+  // Skip rate limiting for certain conditions
+  skip: (req) => {
+    // Example: Skip for health checks
+    return req.path === '/health';
+  },
+  
+  // Custom handler for rate limit exceeded
+  handler: (req, res, next, options) => {
+    // Log rate limit hit for monitoring
+    console.warn('Rate limit exceeded', {
+      customerId: req.user?.customerId,
+      email: req.user?.email,
+      path: req.path,
+      ip: req.ip,
+      timestamp: new Date().toISOString(),
+    });
+    
+    res.status(429).json(options.message);
+  },
+});
+
+// Stricter rate limiter for expensive operations (e.g., agent runs)
+const agentRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute window
+  max: 10, // 10 agent calls per minute per customer
+  message: {
+    error: 'Too many agent requests',
+    message: 'You have exceeded the agent request limit. Please wait before trying again.',
+    retryAfter: 60,
+  },
+  keyGenerator: (req) => {
+    const customerId = req.user?.customerId || 'anonymous';
+    return `rate-limit:agent:${customerId}`;
+  },
+  store: process.env.NODE_ENV === 'production'
+    ? new RedisStore({ client: redis, prefix: 'rl:agent:' })
+    : undefined,
+});
+
+module.exports = { customerRateLimiter, agentRateLimiter };
+```
+
+Apply rate limiters to routes:
+
+```javascript
+// In server.js
+const { customerRateLimiter, agentRateLimiter } = require('./middleware/rateLimiter');
+
+// Apply general rate limiter to all authenticated routes
+app.use('/api', validateAzureToken, customerRateLimiter);
+
+// Apply stricter rate limiter to agent endpoints
+app.post('/api/agent/run', agentRateLimiter, async (req, res) => {
+  // ... existing handler
+});
+
+app.post('/api/agent/thread', agentRateLimiter, async (req, res) => {
+  // ... existing handler
+});
+```
+
+### Audit Logging for Compliance
+
+Implement comprehensive audit logging for data access:
+
+```javascript
+// middleware/auditLogger.js
+const winston = require('winston');
+
+// Structured audit logger
+const auditLogger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'customer-portal', logType: 'audit' },
+  transports: [
+    // Separate audit log file
+    new winston.transports.File({ 
+      filename: 'audit.log',
+      maxsize: 50 * 1024 * 1024, // 50MB
+      maxFiles: 30, // Keep 30 days of logs
+    }),
+    // Also send to console in development
+    ...(process.env.NODE_ENV !== 'production' 
+      ? [new winston.transports.Console({ format: winston.format.simple() })]
+      : []
+    ),
+  ],
+});
+
+// Audit event types
+const AuditEventType = {
+  AUTH_SUCCESS: 'auth.success',
+  AUTH_FAILURE: 'auth.failure',
+  DATA_ACCESS: 'data.access',
+  DATA_QUERY: 'data.query',
+  AGENT_REQUEST: 'agent.request',
+  AGENT_RESPONSE: 'agent.response',
+  RATE_LIMIT_HIT: 'security.rate_limit',
+  PERMISSION_DENIED: 'security.permission_denied',
+  ERROR: 'error',
+};
+
+// Create audit log entry
+function logAudit(eventType, data) {
+  const entry = {
+    eventType,
+    timestamp: new Date().toISOString(),
+    ...data,
+    // Ensure we never log sensitive data
+    sanitized: true,
+  };
+  
+  // Remove any accidentally included tokens or passwords
+  delete entry.azureToken;
+  delete entry.password;
+  delete entry.token;
+  
+  auditLogger.info(entry);
+}
+
+// Audit middleware - logs all API requests
+function auditMiddleware(req, res, next) {
+  const startTime = Date.now();
+  
+  // Capture response
+  const originalSend = res.send;
+  res.send = function(body) {
+    const duration = Date.now() - startTime;
+    
+    logAudit(AuditEventType.DATA_ACCESS, {
+      customerId: req.user?.customerId,
+      userId: req.user?.azureId,
+      userEmail: req.user?.email,
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      duration,
+      userAgent: req.headers['user-agent'],
+      ip: req.ip,
+      // Include request body for mutations (but sanitize sensitive fields)
+      requestSummary: req.method !== 'GET' ? sanitizeRequest(req.body) : undefined,
+    });
+    
+    return originalSend.call(this, body);
+  };
+  
+  next();
+}
+
+// Sanitize request body for logging (remove sensitive data)
+function sanitizeRequest(body) {
+  if (!body) return undefined;
+  
+  const sanitized = { ...body };
+  // Remove potentially sensitive fields
+  const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
+  sensitiveFields.forEach(field => {
+    if (sanitized[field]) {
+      sanitized[field] = '[REDACTED]';
+    }
+  });
+  
+  return sanitized;
+}
+
+// Log agent-specific events with more detail
+function logAgentRequest(req, message) {
+  logAudit(AuditEventType.AGENT_REQUEST, {
+    customerId: req.user?.customerId,
+    userId: req.user?.azureId,
+    userEmail: req.user?.email,
+    agentName: req.body?.agentName,
+    database: req.body?.database,
+    schema: req.body?.schema,
+    // Log first 200 chars of message for audit trail (avoid logging full sensitive queries)
+    messagePreview: message?.substring(0, 200),
+    messageLength: message?.length,
+  });
+}
+
+function logAgentResponse(req, responseStatus) {
+  logAudit(AuditEventType.AGENT_RESPONSE, {
+    customerId: req.user?.customerId,
+    userId: req.user?.azureId,
+    agentName: req.body?.agentName,
+    responseStatus,
+  });
+}
+
+module.exports = {
+  auditLogger,
+  auditMiddleware,
+  logAudit,
+  logAgentRequest,
+  logAgentResponse,
+  AuditEventType,
+};
+```
+
+Apply audit logging to your server:
+
+```javascript
+// In server.js
+const { auditMiddleware, logAgentRequest, logAgentResponse, logAudit, AuditEventType } = require('./middleware/auditLogger');
+
+// Apply audit logging to all authenticated routes
+app.use('/api', validateAzureToken, auditMiddleware);
+
+// Enhanced agent endpoint with audit logging
+app.post('/api/agent/run', validateAzureToken, async (req, res) => {
+  const { database, schema, agentName, threadId, message, parentMessageId = 0 } = req.body;
+
+  // Log agent request for audit trail
+  logAgentRequest(req, message);
+
+  try {
+    // ... existing agent logic ...
+    
+    logAgentResponse(req, 'success');
+  } catch (error) {
+    logAudit(AuditEventType.ERROR, {
+      customerId: req.user?.customerId,
+      userId: req.user?.azureId,
+      error: error.message,
+      path: req.path,
+    });
+    
+    logAgentResponse(req, 'error');
+    // ... error handling ...
+  }
+});
+```
+
+Snowflake query to analyze audit logs (if stored in Snowflake):
+
+```sql
+-- Create audit log table
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id STRING DEFAULT UUID_STRING(),
+  event_type STRING,
+  customer_id STRING,
+  user_id STRING,
+  user_email STRING,
+  method STRING,
+  path STRING,
+  status_code INTEGER,
+  duration_ms INTEGER,
+  message_preview STRING,
+  ip_address STRING,
+  user_agent STRING,
+  created_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);
+
+-- Query: Customer activity summary (last 24 hours)
+SELECT
+  customer_id,
+  user_email,
+  COUNT(*) as total_requests,
+  COUNT(DISTINCT DATE_TRUNC('hour', created_at)) as active_hours,
+  AVG(duration_ms) as avg_response_time,
+  SUM(CASE WHEN event_type = 'agent.request' THEN 1 ELSE 0 END) as agent_requests,
+  MAX(created_at) as last_activity
+FROM audit_logs
+WHERE created_at > DATEADD('hour', -24, CURRENT_TIMESTAMP())
+GROUP BY customer_id, user_email
+ORDER BY total_requests DESC;
+
+-- Query: Detect suspicious activity patterns
+SELECT
+  customer_id,
+  user_email,
+  ip_address,
+  COUNT(*) as request_count,
+  COUNT(DISTINCT path) as unique_endpoints,
+  MIN(created_at) as first_request,
+  MAX(created_at) as last_request
+FROM audit_logs
+WHERE created_at > DATEADD('hour', -1, CURRENT_TIMESTAMP())
+GROUP BY customer_id, user_email, ip_address
+HAVING COUNT(*) > 100  -- More than 100 requests/hour may indicate abuse
+ORDER BY request_count DESC;
+```
 
 ---
 
@@ -1515,16 +2001,33 @@ LIMIT 100;
 
 ## Deployment Checklist
 
+### Authentication & Authorization
 - [ ] Configure Azure AD app registration
 - [ ] Create Snowflake External OAuth integration
 - [ ] Create and test Row Access Policies
 - [ ] Set up customer mapping table
+- [ ] Verify MSAL uses sessionStorage (not localStorage)
+- [ ] Test token refresh flow works correctly
+
+### Security
+- [ ] Enable HTTPS/SSL (mandatory for production)
+- [ ] Configure CORS properly (restrict to known origins)
+- [ ] Implement per-customer rate limiting
+- [ ] Deploy audit logging middleware
+- [ ] Configure Redis for distributed rate limiting (if multi-node)
+- [ ] Verify sensitive data is never logged
+
+### Deployment
 - [ ] Deploy backend with environment variables
 - [ ] Deploy frontend with MSAL configuration
-- [ ] Enable HTTPS/SSL
-- [ ] Configure CORS properly
 - [ ] Set up monitoring and alerting
+- [ ] Configure audit log retention and rotation
+
+### Testing & Validation
 - [ ] Test with multiple customer accounts
+- [ ] Verify cross-customer data isolation
+- [ ] Test rate limiting thresholds
+- [ ] Verify audit logs capture all data access
 - [ ] Perform security audit
 - [ ] Document customer onboarding process
 - [ ] Set up backup and disaster recovery
@@ -1533,11 +2036,13 @@ LIMIT 100;
 
 ## Next Steps
 
-1. **Add Multi-factor Authentication** via Azure AD
-2. **Implement Audit Logging** for all data access
-3. **Add Usage Analytics** to track customer queries
+1. **Add Multi-factor Authentication** via Azure AD Conditional Access
+2. ~~Implement Audit Logging~~ (included in this guide)
+3. **Add Usage Analytics** to track customer queries and costs
 4. **Create Admin Dashboard** for customer management
 5. **Implement Data Export** capabilities with customer isolation
-6. **Add Real-time Notifications** for important events
+6. **Add Real-time Notifications** for security events
 7. **Create Customer Onboarding** workflow
 8. **Implement SLA Monitoring** and alerting
+9. **Add Anomaly Detection** for suspicious query patterns
+10. **Set up Log Aggregation** (e.g., ELK stack, Datadog) for audit logs

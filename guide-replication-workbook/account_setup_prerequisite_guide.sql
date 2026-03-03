@@ -68,6 +68,21 @@ USE ROLE ORGADMIN;
 --   2. OR create an organization account (requires existing ORGADMIN access)
 
 -- ============================================================================
+-- VALIDATION: STEP 1 - Verify Administrative Role
+-- ============================================================================
+-- Run this query to confirm you have the required role active:
+
+SELECT
+    CURRENT_ROLE() AS current_role,
+    CASE
+        WHEN CURRENT_ROLE() IN ('ORGADMIN', 'GLOBALORGADMIN') THEN '✓ VALID: You have organization admin privileges'
+        ELSE '✗ INVALID: Switch to ORGADMIN or GLOBALORGADMIN role'
+    END AS validation_status;
+
+-- Expected result: validation_status should show "✓ VALID"
+
+
+-- ============================================================================
 -- STEP 2: UNDERSTAND SNOWFLAKE ACCOUNT IDENTIFIERS
 -- ============================================================================
 --
@@ -187,6 +202,19 @@ CREATE ACCOUNT DR_US_WEST
 SHOW ACCOUNTS;
 
 -- ============================================================================
+-- VALIDATION: STEP 4 - Verify Account Creation
+-- ============================================================================
+-- If you created a new account, run this validation query:
+
+SELECT
+    COUNT(*) AS account_count,
+    LISTAGG(account_name, ', ') WITHIN GROUP (ORDER BY account_name) AS all_accounts
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
+WHERE account_name = 'YOUR_NEW_ACCOUNT_NAME';  -- Replace with your new account name
+
+-- Expected result: account_count = 1 if account was created successfully
+
+-- ============================================================================
 -- STEP 5: ENABLE REPLICATION FOR SOURCE AND TARGET ACCOUNTS
 -- ============================================================================
 --
@@ -277,6 +305,37 @@ SELECT SYSTEM$GLOBAL_ACCOUNT_SET_PARAMETER(
 
 -- View all accounts that are now enabled for replication:
 SHOW REPLICATION ACCOUNTS;
+
+-- ============================================================================
+-- VALIDATION: STEP 6 - Verify Replication Enablement
+-- ============================================================================
+-- Run this validation to confirm all required accounts are enabled:
+
+-- First, store your expected accounts (customize this list):
+-- Expected source account: YOUR_ORG_NAME.YOUR_SOURCE_ACCOUNT
+-- Expected target account(s): YOUR_ORG_NAME.YOUR_TARGET_ACCOUNT
+
+-- Validation query - checks if your accounts appear in replication accounts:
+SELECT
+    COUNT(*) AS enabled_account_count,
+    LISTAGG(organization_name || '.' || account_name, ', ')
+        WITHIN GROUP (ORDER BY account_name) AS enabled_accounts
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- Expected result: enabled_account_count >= 2 (at least source + 1 target)
+-- All your source and target accounts should appear in enabled_accounts
+
+-- Detailed validation - check specific accounts:
+SELECT
+    organization_name || '.' || account_name AS account_identifier,
+    snowflake_region,
+    CASE
+        WHEN account_name IN ('YOUR_SOURCE_ACCOUNT', 'YOUR_TARGET_ACCOUNT')
+        THEN '✓ Required account enabled'
+        ELSE 'Additional account'
+    END AS status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID(-2)))  -- Reference the SHOW REPLICATION ACCOUNTS result
+ORDER BY account_name;
 
 -- VERIFY THE OUTPUT:
 --   ✓ Your source account should be listed

@@ -229,6 +229,50 @@ CREATE FAILOVER GROUP IF NOT EXISTS MY_FAILOVER_GROUP
 
 
 /*******************************************************************************
+ * VALIDATION: STEP 3 - Verify Failover Group Creation
+ *
+ * Run in: SOURCE account (primary)
+ * Purpose: Confirm the failover group was created correctly
+ ******************************************************************************/
+
+-- Validation query - verify failover group exists and is configured correctly:
+SHOW FAILOVER GROUPS LIKE 'MY_FAILOVER_GROUP';
+
+SELECT
+    "name" AS group_name,
+    "type" AS group_type,
+    "is_primary" AS is_primary,
+    "replication_schedule" AS schedule,
+    "object_types" AS replicated_objects,
+    CASE
+        WHEN "is_primary" = TRUE AND "type" = 'FAILOVER' AND "replication_schedule" IS NOT NULL
+        THEN '✓ VALID: Primary failover group created with schedule'
+        WHEN "is_primary" = TRUE AND "type" = 'FAILOVER' AND "replication_schedule" IS NULL
+        THEN '⚠ WARNING: No replication schedule set (manual refresh only)'
+        WHEN "type" != 'FAILOVER'
+        THEN '✗ ERROR: This is not a failover group (type=' || "type" || ')'
+        ELSE '✗ UNEXPECTED: Check configuration'
+    END AS validation_status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- Expected result:
+--   is_primary = TRUE
+--   type = 'FAILOVER'
+--   schedule = '10 MINUTE' (or your configured interval)
+--   validation_status = '✓ VALID: Primary failover group created with schedule'
+
+-- Verify all databases are included:
+SHOW DATABASES IN FAILOVER GROUP MY_FAILOVER_GROUP;
+
+SELECT
+    COUNT(*) AS database_count,
+    LISTAGG("name", ', ') WITHIN GROUP (ORDER BY "name") AS included_databases
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- Expected result: database_count matches the number of databases you specified in ALLOWED_DATABASES
+
+
+/*******************************************************************************
  * STEP 4: VERIFY FAILOVER GROUP CONFIGURATION
  *
  * Run in: SOURCE account (primary)
@@ -304,6 +348,40 @@ CREATE FAILOVER GROUP IF NOT EXISTS MY_FAILOVER_GROUP
 -- [ ] Secondary failover group created in DR account
 -- [ ] Initial refresh completed successfully
 -- [ ] No errors in refresh history
+
+
+/*******************************************************************************
+ * VALIDATION: STEP 5 - Verify Secondary Failover Group
+ *
+ * Run in: TARGET account (DR/failover account)
+ * Purpose: Confirm the secondary failover group was created and linked
+ ******************************************************************************/
+
+-- Validation query - verify secondary group is linked to primary:
+SHOW FAILOVER GROUPS LIKE 'MY_FAILOVER_GROUP';
+
+SELECT
+    "name" AS group_name,
+    "type" AS group_type,
+    "is_primary" AS is_primary,
+    "primary" AS primary_source,
+    "secondary_state" AS state,
+    CASE
+        WHEN "is_primary" = FALSE AND "type" = 'FAILOVER' AND "secondary_state" = 'STARTED'
+        THEN '✓ VALID: Secondary failover group active and receiving refreshes'
+        WHEN "is_primary" = FALSE AND "type" = 'FAILOVER' AND "secondary_state" = 'SUSPENDED'
+        THEN '⚠ WARNING: Secondary group is suspended - run ALTER ... RESUME'
+        WHEN "is_primary" = FALSE AND "type" = 'FAILOVER'
+        THEN '⚠ CHECK: Secondary state is ' || COALESCE("secondary_state", 'NULL')
+        ELSE '✗ UNEXPECTED: Check configuration'
+    END AS validation_status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- Expected result:
+--   is_primary = FALSE
+--   type = 'FAILOVER'
+--   state = 'STARTED'
+--   validation_status = '✓ VALID: Secondary failover group active and receiving refreshes'
 
 
 /*******************************************************************************
@@ -508,6 +586,53 @@ SHOW FAILOVER GROUPS LIKE 'MY_FAILOVER_GROUP';
 
 
 /*******************************************************************************
+ * VALIDATION: STEP 11 - Verify Failover Success
+ *
+ * Run in: NEW PRIMARY account (former DR account)
+ * Purpose: Confirm the failover completed and this account is now primary
+ ******************************************************************************/
+
+-- Validation query - verify this account is now primary:
+SHOW FAILOVER GROUPS LIKE 'MY_FAILOVER_GROUP';
+
+SELECT
+    "name" AS group_name,
+    "is_primary" AS is_primary,
+    "type" AS group_type,
+    CASE
+        WHEN "is_primary" = TRUE AND "type" = 'FAILOVER'
+        THEN '✓ VALID: This account is now the PRIMARY - failover successful'
+        WHEN "is_primary" = FALSE
+        THEN '✗ FAILED: This account is still SECONDARY - failover did not complete'
+        ELSE '⚠ CHECK: Unexpected state'
+    END AS validation_status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- Expected result: is_primary = TRUE, validation_status shows successful failover
+
+-- Verify databases are now writable:
+-- Try inserting a test record into a replicated database
+-- Example:
+-- INSERT INTO MY_DATABASE.TEST_SCHEMA.FAILOVER_TEST_TABLE (test_col)
+-- VALUES ('Failover test at ' || CURRENT_TIMESTAMP());
+-- If this succeeds, the database is read-write (failover complete)
+-- If this fails with "read-only", the failover did not complete properly
+
+-- Verify warehouses are running:
+SHOW WAREHOUSES;
+SELECT
+    COUNT(*) AS warehouse_count,
+    SUM(CASE WHEN "state" = 'STARTED' THEN 1 ELSE 0 END) AS running_warehouses
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- Verify users were replicated:
+SHOW USERS;
+SELECT COUNT(*) AS user_count FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- Expected result: user_count should match the count from your original primary
+
+
+/*******************************************************************************
  * STEP 12: UPDATE CLIENT CONNECTIONS (POST-FAILOVER)
  *
  * Run in: BOTH accounts
@@ -527,6 +652,170 @@ SHOW FAILOVER GROUPS LIKE 'MY_FAILOVER_GROUP';
 -- Update application connection strings to point to new primary account
 -- Example: Change from prod-account.snowflakecomputing.com
 --          to dr-account.snowflakecomputing.com
+
+
+/*******************************************************************************
+ * STEP 12A: CLIENT REDIRECT IMPLEMENTATION DETAILS
+ *
+ * Run in: SOURCE account (primary) - INITIAL SETUP
+ * Purpose: Configure automatic client redirect for seamless failover
+ *
+ * Client redirect allows applications to use a single connection URL that
+ * automatically routes to whichever account is currently primary.
+ ******************************************************************************/
+
+-- UNDERSTANDING CLIENT REDIRECT:
+--
+-- Without client redirect:
+--   - Applications connect directly to account URLs
+--   - On failover, you must update ALL application connection strings
+--   - Downtime while updating connections
+--
+-- With client redirect:
+--   - Applications connect via a "connection" object URL
+--   - The connection object automatically routes to the current primary
+--   - On failover, no application changes needed - routing is automatic
+
+-- STEP 12A-1: Create a connection object in the PRIMARY account
+-- This connection object will be replicated to secondary accounts
+-- and will automatically redirect clients after failover
+
+CREATE CONNECTION IF NOT EXISTS MY_APP_CONNECTION;
+
+-- STEP 12A-2: View the connection details
+SHOW CONNECTIONS;
+
+-- Note the "account_url" - this is what clients will use
+-- Format: <organization>-<connection_name>.snowflakecomputing.com
+
+-- STEP 12A-3: Enable failover for the connection
+-- This must be done in the PRIMARY account
+ALTER CONNECTION MY_APP_CONNECTION ENABLE FAILOVER TO ACCOUNTS
+    YOUR_ORG.YOUR_DR_ACCOUNT;  -- Replace with your DR account identifier(s)
+
+-- For multiple DR accounts:
+-- ALTER CONNECTION MY_APP_CONNECTION ENABLE FAILOVER TO ACCOUNTS
+--     ACME_CORP.DR_US_WEST, ACME_CORP.DR_EUROPE;
+
+-- STEP 12A-4: Add the connection to your failover group
+-- This ensures the connection object is replicated to DR accounts
+ALTER FAILOVER GROUP MY_FAILOVER_GROUP ADD MY_APP_CONNECTION;
+
+-- STEP 12A-5: Verify the connection is configured correctly
+SHOW CONNECTIONS LIKE 'MY_APP_CONNECTION';
+
+SELECT
+    "name" AS connection_name,
+    "account_name" AS current_primary_account,
+    "region_group" AS region,
+    "failover_allowed_to_accounts" AS failover_targets,
+    "is_primary" AS is_primary_connection,
+    "primary" AS primary_connection_source
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+
+/*******************************************************************************
+ * STEP 12B: CLIENT REDIRECT - TARGET ACCOUNT SETUP
+ *
+ * Run in: TARGET account (DR/failover account) - AFTER secondary group created
+ * Purpose: Create the secondary connection that will become primary on failover
+ ******************************************************************************/
+
+-- STEP 12B-1: Create the secondary connection as a replica
+-- This links to the primary connection and will receive updates
+
+CREATE CONNECTION IF NOT EXISTS MY_APP_CONNECTION
+    AS REPLICA OF YOUR_ORG.YOUR_SOURCE_ACCOUNT.MY_APP_CONNECTION;
+
+-- STEP 12B-2: Verify the secondary connection
+SHOW CONNECTIONS LIKE 'MY_APP_CONNECTION';
+
+SELECT
+    "name" AS connection_name,
+    "is_primary" AS is_primary_connection,
+    "primary" AS primary_connection_source,
+    CASE
+        WHEN "is_primary" = FALSE
+        THEN '✓ VALID: Secondary connection ready for failover'
+        ELSE '⚠ CHECK: Connection state unexpected'
+    END AS validation_status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+
+/*******************************************************************************
+ * STEP 12C: CLIENT REDIRECT - APPLICATION CONFIGURATION
+ *
+ * Purpose: Update applications to use the connection URL
+ ******************************************************************************/
+
+-- GETTING THE CONNECTION URL:
+-- Run this in either account to get the connection URL for applications:
+
+SHOW CONNECTIONS LIKE 'MY_APP_CONNECTION';
+
+-- The connection URL format is:
+--   https://<organization_name>-<connection_name>.snowflakecomputing.com
+--
+-- Example: If your organization is "ACME_CORP" and connection is "MY_APP_CONNECTION":
+--   https://acme_corp-my_app_connection.snowflakecomputing.com
+
+-- APPLICATION CONFIGURATION EXAMPLES:
+--
+-- JDBC Connection String:
+--   jdbc:snowflake://acme_corp-my_app_connection.snowflakecomputing.com/?db=MYDB&warehouse=MY_WH
+--
+-- Python (snowflake-connector-python):
+--   conn = snowflake.connector.connect(
+--       account='acme_corp-my_app_connection',
+--       user=os.environ['SNOWFLAKE_USER'],
+--       password=os.environ['SNOWFLAKE_PASSWORD'],
+--       database='MYDB',
+--       warehouse='MY_WH'
+--   )
+--
+-- .NET/ODBC:
+--   Server=acme_corp-my_app_connection.snowflakecomputing.com;Database=MYDB;Warehouse=MY_WH;
+--
+-- IMPORTANT: The account parameter uses the connection name, not the account name!
+
+
+/*******************************************************************************
+ * STEP 12D: CLIENT REDIRECT - FAILOVER PROCEDURE
+ *
+ * Run in: TARGET account (during failover)
+ * Purpose: Promote the connection so clients are redirected to the new primary
+ ******************************************************************************/
+
+-- During failover, AFTER promoting the failover group to primary,
+-- you must also promote the connection:
+
+-- STEP 12D-1: Promote the connection (run in new primary account)
+ALTER CONNECTION MY_APP_CONNECTION PRIMARY;
+
+-- STEP 12D-2: Verify the connection is now primary
+SHOW CONNECTIONS LIKE 'MY_APP_CONNECTION';
+
+SELECT
+    "name" AS connection_name,
+    "is_primary" AS is_primary_connection,
+    CASE
+        WHEN "is_primary" = TRUE
+        THEN '✓ VALID: Connection is PRIMARY - clients will route here'
+        ELSE '✗ ERROR: Connection is still secondary - run ALTER CONNECTION ... PRIMARY'
+    END AS validation_status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- STEP 12D-3: Test client connectivity
+-- Have clients reconnect using the same connection URL
+-- They should automatically route to this (new primary) account
+
+-- 📋 Checklist: Client Redirect Configuration
+-- [ ] Primary connection created in source account
+-- [ ] Failover enabled for connection to target accounts
+-- [ ] Connection added to failover group
+-- [ ] Secondary connection created in DR account(s)
+-- [ ] Applications updated to use connection URL (not direct account URL)
+-- [ ] Tested client redirect after failover
 
 -- 📋 Checklist: Connection Update
 -- [ ] Client redirect configured (if using) OR
@@ -611,6 +900,107 @@ ALTER FAILOVER GROUP MY_FAILOVER_GROUP RESUME;
 -- [ ] Replication schedule matches RPO requirements
 -- [ ] Secondary accounts receiving refreshes on schedule
 -- [ ] Can suspend/resume as needed
+
+
+/*******************************************************************************
+ * STEP 14A: CONFIGURE ERROR_INTEGRATION FOR AUTOMATIC ALERTING
+ *
+ * Run in: TARGET account (DR/failover account)
+ * Purpose: Receive automatic notifications when replication refreshes fail
+ *
+ * Error integrations allow you to receive alerts via email, webhook, or
+ * cloud messaging services when refresh operations fail.
+ ******************************************************************************/
+
+-- UNDERSTANDING ERROR INTEGRATIONS:
+--
+-- An error integration sends notifications when:
+--   - A scheduled refresh fails
+--   - A manual refresh fails
+--   - Replication errors occur
+--
+-- Notification channels supported:
+--   - Email (via notification integration)
+--   - Webhooks (for PagerDuty, Slack, etc.)
+--   - AWS SNS
+--   - Azure Event Grid
+--   - GCP Pub/Sub
+
+-- STEP 14A-1: Create a notification integration (example: email)
+-- This creates an email notification endpoint
+
+CREATE OR REPLACE NOTIFICATION INTEGRATION replication_alert_email
+  TYPE = EMAIL
+  ENABLED = TRUE
+  ALLOWED_RECIPIENTS = ('dr-alerts@yourcompany.com', 'oncall@yourcompany.com')
+  COMMENT = 'Email notifications for replication failures';
+
+-- STEP 14A-2: Create a notification integration (example: webhook for Slack/PagerDuty)
+/*
+CREATE OR REPLACE NOTIFICATION INTEGRATION replication_alert_webhook
+  TYPE = WEBHOOK
+  ENABLED = TRUE
+  WEBHOOK_URL = 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+  WEBHOOK_SECRET = snowflake.notification_integration.replication_alert_webhook.secret
+  COMMENT = 'Webhook notifications for replication failures';
+*/
+
+-- STEP 14A-3: Create a notification integration (example: AWS SNS)
+/*
+CREATE OR REPLACE NOTIFICATION INTEGRATION replication_alert_sns
+  TYPE = QUEUE
+  ENABLED = TRUE
+  DIRECTION = OUTBOUND
+  NOTIFICATION_PROVIDER = AWS_SNS
+  AWS_SNS_TOPIC_ARN = 'arn:aws:sns:us-west-2:123456789012:replication-alerts'
+  AWS_SNS_ROLE_ARN = 'arn:aws:iam::123456789012:role/snowflake-sns-role'
+  COMMENT = 'AWS SNS notifications for replication failures';
+*/
+
+-- STEP 14A-4: Create an error integration linked to your notification
+CREATE OR REPLACE ERROR INTEGRATION replication_error_alerts
+  ERROR_TRIGGERS = (REPLICATION_REFRESH_FAILED)
+  ENABLED = TRUE
+  COMMENT = 'Alert on replication refresh failures';
+
+-- STEP 14A-5: Associate the error integration with your failover group
+ALTER FAILOVER GROUP MY_FAILOVER_GROUP SET
+  ERROR_INTEGRATION = replication_error_alerts;
+
+-- STEP 14A-6: Verify the error integration is configured
+SHOW ERROR INTEGRATIONS;
+
+SELECT
+    "name" AS integration_name,
+    "enabled" AS is_enabled,
+    "error_triggers" AS triggers,
+    CASE
+        WHEN "enabled" = TRUE
+        THEN '✓ VALID: Error integration is active'
+        ELSE '⚠ WARNING: Error integration is disabled'
+    END AS validation_status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
+WHERE "name" = 'REPLICATION_ERROR_ALERTS';
+
+-- STEP 14A-7: Test the error integration
+-- You can test by checking the integration status and reviewing
+-- any past alerts in the notification history
+
+-- View notification history (if notifications have been sent)
+SELECT *
+FROM TABLE(INFORMATION_SCHEMA.NOTIFICATION_HISTORY(
+    SCHEDULED_TIME_RANGE_START => DATEADD('day', -7, CURRENT_TIMESTAMP()),
+    RESULT_LIMIT => 100
+))
+WHERE INTEGRATION_NAME = 'REPLICATION_ALERT_EMAIL'
+ORDER BY SCHEDULED_TIME DESC;
+
+-- 📋 Checklist: Error Integration Setup
+-- [ ] Notification integration created (email, webhook, or cloud service)
+-- [ ] Error integration created with REPLICATION_REFRESH_FAILED trigger
+-- [ ] Error integration associated with failover group
+-- [ ] Test notification sent and received
+-- [ ] On-call team knows how to respond to alerts
 
 
 /*******************************************************************************

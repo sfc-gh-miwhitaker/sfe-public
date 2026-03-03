@@ -34,15 +34,15 @@ This is the single most important concept for getting good results from AI pair-
 
 See [diagrams/guidance-hierarchy.md](diagrams/guidance-hierarchy.md) for the full visual, but here's the summary:
 
-| Priority | Scope | Location | Loaded When |
-|----------|-------|----------|-------------|
-| 1 (highest) | Organization | `/Library/Application Support/Cortex/managed-settings.json` (macOS) | Always (if exists) |
+| Override Precedence | Scope | Location | Loaded When |
+|---------------------|-------|----------|-------------|
+| 1 (overrides all below) | Organization | `/Library/Application Support/Cortex/managed-settings.json` (macOS) | Always (if exists) |
 | 2 | User | `~/.claude/CLAUDE.md` + `~/.claude/skills/` + `~/.snowflake/cortex/skills/` | Always |
 | 3 | Project | `AGENTS.md` (or `CLAUDE.md`) at project root + `.cortex/skills/` or `.claude/skills/` | When working in that project |
 | 4 | Session | Temporary skills, `/plan` mode, model overrides | Current session only |
-| 5 (lowest) | Built-in | ~11 bundled skills (semantic views, dbt, etc.) | Always available |
+| 5 (overridden by all above) | Built-in | ~11 bundled skills (semantic views, dbt, etc.) | Always available |
 
-Higher-priority layers override lower ones. This means your project-level `AGENTS.md` can specialize the behavior defined in your user-level `CLAUDE.md`.
+> **Note:** "Override precedence" means higher layers can override instructions from lower layers. Organization policies override user preferences, which override project settings, etc.
 
 ### Always-On vs On-Demand
 
@@ -141,12 +141,14 @@ This puts it at user-level scope -- it applies to every project you work on.
 cp reference/first-skill/SKILL.md ~/.claude/skills/team-standards/SKILL.md
 ```
 
-Or open [`reference/first-skill/SKILL.md`](reference/first-skill/SKILL.md) and customize it before copying. The example covers:
+Or open [`reference/first-skill/SKILL.md`](reference/first-skill/SKILL.md) and customize it before copying. The example is a **fill-in-the-blank template** that covers:
 
 - **SQL standards** -- no SELECT \*, sargable predicates, QUALIFY for window functions, explicit columns
 - **Security rules** -- no credentials in code, use Snowflake secrets, no account IDs in output
-- **Naming conventions** -- SFE\_ prefix patterns, COMMENT on all objects
+- **Naming conventions** -- customizable `{TEAM_PREFIX}_` patterns, COMMENT on all objects
 - **Operational best practices** -- reload core context on compaction, search docs before answering Snowflake syntax from memory, when to start a new session vs continue
+
+Before deploying, replace all `{PLACEHOLDER}` values with your team's conventions. Search for `{` in the file to find everything that needs customization.
 
 **Step 3: Verify**
 
@@ -176,6 +178,57 @@ With the skill loaded, the AI should use explicit columns (not SELECT \*), use Q
 | Project-level | `.claude/skills/` in the project | Standards specific to ONE project (schema names, domain vocabulary, project patterns) |
 
 Start with user-level. Move things to project-level when they're project-specific or when you're sharing a repo with others who have different standards.
+
+---
+
+## Troubleshooting
+
+### "My AGENTS.md isn't being followed"
+
+**1. Wrong directory**
+- AGENTS.md must be at the **root** of your project, not in a subdirectory
+- Check: `ls -la $(pwd)/AGENTS.md` should show your file
+- CoCo looks in the directory you launched from (or the `-w` path)
+
+**2. Context compaction dropped it**
+- Long sessions trigger automatic summarization, which can lose AGENTS.md content
+- Fix: Ask CoCo to re-read it: "Please re-read the AGENTS.md file and follow its instructions"
+- Prevention: Start fresh sessions for new tasks rather than extending very long ones
+
+**3. Conflicting instructions**
+- Higher-precedence layers override lower ones (see [hierarchy table](#the-guidance-hierarchy))
+- Check if your `~/.claude/CLAUDE.md` or org-level settings contradict your project AGENTS.md
+- Project AGENTS.md cannot override user-level or org-level rules
+
+**4. Skill not loaded**
+- Skills in `.claude/skills/` are on-demand, not always-on
+- Check if your skill is loaded: `/skill list`
+- If you expected automatic loading, the instructions belong in AGENTS.md instead
+
+**5. File not saved**
+- AGENTS.md changes aren't picked up until the file is saved
+- Some editors don't auto-save; check for unsaved changes
+
+### "CoCo ignores my skill triggers"
+
+**1. Triggers not defined**
+- Check your SKILL.md has a `triggers:` section in the frontmatter
+- Triggers are keyword phrases that auto-invoke the skill
+
+**2. Triggers too generic**
+- Triggers like "help" or "code" match too much and may be deprioritized
+- Use specific phrases: "team standards", "sql conventions", "deploy pipeline"
+
+**3. Skill not in a recognized path**
+- User skills: `~/.claude/skills/<name>/SKILL.md` or `~/.snowflake/cortex/skills/<name>/SKILL.md`
+- Project skills: `.claude/skills/<name>/SKILL.md` or `.cortex/skills/<name>/SKILL.md`
+- The directory name becomes the skill name
+
+### "Settings from one project leak into another"
+
+- User-level files (`~/.claude/CLAUDE.md`, `~/.claude/skills/`) apply to ALL projects
+- Move project-specific content to the project's AGENTS.md or `.claude/skills/` directory
+- Check for stale context: start a new session with `cortex` (not `cortex --continue`)
 
 ---
 

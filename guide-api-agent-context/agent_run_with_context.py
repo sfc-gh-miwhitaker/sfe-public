@@ -3,60 +3,100 @@
 Working example of calling the Snowflake agent:run API with execution context.
 
 This demonstrates how to:
-1. Set role and warehouse in execution environment
+1. Set role and warehouse via HTTP headers
 2. Create a thread for conversation context
 3. Send messages to an agent
 4. Handle streaming responses
 
 Requirements:
-    pip install snowflake-connector-python requests
+    pip install requests
 
 Environment Variables:
     SNOWFLAKE_ACCOUNT: Your Snowflake account identifier (e.g., 'myorg-myaccount')
-    SNOWFLAKE_USER: Your Snowflake username
-    SNOWFLAKE_PASSWORD: Your password (or use OAuth/key pair)
 
-    OR use a Personal Access Token (PAT):
+    Option 1 - Personal Access Token (recommended):
     SNOWFLAKE_PAT: Your Personal Access Token
+
+    Option 2 - OAuth (client credentials):
+    SNOWFLAKE_OAUTH_CLIENT_ID: OAuth client ID
+    SNOWFLAKE_OAUTH_CLIENT_SECRET: OAuth client secret
 """
 
 import os
 import sys
 import json
+import time
 import requests
 from typing import Optional
+from urllib.parse import urlencode
 
-def get_auth_token(
+
+def get_oauth_token(
     account: str,
-    user: Optional[str] = None,
-    password: Optional[str] = None,
-    pat: Optional[str] = None
+    client_id: str,
+    client_secret: str,
+    scope: str = "session:role:PUBLIC"
 ) -> str:
     """
-    Get authentication token for Snowflake API.
+    Get OAuth access token using client credentials flow.
 
-    For PAT: Just use the PAT directly as Bearer token.
-    For username/password: Exchange for OAuth token.
+    Args:
+        account: Snowflake account identifier (e.g., 'myorg-myaccount')
+        client_id: OAuth client ID from security integration
+        client_secret: OAuth client secret
+        scope: OAuth scope (default: session:role:PUBLIC)
+
+    Returns:
+        Access token string
+
+    To create an OAuth integration in Snowflake:
+        CREATE SECURITY INTEGRATION my_oauth_int
+            TYPE = OAUTH
+            OAUTH_CLIENT = CUSTOM
+            OAUTH_CLIENT_TYPE = 'CONFIDENTIAL'
+            OAUTH_REDIRECT_URI = 'https://localhost'
+            OAUTH_ISSUE_REFRESH_TOKENS = TRUE
+            OAUTH_REFRESH_TOKEN_VALIDITY = 86400
+            ENABLED = TRUE;
+
+        -- Get client ID and secret:
+        SELECT SYSTEM$SHOW_OAUTH_CLIENT_SECRETS('MY_OAUTH_INT');
     """
-    if pat:
-        return pat
-
-    if not (user and password):
-        raise ValueError("Either PAT or user+password required")
-
     token_url = f"https://{account}.snowflakecomputing.com/oauth/token"
 
     response = requests.post(
         token_url,
         headers={"Content-Type": "application/x-www-form-urlencoded"},
-        data={
-            "grant_type": "password",
-            "username": user,
-            "password": password,
-        }
+        data=urlencode({
+            "grant_type": "client_credentials",
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "scope": scope,
+        }),
+        timeout=30
     )
     response.raise_for_status()
     return response.json()["access_token"]
+
+
+def get_auth_token(
+    account: str,
+    pat: Optional[str] = None,
+    oauth_client_id: Optional[str] = None,
+    oauth_client_secret: Optional[str] = None,
+) -> str:
+    """
+    Get authentication token for Snowflake API.
+
+    Priority: PAT > OAuth client credentials
+    """
+    if pat:
+        return pat
+
+    if oauth_client_id and oauth_client_secret:
+        return get_oauth_token(account, oauth_client_id, oauth_client_secret)
+
+    raise ValueError("Either PAT or OAuth client credentials required")
 
 
 def create_thread(account: str, token: str) -> str:
@@ -117,8 +157,12 @@ def run_agent_with_context(
         "Content-Type": "application/json",
     }
 
+    # Use official Snowflake headers for role and warehouse context
+    # See: https://docs.snowflake.com/en/developer-guide/snowflake-rest-api/setting-context
     if role:
-        headers["X-Snowflake-Context"] = json.dumps({"currentRole": role})
+        headers["X-Snowflake-Role"] = role
+    if warehouse:
+        headers["X-Snowflake-Warehouse"] = warehouse
 
     payload = {
         "thread_id": thread_id,
@@ -231,8 +275,10 @@ def run_agent_without_agent_object(
         "Content-Type": "application/json",
     }
 
+    # Use official Snowflake headers for role and warehouse context
+    # See: https://docs.snowflake.com/en/developer-guide/snowflake-rest-api/setting-context
     if role:
-        headers["X-Snowflake-Context"] = json.dumps({"currentRole": role})
+        headers["X-Snowflake-Role"] = role
 
     payload = {
         "thread_id": thread_id,
@@ -325,22 +371,27 @@ def run_agent_without_agent_object(
 
 def main():
     account = os.getenv("SNOWFLAKE_ACCOUNT")
-    user = os.getenv("SNOWFLAKE_USER")
-    password = os.getenv("SNOWFLAKE_PASSWORD")
     pat = os.getenv("SNOWFLAKE_PAT")
+    oauth_client_id = os.getenv("SNOWFLAKE_OAUTH_CLIENT_ID")
+    oauth_client_secret = os.getenv("SNOWFLAKE_OAUTH_CLIENT_SECRET")
 
     if not account:
         print("Error: SNOWFLAKE_ACCOUNT environment variable required")
         print("Format: myorg-myaccount")
         sys.exit(1)
 
-    if not pat and not (user and password):
-        print("Error: Either SNOWFLAKE_PAT or SNOWFLAKE_USER+SNOWFLAKE_PASSWORD required")
+    if not pat and not (oauth_client_id and oauth_client_secret):
+        print("Error: Either SNOWFLAKE_PAT or SNOWFLAKE_OAUTH_CLIENT_ID+SNOWFLAKE_OAUTH_CLIENT_SECRET required")
         sys.exit(1)
 
     try:
         print("Authenticating...")
-        token = get_auth_token(account, user, password, pat)
+        token = get_auth_token(
+            account=account,
+            pat=pat,
+            oauth_client_id=oauth_client_id,
+            oauth_client_secret=oauth_client_secret,
+        )
         print("✓ Authenticated")
 
         print("\nCreating thread...")

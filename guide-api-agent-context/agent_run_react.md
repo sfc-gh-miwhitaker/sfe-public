@@ -57,8 +57,13 @@ app.post('/api/agent/run', async (req, res) => {
     'Content-Type': 'application/json',
   };
 
+  // Use official Snowflake headers for role and warehouse context
+  // See: https://docs.snowflake.com/en/developer-guide/snowflake-rest-api/setting-context
   if (role) {
-    headers['X-Snowflake-Context'] = JSON.stringify({ currentRole: role });
+    headers['X-Snowflake-Role'] = role;
+  }
+  if (warehouse) {
+    headers['X-Snowflake-Warehouse'] = warehouse;
   }
 
   const url = `https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com/api/v2/databases/${database}/schemas/${schema}/agents/${agentName}:run`;
@@ -331,15 +336,20 @@ export class SnowflakeAgentClient {
     agentName: string,
     threadId: string,
     message: string,
-    role?: string
+    role?: string,
+    warehouse?: string
   ): AsyncGenerator<string, void, unknown> {
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${this.token}`,
       'Content-Type': 'application/json',
     };
 
+    // Use official Snowflake headers for role and warehouse context
     if (role) {
-      headers['X-Snowflake-Context'] = JSON.stringify({ currentRole: role });
+      headers['X-Snowflake-Role'] = role;
+    }
+    if (warehouse) {
+      headers['X-Snowflake-Warehouse'] = warehouse;
     }
 
     const url = `https://${this.account}.snowflakecomputing.com/api/v2/databases/${database}/schemas/${schema}/agents/${agentName}:run`;

@@ -154,6 +154,36 @@ CREATE REPLICATION GROUP IF NOT EXISTS MY_REPLICATION_GROUP
 
 
 /*******************************************************************************
+ * VALIDATION: STEP 2 - Verify Replication Group Creation
+ *
+ * Run in: SOURCE account
+ * Purpose: Confirm the replication group was created correctly
+ ******************************************************************************/
+
+-- Validation query - verify replication group exists and is configured correctly:
+SHOW REPLICATION GROUPS LIKE 'MY_REPLICATION_GROUP';
+
+SELECT
+    "name" AS group_name,
+    "type" AS group_type,
+    "is_primary" AS is_primary,
+    "replication_schedule" AS schedule,
+    CASE
+        WHEN "is_primary" = TRUE AND "replication_schedule" IS NOT NULL
+        THEN '✓ VALID: Primary group created with schedule'
+        WHEN "is_primary" = TRUE AND "replication_schedule" IS NULL
+        THEN '⚠ WARNING: No replication schedule set (manual refresh only)'
+        ELSE '✗ UNEXPECTED: Check configuration'
+    END AS validation_status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- Expected result:
+--   is_primary = TRUE
+--   schedule = '10 MINUTE' (or your configured interval)
+--   validation_status = '✓ VALID: Primary group created with schedule'
+
+
+/*******************************************************************************
  * STEP 3: BUSINESS CONTINUITY NOTE
  *
  * This guide intentionally stops at read-only replicas (basic redundancy).
@@ -239,6 +269,38 @@ CREATE REPLICATION GROUP IF NOT EXISTS MY_REPLICATION_GROUP
 
 
 /*******************************************************************************
+ * VALIDATION: STEP 5 - Verify Secondary Replication Group
+ *
+ * Run in: TARGET account
+ * Purpose: Confirm the secondary replication group was created and linked
+ ******************************************************************************/
+
+-- Validation query - verify secondary group is linked to primary:
+SHOW REPLICATION GROUPS LIKE 'MY_REPLICATION_GROUP';
+
+SELECT
+    "name" AS group_name,
+    "is_primary" AS is_primary,
+    "primary" AS primary_source,
+    "secondary_state" AS state,
+    CASE
+        WHEN "is_primary" = FALSE AND "secondary_state" = 'STARTED'
+        THEN '✓ VALID: Secondary group active and receiving refreshes'
+        WHEN "is_primary" = FALSE AND "secondary_state" = 'SUSPENDED'
+        THEN '⚠ WARNING: Secondary group is suspended - run ALTER ... RESUME'
+        WHEN "is_primary" = FALSE
+        THEN '⚠ CHECK: Secondary state is ' || COALESCE("secondary_state", 'NULL')
+        ELSE '✗ UNEXPECTED: This appears to be a primary group'
+    END AS validation_status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+-- Expected result:
+--   is_primary = FALSE
+--   state = 'STARTED'
+--   validation_status = '✓ VALID: Secondary group active and receiving refreshes'
+
+
+/*******************************************************************************
  * STEP 6: MANUAL REFRESH (OPTIONAL)
  *
  * Run in: TARGET account
@@ -259,6 +321,31 @@ ALTER REPLICATION GROUP MY_REPLICATION_GROUP REFRESH;
 -- [ ] ALTER REPLICATION GROUP ... REFRESH executed successfully
 -- [ ] No timeout errors (increase statement timeout if needed)
 -- [ ] Refresh progress/history show SUCCEEDED phases
+
+
+/*******************************************************************************
+ * VALIDATION: STEP 6 - Verify Refresh Success
+ *
+ * Run in: TARGET account
+ * Purpose: Confirm the manual refresh completed successfully
+ ******************************************************************************/
+
+SELECT
+    phase_name,
+    start_time,
+    end_time,
+    DATEDIFF('second', start_time, end_time) AS duration_seconds,
+    CASE
+        WHEN phase_name = 'COMPLETED' THEN '✓ VALID: Refresh completed successfully'
+        WHEN phase_name = 'FAILED' THEN '✗ FAILED: Check error details'
+        WHEN phase_name = 'CANCELED' THEN '⚠ CANCELED: Refresh was interrupted'
+        ELSE '⏳ IN PROGRESS: ' || phase_name
+    END AS validation_status
+FROM TABLE(INFORMATION_SCHEMA.REPLICATION_GROUP_REFRESH_PROGRESS('MY_REPLICATION_GROUP'))
+ORDER BY start_time DESC
+LIMIT 1;
+
+-- Expected result: validation_status = '✓ VALID: Refresh completed successfully'
 
 
 /*******************************************************************************
@@ -432,6 +519,91 @@ SHOW REPLICATION GROUPS LIKE 'MY_REPLICATION_GROUP';
 -- [ ] No recurring failures in refresh history
 -- [ ] Duration and transferred bytes are within expected ranges
 -- [ ] Alerts exist for refresh failures (optional)
+
+
+/*******************************************************************************
+ * STEP 12A: CONFIGURE ERROR_INTEGRATION FOR AUTOMATIC ALERTING
+ *
+ * Run in: TARGET account
+ * Purpose: Receive automatic notifications when replication refreshes fail
+ *
+ * Error integrations allow you to receive alerts via email, webhook, or
+ * cloud messaging services when refresh operations fail.
+ ******************************************************************************/
+
+-- UNDERSTANDING ERROR INTEGRATIONS:
+--
+-- An error integration sends notifications when:
+--   - A scheduled refresh fails
+--   - A manual refresh fails
+--   - Replication errors occur
+--
+-- Notification channels supported:
+--   - Email (via notification integration)
+--   - Webhooks (for PagerDuty, Slack, etc.)
+--   - AWS SNS
+--   - Azure Event Grid
+--   - GCP Pub/Sub
+
+-- STEP 12A-1: Create a notification integration (example: email)
+-- This creates an email notification endpoint
+
+CREATE OR REPLACE NOTIFICATION INTEGRATION replication_alert_email
+  TYPE = EMAIL
+  ENABLED = TRUE
+  ALLOWED_RECIPIENTS = ('replication-alerts@yourcompany.com', 'oncall@yourcompany.com')
+  COMMENT = 'Email notifications for replication failures';
+
+-- STEP 12A-2: Create a notification integration (example: webhook for Slack/PagerDuty)
+/*
+CREATE OR REPLACE NOTIFICATION INTEGRATION replication_alert_webhook
+  TYPE = WEBHOOK
+  ENABLED = TRUE
+  WEBHOOK_URL = 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+  WEBHOOK_SECRET = snowflake.notification_integration.replication_alert_webhook.secret
+  COMMENT = 'Webhook notifications for replication failures';
+*/
+
+-- STEP 12A-3: Create an error integration linked to your notification
+CREATE OR REPLACE ERROR INTEGRATION replication_error_alerts
+  ERROR_TRIGGERS = (REPLICATION_REFRESH_FAILED)
+  ENABLED = TRUE
+  COMMENT = 'Alert on replication refresh failures';
+
+-- STEP 12A-4: Associate the error integration with your replication group
+ALTER REPLICATION GROUP MY_REPLICATION_GROUP SET
+  ERROR_INTEGRATION = replication_error_alerts;
+
+-- STEP 12A-5: Verify the error integration is configured
+SHOW ERROR INTEGRATIONS;
+
+SELECT
+    "name" AS integration_name,
+    "enabled" AS is_enabled,
+    "error_triggers" AS triggers,
+    CASE
+        WHEN "enabled" = TRUE
+        THEN '✓ VALID: Error integration is active'
+        ELSE '⚠ WARNING: Error integration is disabled'
+    END AS validation_status
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
+WHERE "name" = 'REPLICATION_ERROR_ALERTS';
+
+-- STEP 12A-6: View notification history (if notifications have been sent)
+SELECT *
+FROM TABLE(INFORMATION_SCHEMA.NOTIFICATION_HISTORY(
+    SCHEDULED_TIME_RANGE_START => DATEADD('day', -7, CURRENT_TIMESTAMP()),
+    RESULT_LIMIT => 100
+))
+WHERE INTEGRATION_NAME = 'REPLICATION_ALERT_EMAIL'
+ORDER BY SCHEDULED_TIME DESC;
+
+-- 📋 Checklist: Error Integration Setup
+-- [ ] Notification integration created (email, webhook, or cloud service)
+-- [ ] Error integration created with REPLICATION_REFRESH_FAILED trigger
+-- [ ] Error integration associated with replication group
+-- [ ] Test notification sent and received
+-- [ ] Team knows how to respond to alerts
 
 
 /*******************************************************************************
