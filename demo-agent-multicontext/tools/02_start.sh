@@ -4,6 +4,10 @@ set -e
 cd "$(dirname "$0")/.."
 
 if [ -z "$SNOWFLAKE_ACCOUNT" ] || [ -z "$SNOWFLAKE_PAT" ]; then
+  OP_ENV="${OP_ENV:-$HOME/.snowflake/.env.1password}"
+  if command -v op &>/dev/null && [ -f "$OP_ENV" ]; then
+    exec op run --env-file "$OP_ENV" -- "$0" "$@"
+  fi
   echo "ERROR: Required environment variables not set."
   echo ""
   echo "  export SNOWFLAKE_ACCOUNT=\"myorg-myaccount\""
