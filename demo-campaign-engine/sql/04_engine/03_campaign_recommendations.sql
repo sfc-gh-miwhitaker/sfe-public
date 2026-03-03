@@ -27,15 +27,18 @@ AS
 $$
     SNOWFLAKE.CORTEX.COMPLETE(
         'claude-4-sonnet',
-        'You are a casino marketing strategist. Generate a concise campaign recommendation '
-        || '(3-4 sentences) for a ' || campaign_type || ' campaign targeting '
+        'You are a casino marketing strategist. Generate a campaign recommendation '
+        || 'for a ' || campaign_type || ' campaign targeting '
         || audience_size::VARCHAR || ' players. '
-        || 'Audience profile: average daily wager $' || ROUND(avg_wager, 0)::VARCHAR
-        || ', average loyalty tier ' || ROUND(avg_tier, 1)::VARCHAR || '/5'
-        || ', average ' || ROUND(avg_frequency, 1)::VARCHAR || ' sessions/week'
+        || 'Audience profile: average daily wager ' || ROUND(avg_wager, 0)::VARCHAR || ' USD'
+        || ', average loyalty tier ' || ROUND(avg_tier, 1)::VARCHAR || ' out of 5'
+        || ', average ' || ROUND(avg_frequency, 1)::VARCHAR || ' sessions per week'
         || ', most popular game type: ' || top_game_type || '. '
-        || 'Include: recommended offer, preferred channel (email/SMS/app push/in-venue), '
-        || 'and optimal timing. Be specific and data-driven.'
+        || 'Format your response in markdown with these sections: '
+        || '**Recommended Offer** (one paragraph), '
+        || '**Channel Strategy** (bullet list of channels with reasoning), '
+        || '**Optimal Timing** (when to launch and why). '
+        || 'Be specific and data-driven. Use USD instead of dollar signs for currency.'
     )
 $$;
 
