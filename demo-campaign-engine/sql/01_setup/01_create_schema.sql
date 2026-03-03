@@ -7,7 +7,7 @@ Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
 USE ROLE ACCOUNTADMIN;
-GRANT APPLICATION ROLE SNOWFLAKE.MODELS."CORTEX-MODEL-ROLE-ALL" TO ROLE SYSADMIN;
+GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-ALL" TO ROLE SYSADMIN;
 
 USE ROLE SYSADMIN;
 
