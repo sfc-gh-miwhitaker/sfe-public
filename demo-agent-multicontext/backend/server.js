@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { Readable } = require('stream');
 
 const app = express();
 app.use(cors());
@@ -180,7 +181,7 @@ app.post('/api/agent/thread', async (_req, res) => {
         Authorization: `Bearer ${SNOWFLAKE_PAT}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ origin_application: 'demo_agent_multicontext' }),
+      body: JSON.stringify({ origin_application: 'agent_multictx' }),
     });
 
     if (!response.ok) {
@@ -189,7 +190,8 @@ app.post('/api/agent/thread', async (_req, res) => {
     }
 
     const data = await response.json();
-    res.json(data);
+    const id = typeof data === 'string' ? data : data.thread_id ?? data.id ?? data;
+    res.json({ id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -267,7 +269,7 @@ app.post('/api/agent/run', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    response.body.pipe(res);
+    Readable.fromWeb(response.body).pipe(res);
   } catch (error) {
     if (!res.headersSent) {
       res.status(500).json({ error: error.message });

@@ -14,6 +14,8 @@ instead of stuffing context into user messages.
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-03 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
+![Agent Multicontext Demo](assets/demo-screenshot.png)
+
 ## First Time Here?
 
 1. **Deploy Snowflake objects** -- Copy `deploy_all.sql` into Snowsight, click "Run All"

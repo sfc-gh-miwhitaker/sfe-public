@@ -1,7 +1,34 @@
 import { useState, useCallback, useRef } from 'react';
-import type { AgentContext, ChatMessage } from '../types';
+import type { AgentContext, ChatMessage, ThinkingStep } from '../types';
 
 const API_BASE = '/api';
+
+function addThinkingStep(
+  steps: ThinkingStep[],
+  type: ThinkingStep['type'],
+  text: string,
+): ThinkingStep[] {
+  const last = steps[steps.length - 1];
+  if (last?.type === type && type === 'thinking') {
+    return [...steps.slice(0, -1), { ...last, text: last.text + text }];
+  }
+  return [...steps, { type, text, timestamp: new Date() }];
+}
+
+function updateAssistantMessage(
+  prev: ChatMessage[],
+  content: string,
+  thinkingSteps: ThinkingStep[],
+): ChatMessage[] {
+  const last = prev[prev.length - 1];
+  if (last?.role === 'assistant') {
+    return [
+      ...prev.slice(0, -1),
+      { ...last, content, thinkingSteps },
+    ];
+  }
+  return [...prev, { role: 'assistant', content, timestamp: new Date(), thinkingSteps }];
+}
 
 export function useAgentChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -55,6 +82,7 @@ export function useAgentChat() {
 
       const decoder = new TextDecoder();
       let assistantContent = '';
+      let thinkingSteps: ThinkingStep[] = [];
       let currentEvent = '';
 
       while (true) {
@@ -72,22 +100,50 @@ export function useAgentChat() {
             try {
               const eventData = JSON.parse(data);
 
-              if (currentEvent === 'response.text.delta') {
-                assistantContent += eventData.text || '';
-                setMessages(prev => {
-                  const last = prev[prev.length - 1];
-                  if (last?.role === 'assistant') {
-                    return [
-                      ...prev.slice(0, -1),
-                      { role: 'assistant', content: assistantContent, timestamp: last.timestamp },
-                    ];
-                  }
-                  return [...prev, { role: 'assistant', content: assistantContent, timestamp: new Date() }];
-                });
-              }
+              switch (currentEvent) {
+                case 'response.status':
+                  thinkingSteps = addThinkingStep(thinkingSteps, 'status', eventData.message);
+                  setMessages(prev => updateAssistantMessage(prev, assistantContent, thinkingSteps));
+                  break;
 
-              if (currentEvent === 'metadata' && eventData.metadata?.role === 'assistant') {
-                parentMessageIdRef.current = eventData.metadata.message_id;
+                case 'response.thinking.delta':
+                  thinkingSteps = addThinkingStep(thinkingSteps, 'thinking', eventData.text || '');
+                  setMessages(prev => updateAssistantMessage(prev, assistantContent, thinkingSteps));
+                  break;
+
+                case 'response.tool_use':
+                  thinkingSteps = addThinkingStep(
+                    thinkingSteps,
+                    'tool_use',
+                    `Using ${eventData.name ?? eventData.type}`,
+                  );
+                  setMessages(prev => updateAssistantMessage(prev, assistantContent, thinkingSteps));
+                  break;
+
+                case 'response.tool_result.status':
+                  thinkingSteps = addThinkingStep(thinkingSteps, 'tool_status', eventData.message);
+                  setMessages(prev => updateAssistantMessage(prev, assistantContent, thinkingSteps));
+                  break;
+
+                case 'response.tool_result.analyst.delta': {
+                  const think = eventData.delta?.think;
+                  if (think) {
+                    thinkingSteps = addThinkingStep(thinkingSteps, 'thinking', think);
+                    setMessages(prev => updateAssistantMessage(prev, assistantContent, thinkingSteps));
+                  }
+                  break;
+                }
+
+                case 'response.text.delta':
+                  assistantContent += eventData.text || '';
+                  setMessages(prev => updateAssistantMessage(prev, assistantContent, thinkingSteps));
+                  break;
+
+                case 'metadata':
+                  if (eventData.metadata?.role === 'assistant') {
+                    parentMessageIdRef.current = eventData.metadata.message_id;
+                  }
+                  break;
               }
             } catch {
               // skip malformed JSON lines

@@ -26,10 +26,9 @@ echo "Installing frontend dependencies..."
 cd frontend && npm install --silent && cd ..
 
 echo "Starting backend on http://localhost:3001..."
-cd backend && npm start &
+(cd backend && npm start) &
 BACKEND_PID=$!
-echo $BACKEND_PID > ../.pids/backend.pid
-cd ..
+echo $BACKEND_PID > .pids/backend.pid
 
 sleep 2
 if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
@@ -38,10 +37,9 @@ if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
 fi
 
 echo "Starting frontend on http://localhost:3000..."
-cd frontend && npm run dev &
+(cd frontend && npm run dev) &
 FRONTEND_PID=$!
-echo $FRONTEND_PID > ../.pids/frontend.pid
-cd ..
+echo $FRONTEND_PID > .pids/frontend.pid
 
 echo ""
 echo "Services started:"

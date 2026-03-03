@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { ChatMessage, AgentContext, Station } from '../types';
+import type { ChatMessage, AgentContext, Station, ThinkingStep } from '../types';
 import { getStation } from '../utils/buildAgentPayload';
 
 interface AgentChatProps {
@@ -28,6 +28,46 @@ const EXAMPLE_QUESTIONS: Record<string, string[]> = {
     'How many active members does our station have?',
   ],
 };
+
+const STEP_ICONS: Record<ThinkingStep['type'], string> = {
+  status: '◆',
+  thinking: '◇',
+  tool_use: '⚙',
+  tool_status: '↻',
+};
+
+function ThinkingStepsView({ steps, isStreaming }: { steps: ThinkingStep[]; isStreaming: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!steps.length) return null;
+
+  const lastStep = steps[steps.length - 1];
+  const showExpanded = expanded || isStreaming;
+
+  return (
+    <div className="thinking-steps">
+      <button
+        className="thinking-toggle"
+        onClick={() => setExpanded(e => !e)}
+      >
+        <span className={`thinking-indicator ${isStreaming ? 'pulse' : ''}`}>
+          {STEP_ICONS[lastStep.type]}
+        </span>
+        {isStreaming ? lastStep.text : `${steps.length} step${steps.length > 1 ? 's' : ''}`}
+        <span className="thinking-chevron">{showExpanded ? '▾' : '▸'}</span>
+      </button>
+      {showExpanded && (
+        <ul className="thinking-list">
+          {steps.map((step, i) => (
+            <li key={i} className={`thinking-step thinking-step--${step.type}`}>
+              <span className="thinking-step-icon">{STEP_ICONS[step.type]}</span>
+              <span className="thinking-step-text">{step.text}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function AgentChat({ messages, isLoading, error, context, onSend, onReset }: AgentChatProps) {
   const [input, setInput] = useState('');
@@ -85,6 +125,12 @@ export function AgentChat({ messages, isLoading, error, context, onSend, onReset
               <strong>{msg.role === 'user' ? 'You' : `${station.callSign} Agent`}</strong>
               <span className="message-time">{msg.timestamp.toLocaleTimeString()}</span>
             </div>
+            {msg.role === 'assistant' && msg.thinkingSteps && msg.thinkingSteps.length > 0 && (
+              <ThinkingStepsView
+                steps={msg.thinkingSteps}
+                isStreaming={isLoading && idx === messages.length - 1}
+              />
+            )}
             <div className="message-body">{msg.content}</div>
           </div>
         ))}

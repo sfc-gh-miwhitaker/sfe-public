@@ -17,10 +17,17 @@ export interface DemoUser {
   tier: string;
 }
 
+export interface ThinkingStep {
+  type: 'status' | 'thinking' | 'tool_use' | 'tool_status';
+  text: string;
+  timestamp: Date;
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  thinkingSteps?: ThinkingStep[];
 }
 
 export interface AgentContext {

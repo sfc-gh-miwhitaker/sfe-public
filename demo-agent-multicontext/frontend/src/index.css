@@ -393,6 +393,97 @@ body {
   font-size: 0.85rem;
 }
 
+/* --- Thinking steps --- */
+
+.thinking-steps {
+  margin-bottom: 6px;
+}
+
+.thinking-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 4px 12px 4px 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thinking-toggle:hover {
+  background: #f1f3f5;
+  border-color: #d1d5db;
+}
+
+.thinking-indicator {
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+.thinking-indicator.pulse {
+  animation: pulse-glow 1.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.thinking-chevron {
+  font-size: 0.6rem;
+  margin-left: 2px;
+}
+
+.thinking-list {
+  list-style: none;
+  margin-top: 6px;
+  padding-left: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.thinking-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.thinking-step-icon {
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  margin-top: 3px;
+  opacity: 0.7;
+}
+
+.thinking-step-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thinking-step--thinking .thinking-step-text {
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
+.thinking-step--tool_use {
+  color: #7c3aed;
+}
+
+.thinking-step--tool_status {
+  color: #059669;
+}
+
 /* --- Chat input --- */
 
 .chat-input-form {
