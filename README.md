@@ -41,6 +41,7 @@ Documentation, patterns, and examples (no deploy/teardown).
 | [guide-agent-multi-tenant](guide-agent-multi-tenant/) | Multi-tenant agent pattern with OAuth IdP + row-access policies |
 | [guide-cortex-search](guide-cortex-search/) | Cortex Search service creation, management, and querying |
 | [guide-api-agent-context](guide-api-agent-context/) | Agent:Run REST API examples with execution context |
+| [guide-coco-setup](guide-coco-setup/) | Cortex Code CLI on-ramp: install, guidance hierarchy, and first custom skill |
 | [guide-slack-chart-patch](guide-slack-chart-patch/) | Chart and visualization support for the Cortex Agent + Slack quickstart |
 | [guide-replication-workbook](guide-replication-workbook/) | Replication and failover SQL runbooks for Snowsight |
 
