@@ -6,6 +6,9 @@ Tool: Cursor + Claude | Refined: 1 iteration(s)
 Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-01
 ==============================================================================*/
 
+USE ROLE ACCOUNTADMIN;
+GRANT APPLICATION ROLE SNOWFLAKE.MODELS."CORTEX-MODEL-ROLE-ALL" TO ROLE SYSADMIN;
+
 USE ROLE SYSADMIN;
 
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;

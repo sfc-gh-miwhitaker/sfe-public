@@ -186,7 +186,7 @@ with tab_targeting:
 
                 if len(scored_df) > 0:
                     st.write(f"Found **{len(scored_df)}** players predicted to respond.")
-                    status.update(label="Scoring complete", state="complete", expanded=False)
+                    status.update(label="Scoring complete", state="complete", expanded=True)
 
                     col1, col2, col3 = st.columns(3)
                     col1.metric("Predicted Audience Size", f"{len(scored_df):,}")
@@ -267,7 +267,7 @@ with tab_targeting:
                 """).to_pandas()
 
                 if len(rec_df) > 0:
-                    status.update(label="Recommendation ready", state="complete", expanded=False)
+                    status.update(label="Recommendation ready", state="complete", expanded=True)
                     st.markdown(rec_df.iloc[0]["RECOMMENDATION"])
                 else:
                     status.update(label="No profile found", state="error")
@@ -325,7 +325,7 @@ with tab_lookalike:
 
                 if len(similar_df) > 0:
                     st.write(f"Found **{len(similar_df)}** closest matches.")
-                    status.update(label="Similarity search complete", state="complete", expanded=False)
+                    status.update(label="Similarity search complete", state="complete", expanded=True)
 
                     col1, col2, col3 = st.columns(3)
                     col1.metric(
