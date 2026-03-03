@@ -13,6 +13,8 @@ A production-grade campaign recommendation engine for casino operators -- audien
 **Pair-programmed by:** SE Community + Cortex Code
 **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
+![Streamlit Dashboard -- ML scoring, audience metrics, and distribution charts](assets/streamlit-dashboard.png)
+
 ### Complexity Card
 
 | Metric | Manual Estimate | AI-Pair Actual |
@@ -30,6 +32,8 @@ A production-grade campaign recommendation engine for casino operators -- audien
 3. **Campaign Copy Generator** -- LLM-powered campaign messaging and channel strategy recommendations
 4. **Interactive Dashboard** -- Streamlit app with Campaign Targeting and Player Lookalike tabs
 5. **Natural Language Analytics** -- Cortex Intelligence Agent for ad-hoc campaign and player queries
+
+![Snowflake Intelligence -- natural language query with auto-generated chart](assets/snowflake-intelligence.png)
 
 ## How It Was Built
 
@@ -107,6 +111,7 @@ demo-campaign-engine/
 │   ├── 06_streamlit/         -- Dashboard deployment
 │   └── 99_cleanup/           -- Teardown scripts
 ├── streamlit/                -- Streamlit app source
+├── assets/                   -- Screenshots and images
 ├── diagrams/                 -- Architecture diagrams
 ├── docs/                     -- User guides
 └── prompts/                  -- AI prompt catalog
