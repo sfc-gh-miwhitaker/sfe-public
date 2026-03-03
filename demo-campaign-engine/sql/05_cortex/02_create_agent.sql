@@ -11,8 +11,12 @@ USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;
 
 CREATE OR REPLACE AGENT SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE.CAMPAIGN_ANALYTICS_AGENT
   COMMENT = 'DEMO: NL analytics agent for campaign and player data (Expires: 2026-05-01)'
+  PROFILE = '{"display_name": "Campaign Analytics", "color": "blue"}'
   FROM SPECIFICATION
   $$
+  models:
+    orchestration: auto
+
   instructions:
     response: >-
       You are a casino marketing analytics assistant. Answer questions about
@@ -37,8 +41,27 @@ CREATE OR REPLACE AGENT SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE.CAMPAIGN_ANALYTICS_AGE
           response history. Use this tool for any question involving player counts,
           averages, trends, comparisons, or campaign performance metrics like
           response rate and redemption amounts.
+    - tool_spec:
+        type: data_to_chart
+        name: data_to_chart
+        description: 'Generates visualizations from data'
 
   tool_resources:
     campaign_data:
       semantic_view: SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_CAMPAIGN_ENGINE_ANALYTICS
   $$;
+
+----------------------------------------------------------------------
+-- Register agent with Snowflake Intelligence
+----------------------------------------------------------------------
+USE ROLE ACCOUNTADMIN;
+
+CREATE SNOWFLAKE INTELLIGENCE IF NOT EXISTS SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT;
+
+ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT
+  ADD AGENT SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE.CAMPAIGN_ANALYTICS_AGENT;
+
+GRANT USAGE ON SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT
+  TO ROLE PUBLIC;
+
+USE ROLE SYSADMIN;
