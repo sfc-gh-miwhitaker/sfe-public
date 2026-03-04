@@ -1,3 +1,8 @@
+---
+name: demo-agent-multicontext
+description: "Per-request context injection using Snowflake Agent Run API without agent object. Triggers: multicontext agent, per-request context, agent:run inline, authorization tiers, station branding, tool gating, anonymous basic admin tiers."
+---
+
 # Multicontext Agent Patterns
 
 ## Purpose
@@ -14,7 +19,7 @@ Per-request context injection using the Snowflake Agent Run API "without agent o
 
 ## Architecture
 
-The "without agent object" endpoint (`POST /api/v2/cortex/agent:run`) accepts the full agent specification inline per request. This means every field -- `instructions`, `tools`, `tool_resources`, and the `X-Snowflake-Role` header -- can change per request without creating or modifying an agent object in Snowflake.
+The "without agent object" endpoint (`POST /api/v2/cortex/agent:run`) accepts the full agent specification inline per request. Every field -- `instructions`, `tools`, `tool_resources`, and the `X-Snowflake-Role` header -- can change per request without creating or modifying an agent object in Snowflake.
 
 ```
 User picks station + tier
@@ -48,7 +53,7 @@ User picks station + tier
 | Basic Member | `low` | Search + Analyst (viewership) | `TV_VIEWER_ROLE` | User name, member ID, tier |
 | Station Admin | `full` | Search + full Analyst | `TV_ADMIN_ROLE` | User name, member ID, admin flag |
 
-## Adding a New Tool
+## Extension Playbook: Adding a New Tool
 
 1. Add the tool spec and resource in `buildTools()` in `backend/server.js`
 2. Gate it behind the appropriate `userType` check
@@ -56,7 +61,7 @@ User picks station + tier
 4. Mirror the change in `frontend/src/utils/buildAgentPayload.ts` for the API Inspector
 5. If the tool needs a new Snowflake object, add it to both `deploy_all.sql` and `teardown_all.sql`
 
-## Adding a New Tier
+## Extension Playbook: Adding a New Tier
 
 1. Add the tier to the `if/else` chain in `buildSystemInstructions()`, `buildResponseInstructions()`, `buildOrchestrationInstructions()`, and `buildTools()`
 2. Create the corresponding Snowflake role in `sql/06_roles_and_grants.sql` and `deploy_all.sql`
@@ -75,9 +80,16 @@ The system prompt begins with the station identity: "You are the WETA Support Ag
 
 ## Snowflake Objects
 
-- Database: `SNOWFLAKE_EXAMPLE`
-- Schema: `AGENT_MULTICONTEXT`
-- Warehouse: `SFE_AGENT_MULTICONTEXT_WH`
-- Cortex Search: `SUPPORT_KB_SEARCH`
-- Semantic View: `SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AGENT_MULTICONTEXT_VIEWERSHIP`
-- All objects have `COMMENT = 'DEMO: ... (Expires: 2026-04-02)'`
+| Object | Name |
+|--------|------|
+| Schema | `SNOWFLAKE_EXAMPLE.AGENT_MULTICONTEXT` |
+| Warehouse | `SFE_AGENT_MULTICONTEXT_WH` |
+| Cortex Search | `SUPPORT_KB_SEARCH` |
+| Semantic View | `SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AGENT_MULTICONTEXT_VIEWERSHIP` |
+
+## Gotchas
+
+- Backend is authoritative -- frontend `buildAgentPayload.ts` is for preview only
+- `X-Snowflake-Role` header controls RBAC, not the payload
+- Thread IDs must be created via API before referencing in agent:run calls
+- SSE `metadata` events carry `parent_message_id` needed for multi-turn threading

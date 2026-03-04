@@ -23,6 +23,20 @@ The AI will guide you through deployment and usage. You don't need to understand
 
 ## Projects
 
+### Which Agent Project?
+
+Three projects cover overlapping Cortex Agent territory. Use this table to pick the right starting point.
+
+| | [guide-api-agent-context](guide-api-agent-context/) | [guide-agent-multi-tenant](guide-agent-multi-tenant/) | [demo-agent-multicontext](demo-agent-multicontext/) |
+|---|---|---|---|
+| **Type** | Code snippet guide | Architecture guide | Runnable demo |
+| **API Approach** | Both (with + without agent object) | With agent object | Without agent object |
+| **What Changes Per Request** | Role + warehouse headers | Authenticated identity (RAP filtering) | System prompt, tools, role, and instructions |
+| **Auth Pattern** | PAT / OAuth snippets | Azure AD + External OAuth (production) | Simulated user picker |
+| **Data Isolation** | Not implemented | Row Access Policies via CURRENT_USER() | Row Access Policies via X-Snowflake-Role |
+| **Runnable?** | Single Python script | No (markdown only) | Yes (full stack) |
+| **Start here if…** | "I need the API syntax" | "I'm designing a production app" | "I want to see and show context injection" |
+
 ### Demos
 
 Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
