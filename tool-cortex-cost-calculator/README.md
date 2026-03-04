@@ -8,6 +8,7 @@
 > **DEMONSTRATION PROJECT** - Expiration date in [`deploy_all.sql` line 6](deploy_all.sql) (SSOT)
 > This demo uses Snowflake features current as of March 2026.
 > After expiration, this repository will be archived and made private.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 **Author:** SE Community
 **Purpose:** Reference implementation for Cortex spend attribution and 12-month forecasting

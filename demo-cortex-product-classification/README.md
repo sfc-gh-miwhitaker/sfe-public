@@ -6,8 +6,9 @@
 # Glaze & Classify
 
 > **Warning:** This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
-Product classification showdown: four progressively sophisticated approaches to classifying an international bakery catalog — from brittle SQL to production-ready Cortex AI pipelines and custom SPCS vision models.
+Product classification showdown: four progressively sophisticated approaches to classifying an international bakery catalog — from brittle SQL to robust Cortex AI pipelines and custom SPCS vision models.
 
 **Author:** SE Community
 **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
@@ -58,7 +59,7 @@ CASE/LIKE/regex with keyword lookup tables. Works for English, breaks on Japanes
 A single `AI_COMPLETE()` call with a classification prompt. ~10 lines of SQL. Handles multiple languages out of the box. Shows how fast you can get started with AI classification.
 
 ### 3. Cortex COMPLETE — Robust
-Multi-step pipeline: language detection, structured JSON output via type literals, hierarchical classification (Category > Subcategory > Attributes), confidence scoring, batch processing with error handling. Production-ready pattern.
+Multi-step pipeline: language detection, structured JSON output via type literals, hierarchical classification (Category > Subcategory > Attributes), confidence scoring, batch processing with error handling. Robust reference pattern.
 
 ### 4. SPCS Custom Vision Model
 Snowpark Container Services running a lightweight image classification model. Exposed as a SQL-callable service function. Shows "bring your own model" for specialized domains where general LLMs fall short.

@@ -8,6 +8,7 @@
 > DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
 > This demo uses Snowflake features current as of March 2026.
 > After expiration, this repository will be archived and made private.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 **Author:** SE Community
 **Purpose:** Reference implementation for automated data quality monitoring and reporting using Snowflake native features.

@@ -8,6 +8,7 @@
 > DEMONSTRATION PROJECT - EXPIRES: 2026-04-02
 > This demo uses Snowflake features current as of March 2026.
 > After expiration, a warning banner will be added to this README and deploy_all.sql.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 Demonstrates the Snowflake Agent Run API **"without agent object"** approach for
 injecting per-request context -- user identity, station branding, and

@@ -10,6 +10,7 @@
 > **DEMONSTRATION PROJECT** | **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01
 > This demo uses Snowflake features current as of March 2026.
 > After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before deploying.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 **Author:** SE Community
 **Purpose:** Reference implementation showing React.js integration with Snowflake Cortex Agents
@@ -58,7 +59,7 @@ A modern, single-page React application that provides a chat interface for Snowf
 - 🔐 Key-pair JWT authentication (no expiring tokens to manage)
 - 💬 Real-time streaming responses via Server-Sent Events
 - ⚡ Auto-refreshing JWT tokens (1-hour lifetime)
-- 🧩 Simple, production-ready React patterns
+- 🧩 Simple, well-structured React patterns
 
 ## 🔒 Security Warning
 

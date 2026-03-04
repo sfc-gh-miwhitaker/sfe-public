@@ -1,14 +1,15 @@
-![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
-![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
+![Guide](https://img.shields.io/badge/Type-Guide-blue)
+![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
 ![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
-# Agent Config Diff Tool
+# Agent Config Diff
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
-> This tool uses Snowflake features current as of March 2026.
+> REFERENCE GUIDE - EXPIRES: 2026-05-01
+> This guide uses Snowflake features current as of March 2026.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
-Extract Cortex Agent specifications for configuration management, comparison, and version control.
+Extract Cortex Agent specifications for configuration management, comparison, and version control. No persistent objects are created -- run the queries ad-hoc in Snowsight or programmatically via Python.
 
 **Author:** SE Community
 **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
@@ -26,7 +27,7 @@ cd sfe-public/tool-agent-config-diff && cortex
 
 ## What This Creates
 
-This tool runs ad-hoc SQL queries -- no persistent objects are created. It reads agent metadata via `DESCRIBE AGENT` and formats output for diff workflows.
+This guide runs ad-hoc SQL queries -- no persistent objects are created. It reads agent metadata via `DESCRIBE AGENT` and formats output for diff workflows.
 
 ## Usage
 
@@ -113,7 +114,7 @@ Per [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/desc-agent)
 
 ## Cleanup
 
-No cleanup required -- this tool creates no persistent objects.
+No cleanup required -- this guide creates no persistent objects.
 
 ## Development Tools
 

@@ -7,6 +7,7 @@
 
 > DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
 > This tool uses Snowflake features current as of March 2026.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 A simple contact form built with Streamlit in Snowflake that collects user information and writes directly to a Snowflake table.
 

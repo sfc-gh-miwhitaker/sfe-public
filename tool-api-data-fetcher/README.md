@@ -7,6 +7,7 @@
 
 > DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
 > This tool uses Snowflake features current as of March 2026.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 A Python stored procedure that fetches data from a public REST API and stores it in a Snowflake table, demonstrating External Access Integration.
 

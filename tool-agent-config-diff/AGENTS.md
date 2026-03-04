@@ -1,6 +1,6 @@
-# Agent Config Diff Tool
+# Agent Config Diff
 
-Extract Cortex Agent specifications for configuration management, comparison, and version control.
+Reference guide for extracting Cortex Agent specifications for configuration management, comparison, and version control.
 
 ## Project Structure
 - `extract_agent_spec.sql` -- Interactive SQL for Snowsight/SnowSQL

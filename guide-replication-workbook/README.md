@@ -1,5 +1,7 @@
 # Replication Workbook (SQL Guides)
 
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+
 ## Quick Start
 
 **Get just this guide:**

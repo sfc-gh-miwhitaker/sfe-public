@@ -8,6 +8,7 @@
 > **DEMONSTRATION PROJECT** | **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01
 > This demo uses Snowflake features current as of March 2026.
 > After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before deploying.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 **Author:** SE Community
 **Purpose:** Reference implementation for a Snowflake-native Streamlit cost calculator for database replication/DR

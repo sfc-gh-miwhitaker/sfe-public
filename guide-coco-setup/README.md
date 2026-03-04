@@ -1,5 +1,7 @@
 # Get Started with Cortex Code CLI
 
+> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
+
 A curated on-ramp for AI pair-programming with Snowflake. Install the CLI, understand how it finds its instructions, and build your first custom skill.
 
 **Time:** ~45 minutes | **Result:** Working CLI + your first custom skill

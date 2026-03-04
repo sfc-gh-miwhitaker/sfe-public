@@ -7,6 +7,7 @@
 
 > DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
 > This demo uses Snowflake features current as of March 2026.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 Pull accounting data from QuickBooks Online directly into Snowflake using native features -- no external ETL tools needed. Walks through every layer of the medallion pattern with Cortex AI enrichment and Data Metric Functions for continuous quality monitoring.
 

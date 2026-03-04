@@ -1,5 +1,7 @@
 # Multi-Tenant Snowflake Agent with Azure AD OAuth and Row Access Policies
 
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+
 Complete guide for building a customer-facing React application where each customer only sees their own data using Azure AD OAuth and Snowflake Row Access Policies.
 
 ## Architecture Overview

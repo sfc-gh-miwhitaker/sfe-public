@@ -8,6 +8,7 @@
 
 > DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
 > This tool uses Snowflake features current as of March 2026.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 **Author:** SE Community
 **Purpose:** Enhance Snowflake semantic views with AI-improved descriptions using Cortex
@@ -302,7 +303,7 @@ See `diagrams/` folder for detailed architecture diagrams:
 1. ✅ **Creates enhanced copies** - Original views stay safe
 2. ✅ **One procedure, one call** - Simple API
 3. ✅ **Cortex-powered** - AI understands your business context
-4. ✅ **Production-ready** - Handles errors, escaping, edge cases
+4. ✅ **Robust** - Handles errors, escaping, edge cases
 5. ✅ **Cost-effective** - Pennies per semantic view
 6. ✅ **Flexible** - Iterative refinement supported
 

@@ -7,6 +7,7 @@
 
 > DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
 > This demo uses Snowflake features current as of March 2026.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 Transform complex OpenAI API responses using Snowflake's native Cortex AI functions
 for classification, sentiment analysis, and summarization - no external API calls required.
