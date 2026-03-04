@@ -36,21 +36,17 @@ SFE_SUBMISSIONS table
 
 ## Inline Deployment Pattern
 
-The Streamlit code is embedded in a Python stored procedure that writes it to a stage:
+The Streamlit code is embedded in a Python stored procedure that writes it to a stage.
+The file MUST be staged BEFORE `CREATE STREAMLIT FROM` (which copies files at creation time),
+followed by `ADD LIVE VERSION FROM LAST` to activate the app:
 
 ```sql
-CREATE OR REPLACE PROCEDURE put_stream(...)
-    RETURNS STRING LANGUAGE PYTHON RUNTIME_VERSION = '3.11'
-    PACKAGES = ('snowflake-snowpark-python')
-    HANDLER = 'run'
-AS $$ 
-def run(session, code, stage, filename):
-    import io
-    session.file.put_stream(io.BytesIO(code.encode()), f"@{stage}/{filename}", ...)
-$$;
-
-CALL put_stream(<streamlit_code>, <stage>, 'streamlit_app.py');
+CREATE STAGE @<stage> DIRECTORY = (ENABLE = TRUE);
+CREATE PROCEDURE SFE_SETUP_APP() ... AS $$ session.file.put_stream(...) $$;
+CALL SFE_SETUP_APP();
+ALTER STAGE @<stage> REFRESH;
 CREATE STREAMLIT SFE_CONTACT_FORM FROM @<stage> MAIN_FILE = 'streamlit_app.py';
+ALTER STREAMLIT SFE_CONTACT_FORM ADD LIVE VERSION FROM LAST;
 ```
 
 ## Extension Playbook: Adding New Form Fields
@@ -80,8 +76,10 @@ CREATE STREAMLIT SFE_CONTACT_FORM FROM @<stage> MAIN_FILE = 'streamlit_app.py';
 
 ## Gotchas
 
+- `CREATE STREAMLIT FROM` copies files at creation time -- stage the file FIRST, then create the Streamlit object
+- `ADD LIVE VERSION FROM LAST` is required after `CREATE STREAMLIT` for the app to be live without manual Snowsight visit
+- AUTOINCREMENT defaults to NOORDER since BCR-1483 (2024_01) -- use explicit ORDER if sequential IDs are needed
 - Inline deployment via `put_stream` is simpler but harder to version control than Git-integrated
 - The shared `SFE_TOOLS_WH` warehouse keeps costs minimal
 - `submitted_at` uses `CURRENT_TIMESTAMP()` -- timezone is session-dependent
-- Minimal footprint: no environment.yml needed for basic Streamlit
 - Schema CASCADE drop in teardown removes all objects

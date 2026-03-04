@@ -3,7 +3,7 @@
  * File: deploy.sql
  * Author: SE Community
  * Created: 2025-12-10
- * Last Updated: 2026-03-02
+ * Last Updated: 2026-03-04
  * Expires: 2026-05-01
  *
  * Prerequisites:
@@ -46,7 +46,6 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_TOOLS_WH
     WAREHOUSE_SIZE = 'X-SMALL'
     AUTO_SUSPEND = 60
     AUTO_RESUME = TRUE
-    INITIALLY_SUSPENDED = FALSE
     COMMENT = 'Shared warehouse for Snowflake Tools Collection | Author: SE Community';
 
 USE WAREHOUSE SFE_TOOLS_WH;
@@ -64,7 +63,7 @@ USE SCHEMA SFE_CONTACT_FORM;
 -- CREATE TABLE
 -- ============================================================================
 CREATE OR REPLACE TABLE SFE_SUBMISSIONS (
-    submission_id INT AUTOINCREMENT,
+    submission_id INT AUTOINCREMENT ORDER,
     full_name VARCHAR(200) NOT NULL,
     email VARCHAR(320) NOT NULL,
     address VARCHAR(500),
@@ -74,21 +73,12 @@ CREATE OR REPLACE TABLE SFE_SUBMISSIONS (
 COMMENT = 'TOOL: Contact form submissions | Author: SE Community | Expires: 2026-05-01';
 
 -- ============================================================================
--- CREATE STREAMLIT STAGE AND APP
+-- STAGE STREAMLIT APP CODE (must happen BEFORE CREATE STREAMLIT)
 -- ============================================================================
 CREATE OR REPLACE STAGE SFE_STREAMLIT_STAGE
     DIRECTORY = (ENABLE = TRUE)
     COMMENT = 'TOOL: Stage for Streamlit app files | Author: SE Community | Expires: 2026-05-01';
 
-CREATE OR REPLACE STREAMLIT SFE_CONTACT_FORM
-    FROM '@SNOWFLAKE_EXAMPLE.SFE_CONTACT_FORM.SFE_STREAMLIT_STAGE'
-    MAIN_FILE = 'streamlit_app.py'
-    QUERY_WAREHOUSE = SFE_TOOLS_WH
-    COMMENT = 'TOOL: Contact form Streamlit app | Author: SE Community | Expires: 2026-05-01';
-
--- ============================================================================
--- UPLOAD STREAMLIT APP CODE
--- ============================================================================
 CREATE OR REPLACE PROCEDURE SFE_SETUP_APP()
     RETURNS STRING
     LANGUAGE PYTHON
@@ -107,24 +97,19 @@ def setup_app(session):
 import streamlit as st
 from snowflake.snowpark.context import get_active_session
 
-# Page configuration
 st.set_page_config(
     page_title="Contact Form",
     page_icon="📝",
     layout="centered"
 )
 
-# Get Snowflake session
 session = get_active_session()
 
-# Header
 st.title("📝 Contact Form")
 st.markdown("---")
 
-# Info
 st.info("**Streamlit in Snowflake Demo** | Form data writes directly to a Snowflake table.")
 
-# Form
 with st.form("contact_form", clear_on_submit=True):
     st.subheader("Submit Your Information")
 
@@ -159,7 +144,6 @@ with st.form("contact_form", clear_on_submit=True):
 
 st.markdown("---")
 
-# Recent submissions
 st.subheader("📊 Recent Submissions")
 
 try:
@@ -185,12 +169,10 @@ try:
 except Exception as e:
     st.error(f"Error loading submissions: {str(e)}")
 
-# Footer
 st.markdown("---")
 st.caption("Streamlit in Snowflake | SE Community | Expires: 2026-05-01")
 '''
 
-    # Wrap bytes in BytesIO for put_stream
     file_stream = BytesIO(streamlit_code.encode('utf-8'))
 
     session.file.put_stream(
@@ -203,11 +185,21 @@ st.caption("Streamlit in Snowflake | SE Community | Expires: 2026-05-01")
     return "Streamlit app file created successfully"
 $$;
 
--- Run setup
 CALL SFE_SETUP_APP();
 
--- Refresh stage
 ALTER STAGE SFE_STREAMLIT_STAGE REFRESH;
+
+-- ============================================================================
+-- CREATE STREAMLIT APP (after file is staged)
+-- ============================================================================
+CREATE OR REPLACE STREAMLIT SFE_CONTACT_FORM
+    FROM '@SNOWFLAKE_EXAMPLE.SFE_CONTACT_FORM.SFE_STREAMLIT_STAGE'
+    MAIN_FILE = 'streamlit_app.py'
+    QUERY_WAREHOUSE = SFE_TOOLS_WH
+    TITLE = 'Contact Form'
+    COMMENT = 'TOOL: Contact form Streamlit app | Author: SE Community | Expires: 2026-05-01';
+
+ALTER STREAMLIT SFE_CONTACT_FORM ADD LIVE VERSION FROM LAST;
 
 -- ============================================================================
 -- DEPLOYMENT COMPLETE

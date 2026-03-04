@@ -69,7 +69,9 @@ cd sfe-public/tool-streamlit-contact-form && cortex
 After submitting the form, your data appears in:
 
 ```sql
-SELECT * FROM SNOWFLAKE_EXAMPLE.SFE_CONTACT_FORM.SFE_SUBMISSIONS;
+SELECT submission_id, full_name, email, address, submitted_at
+FROM SNOWFLAKE_EXAMPLE.SFE_CONTACT_FORM.SFE_SUBMISSIONS
+ORDER BY submitted_at DESC;
 ```
 
 | submission_id | full_name | email | address | submitted_at |
@@ -125,4 +127,4 @@ This project is designed for AI-pair development.
 
 ---
 
-*SE Community • Contact Form Tool • Last Updated: 2026-03-02*
+*SE Community • Contact Form Tool • Last Updated: 2026-03-04*
