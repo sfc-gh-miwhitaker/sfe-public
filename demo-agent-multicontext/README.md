@@ -100,11 +100,23 @@ being sent to the Snowflake Agent API. Toggle between tabs to see:
 
 ## Observability
 
-Agent monitoring works with the "without agent object" approach. All
-conversations and traces are available in the Snowflake UI under
-AI & ML > Agents > Monitoring. Logs are stored in
-`SNOWFLAKE.LOCAL.AI_OBSERVABILITY_EVENTS`. Threads tie conversations
-together regardless of which endpoint is used.
+The "without agent object" approach trades the Snowsight Agents monitoring
+UI (AI & ML > Agents > Monitoring) for per-request flexibility. That UI
+requires selecting an agent object, so it is not available when you skip
+object creation. Three SQL-based observability paths still work:
+
+| What | Source | Scope |
+|------|--------|-------|
+| Agent credits and token usage | `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY` | All `agent:run` calls (with and without object) |
+| Cortex Analyst request logs | `SNOWFLAKE.LOCAL.CORTEX_ANALYST_REQUESTS()` table function | Scoped to a semantic view |
+| Conversation history | Thread REST API (`GET /api/v2/cortex/threads/{id}/messages`) | Per thread |
+
+Threads tie conversations together regardless of which endpoint is used --
+the same `thread_id` works with both `/api/v2/cortex/agent:run` and
+`/api/v2/databases/{db}/schemas/{schema}/agents/{name}:run`.
+
+See `sql/07_observability_queries.sql` for ready-to-run queries you can
+paste into Snowsight after using the demo.
 
 ## Operations
 
@@ -113,6 +125,7 @@ together regardless of which endpoint is used.
 | `./tools/02_start.sh` | Install deps, start backend + frontend |
 | `./tools/03_status.sh` | Check service health and port status |
 | `./tools/04_stop.sh` | Stop all services |
+| `sql/07_observability_queries.sql` | Ad-hoc observability queries (run individually in Snowsight) |
 
 - **Backend:** http://localhost:3001 (Express proxy to Snowflake)
 - **Frontend:** http://localhost:3000 (Vite dev server, proxies `/api` to backend)
@@ -143,5 +156,7 @@ This project is designed for AI-pair development.
 
 - [Cortex Agents Run API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-run) -- `agent:run` with and without agent object
 - [Cortex Agents REST API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-rest-api) -- CRUD operations for agent objects
-- [Monitor Cortex Agent Requests](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-monitor) -- Observability and tracing
+- [Monitor Cortex Agent Requests](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-monitor) -- Observability and tracing (requires agent object)
+- [CORTEX_AGENT_USAGE_HISTORY](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_agent_usage_history) -- Usage view for all `agent:run` calls
+- [Cortex Analyst Administrator Monitoring](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/admin-observability) -- Analyst request logs and SQL queries
 - [Setting Execution Context](https://docs.snowflake.com/en/developer-guide/snowflake-rest-api/setting-context) -- X-Snowflake-Role and X-Snowflake-Warehouse headers
