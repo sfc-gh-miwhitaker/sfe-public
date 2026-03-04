@@ -11,24 +11,33 @@ This demonstrates how to:
 Requirements:
     pip install requests
 
+    For key-pair JWT auth only (option 3):
+    pip install cryptography
+
 Environment Variables:
     SNOWFLAKE_ACCOUNT: Your Snowflake account identifier (e.g., 'myorg-myaccount')
 
-    Option 1 - Personal Access Token (recommended):
+    Option 1 - Personal Access Token (recommended for quick testing):
     SNOWFLAKE_PAT: Your Personal Access Token
 
     Option 2 - OAuth (client credentials):
     SNOWFLAKE_OAUTH_CLIENT_ID: OAuth client ID
     SNOWFLAKE_OAUTH_CLIENT_SECRET: OAuth client secret
+
+    Option 3 - Key-Pair JWT (service accounts, CI/CD, no-password):
+    SNOWFLAKE_USER: Snowflake username with RSA public key assigned
+    SNOWFLAKE_PRIVATE_KEY_PATH: Path to PEM-encoded RSA private key file
+    See: https://docs.snowflake.com/en/user-guide/key-pair-auth
 """
 
 import os
 import sys
 import json
 import time
-import requests
-from typing import Optional
+from typing import Optional, Tuple, Dict
 from urllib.parse import urlencode
+
+import requests
 
 
 def get_oauth_token(
@@ -79,27 +88,104 @@ def get_oauth_token(
     return response.json()["access_token"]
 
 
+def generate_keypair_jwt(
+    account: str,
+    user: str,
+    private_key_path: str,
+    expires_in_seconds: int = 3600,
+) -> str:
+    """
+    Generate a Snowflake KEYPAIR_JWT token from an RSA private key.
+
+    Requires: pip install cryptography
+
+    Snowflake setup (one-time, as ACCOUNTADMIN):
+        ALTER USER <user> SET RSA_PUBLIC_KEY='<public key without header/footer>';
+
+    See: https://docs.snowflake.com/en/user-guide/key-pair-auth
+    """
+    import hashlib
+    import math
+    import base64
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import padding
+
+    def _b64url(data: bytes) -> str:
+        return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+    pem_bytes = open(private_key_path, "rb").read()
+    private_key = serialization.load_pem_private_key(pem_bytes, password=None)
+
+    public_der = private_key.public_key().public_bytes(
+        serialization.Encoding.DER,
+        serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    fingerprint = base64.b64encode(hashlib.sha256(public_der).digest()).decode("ascii")
+
+    normalized_account = (
+        account.strip()
+        .replace(".snowflakecomputing.com", "")
+        .replace(".", "-")
+        .upper()
+    )
+    username = user.strip().upper()
+    qualified = f"{normalized_account}.{username}"
+
+    now = math.floor(time.time())
+    header = {"alg": "RS256", "typ": "JWT"}
+    payload = {
+        "iss": f"{qualified}.SHA256:{fingerprint}",
+        "sub": qualified,
+        "iat": now,
+        "exp": now + expires_in_seconds,
+    }
+
+    signing_input = f"{_b64url(json.dumps(header).encode())}.{_b64url(json.dumps(payload).encode())}"
+    signature = private_key.sign(
+        signing_input.encode(), padding.PKCS1v15(), hashes.SHA256()
+    )
+    return f"{signing_input}.{_b64url(signature)}"
+
+
 def get_auth_token(
     account: str,
     pat: Optional[str] = None,
     oauth_client_id: Optional[str] = None,
     oauth_client_secret: Optional[str] = None,
-) -> str:
+    user: Optional[str] = None,
+    private_key_path: Optional[str] = None,
+) -> Tuple[str, Dict[str, str]]:
     """
-    Get authentication token for Snowflake API.
+    Get authentication token and any extra headers for the Snowflake API.
 
-    Priority: PAT > OAuth client credentials
+    Returns (token, extra_headers). For PAT and OAuth the extra headers dict
+    is empty.  For key-pair JWT it contains X-Snowflake-Authorization-Token-Type.
+
+    Priority: PAT > Key-Pair JWT > OAuth client credentials
     """
     if pat:
-        return pat
+        return pat, {}
+
+    if user and private_key_path:
+        token = generate_keypair_jwt(account, user, private_key_path)
+        return token, {"X-Snowflake-Authorization-Token-Type": "KEYPAIR_JWT"}
 
     if oauth_client_id and oauth_client_secret:
-        return get_oauth_token(account, oauth_client_id, oauth_client_secret)
+        return get_oauth_token(account, oauth_client_id, oauth_client_secret), {}
 
-    raise ValueError("Either PAT or OAuth client credentials required")
+    raise ValueError(
+        "One of the following is required:\n"
+        "  - SNOWFLAKE_PAT\n"
+        "  - SNOWFLAKE_USER + SNOWFLAKE_PRIVATE_KEY_PATH\n"
+        "  - SNOWFLAKE_OAUTH_CLIENT_ID + SNOWFLAKE_OAUTH_CLIENT_SECRET"
+    )
 
 
-def create_thread(account: str, token: str) -> str:
+def create_thread(
+    account: str,
+    token: str,
+    extra_headers: Optional[Dict[str, str]] = None,
+) -> str:
     """
     Create a conversation thread.
 
@@ -107,12 +193,15 @@ def create_thread(account: str, token: str) -> str:
     """
     url = f"https://{account}.snowflakecomputing.com/api/v2/cortex/threads"
 
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        **(extra_headers or {}),
+    }
+
     response = requests.post(
         url,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        },
+        headers=headers,
         json={"origin_application": "agent_run_example"}
     )
     response.raise_for_status()
@@ -132,6 +221,7 @@ def run_agent_with_context(
     user_message: str,
     role: Optional[str] = None,
     warehouse: Optional[str] = None,
+    extra_headers: Optional[Dict[str, str]] = None,
     query_timeout: int = 60
 ) -> None:
     """
@@ -139,7 +229,7 @@ def run_agent_with_context(
 
     Args:
         account: Snowflake account identifier
-        token: Auth token (PAT or OAuth)
+        token: Auth token (PAT, OAuth, or Key-Pair JWT)
         database: Database containing the agent
         schema: Schema containing the agent
         agent_name: Name of the agent
@@ -148,6 +238,7 @@ def run_agent_with_context(
         user_message: The user's question/message
         role: Snowflake role to use (optional, uses caller's default if not specified)
         warehouse: Warehouse to use for execution (optional, uses caller's default if not specified)
+        extra_headers: Additional headers (e.g. KEYPAIR_JWT token-type header)
         query_timeout: Query timeout in seconds
     """
     url = f"https://{account}.snowflakecomputing.com/api/v2/databases/{database}/schemas/{schema}/agents/{agent_name}:run"
@@ -155,6 +246,7 @@ def run_agent_with_context(
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
+        **(extra_headers or {}),
     }
 
     # Use official Snowflake headers for role and warehouse context
@@ -258,6 +350,7 @@ def run_agent_without_agent_object(
     semantic_view: str,
     warehouse: str,
     role: Optional[str] = None,
+    extra_headers: Optional[Dict[str, str]] = None,
     query_timeout: int = 60
 ) -> None:
     """
@@ -273,6 +366,7 @@ def run_agent_without_agent_object(
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
+        **(extra_headers or {}),
     }
 
     # Use official Snowflake headers for role and warehouse context
@@ -374,29 +468,41 @@ def main():
     pat = os.getenv("SNOWFLAKE_PAT")
     oauth_client_id = os.getenv("SNOWFLAKE_OAUTH_CLIENT_ID")
     oauth_client_secret = os.getenv("SNOWFLAKE_OAUTH_CLIENT_SECRET")
+    user = os.getenv("SNOWFLAKE_USER")
+    private_key_path = os.getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
 
     if not account:
         print("Error: SNOWFLAKE_ACCOUNT environment variable required")
         print("Format: myorg-myaccount")
         sys.exit(1)
 
-    if not pat and not (oauth_client_id and oauth_client_secret):
-        print("Error: Either SNOWFLAKE_PAT or SNOWFLAKE_OAUTH_CLIENT_ID+SNOWFLAKE_OAUTH_CLIENT_SECRET required")
+    has_pat = bool(pat)
+    has_oauth = bool(oauth_client_id and oauth_client_secret)
+    has_keypair = bool(user and private_key_path)
+
+    if not (has_pat or has_oauth or has_keypair):
+        print("Error: One of the following is required:")
+        print("  - SNOWFLAKE_PAT")
+        print("  - SNOWFLAKE_USER + SNOWFLAKE_PRIVATE_KEY_PATH")
+        print("  - SNOWFLAKE_OAUTH_CLIENT_ID + SNOWFLAKE_OAUTH_CLIENT_SECRET")
         sys.exit(1)
 
     try:
         print("Authenticating...")
-        token = get_auth_token(
+        token, extra_headers = get_auth_token(
             account=account,
             pat=pat,
             oauth_client_id=oauth_client_id,
             oauth_client_secret=oauth_client_secret,
+            user=user,
+            private_key_path=private_key_path,
         )
-        print("✓ Authenticated")
+        auth_method = "Key-Pair JWT" if extra_headers else ("PAT" if pat else "OAuth")
+        print(f"OK  Authenticated via {auth_method}")
 
         print("\nCreating thread...")
-        thread_id = create_thread(account, token)
-        print(f"✓ Thread created: {thread_id}")
+        thread_id = create_thread(account, token, extra_headers)
+        print(f"OK  Thread created: {thread_id}")
 
         print("\n" + "="*80)
         print("EXAMPLE 1: Agent with execution context")
@@ -413,6 +519,7 @@ def main():
             user_message="What were the top 5 products by revenue last month?",
             role="ANALYST_ROLE",
             warehouse="ANALYTICS_WH",
+            extra_headers=extra_headers,
             query_timeout=120
         )
 
@@ -420,7 +527,7 @@ def main():
         print("EXAMPLE 2: Agent without agent object (inline config)")
         print("="*80)
 
-        thread_id_2 = create_thread(account, token)
+        thread_id_2 = create_thread(account, token, extra_headers)
 
         run_agent_without_agent_object(
             account=account,
@@ -431,6 +538,7 @@ def main():
             semantic_view="SALES_DB.ANALYTICS.SALES_SEMANTIC_VIEW",
             warehouse="COMPUTE_WH",
             role="ANALYST_ROLE",
+            extra_headers=extra_headers,
             query_timeout=60
         )
 

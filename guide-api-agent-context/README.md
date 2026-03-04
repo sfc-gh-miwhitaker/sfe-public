@@ -10,7 +10,9 @@ bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/m
 cd sfe-public/guide-api-agent-context
 ```
 
-Working examples of calling the Snowflake `agent:run` API with execution context (role and warehouse).
+Working examples of calling the Snowflake `agent:run` API with execution context (role and warehouse) using three authentication methods: PAT, OAuth, and Key-Pair JWT.
+
+> **Switching from PAT to Key-Pair JWT?** See [`migrate_pat_to_keypair_jwt.md`](migrate_pat_to_keypair_jwt.md) for step-by-step recipes that apply to [`demo-agent-multicontext`](../demo-agent-multicontext/), [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/), or any Express/Python backend.
 
 ## Quick Test (curl)
 
@@ -58,8 +60,11 @@ curl -X POST \
 
 | File | Description |
 |------|-------------|
-| `agent_run_with_context.py` | Complete Python example with PAT and OAuth authentication |
-| `agent_run_react.md` | React integration guide with backend proxy pattern |
+| `agent_run_with_context.py` | Python example with PAT, OAuth, and Key-Pair JWT authentication |
+| `agent_run_keypair_jwt.py` | Standalone Python key-pair JWT example (uses `cryptography`) |
+| `agent_run_keypair_jwt.js` | Standalone Node.js key-pair JWT example (zero dependencies) |
+| `agent_run_react.md` | React integration guide with three backend proxy patterns |
+| `migrate_pat_to_keypair_jwt.md` | Step-by-step recipes for switching existing projects to JWT auth |
 
 ## Key Concepts
 
@@ -91,6 +96,38 @@ For tool-specific warehouse configuration, use `execution_environment`:
 }
 ```
 
+### Key-Pair JWT Authentication
+
+For service accounts, CI/CD, or no-password environments. The private key never leaves the server.
+
+```bash
+# One-time: generate key pair
+openssl genrsa -out rsa_key.pem 2048
+openssl rsa -in rsa_key.pem -pubout -out rsa_key.pub
+
+# One-time: assign public key to Snowflake user (as ACCOUNTADMIN)
+# ALTER USER my_user SET RSA_PUBLIC_KEY='<pub key without BEGIN/END lines>';
+```
+
+Key-pair JWT requests require two auth headers:
+
+```python
+headers = {
+    "Authorization": f"Bearer {jwt_token}",
+    "X-Snowflake-Authorization-Token-Type": "KEYPAIR_JWT",
+}
+```
+
+The JWT issuer claim format is `ACCOUNT.USER.SHA256:<fingerprint>` where the fingerprint is the Base64-encoded SHA256 hash of the DER-encoded public key. See [`agent_run_keypair_jwt.py`](agent_run_keypair_jwt.py) and [`agent_run_keypair_jwt.js`](agent_run_keypair_jwt.js) for complete implementations.
+
+### Authentication Method Comparison
+
+| Method | Best For | Token Lifetime | Snowflake Setup | Extra Header |
+|--------|----------|---------------|-----------------|--------------|
+| PAT | Quick testing, dev | Configurable | Snowsight > Settings > Auth > PATs | _(none)_ |
+| OAuth | Production apps, SSO | Short-lived + refresh | Security Integration | _(none)_ |
+| Key-Pair JWT | Service accounts, CI/CD, no-password | 1 hour (auto-refreshed) | `ALTER USER SET RSA_PUBLIC_KEY` | `X-Snowflake-Authorization-Token-Type: KEYPAIR_JWT` |
+
 ### Important Notes
 
 1. **Warehouse naming**: Use UPPERCASE for unquoted identifiers (e.g., `"MY_WH"`), case-sensitive for quoted identifiers
@@ -104,21 +141,28 @@ For tool-specific warehouse configuration, use `execution_environment`:
 ### Setup
 
 ```bash
-pip install snowflake-connector-python requests
+pip install requests
+
+# Only needed for key-pair JWT auth (option 3):
+pip install cryptography
 ```
 
 ### Environment Variables
 
 ```bash
-# Account identifier
+# Account identifier (always required)
 export SNOWFLAKE_ACCOUNT="myorg-myaccount"
 
-# Option 1: Personal Access Token (recommended)
+# Option 1: Personal Access Token (recommended for quick testing)
 export SNOWFLAKE_PAT="your_pat_token"
 
-# Option 2: Username and password
-export SNOWFLAKE_USER="your_username"
-export SNOWFLAKE_PASSWORD="your_password" # pragma: allowlist secret
+# Option 2: OAuth (client credentials)
+export SNOWFLAKE_OAUTH_CLIENT_ID="your_client_id"
+export SNOWFLAKE_OAUTH_CLIENT_SECRET="your_client_secret"  # pragma: allowlist secret
+
+# Option 3: Key-Pair JWT (service accounts, CI/CD, no-password)
+export SNOWFLAKE_USER="MY_SERVICE_USER"
+export SNOWFLAKE_PRIVATE_KEY_PATH="./rsa_key.pem"
 ```
 
 ### Run Example
@@ -199,7 +243,7 @@ The example handles these event types:
 
 | Status | Meaning | Resolution |
 |--------|---------|------------|
-| **401 Unauthorized** | Invalid or expired token | Verify PAT is valid and not expired. For OAuth, refresh the access token. Check `SNOWFLAKE_PAT` env var is set correctly. |
+| **401 Unauthorized** | Invalid or expired token | PAT: verify token is valid. OAuth: refresh access token. Key-Pair JWT: verify public key is assigned (`DESC USER`), check key format, and confirm `X-Snowflake-Authorization-Token-Type: KEYPAIR_JWT` header is present. |
 | **403 Forbidden** | Role lacks required privileges | Verify the role has `USAGE` on the agent, database, schema, warehouse, and underlying semantic views/tables. Check PAT's `ROLE_RESTRICTION` if using scoped tokens. |
 | **404 Not Found** | Agent, database, or schema doesn't exist | Verify the agent path: `databases/{DB}/schemas/{SCHEMA}/agents/{NAME}`. Check spelling and case sensitivity. |
 | **429 Too Many Requests** | Rate limit exceeded | Implement exponential backoff. Wait and retry. Consider batching requests or increasing delays between calls. |
@@ -241,3 +285,18 @@ def call_with_retry(func, max_retries=3, base_delay=1.0):
 - [Cortex Agents Run API Docs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-run)
 - [Cortex Agents REST API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-rest-api)
 - [Execution Environment Schema](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-run#label-snowflake-agent-run-executionenvironment)
+- [Key-Pair Authentication](https://docs.snowflake.com/en/user-guide/key-pair-auth)
+- [REST API Authentication](https://docs.snowflake.com/en/developer-guide/sql-api/authenticating)
+
+## Related Projects
+
+Three projects in this repo cover Cortex Agent context and multi-tenancy. This guide focuses on the API mechanics.
+
+| | This project | [demo-agent-multicontext](../demo-agent-multicontext/) | [guide-agent-multi-tenant](../guide-agent-multi-tenant/) |
+|---|---|---|---|
+| **Type** | Code snippet guide | Runnable demo | Architecture guide |
+| **API Approach** | Both (with + without agent object) | Without agent object | With agent object |
+| **What Changes Per Request** | Role + warehouse headers | System prompt, tools, role, and instructions | Authenticated identity (RAP filtering) |
+| **Auth Pattern** | PAT / OAuth / Key-Pair JWT snippets | Simulated user picker | Azure AD + External OAuth (production) |
+| **Data Isolation** | Not implemented | Row Access Policies via X-Snowflake-Role | Row Access Policies via CURRENT_USER() |
+| **Start here if...** | "I need the API syntax" | "I want to see and show context injection" | "I'm designing a production app" |

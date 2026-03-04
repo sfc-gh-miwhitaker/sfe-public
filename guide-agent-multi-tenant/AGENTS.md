@@ -21,3 +21,9 @@ Run API with Azure AD OAuth and Row Access Policies for per-customer data isolat
 - Agent calls use the "without agent object" inline-config approach
 - Diagrams use Mermaid syntax -- follow conventions in diagrams.md
 - The guide covers both happy path and error handling patterns
+- For key-pair JWT auth as an alternative to Azure AD OAuth or PAT, see [`guide-api-agent-context/migrate_pat_to_keypair_jwt.md`](../guide-api-agent-context/migrate_pat_to_keypair_jwt.md)
+
+## Related Projects
+- [`guide-api-agent-context`](../guide-api-agent-context/) -- API code snippets (PAT, OAuth, Key-Pair JWT) and migration recipes
+- [`demo-agent-multicontext`](../demo-agent-multicontext/) -- runnable demo with per-request context injection
+- [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Teams / M365 Copilot integration

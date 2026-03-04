@@ -2036,6 +2036,19 @@ LIMIT 100;
 
 ---
 
+## Related Projects
+
+Three projects in this repo cover Cortex Agent context and multi-tenancy. This guide covers the production architecture.
+
+| | This project | [guide-api-agent-context](../guide-api-agent-context/) | [demo-agent-multicontext](../demo-agent-multicontext/) |
+|---|---|---|---|
+| **Type** | Architecture guide | Code snippet guide | Runnable demo |
+| **API Approach** | With agent object | Both (with + without) | Without agent object |
+| **What Changes Per Request** | Authenticated identity (RAP filtering) | Role + warehouse headers | System prompt, tools, role, and instructions |
+| **Auth Pattern** | Azure AD + External OAuth (production) | PAT / OAuth / Key-Pair JWT snippets | Simulated user picker |
+| **Data Isolation** | Row Access Policies via CURRENT_USER() | Not implemented | Row Access Policies via X-Snowflake-Role |
+| **Start here if...** | "I'm designing a production app" | "I need the API syntax" | "I want to see and show context injection" |
+
 ## Next Steps
 
 1. **Add Multi-factor Authentication** via Azure AD Conditional Access

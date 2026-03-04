@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-19-blue)
+![Projects](https://img.shields.io/badge/Projects-18-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -23,20 +23,6 @@ The AI will guide you through deployment and usage. You don't need to understand
 
 ## Projects
 
-### Which Agent Project?
-
-Three projects cover overlapping Cortex Agent territory. Use this table to pick the right starting point.
-
-| | [guide-api-agent-context](guide-api-agent-context/) | [guide-agent-multi-tenant](guide-agent-multi-tenant/) | [demo-agent-multicontext](demo-agent-multicontext/) |
-|---|---|---|---|
-| **Type** | Code snippet guide | Architecture guide | Runnable demo |
-| **API Approach** | Both (with + without agent object) | With agent object | Without agent object |
-| **What Changes Per Request** | Role + warehouse headers | Authenticated identity (RAP filtering) | System prompt, tools, role, and instructions |
-| **Auth Pattern** | PAT / OAuth snippets | Azure AD + External OAuth (production) | Simulated user picker |
-| **Data Isolation** | Not implemented | Row Access Policies via CURRENT_USER() | Row Access Policies via X-Snowflake-Role |
-| **Runnable?** | Single Python script | No (markdown only) | Yes (full stack) |
-| **Start here if…** | "I need the API syntax" | "I'm designing a production app" | "I want to see and show context injection" |
-
 ### Demos
 
 Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
@@ -60,7 +46,6 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 | [tool-cortex-cost-calculator](tool-cortex-cost-calculator/) | Cortex spend attribution dashboard with 12-month forecasting | ACCOUNT_USAGE, Streamlit, Views |
 | [tool-replication-cost-calculator](tool-replication-cost-calculator/) | Streamlit DR Replication Cost Calculator for Business Critical | Streamlit, Replication Metadata |
 | [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |
-| [tool-cortex-agent-chat](tool-cortex-agent-chat/) | React chat UI for Cortex Agents (REST API + key-pair JWT) | Cortex Agents, REST API, Key-Pair Auth |
 | [tool-streamlit-contact-form](tool-streamlit-contact-form/) | Streamlit form that writes submissions to a Snowflake table | Streamlit in Snowflake, Snowpark |
 | [tool-api-data-fetcher](tool-api-data-fetcher/) | Python stored procedure that fetches from a REST API via external access | External Access, Python Stored Procedures |
 
@@ -72,7 +57,7 @@ Documentation, patterns, and examples (no deploy/teardown).
 |---|---|---|
 | [guide-agent-multi-tenant](guide-agent-multi-tenant/) | Multi-tenant agent pattern with OAuth IdP + row-access policies | OAuth, Row Access Policies, Cortex Agents |
 | [guide-cortex-search](guide-cortex-search/) | Cortex Search service creation, management, and querying | Cortex Search |
-| [guide-api-agent-context](guide-api-agent-context/) | Agent:Run REST API examples with execution context | Agent Run API |
+| [guide-api-agent-context](guide-api-agent-context/) | Agent:Run REST API examples with execution context and three auth methods | Agent Run API, Key-Pair JWT Auth |
 | [guide-coco-setup](guide-coco-setup/) | Cortex Code CLI on-ramp: install, guidance hierarchy, and first custom skill | Cortex Code, AGENTS.md |
 | [guide-replication-workbook](guide-replication-workbook/) | Replication and failover SQL runbooks for Snowsight | Replication, Failover Groups |
 | [tool-agent-config-diff](tool-agent-config-diff/) | Extract Cortex Agent specs for comparison and version control | DESC AGENT, RESULT_SCAN |

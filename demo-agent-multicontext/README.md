@@ -204,6 +204,19 @@ This project is designed for AI-pair development.
 - [Cortex Analyst Administrator Monitoring](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/admin-observability) -- Analyst request logs and SQL queries
 - [Setting Execution Context](https://docs.snowflake.com/en/developer-guide/snowflake-rest-api/setting-context) -- X-Snowflake-Role and X-Snowflake-Warehouse headers
 
+## Related Projects
+
+Three projects in this repo cover Cortex Agent context and multi-tenancy. This demo is the runnable one.
+
+| | This project | [guide-api-agent-context](../guide-api-agent-context/) | [guide-agent-multi-tenant](../guide-agent-multi-tenant/) |
+|---|---|---|---|
+| **Type** | Runnable demo | Code snippet guide | Architecture guide |
+| **API Approach** | Without agent object | Both (with + without) | With agent object |
+| **What Changes Per Request** | System prompt, tools, role, and instructions | Role + warehouse headers | Authenticated identity (RAP filtering) |
+| **Auth Pattern** | Simulated user picker | PAT / OAuth / Key-Pair JWT snippets | Azure AD + External OAuth (production) |
+| **Data Isolation** | Row Access Policies via X-Snowflake-Role | Not implemented | Row Access Policies via CURRENT_USER() |
+| **Start here if...** | "I want to see and show context injection" | "I need the API syntax" | "I'm designing a production app" |
+
 ## License
 
 Apache 2.0 -- See individual file headers for details.

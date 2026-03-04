@@ -421,6 +421,111 @@ for await (const text of client.runAgent(
 }
 ```
 
+## Option 3: Backend Proxy with Key-Pair JWT
+
+Use this when PATs are not available -- for example, service accounts, CI/CD pipelines, or organizations with no-password policies. The private key stays server-side; the React frontend is unchanged.
+
+> **Switching an existing project from PAT to key-pair JWT?**
+> See [`migrate_pat_to_keypair_jwt.md`](migrate_pat_to_keypair_jwt.md) for step-by-step recipes targeting `demo-agent-multicontext`, `guide-agent-multi-tenant`, or any Express backend.
+
+### Prerequisites
+
+```bash
+# Generate key pair (one-time)
+openssl genrsa -out rsa_key.pem 2048
+openssl rsa -in rsa_key.pem -pubout -out rsa_key.pub
+
+# Assign public key to Snowflake user (as ACCOUNTADMIN)
+# ALTER USER my_service_user SET RSA_PUBLIC_KEY='<contents without header/footer>';
+```
+
+### Backend (Node.js/Express with Key-Pair JWT)
+
+The JWT module from [`agent_run_keypair_jwt.js`](agent_run_keypair_jwt.js) can be dropped into any Express project. It uses only the built-in Node.js `crypto` module -- zero dependencies.
+
+```javascript
+// server.js -- key-pair JWT variant
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const { getJwt, buildHeaders } = require('./agent_run_keypair_jwt');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const SNOWFLAKE_ACCOUNT = process.env.SNOWFLAKE_ACCOUNT;
+const SNOWFLAKE_USER = process.env.SNOWFLAKE_USER;
+const PRIVATE_KEY = fs.readFileSync(process.env.SNOWFLAKE_PRIVATE_KEY_PATH, 'utf8');
+
+const BASE = `https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com`;
+
+app.post('/api/agent/thread', async (req, res) => {
+  try {
+    const jwt = getJwt(SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, PRIVATE_KEY);
+    const response = await fetch(`${BASE}/api/v2/cortex/threads`, {
+      method: 'POST',
+      headers: buildHeaders(jwt),
+      body: JSON.stringify({ origin_application: 'my_react_app' }),
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/agent/run', async (req, res) => {
+  const { database, schema, agentName, threadId, message, role, warehouse } = req.body;
+  const jwt = getJwt(SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, PRIVATE_KEY);
+  const headers = buildHeaders(jwt);
+  if (role) headers['X-Snowflake-Role'] = role;
+  if (warehouse) headers['X-Snowflake-Warehouse'] = warehouse;
+
+  const url = `${BASE}/api/v2/databases/${database}/schemas/${schema}/agents/${agentName}:run`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        thread_id: threadId,
+        parent_message_id: 0,
+        messages: [{ role: 'user', content: [{ type: 'text', text: message }] }],
+      }),
+    });
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    response.body.pipe(res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.listen(3001, () => console.log('Proxy (key-pair JWT) on port 3001'));
+```
+
+### Environment Variables (Key-Pair JWT)
+
+```bash
+export SNOWFLAKE_ACCOUNT="myorg-myaccount"
+export SNOWFLAKE_USER="MY_SERVICE_USER"
+export SNOWFLAKE_PRIVATE_KEY_PATH="./rsa_key.pem"
+```
+
+### When to Use Key-Pair JWT vs PAT
+
+| | PAT | Key-Pair JWT |
+|---|---|---|
+| **Setup** | Snowsight > Settings > Auth > PATs | `openssl` + `ALTER USER` |
+| **Best for** | Quick testing, dev | Service accounts, CI/CD, no-password orgs |
+| **Token lifetime** | Configurable | 1 hour (auto-refreshed by `getJwt()`) |
+| **Rotation** | Manual regeneration | Rotate RSA key pair |
+| **Security** | Token is a secret | Private key never leaves the server |
+
+---
+
 ## Security Considerations
 
 1. **Never expose credentials in frontend code**

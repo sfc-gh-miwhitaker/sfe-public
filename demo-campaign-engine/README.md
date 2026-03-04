@@ -22,7 +22,7 @@ A production-grade campaign recommendation engine for casino operators -- audien
 ## Quick Start
 
 **Deploy in Snowsight (no clone needed):**
-Run [`shared/sql/00_shared_setup.sql`](../shared/sql/00_shared_setup.sql) once, then copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
 
 **Develop with Cortex Code:**
 ```bash
