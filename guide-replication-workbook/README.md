@@ -1,5 +1,13 @@
 # Replication Workbook (SQL Guides)
 
+## Quick Start
+
+**Get just this guide:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) guide-replication-workbook
+cd sfe-public/guide-replication-workbook
+```
+
 This folder contains SQL guides for setting up Snowflake replication:
 
 - `enterprise_replication_guide.sql` - **Enterprise/Standard**: basic redundancy with replication groups (read-only replicas; no promotion)

@@ -1,6 +1,7 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Cortex Cost Calculator v3.3
 
@@ -17,6 +18,19 @@
 **Understand which users and features are driving Cortex spend, and forecast usage 12 months out.**
 
 A professional toolkit for tracking Snowflake Cortex service consumption and generating accurate cost projections. Perfect for Solutions Engineers during scoping exercises and for customers managing their AI workload budgets.
+
+---
+
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-cortex-cost-calculator
+cd sfe-public/tool-cortex-cost-calculator && cortex
+```
 
 ---
 

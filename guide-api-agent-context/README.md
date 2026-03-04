@@ -1,5 +1,13 @@
 # Agent:Run API with Context - Examples
 
+## Quick Start
+
+**Get just this guide:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) guide-api-agent-context
+cd sfe-public/guide-api-agent-context
+```
+
 Working examples of calling the Snowflake `agent:run` API with execution context (role and warehouse).
 
 ## Quick Test (curl)

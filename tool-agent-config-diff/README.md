@@ -1,9 +1,32 @@
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 # Agent Config Diff Tool
 
-> **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days)
-> After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before use.
+> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
+> This tool uses Snowflake features current as of March 2026.
 
 Extract Cortex Agent specifications for configuration management, comparison, and version control.
+
+**Author:** SE Community
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+
+## Quick Start
+
+**Use in Snowsight (no clone needed):**
+Copy [`extract_agent_spec.sql`](extract_agent_spec.sql) into a Snowsight worksheet and update the `agent_fqn` variable.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-agent-config-diff
+cd sfe-public/tool-agent-config-diff && cortex
+```
+
+## What This Creates
+
+This tool runs ad-hoc SQL queries -- no persistent objects are created. It reads agent metadata via `DESCRIBE AGENT` and formats output for diff workflows.
 
 ## Usage
 
@@ -79,6 +102,29 @@ Per [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/desc-agent)
 | profile | JSON: display_name, avatar, color |
 | agent_spec | Complete YAML specification |
 | created_on | Creation timestamp |
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| "Object does not exist" | Verify the agent FQN is correct: `SHOW AGENTS IN SCHEMA <db>.<schema>`. |
+| Empty `agent_spec` | Agent may have been created without a spec. Check with `DESC AGENT`. |
+| `TRY_PARSE_JSON` returns NULL | Profile field may be empty. This is normal for agents without custom profiles. |
+
+## Cleanup
+
+No cleanup required -- this tool creates no persistent objects.
+
+## Development Tools
+
+This project is designed for AI-pair development.
+
+- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
+- **.claude/skills/** -- Project-specific AI skills (Cursor + Claude Code)
+- **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
+- **Cursor** -- Open locally with Cursor for AI-pair coding
+
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ## Notes
 

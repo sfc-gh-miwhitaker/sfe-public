@@ -22,7 +22,15 @@ SELECT
         ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), $DEMO_EXPIRES::DATE) || ' days remaining'
     END AS demo_status;
 
--- 3. Bootstrap warehouse (required before EXECUTE IMMEDIATE FROM)
+-- 3. API integration (ACCOUNTADMIN required for CREATE API INTEGRATION)
+USE ROLE ACCOUNTADMIN;
+CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
+  API_PROVIDER = git_https_api
+  API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-miwhitaker/sfe-public')
+  ENABLED = TRUE
+  COMMENT = 'Shared Git integration for sfe-public monorepo | Author: SE Community';
+
+-- 4. Bootstrap warehouse (required before EXECUTE IMMEDIATE FROM)
 USE ROLE SYSADMIN;
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
 CREATE WAREHOUSE IF NOT EXISTS SFE_CAMPAIGN_ENGINE_WH
@@ -32,7 +40,7 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_CAMPAIGN_ENGINE_WH
   COMMENT = 'DEMO: Campaign engine compute (Expires: 2026-05-01)';
 USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;
 
--- 4. Fetch latest from Git
+-- 5. Fetch latest from Git
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
   COMMENT = 'Shared schema for Git repository stages across demo projects';
 
@@ -43,7 +51,7 @@ CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CAMPAIGN_ENG
 
 ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CAMPAIGN_ENGINE_REPO FETCH;
 
--- 5. Execute scripts in order
+-- 6. Execute scripts in order
 -- 5a. Setup
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_CAMPAIGN_ENGINE_REPO/branches/main/demo-campaign-engine/sql/01_setup/01_create_schema.sql';
 

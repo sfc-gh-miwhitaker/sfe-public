@@ -1,7 +1,9 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=flat&logo=snowflake&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
 ![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Cortex Agent Chat - React Integration Example
 
@@ -31,6 +33,19 @@ Unlike typical tools in this repository (which use Streamlit, Snowflake notebook
 - Snowflake Cortex Analyst built-in UI
 - Streamlit applications (Python-based)
 - Snowflake Notebooks with interactive widgets
+
+---
+
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-cortex-agent-chat
+cd sfe-public/tool-cortex-agent-chat && cortex
+```
 
 ---
 
@@ -145,14 +160,7 @@ npm run dev
 <details>
 <summary>Click to expand manual setup instructions</summary>
 
-### Step 1: Run Shared Setup (First Time Only)
-
-```sql
--- Copy shared/sql/00_shared_setup.sql into Snowsight → Run All
--- (Creates SNOWFLAKE_EXAMPLE database and SFE_SHARED_WH warehouse)
-```
-
-### Step 2: Generate RSA Key-Pair
+### Step 1: Generate RSA Key-Pair
 
 ```bash
 # Generate 2048-bit RSA private key
@@ -162,14 +170,14 @@ openssl genrsa -out rsa_key.pem 2048
 openssl rsa -in rsa_key.pem -pubout -out rsa_key.pub
 ```
 
-### Step 3: Deploy Cortex Agent
+### Step 2: Deploy Cortex Agent
 
 ```sql
 -- Copy deploy.sql into Snowsight → Run All
 -- (Creates SFE_REACT_DEMO_AGENT)
 ```
 
-### Step 4: Assign Public Key to User
+### Step 3: Assign Public Key to User
 
 ```sql
 -- In Snowsight:
@@ -182,7 +190,7 @@ ALTER USER your_username SET RSA_PUBLIC_KEY='MIIBIjANBgkqhki...';
 DESC USER your_username;
 ```
 
-### Step 5: Create environment files
+### Step 4: Create environment files
 
 ```bash
 cp server.env.example .env.server.local   # backend (holds private key)
@@ -191,7 +199,7 @@ cp env.example .env.local                 # frontend (no secrets)
 # Edit both files to set your account; place the private key ONLY in .env.server.local
 ```
 
-### Step 6: Start Application
+### Step 5: Start Application
 
 ```bash
 npm install
@@ -222,10 +230,9 @@ npm run dev   # starts backend :4000 and frontend :3001
 | Schema | `SNOWFLAKE_EXAMPLE.SFE_CORTEX_AGENT_CHAT` | Project namespace |
 | Cortex Agent | `SNOWFLAKE_EXAMPLE.SFE_CORTEX_AGENT_CHAT.SFE_REACT_DEMO_AGENT` | Demo conversational agent |
 
-**Shared Infrastructure (created by `shared/sql/00_shared_setup.sql`):**
+**Shared Infrastructure (created by `deploy.sql` if not already present):**
 - Database: `SNOWFLAKE_EXAMPLE`
-- Warehouse: `SFE_SHARED_WH` (XS, auto-suspend 60s)
-- Schema: `SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS` (for semantic views)
+- Warehouse: `SFE_TOOLS_WH` (XS, auto-suspend 60s)
 
 **User Configuration:**
 - RSA public key assigned to your Snowflake user (via `ALTER USER`)

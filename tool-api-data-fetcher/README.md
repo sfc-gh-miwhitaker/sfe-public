@@ -1,7 +1,12 @@
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 # API Data Fetcher
 
-> **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days)
-> After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before deploying.
+> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
+> This tool uses Snowflake features current as of March 2026.
 
 A Python stored procedure that fetches data from a public REST API and stores it in a Snowflake table, demonstrating External Access Integration.
 
@@ -27,19 +32,16 @@ A Python stored procedure that fetches data from a public REST API and stores it
 
 ## Quick Start
 
-### 1. Run Shared Setup (First Time Only)
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
 
-```sql
--- Copy shared/sql/00_shared_setup.sql into Snowsight, Run All
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-api-data-fetcher
+cd sfe-public/tool-api-data-fetcher && cortex
 ```
 
-### 2. Deploy This Tool
-
-```sql
--- Copy deploy.sql into Snowsight, Run All
-```
-
-### 3. Use the Tool
+### Use the Tool
 
 ```sql
 -- Fetch data from API
@@ -154,6 +156,25 @@ See `diagrams/` for:
                           │ jsonplaceholder.typicode.com  │
                           └───────────────────────────────┘
 ```
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| `SFE_FETCH_USERS` fails | Verify External Access Integration exists: `SHOW INTEGRATIONS`. Ensure ACCOUNTADMIN role was used for deploy. |
+| Empty table after CALL | Check network rule allows egress to `jsonplaceholder.typicode.com`. |
+| Permission denied on integration | External Access Integrations require ACCOUNTADMIN to create. |
+
+## Development Tools
+
+This project is designed for AI-pair development.
+
+- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
+- **.claude/skills/** -- Project-specific AI skills (Cursor + Claude Code)
+- **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
+- **Cursor** -- Open locally with Cursor for AI-pair coding
+
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ---
 

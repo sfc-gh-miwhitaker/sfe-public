@@ -1,6 +1,9 @@
-# Agent Multicontext Demo
-
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
+# Agent Multicontext Demo
 
 > DEMONSTRATION PROJECT - EXPIRES: 2026-04-02
 > This demo uses Snowflake features current as of March 2026.
@@ -15,6 +18,17 @@ instead of stuffing context into user messages.
 **Created:** 2026-03-03 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 ![Agent Multicontext Demo](assets/demo-screenshot.png)
+
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-agent-multicontext
+cd sfe-public/demo-agent-multicontext && cortex
+```
 
 ## First Time Here?
 
@@ -34,6 +48,18 @@ instead of stuffing context into user messages.
 4. **Open** -- Navigate to `http://localhost:3000`
 
 5. **Cleanup** -- Run `teardown_all.sql` in Snowsight, then `./tools/04_stop.sh`
+
+## What This Creates
+
+| Object Type | Name | Purpose |
+|---|---|---|
+| Schema | `SNOWFLAKE_EXAMPLE.AGENT_MULTICONTEXT` | Demo schema |
+| Warehouse | `SFE_AGENT_MULTICONTEXT_WH` | Demo compute |
+| Cortex Search Service | `KB_SEARCH` | Knowledge base search |
+| Semantic View | `SV_AGENT_MULTICONTEXT_VIEWERSHIP` | Viewership analytics for Cortex Analyst |
+| Tables | `RAW_*`, `MEMBERS`, `STATIONS` | Source data |
+| Row Access Policies | `RAP_STATION_*` | Station-scoped data isolation |
+| Roles | `TV_VIEWER_ROLE`, `TV_ADMIN_ROLE` | Authorization tiers |
 
 ## What This Demo Shows
 
@@ -152,6 +178,22 @@ This project is designed for AI-pair development.
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
+## Estimated Demo Costs
+
+| Component | Size | Est. Credits/Hour |
+|---|---|---|
+| Warehouse (SFE_AGENT_MULTICONTEXT_WH) | X-SMALL | 1 |
+| Cortex Search Service | Serverless | ~0.1 |
+| Cortex Agent calls | Per-query | ~0.01/query |
+| Cortex Analyst calls | Per-query | ~0.01/query |
+
+**Total estimated cost:** <2 credits for full deployment + 1 hour of exploration.
+
+## Cleanup
+
+1. Run `teardown_all.sql` in Snowsight
+2. Stop local services: `./tools/04_stop.sh`
+
 ## References
 
 - [Cortex Agents Run API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-run) -- `agent:run` with and without agent object
@@ -160,3 +202,7 @@ This project is designed for AI-pair development.
 - [CORTEX_AGENT_USAGE_HISTORY](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_agent_usage_history) -- Usage view for all `agent:run` calls
 - [Cortex Analyst Administrator Monitoring](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/admin-observability) -- Analyst request logs and SQL queries
 - [Setting Execution Context](https://docs.snowflake.com/en/developer-guide/snowflake-rest-api/setting-context) -- X-Snowflake-Role and X-Snowflake-Warehouse headers
+
+## License
+
+Apache 2.0 -- See individual file headers for details.

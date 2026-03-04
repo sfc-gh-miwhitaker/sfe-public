@@ -38,12 +38,23 @@ If someone sent you a link to a GitHub project and you've never used GitHub befo
 
 ### Already Comfortable with Terminal?
 
-If you know what `git clone` means, use this instead:
+Clone the full repo (under 4 MB):
 
 ```bash
-git clone <paste-the-url-here>
-cd <folder-name>
+git clone https://github.com/sfc-gh-miwhitaker/sfe-public.git
+cd sfe-public/<project-name>
 ```
+
+Or clone just one project:
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) <project-name>
+cd sfe-public/<project-name>
+```
+
+### Don't Need Local Files?
+
+Most projects deploy entirely inside Snowflake. Open the project's `deploy_all.sql` on GitHub, copy it into a Snowsight worksheet, and click **Run All**. No local clone needed.
 
 ### Troubleshooting
 

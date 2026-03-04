@@ -4,7 +4,7 @@
 
 - Snowflake account with **Enterprise** edition or higher (required for ML CLASSIFICATION and Dynamic Tables)
 - `SYSADMIN` role access
-- `SFE_GIT_API_INTEGRATION` configured (see `shared/sql/00_shared_setup.sql` in the monorepo root)
+- `ACCOUNTADMIN` role access (required for `CREATE API INTEGRATION`)
 
 ## Quick Deploy
 
@@ -41,7 +41,7 @@
 
 | Issue | Solution |
 |---|---|
-| "API integration not found" | Run `shared/sql/00_shared_setup.sql` first |
+| "API integration not found" | Ensure `deploy_all.sql` ran with ACCOUNTADMIN role |
 | ML model training fails | Ensure Enterprise edition; check warehouse size |
 | Dynamic Tables not refreshing | Check `SHOW DYNAMIC TABLES` for status |
 | Streamlit not loading | Visit the app in Snowsight with the owning role |

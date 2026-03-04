@@ -1,8 +1,28 @@
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 # QuickBooks API Medallion Architecture Demo
 
-> **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | Snowflake Example
+> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
+> This demo uses Snowflake features current as of March 2026.
 
 Pull accounting data from QuickBooks Online directly into Snowflake using native features -- no external ETL tools needed. Walks through every layer of the medallion pattern with Cortex AI enrichment and Data Metric Functions for continuous quality monitoring.
+
+**Author:** SE Community
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-api-quickbooks-medallion
+cd sfe-public/demo-api-quickbooks-medallion && cortex
+```
 
 ## First Time Here?
 
@@ -127,7 +147,37 @@ The sample data in `04_sample_data.sql` intentionally includes these issues so D
 -- Run: teardown_all.sql
 ```
 
-## Requirements
+## Estimated Demo Costs
+
+| Component | Size | Est. Credits/Hour |
+|---|---|---|
+| Warehouse | X-SMALL | 1 |
+| Dynamic Table refresh | X-SMALL | <0.1 |
+| Cortex AI enrichment | Per-row | ~0.01/row |
+| DMFs (serverless) | Serverless | <0.1 |
+
+**Total estimated cost:** <2 credits for full deployment + 1 hour of exploration.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| DMFs not firing | DMFs are serverless -- ensure `DATA_METRIC_SCHEDULE` is set on the table. |
+| Dynamic tables stuck in FAILED | Check `SELECT * FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY())` for errors. |
+| Cortex functions unavailable | Verify your region supports Cortex AI. See [Cortex availability](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions#availability). |
+
+## Development Tools
+
+This project is designed for AI-pair development.
+
+- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
+- **.claude/skills/** -- Project-specific AI skills (Cursor + Claude Code)
+- **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
+- **Cursor** -- Open locally with Cursor for AI-pair coding
+
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
+
+## Prerequisites
 
 - Snowflake account with SYSADMIN + ACCOUNTADMIN roles
 - Cortex AI functions enabled (most commercial regions)

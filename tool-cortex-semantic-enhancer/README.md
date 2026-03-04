@@ -1,11 +1,31 @@
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)
+
 # Semantic View Enhancer
 
-![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)
+> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
+> This tool uses Snowflake features current as of March 2026.
 
 **Author:** SE Community
 **Purpose:** Enhance Snowflake semantic views with AI-improved descriptions using Cortex
 **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days)
 **Status:** ACTIVE
+
+---
+
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-cortex-semantic-enhancer
+cd sfe-public/tool-cortex-semantic-enhancer && cortex
+```
 
 ---
 
@@ -294,6 +314,17 @@ See `diagrams/` folder for detailed architecture diagrams:
 - [Cortex COMPLETE Function](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions)
 - [GET_DDL Function](https://docs.snowflake.com/en/sql-reference/functions/get_ddl)
 - [DESCRIBE SEMANTIC VIEW](https://docs.snowflake.com/en/sql-reference/sql/desc-semantic-view)
+
+## Development Tools
+
+This project is designed for AI-pair development.
+
+- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
+- **.claude/skills/** -- Project-specific AI skills (Cursor + Claude Code)
+- **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
+- **Cursor** -- Open locally with Cursor for AI-pair coding
+
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ---
 

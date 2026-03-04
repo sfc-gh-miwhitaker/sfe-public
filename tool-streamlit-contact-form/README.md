@@ -1,7 +1,12 @@
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 # Contact Form (Streamlit in Snowflake)
 
-> **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days)
-> After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before deploying.
+> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
+> This tool uses Snowflake features current as of March 2026.
 
 A simple contact form built with Streamlit in Snowflake that collects user information and writes directly to a Snowflake table.
 
@@ -27,19 +32,16 @@ A simple contact form built with Streamlit in Snowflake that collects user infor
 
 ## Quick Start
 
-### 1. Run Shared Setup (First Time Only)
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
 
-```sql
--- Copy shared/sql/00_shared_setup.sql into Snowsight, Run All
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-streamlit-contact-form
+cd sfe-public/tool-streamlit-contact-form && cortex
 ```
 
-### 2. Deploy This Tool
-
-```sql
--- Copy deploy.sql into Snowsight, Run All
-```
-
-### 3. Use the Tool
+### Use the Tool
 
 1. Navigate to **Projects → Streamlit** in Snowsight
 2. Find **SFE_CONTACT_FORM** in the list
@@ -100,6 +102,25 @@ See `diagrams/` for:
 2. **Add validation** - More sophisticated email/phone validation
 3. **Add export** - Download submissions as CSV
 4. **Add charts** - Submission trends over time
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| Streamlit app not visible | Navigate to Snowsight > Projects > Streamlit. Ensure `deploy.sql` ran successfully. |
+| Submit button does nothing | Check browser console for errors. Verify the `SFE_SUBMISSIONS` table exists. |
+| Permission denied | Ensure the Streamlit app's warehouse and schema grants are correct. |
+
+## Development Tools
+
+This project is designed for AI-pair development.
+
+- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
+- **.claude/skills/** -- Project-specific AI skills (Cursor + Claude Code)
+- **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
+- **Cursor** -- Open locally with Cursor for AI-pair coding
+
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ---
 

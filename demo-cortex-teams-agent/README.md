@@ -1,6 +1,7 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--04--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Cortex Agents for Microsoft Teams & M365 Copilot
 
@@ -16,6 +17,17 @@
 **Chat with AI-powered agents directly in Microsoft Teams and M365 Copilot -- zero custom code required.**
 
 ---
+
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-cortex-teams-agent
+cd sfe-public/demo-cortex-teams-agent && cortex
+```
 
 ## First Time Here?
 
@@ -39,6 +51,16 @@ This project is designed for AI-pair development.
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ---
+
+## What This Creates
+
+| Object Type | Name | Purpose |
+|---|---|---|
+| Schema | `SNOWFLAKE_EXAMPLE.TEAMS_AGENT` | Demo schema |
+| Warehouse | `SFE_TEAMS_AGENT_WH` | Demo compute |
+| Agent | `JOKE_AGENT` | Cortex Agent for Teams/M365 |
+| Function | `TELL_JOKE` | AI_COMPLETE joke generator |
+| Security Integration | OAuth with Microsoft Entra ID | Teams authentication |
 
 ## What You Get
 

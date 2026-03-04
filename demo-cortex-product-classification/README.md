@@ -1,6 +1,9 @@
-# Glaze & Classify
-
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
+# Glaze & Classify
 
 > **Warning:** This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
 
@@ -8,6 +11,17 @@ Product classification showdown: four progressively sophisticated approaches to 
 
 **Author:** SE Community
 **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-cortex-product-classification
+cd sfe-public/demo-cortex-product-classification && cortex
+```
 
 ## First Time Here?
 
@@ -103,6 +117,30 @@ flowchart LR
 | **Total** | | **~2.0 credits** | Single deployment run |
 
 **Edition Required:** Enterprise (for SPCS + Cortex)
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| Cortex AI_COMPLETE unavailable | Verify your region supports Cortex AI. See [Cortex availability](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions#availability). |
+| SPCS service won't start | Ensure Enterprise edition and a compute pool exists. Check `SHOW COMPUTE POOLS`. |
+| Intelligence agent errors | Verify the semantic view `SV_GLAZE_PRODUCTS` exists and the warehouse is running. |
+| Classification results empty | Ensure `RAW_PRODUCTS` has data. Rerun the data load step if needed. |
+
+## Cleanup
+
+Run `teardown_all.sql` in Snowsight to remove all demo objects.
+
+## Development Tools
+
+This project is designed for AI-pair development.
+
+- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
+- **.claude/skills/** -- Project-specific AI skills (Cursor + Claude Code)
+- **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
+- **Cursor** -- Open locally with Cursor for AI-pair coding
+
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ## Documentation
 

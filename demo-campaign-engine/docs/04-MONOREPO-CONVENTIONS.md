@@ -17,10 +17,9 @@ This means `CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE` may appear in both
 `deploy_all.sql` and `sql/01_setup/01_create_schema.sql` within the same
 project. That is intentional, not duplication.
 
-Never assume another project or `shared/sql/00_shared_setup.sql` has already run.
-The shared setup creates the `SFE_GIT_API_INTEGRATION` and is listed as a
-prerequisite in the deployment guide, but individual scripts should not depend on
-it for database or warehouse creation.
+Never assume another project has already run.
+Each deploy script must create its own database, warehouse, and API integration
+using `IF NOT EXISTS` so it can run standalone.
 
 ### Idempotency
 
@@ -54,7 +53,7 @@ confusion and drift risk. Two examples removed from this project:
 | Teardown entry point | `demo-*/teardown_all.sql` | One copy at the project root; no mirrors |
 | SQL scripts (EXECUTE IMMEDIATE FROM) | `demo-*/sql/NN_category/NN_name.sql` | Called by `deploy_all.sql` via Git stage |
 | Streamlit source | `demo-*/streamlit/` | Deployed from Git stage by a SQL script |
-| Shared infra | `shared/sql/00_shared_setup.sql` | Creates `SFE_GIT_API_INTEGRATION`; listed as a prerequisite, never assumed |
+| Shared infra | Inline in each `deploy_all.sql` | `CREATE ... IF NOT EXISTS` for database, warehouse, API integration |
 | Semantic views | `SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS` schema | Shared schema, created idempotently by each project that needs it |
 
 ## Expiration Handling
@@ -86,8 +85,7 @@ individual project directory.
 - [ ] Every SQL script uses `IF NOT EXISTS` / `CREATE OR REPLACE` / `DROP IF
       EXISTS` as appropriate
 - [ ] No `.github/` directory inside the project (workflows live at repo root)
-- [ ] `shared/sql/00_shared_setup.sql` listed as a prerequisite in
-      `docs/01-DEPLOYMENT.md`, never silently assumed
+- [ ] Deploy script creates shared infrastructure inline (`IF NOT EXISTS`)
 - [ ] Database and warehouse creation repeated in setup scripts for
       standalone runnability
 - [ ] `teardown_all.sql` drops only project-specific objects; never drops

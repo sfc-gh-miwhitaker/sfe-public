@@ -8,7 +8,7 @@ Presenter playbook for the five-act AI-pair programming showcase.
 
 1. Open Cursor (or Cortex Code in Snowsight) with this project
 2. Have Snowsight open in a browser tab
-3. Ensure `SNOWFLAKE_EXAMPLE` database exists (run `shared/sql/00_shared_setup.sql` if not)
+3. Ensure `SNOWFLAKE_EXAMPLE` database exists (run `deploy_all.sql` if not)
 4. Clear terminal history for a clean starting point
 
 ## Act 1: "Describe the Problem" (~5 min)

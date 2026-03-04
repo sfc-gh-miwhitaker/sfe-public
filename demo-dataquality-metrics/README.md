@@ -23,6 +23,17 @@ This code demonstrates production-grade architectural patterns and best practice
 
 ---
 
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-dataquality-metrics
+cd sfe-public/demo-dataquality-metrics && cortex
+```
+
 ## First Time Here?
 
 **Deploy:**
@@ -160,6 +171,30 @@ tools/00_master.sh cleanup  # Print cleanup steps
 ├── tools/                      # Master script and helpers
 └── .github/workflows/          # Demo expiration automation
 ```
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| DMFs not triggering | `TRIGGER_ON_CHANGES` schedule takes ~10 min to activate after deployment. Wait, then INSERT new data. |
+| Task not running | Check `SHOW TASKS LIKE 'refresh_data_quality%'` and ensure the task is RESUMED. |
+| Streamlit app not visible | Navigate to Snowsight > Streamlit. Verify the Git repository stage is accessible. |
+| Data Quality tab empty in Catalog | DMFs must have run at least once. Insert sample data and wait for the schedule. |
+
+## Cleanup
+
+Run `sql/99_cleanup/teardown_all.sql` in Snowsight to remove all demo objects.
+
+## Development Tools
+
+This project is designed for AI-pair development.
+
+- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
+- **.claude/skills/** -- Project-specific AI skills (Cursor + Claude Code)
+- **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
+- **Cursor** -- Open locally with Cursor for AI-pair coding
+
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ## Support
 

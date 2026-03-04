@@ -1,5 +1,13 @@
 # Cortex Search Automation Guide
 
+## Quick Start
+
+**Get just this guide:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) guide-cortex-search
+cd sfe-public/guide-cortex-search
+```
+
 This guide provides **automation patterns not found in official documentation**. For syntax reference, see the [official docs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search/cortex-search-overview).
 
 ## What This Guide Provides

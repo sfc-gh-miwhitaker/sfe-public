@@ -7,8 +7,7 @@
  * Expires: 2026-05-01
  *
  * Prerequisites:
- *   1. Run shared/sql/00_shared_setup.sql first
- *   2. SYSADMIN role access
+ *   1. SYSADMIN role access
  *
  * How to Deploy:
  *   1. Copy this ENTIRE script into Snowsight
@@ -42,7 +41,9 @@ SELECT
 -- ============================================================================
 USE ROLE SYSADMIN;
 
--- Create shared warehouse if it doesn't exist
+CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
+    COMMENT = 'Shared database for SE demonstration projects and tools | Author: SE Community';
+
 CREATE WAREHOUSE IF NOT EXISTS SFE_TOOLS_WH
     WAREHOUSE_SIZE = 'X-SMALL'
     AUTO_SUSPEND = 60

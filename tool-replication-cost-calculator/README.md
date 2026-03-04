@@ -3,6 +3,7 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
 > **DEMONSTRATION PROJECT** | **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01
 > This demo uses Snowflake features current as of March 2026.
@@ -11,6 +12,17 @@
 **Author:** SE Community
 **Purpose:** Reference implementation for a Snowflake-native Streamlit cost calculator for database replication/DR
 **Created:** 2025-12-08 | **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days) | **Status:** ACTIVE
+
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-replication-cost-calculator
+cd sfe-public/tool-replication-cost-calculator && cortex
+```
 
 ## First Time Here?
 

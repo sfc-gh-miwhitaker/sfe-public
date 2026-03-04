@@ -10,8 +10,7 @@
  *          the React chat application to consume via REST API with key-pair JWT auth.
  *
  * Prerequisites:
- *   1. Run shared/sql/00_shared_setup.sql first (creates database and warehouse)
- *   2. ACCOUNTADMIN role access (required to grant CORTEX_AGENT_USER role)
+ *   1. ACCOUNTADMIN role access (required to grant CORTEX_AGENT_USER role)
  *   3. Cortex Agents feature available in your Snowflake region
  *   4. RSA key-pair generated (run tools/01_setup.sh or see README for manual steps)
  *
@@ -47,6 +46,17 @@ SELECT
 -- CONTEXT SETTING (MANDATORY)
 -- ============================================================================
 USE ROLE ACCOUNTADMIN;  -- Required for granting CORTEX_AGENT_USER role
+
+CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
+    COMMENT = 'Shared database for SE demonstration projects and tools | Author: SE Community';
+
+CREATE WAREHOUSE IF NOT EXISTS SFE_TOOLS_WH
+    WAREHOUSE_SIZE = 'X-SMALL'
+    AUTO_SUSPEND = 60
+    AUTO_RESUME = TRUE
+    INITIALLY_SUSPENDED = TRUE
+    COMMENT = 'Shared warehouse for Snowflake Tools Collection | Author: SE Community';
+
 USE DATABASE SNOWFLAKE_EXAMPLE;
 USE WAREHOUSE SFE_TOOLS_WH;
 

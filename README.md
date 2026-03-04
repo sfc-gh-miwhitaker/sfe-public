@@ -34,7 +34,7 @@ Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
 
 ### Deployable Tools
 
-Focused utilities with `deploy.sql` and `teardown.sql`.
+Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 
 | Directory | Description |
 |---|---|
@@ -61,13 +61,32 @@ Documentation, patterns, and examples (no deploy/teardown).
 
 ## Quick Start
 
-### Demos and deployable tools
+### Path 1: Deploy in Snowsight (no local clone needed)
 
-1. Run `shared/sql/00_shared_setup.sql` in Snowsight (first time only -- creates shared database and warehouse)
-2. Pick a project from the tables above
-3. Open its `deploy_all.sql` or `deploy.sql` in Snowsight
-4. Click **Run All**
-5. See the project README for detailed instructions
+Most projects deploy entirely inside Snowflake -- the deploy script creates a Git Repository object, fetches from GitHub, and runs everything server-side.
+
+1. Pick a demo or tool from the tables above
+2. Open its `deploy_all.sql` (or `deploy.sql`) on GitHub and copy into a Snowsight worksheet
+3. Click **Run All**
+4. See the project README for usage instructions
+
+### Path 2: Develop with Cortex Code (clone the repo)
+
+If you want AI-assisted deployment or want to modify the code, clone the repo and use [Cortex Code](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli):
+
+```bash
+git clone https://github.com/sfc-gh-miwhitaker/sfe-public.git
+cd sfe-public/<project-name>
+cortex
+```
+
+Then tell Cortex Code: *"Help me get started with this project"*
+
+The full repo is under 4 MB. To clone only one project:
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) <project-name>
+```
 
 ### Guides
 
@@ -75,14 +94,14 @@ Open the guide directory and follow the README.
 
 ## Shared Infrastructure
 
-All deployable projects use common infrastructure created by [`shared/sql/00_shared_setup.sql`](shared/sql/00_shared_setup.sql):
+Each deploy script creates the shared infrastructure it needs (using `IF NOT EXISTS`):
 
 | Resource | Name | Purpose |
 |---|---|---|
 | Database | `SNOWFLAKE_EXAMPLE` | Shared demo database |
 | Warehouse | `SFE_TOOLS_WH` | Shared compute (X-SMALL) |
 
-Each project creates its own schema within `SNOWFLAKE_EXAMPLE`.
+Each project creates its own schema within `SNOWFLAKE_EXAMPLE`. No separate setup step is required.
 
 ## License
 

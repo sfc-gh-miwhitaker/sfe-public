@@ -1,6 +1,9 @@
-# Casino Campaign Recommendation Engine
-
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--04--01-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
+# Casino Campaign Recommendation Engine
 
 > DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
 > This demo uses Snowflake features current as of March 2026.
@@ -15,6 +18,17 @@ A production-grade campaign recommendation engine for casino operators -- audien
 
 ![Streamlit Dashboard -- ML scoring, audience metrics, and distribution charts](assets/streamlit-dashboard.png)
 
+## Quick Start
+
+**Deploy in Snowsight (no clone needed):**
+Run [`shared/sql/00_shared_setup.sql`](../shared/sql/00_shared_setup.sql) once, then copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Develop with Cortex Code:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-campaign-engine
+cd sfe-public/demo-campaign-engine && cortex
+```
+
 ### Complexity Card
 
 | Metric | Manual Estimate | AI-Pair Actual |
@@ -24,6 +38,19 @@ A production-grade campaign recommendation engine for casino operators -- audien
 | Snowflake features | 9 | 9 |
 | Documentation | Written separately | Auto-generated |
 | Tests | Written separately | Inline validation |
+
+## What This Creates
+
+| Object Type | Name | Purpose |
+|---|---|---|
+| Schema | `SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE` | Demo schema |
+| Warehouse | `SFE_CAMPAIGN_ENGINE_WH` | Demo compute |
+| Tables | `PLAYERS`, `CAMPAIGNS`, `RESPONSES`, `CAMPAIGN_SEED_PLAYERS` | Source data |
+| Dynamic Tables | `DT_PLAYER_FEATURES` | Feature engineering pipeline |
+| Stored Procedure | `SP_FIND_LOOKALIKES` | Vector similarity lookalike finder |
+| ML Model | `CLASSIFICATION` on campaign responses | Audience targeting |
+| Semantic View | Campaign analytics | Natural language queries |
+| Streamlit App | Campaign dashboard | Interactive UI |
 
 ## What You Get
 
@@ -109,6 +136,19 @@ You'll learn 7 AI-pair techniques (one per step), evolve AGENTS.md from 3 lines 
 ## Prompt Catalog
 
 Every SQL and Python file in this project was generated from a natural-language prompt. See the [prompts/](prompts/) directory for the full catalog.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| ML CLASSIFICATION fails | Ensure Enterprise edition. Classification requires Enterprise or higher. |
+| Dynamic table stuck | Check `SELECT * FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY())` for errors. |
+| Streamlit app not visible | Navigate to Snowsight > Streamlit. The app deploys as part of `deploy_all.sql`. |
+| Vector similarity returns no results | Verify `DT_PLAYER_FEATURES` has refreshed. Check `SYSTEM$DYNAMIC_TABLE_GRAPH_REFRESH_STATUS()`. |
+
+## Cleanup
+
+Run `teardown_all.sql` in Snowsight to remove all demo objects.
 
 ## Project Structure
 
