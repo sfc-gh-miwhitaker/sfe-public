@@ -3,6 +3,20 @@
 A curated collection of Snowflake demonstration projects, tools, and guides.
 Each subdirectory is self-contained with its own documentation, deployment scripts, and cleanup.
 
+---
+
+## Brand New to All of This?
+
+Never used GitHub, Cortex Code, or any of these tools before? Start here:
+
+1. **Get the code** -- [How to download from GitHub](guide-coco-setup/#part-0-getting-the-code) (no experience required)
+2. **Get Cortex Code** -- [Install the AI assistant](guide-coco-setup/#part-1-the-learning-path) that will help you with everything else
+3. **Open a project** -- Navigate to any demo folder below, then tell Cortex Code: *"Help me get started with this project"*
+
+The AI will guide you through deployment and usage. You don't need to understand all the technical details upfront.
+
+---
+
 ## Projects
 
 ### Demos

@@ -8,6 +8,53 @@ A curated on-ramp for AI pair-programming with Snowflake. Install the CLI, under
 
 Anyone new to AI pair-programming who wants to use Cortex Code with Snowflake. You don't need prior experience with AI coding tools, prompt engineering, or skills. You do need a Snowflake account.
 
+---
+
+## Part 0: Getting the Code
+
+If someone sent you a link to a GitHub project and you've never used GitHub before, this section is for you. If you already have the code on your computer, skip to [Part 1](#part-1-the-learning-path).
+
+### Downloading from GitHub (No Experience Required)
+
+1. **Click the link** you were given -- you'll arrive at a page showing the project name at the top and a list of files below
+
+2. **Find the green button labeled "Code"** -- it's on the right side, above the file list. (If you don't see it, scroll up -- it's near the top of the page.)
+
+3. **Click that green "Code" button** -- a small dropdown menu appears
+
+4. **Click "Download ZIP"** -- this downloads all the project files as a single ZIP file
+
+5. **Find the ZIP file** -- it's in your Downloads folder:
+   - **Mac:** Open Finder, click "Downloads" in the sidebar
+   - **Windows:** Open File Explorer, click "Downloads" in the sidebar
+
+6. **Unzip the file:**
+   - **Mac:** Double-click the ZIP file -- a folder appears next to it
+   - **Windows:** Right-click the ZIP file, select "Extract All...", click "Extract"
+
+7. **Move the folder somewhere memorable** -- drag it to your Documents folder (or anywhere you'll remember)
+
+**That's it -- you have the code.** Continue to Part 1 to install Cortex Code.
+
+### Already Comfortable with Terminal?
+
+If you know what `git clone` means, use this instead:
+
+```bash
+git clone <paste-the-url-here>
+cd <folder-name>
+```
+
+### Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| "I don't see a green Code button" | You might be on a file page, not the main project page. Look for a link near the top that shows just the project name (no file path after it) and click it. |
+| "The ZIP file won't open" | On Windows, you may need to right-click and "Extract All" rather than double-clicking. On Mac, double-click should work -- if not, try right-click > "Open With" > "Archive Utility". |
+| "I can't find my Downloads folder" | **Mac:** Click the Finder icon (smiley face) in your dock, then click "Downloads" in the left sidebar. **Windows:** Click the folder icon in your taskbar, then click "Downloads" in the left sidebar. |
+
+---
+
 ## Part 1: The Learning Path
 
 These official resources cover install, connect, and basic usage. Read them in this order -- each builds on the previous.
