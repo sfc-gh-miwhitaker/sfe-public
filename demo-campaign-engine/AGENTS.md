@@ -24,10 +24,12 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 - Python stored procedures for vector aggregation logic
 
 ## Development Standards
+- Naming: RAW_ prefix for staging tables; SFE_ prefix for account-level objects only
+- IDs: INTEGER primary keys (GENERATOR/UNIFORM for synthetic data)
 - SQL: Explicit columns, sargable predicates, QUALIFY for window functions
-- Objects: COMMENT with expiration date on all objects
+- Objects: COMMENT = 'DEMO: <description> (Expires: 2026-05-01)' on all objects
+- Constraints: PRIMARY KEY on every table, FOREIGN KEY where applicable
 - Deploy: One-command deployment via deploy_all.sql
-- Naming: SFE_ prefix for account-level objects only; project objects scoped by schema
 
 ## When Helping with This Project
 - Follow SFE naming conventions (SFE_ prefix for account-level objects)

@@ -36,12 +36,15 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 - COALESCE/NULLIF guards against division by zero
 
 ## Development Standards
+- Naming: RAW_ prefix for staging tables; SFE_ prefix for account-level objects only
+- IDs: INTEGER primary keys (GENERATOR/UNIFORM for synthetic data)
 - SQL: Explicit columns, sargable predicates, QUALIFY for window functions
-- Objects: COMMENT with expiration date on all objects
+- Objects: COMMENT = 'DEMO: <description> (Expires: 2026-05-01)' on all objects
+- Constraints: PRIMARY KEY on every table, FOREIGN KEY where applicable
 - Deploy: One-command deployment via deploy_all.sql
 ```
 
-Notice what changed: the description now includes "ML audience targeting and vector-based player lookalike matching." Key Patterns and Development Standards sections are new. From this point forward, the AI knows about Dynamic Tables and VECTOR when you ask it to build new features.
+Notice what changed: the description now includes "ML audience targeting and vector-based player lookalike matching." Key Patterns is new. Development Standards carries forward v1's naming conventions and adds SQL and deployment patterns. From this point forward, the AI knows about Dynamic Tables and VECTOR when you ask it to build new features.
 
 ## Validate Your Work
 

@@ -1,10 +1,10 @@
 # AGENTS.md Evolution
 
-This document captures how `AGENTS.md` evolved across the four acts of the AI-pair programming demo. Each version reflects the growing context the AI needed to maintain quality and consistency.
+This document captures how `AGENTS.md` evolves across the workshop. Each version reflects the growing context the AI needs to maintain quality and consistency.
 
-## v1 (Act 1) -- Minimal Context
+## v1 (Before Step 1) -- Environment + Naming Standards
 
-After scaffolding. The AI only knows the project name and Snowflake environment.
+Created before any AI interaction. The AI knows where things live and the naming conventions that keep all 7 steps compatible.
 
 ```markdown
 # Casino Campaign Recommendation Engine
@@ -15,9 +15,15 @@ Campaign recommendation engine for casino operators.
 - Database: SNOWFLAKE_EXAMPLE
 - Schema: CAMPAIGN_ENGINE
 - Warehouse: SFE_CAMPAIGN_ENGINE_WH
+
+## Development Standards
+- Naming: RAW_ prefix for staging tables (e.g. RAW_PLAYERS, RAW_PLAYER_ACTIVITY)
+- IDs: INTEGER primary keys (Step 2 uses GENERATOR/UNIFORM for synthetic data)
+- Objects: COMMENT = 'DEMO: <description> (Expires: 2026-05-01)' on all objects
+- Constraints: PRIMARY KEY on every table, FOREIGN KEY where applicable
 ```
 
-## v2 (Act 2) -- Feature Engineering Standards
+## v2 (After Step 3) -- Feature Engineering Standards
 
 After Dynamic Tables and VECTOR construction. The AI now knows the feature pipeline patterns.
 
@@ -38,12 +44,15 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 - COALESCE/NULLIF guards against division by zero
 
 ## Development Standards
+- Naming: RAW_ prefix for staging tables; SFE_ prefix for account-level objects only
+- IDs: INTEGER primary keys (GENERATOR/UNIFORM for synthetic data)
 - SQL: Explicit columns, sargable predicates, QUALIFY for window functions
-- Objects: COMMENT with expiration date on all objects
+- Objects: COMMENT = 'DEMO: <description> (Expires: 2026-05-01)' on all objects
+- Constraints: PRIMARY KEY on every table, FOREIGN KEY where applicable
 - Deploy: One-command deployment via deploy_all.sql
 ```
 
-## v3 (Act 3) -- ML and Engine Patterns
+## v3 (After Step 5) -- ML and Engine Patterns
 
 After the recommendation engine. The AI knows ML, vector similarity, and LLM patterns.
 
@@ -67,13 +76,15 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 - ML models trained on views using SYSTEM$REFERENCE
 
 ## Development Standards
+- Naming: RAW_ prefix for staging tables; SFE_ prefix for account-level objects only
+- IDs: INTEGER primary keys (GENERATOR/UNIFORM for synthetic data)
 - SQL: Explicit columns, sargable predicates, QUALIFY for window functions
-- Objects: COMMENT with expiration date on all objects
+- Objects: COMMENT = 'DEMO: <description> (Expires: 2026-05-01)' on all objects
+- Constraints: PRIMARY KEY on every table, FOREIGN KEY where applicable
 - Deploy: One-command deployment via deploy_all.sql
-- Naming: SFE_ prefix for account-level objects only; project objects scoped by schema
 ```
 
-## v4 (Act 4) -- Full Project Context (Final)
+## v4 (After Step 7) -- Full Project Context (Final)
 
 After Streamlit and Cortex Agent. The AI has complete project knowledge.
 

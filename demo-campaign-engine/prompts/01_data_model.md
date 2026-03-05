@@ -8,30 +8,14 @@ Don't specify column names and data types -- describe your business domain and u
 
 - [ ] Snowflake schema `SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE` exists (see [GUIDED_BUILD.md](../GUIDED_BUILD.md#before-you-start))
 - [ ] Warehouse `SFE_CAMPAIGN_ENGINE_WH` is running
-- [ ] Your AI tool is open with this project directory as context
+- [ ] `AGENTS.md` exists in your project root with naming conventions (see [GUIDED_BUILD.md](../GUIDED_BUILD.md#2-create-agentsmd-project-context))
+- [ ] Your AI tool is open with this project directory as context (start a **fresh conversation** so AGENTS.md is loaded)
 
 ## The Prompt
 
 Paste this into your AI tool:
 
-> "I'm a casino operator. I need 4 raw staging tables for a campaign recommendation engine. Players have loyalty tiers (Bronze through Diamond) and a home property. Player activity is a single event stream where each session has a game type (slots, table games, poker, sports book), duration, wager, and device. I run marketing campaigns (retention, acquisition, upsell, reactivation) and track which players respond. Keep the model flat -- these are raw tables that a feature engineering pipeline will build on in later steps. The two downstream use cases are ML audience targeting and vector-based player similarity."
-
-## What to Tell the AI (AGENTS.md v1)
-
-After this step, create an `AGENTS.md` file in your project root with this content:
-
-```markdown
-# Casino Campaign Recommendation Engine
-
-Campaign recommendation engine for casino operators.
-
-## Snowflake Environment
-- Database: SNOWFLAKE_EXAMPLE
-- Schema: CAMPAIGN_ENGINE
-- Warehouse: SFE_CAMPAIGN_ENGINE_WH
-```
-
-This is deliberately minimal. The AI only needs to know where things live. You'll add patterns and conventions as you build.
+> "I'm a casino operator. I need 4 raw staging tables for a campaign recommendation engine. Players have loyalty tiers (Bronze through Diamond) and a home property. Player activity is a single event stream where each session has a game type (slots, table games, poker, sports book), duration, wager, and device. I run marketing campaigns (retention, acquisition, upsell, reactivation) and track which players respond with a simple boolean. Keep the model flat -- these are raw tables that a feature engineering pipeline will build on in later steps. The two downstream use cases are ML audience targeting and vector-based player similarity. Create only the CREATE TABLE DDL -- do not generate sample data."
 
 ## Validate Your Work
 
@@ -40,22 +24,43 @@ Run these in Snowsight to confirm the step worked:
 ```sql
 USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
 
--- Should return 4 tables
-SELECT TABLE_NAME, ROW_COUNT
+-- 1. Should return exactly 4 tables, all with RAW_ prefix
+SELECT TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
   AND TABLE_TYPE = 'BASE TABLE'
 ORDER BY TABLE_NAME;
 
--- Confirm ML-critical columns exist
+-- 2. Primary keys should be NUMBER (integer), not VARCHAR/UUID
+SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
+  AND COLUMN_NAME LIKE '%\_ID' ESCAPE '\\'
+  AND ORDINAL_POSITION = 1
+ORDER BY TABLE_NAME;
+
+-- 3. ML-critical: responded BOOLEAN + redemption_amount on responses
 SELECT COLUMN_NAME, DATA_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
   AND TABLE_NAME = 'RAW_CAMPAIGN_RESPONSES'
   AND COLUMN_NAME IN ('RESPONDED', 'REDEMPTION_AMOUNT');
+
+-- 4. Feature-critical columns on activity table
+SELECT COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
+  AND TABLE_NAME = 'RAW_PLAYER_ACTIVITY'
+  AND COLUMN_NAME IN ('GAME_TYPE', 'GAME_NAME', 'SESSION_DURATION_MIN',
+                       'TOTAL_WAGERED', 'TOTAL_WON', 'DEVICE');
 ```
 
-Expected: 4 tables (`RAW_CAMPAIGNS`, `RAW_CAMPAIGN_RESPONSES`, `RAW_PLAYER_ACTIVITY`, `RAW_PLAYERS`) and a `RESPONDED` column with BOOLEAN type.
+Expected:
+
+1. Exactly 4 tables: `RAW_CAMPAIGNS`, `RAW_CAMPAIGN_RESPONSES`, `RAW_PLAYER_ACTIVITY`, `RAW_PLAYERS`
+2. All `_ID` columns are `NUMBER` (not `VARCHAR`) -- Step 2 needs integer IDs for GENERATOR
+3. `RESPONDED` is `BOOLEAN`, `REDEMPTION_AMOUNT` is `NUMBER` -- Step 5 ML needs a binary target
+4. All 6 columns present -- Step 3 feature pipeline needs game_type, game_name, duration, wager, winnings, and device
 
 ## Common Mistakes
 
@@ -77,6 +82,26 @@ Why it happens: Phrases like "slot sessions, table game visits, poker hands, spo
 
 The fix: The prompt says "4 raw staging tables" and "keep the model flat." Activity is a single event stream with a `game_type` column, not 4 separate fact tables. Feature engineering happens in Step 3 as Dynamic Tables. If your AI over-engineered, follow up with: "Simplify to exactly 4 flat tables with RAW_ prefix: RAW_PLAYERS, RAW_PLAYER_ACTIVITY (single table for all game types), RAW_CAMPAIGNS, RAW_CAMPAIGN_RESPONSES. No dimensions, no pre-computed features, no star schema."
 
+### Mistake 3: Right tables, wrong columns
+
+The AI produces exactly 4 tables but with different column choices: UUIDs instead of integers, a marketing funnel (sent_at/opened_at/clicked_at/converted_at) instead of a simple `responded` boolean, date_of_birth instead of age_band, or first_name/last_name instead of a single name column.
+
+Why it happens: Without naming conventions in AGENTS.md, the AI applies generic best practices -- UUIDs are "standard" for distributed systems, marketing funnels are "richer" than boolean flags, exact birth dates are "more flexible" than age bands. These are reasonable choices in isolation but break the downstream pipeline.
+
+Why it breaks: Step 2's GENERATOR() produces integer sequences, not UUIDs. Step 5's ML classifier needs `responded` as a BOOLEAN target variable. Step 3 computes `loyalty_tier_num` from mixed-case tier names ('Bronze', not 'BRONZE'). Each deviation creates a mismatch that surfaces 2-3 steps later.
+
+The fix: Verify AGENTS.md v1 exists with naming conventions before running the prompt. The Development Standards (RAW_ prefix, integer PKs) prevent the most common deviations. For column-level drift, run the validation queries and use the recovery prompts in "If Something Went Wrong."
+
+### Mistake 4: The AI runs ahead
+
+You asked for CREATE TABLE statements but the AI also generated INSERT statements with sample data. Now you have 10 rows per table with hand-crafted values instead of the 500 players and 10K activities that Step 2 will generate with proper statistical distributions.
+
+Why it happens: The AI sees "campaign engine" and infers the full lifecycle -- schema, data, features. It's trying to be helpful by giving you a complete, runnable script.
+
+Why it breaks: Step 2 teaches a different AI-pair technique (specify constraints, not code) and requires specific statistical properties -- weighted tier distributions, game-type-specific wager ranges, ~30% response rate. Hand-crafted sample data has none of these properties, so the ML model in Step 5 has no signal to learn from.
+
+The fix: The prompt ends with "Create only the CREATE TABLE DDL -- do not generate sample data." If the AI ran ahead anyway, keep only the CREATE TABLE statements and discard the INSERTs. This is a transferable pattern: always scope your prompt to one deliverable so you can validate before the next step.
+
 ## What Just Happened
 
 Notice what the AI chose without you specifying it:
@@ -90,9 +115,21 @@ The AI made these decisions because the prompt described *what the data means*, 
 
 ## If Something Went Wrong
 
+**Wrong prefix (STG_, DIM_, FACT_)?** Follow up with: "Rename all tables to use RAW_ prefix: RAW_PLAYERS, RAW_PLAYER_ACTIVITY, RAW_CAMPAIGNS, RAW_CAMPAIGN_RESPONSES. Check that your AGENTS.md naming conventions are loaded."
+
+**UUID primary keys instead of integers?** Follow up with: "Change all primary keys to NUMBER(38,0) NOT NULL. Step 2 uses GENERATOR() and UNIFORM() which produce integer sequences -- UUIDs won't work."
+
+**Marketing funnel instead of `responded` boolean?** If you got sent_at/opened_at/clicked_at/converted_at columns, follow up with: "Replace the funnel timestamp columns with a single `responded BOOLEAN NOT NULL` column and a `response_date DATE`. The ML classifier in Step 5 needs a binary target variable, not a multi-stage funnel."
+
+**Missing `game_name`?** Follow up with: "Add a `game_name VARCHAR(50)` column to the activity table -- each game type has specific titles (e.g. 'Lucky 7s' for slots, 'Blackjack' for table games). The feature pipeline needs this for game diversity metrics."
+
+**`date_of_birth` instead of `age_band`?** Follow up with: "Replace date_of_birth with `age_band VARCHAR(10)` using bands like '21-30', '31-40', etc. Pre-banded ages are simpler for ML features and avoid PII concerns."
+
 **Missing a table?** The AI occasionally combines campaigns and responses into one table. Follow up with: "Separate campaign definitions from campaign responses -- I need a normalized schema where campaign metadata is defined once and responses reference it."
 
-**Wrong column types?** If `responded` came back as VARCHAR, follow up with: "The responded column should be BOOLEAN -- it's the target variable for ML CLASSIFICATION which requires a binary class."
+**No constraints?** Follow up with: "Add PRIMARY KEY constraint on each table's ID column and FOREIGN KEY constraints linking player_id and campaign_id in the activity and response tables to their parent tables."
+
+**AI also generated sample data?** If you got INSERT statements alongside the CREATE TABLEs, discard the data portion. Step 2 has its own prompt with specific statistical requirements (tier distributions, wager ranges, response rates). Run the CREATE TABLE statements only, then move to [Step 2](02_sample_data.md).
 
 ## What Was Generated
 

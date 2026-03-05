@@ -35,7 +35,11 @@ Each step teaches one AI-pair programming technique. By the end you'll have a to
 
 ## Before You Start
 
-**Don't skip this.** Run the schema setup so you have a clean workspace:
+**Don't skip this.** Two setup tasks before Step 1.
+
+### 1. Create the Snowflake Schema
+
+Run this in Snowsight:
 
 ```sql
 USE ROLE SYSADMIN;
@@ -47,6 +51,29 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
 USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;
 ```
 
+### 2. Create AGENTS.md (Project Context)
+
+Create an `AGENTS.md` file in your project root with this content. Your AI tool reads this automatically as project context -- it must exist **before** you open your first AI conversation.
+
+```markdown
+# Casino Campaign Recommendation Engine
+
+Campaign recommendation engine for casino operators.
+
+## Snowflake Environment
+- Database: SNOWFLAKE_EXAMPLE
+- Schema: CAMPAIGN_ENGINE
+- Warehouse: SFE_CAMPAIGN_ENGINE_WH
+
+## Development Standards
+- Naming: RAW_ prefix for staging tables (e.g. RAW_PLAYERS, RAW_PLAYER_ACTIVITY)
+- IDs: INTEGER primary keys (Step 2 uses GENERATOR/UNIFORM for synthetic data)
+- Objects: COMMENT = 'DEMO: <description> (Expires: 2026-05-01)' on all objects
+- Constraints: PRIMARY KEY on every table, FOREIGN KEY where applicable
+```
+
+This is deliberately minimal -- environment plus naming standards. You'll add patterns and conventions as you build (see [The AGENTS.md Story](#the-agentsmd-story)).
+
 ## How This Works
 
 Each step follows the same rhythm:
@@ -56,7 +83,7 @@ Each step follows the same rhythm:
 3. **Review** what the AI generates -- don't blindly accept
 4. **Run** the SQL in Snowsight
 5. **Validate** with the provided check queries
-6. **Update AGENTS.md** when the step tells you to (this is how the AI learns your project)
+6. **Update AGENTS.md** when the step tells you to (this is how the AI learns your project over time)
 7. **Move on** to the next step
 
 ### The One Anti-Pattern That Ruins Everything
@@ -145,11 +172,11 @@ This is the real test of whether your AGENTS.md is complete enough for the AI to
 
 ## The AGENTS.md Story
 
-The hidden curriculum of this workshop is AGENTS.md. You'll create it at Step 1, update it at Steps 3, 5, and 7, and by the end you'll have a complete project context file that any AI tool can use to work on this project. See [prompts/00_agents_evolution.md](prompts/00_agents_evolution.md) for the full evolution story.
+The hidden curriculum of this workshop is AGENTS.md. You create it before Step 1 with environment and naming standards, then update it at Steps 3, 5, and 7 as the project grows. By the end you'll have a complete project context file that any AI tool can use to work on this project. See [prompts/00_agents_evolution.md](prompts/00_agents_evolution.md) for the full evolution story.
 
-| After Step | AGENTS.md Version | What the AI Now Knows |
+| When | AGENTS.md Version | What the AI Now Knows |
 |---|---|---|
-| 1 | v1 | Project name, database, schema, warehouse |
-| 3 | v2 | + Dynamic Tables, VECTOR(FLOAT,16), normalization patterns |
-| 5 | v3 | + ML CLASSIFICATION, VECTOR_COSINE_SIMILARITY, Python procs, CORTEX.COMPLETE |
-| 7 | v4 | + Semantic view clause order, CREATE AGENT YAML syntax, Streamlit deployment |
+| Before Step 1 | v1 | Project name, environment, naming conventions (RAW_ prefix, integer PKs) |
+| After Step 3 | v2 | + Dynamic Tables, VECTOR(FLOAT,16), normalization patterns |
+| After Step 5 | v3 | + ML CLASSIFICATION, VECTOR_COSINE_SIMILARITY, Python procs, CORTEX.COMPLETE |
+| After Step 7 | v4 | + Semantic view clause order, CREATE AGENT YAML syntax, Streamlit deployment |

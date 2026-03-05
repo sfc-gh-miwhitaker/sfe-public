@@ -50,10 +50,12 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 - ML models trained on views using SYSTEM$REFERENCE
 
 ## Development Standards
+- Naming: RAW_ prefix for staging tables; SFE_ prefix for account-level objects only
+- IDs: INTEGER primary keys (GENERATOR/UNIFORM for synthetic data)
 - SQL: Explicit columns, sargable predicates, QUALIFY for window functions
-- Objects: COMMENT with expiration date on all objects
+- Objects: COMMENT = 'DEMO: <description> (Expires: 2026-05-01)' on all objects
+- Constraints: PRIMARY KEY on every table, FOREIGN KEY where applicable
 - Deploy: One-command deployment via deploy_all.sql
-- Naming: SFE_ prefix for account-level objects only; project objects scoped by schema
 ```
 
 Key additions: VECTOR_COSINE_SIMILARITY, ML CLASSIFICATION, CORTEX.COMPLETE, Python proc constraint, SYSTEM$REFERENCE, and naming conventions. The AI now has enough context to build any new feature in this project consistently.
