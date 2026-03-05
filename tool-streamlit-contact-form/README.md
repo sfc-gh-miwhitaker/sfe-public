@@ -11,6 +11,8 @@
 
 A simple contact form built with Streamlit in Snowflake that collects user information and writes directly to a Snowflake table.
 
+![Contact Form Screenshot](assets/contact-form-screenshot.png)
+
 ---
 
 ## What It Does

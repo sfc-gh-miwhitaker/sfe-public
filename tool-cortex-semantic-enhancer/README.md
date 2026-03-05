@@ -1,18 +1,18 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--03-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 ![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)
 
 # Semantic View Enhancer
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
+> DEMONSTRATION PROJECT - EXPIRES: 2026-05-03
 > This tool uses Snowflake features current as of March 2026.
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 **Author:** SE Community
-**Purpose:** Enhance Snowflake semantic views with AI-improved descriptions using Cortex
-**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 (60 days)
+**Purpose:** Enhance *existing* Snowflake semantic views with AI-improved descriptions using custom business context
+**Last Updated:** 2026-03-04 | **Expires:** 2026-05-03 (60 days)
 **Status:** ACTIVE
 
 ---
@@ -32,7 +32,15 @@ cd sfe-public/tool-cortex-semantic-enhancer && cortex
 
 ## What This Tool Does
 
-Creates **enhanced copies** of your Snowflake semantic views with AI-generated, business-aware descriptions for all dimensions and facts using Cortex AI.
+Creates **enhanced copies** of your *existing* Snowflake semantic views with AI-generated, business-aware descriptions for all dimensions and facts using Cortex AI.
+
+> **When to use this tool vs native features:**
+> | Scenario | Recommendation |
+> |----------|----------------|
+> | Creating a **new** semantic view | Use [Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot) with "AI-Generated Descriptions" enabled |
+> | Enhancing an **existing** semantic view | Use this tool |
+> | Need **custom business context** in descriptions | Use this tool |
+> | Programmatic/CLI enhancement (not UI) | Use this tool |
 
 ```sql
 -- You have a semantic view with basic descriptions
@@ -329,4 +337,4 @@ This project is designed for AI-pair development.
 
 ---
 
-*SE Community • Tools Collection • Last Updated: 2026-03-02*
+*SE Community • Tools Collection • Last Updated: 2026-03-04*

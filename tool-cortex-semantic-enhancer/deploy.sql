@@ -3,8 +3,8 @@
  *
  * ⚠️  NOT FOR PRODUCTION USE - EXAMPLE IMPLEMENTATION ONLY
  *
- * LAST UPDATED: 2026-03-02
- * EXPIRES: 2026-05-01
+ * LAST UPDATED: 2026-03-04
+ * EXPIRES: 2026-05-03
  * Author: SE Community
  * Status: ACTIVE
  *
@@ -44,15 +44,15 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 
 SELECT
-    '2026-05-01'::DATE AS expiration_date,
+    '2026-05-03'::DATE AS expiration_date,
     CURRENT_DATE() AS current_date,
-    DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) AS days_remaining,
+    DATEDIFF('day', CURRENT_DATE(), '2026-05-03'::DATE) AS days_remaining,
     CASE
-        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) < 0
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-03'::DATE) < 0
         THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
-        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) <= 7
-        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
-        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-01'::DATE) || ' days remaining'
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-05-03'::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-03'::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-05-03'::DATE) || ' days remaining'
     END AS tool_status;
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -63,7 +63,7 @@ CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
   COMMENT = 'DEMO: Repository for example/demo projects - NOT FOR PRODUCTION';
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS
-  COMMENT = 'DEMO: semantic-view-enhancer - Cortex AI semantic view enhancement | Author: SE Community | Expires: 2026-05-01';
+  COMMENT = 'DEMO: semantic-view-enhancer - Cortex AI semantic view enhancement | Author: SE Community | Expires: 2026-05-03';
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS;
 

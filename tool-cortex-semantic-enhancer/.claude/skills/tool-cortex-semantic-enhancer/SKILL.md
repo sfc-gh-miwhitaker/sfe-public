@@ -1,13 +1,15 @@
 ---
 name: tool-cortex-semantic-enhancer
-description: "Enhance semantic views with AI-improved descriptions. Triggers: semantic enhancer, enhance semantic view, AI descriptions, semantic view descriptions, AI_COMPLETE semantic, dry run enhancement."
+description: "Enhance *existing* semantic views with AI-improved descriptions using custom business context. For NEW views, use Semantic View Autopilot instead. Triggers: semantic enhancer, enhance semantic view, AI descriptions, semantic view descriptions, AI_COMPLETE semantic, dry run enhancement."
 ---
 
 # Semantic View Enhancer
 
 ## Purpose
 
-Enhance Snowflake semantic views with AI-improved descriptions using Cortex AI. Reads existing semantic view definitions, generates improved descriptions via AI_COMPLETE, and applies them. Original views are never modified without explicit confirmation (dry-run mode available).
+Enhance *existing* Snowflake semantic views with AI-improved descriptions using custom business context and Cortex AI. Reads existing semantic view definitions, generates improved descriptions via AI_COMPLETE, and creates enhanced copies. Original views are never modified without explicit confirmation (dry-run mode available).
+
+**Important:** For **new** semantic views, use [Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot) with "AI-Generated Descriptions" enabled. This tool is for enhancing **existing** views or when you need custom business context injection.
 
 ## When to Use
 
@@ -24,7 +26,7 @@ Semantic View (existing)
 SFE_ESTIMATE_ENHANCEMENT_COST (cost estimation function)
        │
        ▼
-SFE_DIAGNOSE_SEMANTIC_VIEW (diagnostic procedure)
+SFE_DIAGNOSE_ENVIRONMENT (diagnostic procedure)
        │
        ▼
 SFE_ENHANCE_SEMANTIC_VIEW (main procedure)

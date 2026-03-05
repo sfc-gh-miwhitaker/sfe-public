@@ -1,0 +1,416 @@
+name: cortex_cost_intelligence
+description: >
+  Cortex Cost Intelligence semantic view for natural-language cost analysis
+  across all Snowflake Cortex AI services. Covers Cortex Analyst, AI Functions,
+  Agents, Snowflake Intelligence, Search, Fine-Tuning, Document Processing,
+  REST API, Code CLI, and Provisioned Throughput.
+comments: >
+  Built over V_COST_INTELLIGENCE_FLAT — a single denormalized view that
+  unions all Cortex ACCOUNT_USAGE sources. Designed for FinOps and Platform
+  Engineering teams to answer cost, attribution, and efficiency questions.
+
+tables:
+  - name: cortex_costs
+    description: >
+      Unified Cortex AI cost data. Each row represents usage from a single
+      service on a given day, optionally attributed to a user, model, and
+      function. Includes credits, tokens, operations, and USD cost.
+    base_table:
+      database: SNOWFLAKE_EXAMPLE
+      schema: CORTEX_COST_INTELLIGENCE
+      table: V_COST_INTELLIGENCE_FLAT
+
+    dimensions:
+      - name: service_type
+        synonyms:
+          - service
+          - cortex service
+          - AI service
+          - product
+        description: >
+          The Cortex AI service that incurred the cost.
+          Values: Cortex Analyst, Cortex AI Functions, Cortex Agent,
+          Snowflake Intelligence, Cortex Code CLI, Cortex Search,
+          Cortex Search Serving, Fine-Tuning, Document Processing,
+          Cortex REST API, Cortex Functions (Legacy), Provisioned Throughput.
+        expr: service_type
+        data_type: VARCHAR
+        is_enum: true
+
+      - name: user_name
+        synonyms:
+          - user
+          - username
+          - who
+          - person
+        description: >
+          The Snowflake user who incurred the cost. SYSTEM for non-user-attributed usage.
+        expr: user_name
+        data_type: VARCHAR
+
+      - name: model_name
+        synonyms:
+          - model
+          - LLM
+          - AI model
+        description: >
+          The AI model used (e.g., llama3.3-70b, claude-4-sonnet, mistral-large2).
+          NULL for services that do not track model-level detail.
+        expr: model_name
+        data_type: VARCHAR
+
+      - name: function_name
+        synonyms:
+          - function
+          - operation
+          - agent name
+          - service name
+        description: >
+          The specific function, agent, or service instance name.
+          For AI Functions: COMPLETE, SUMMARIZE, TRANSLATE, etc.
+          For Agents: the agent object name.
+          For Search: the search service name.
+        expr: function_name
+        data_type: VARCHAR
+
+      - name: role_name
+        synonyms:
+          - role
+        description: >
+          The Snowflake role used when the cost was incurred.
+          Only populated for Cortex AI Functions.
+        expr: role_name
+        data_type: VARCHAR
+
+      - name: day_of_week
+        synonyms:
+          - weekday
+          - day name
+        description: Day of the week (Mon, Tue, Wed, etc.)
+        expr: day_of_week
+        data_type: VARCHAR
+        is_enum: true
+
+    time_dimensions:
+      - name: usage_date
+        synonyms:
+          - date
+          - day
+          - when
+        description: The calendar date when the usage occurred.
+        expr: usage_date
+        data_type: DATE
+        unique: false
+
+      - name: usage_week
+        synonyms:
+          - week
+          - weekly
+        description: The start of the ISO week (Monday) for the usage date.
+        expr: usage_week
+        data_type: DATE
+
+      - name: usage_month
+        synonyms:
+          - month
+          - monthly
+        description: The first day of the month for the usage date.
+        expr: usage_month
+        data_type: DATE
+
+    facts:
+      - name: credits
+        synonyms:
+          - credit usage
+          - credit consumption
+        description: >
+          Snowflake credits consumed for this usage row.
+        expr: credits
+        data_type: NUMBER
+
+      - name: operations
+        synonyms:
+          - requests
+          - calls
+          - queries
+          - invocations
+        description: >
+          Number of operations (requests, queries, documents processed, etc.)
+        expr: operations
+        data_type: NUMBER
+
+      - name: tokens_total
+        synonyms:
+          - tokens
+          - token count
+        description: Total tokens processed (input + output combined where available).
+        expr: tokens_total
+        data_type: NUMBER
+
+      - name: cost_usd
+        synonyms:
+          - cost
+          - dollars
+          - spend
+          - USD
+          - money
+        description: >
+          Estimated USD cost based on the configured credit price
+          (default $3.00/credit). Calculated as credits × credit_cost_usd.
+        expr: cost_usd
+        data_type: NUMBER
+
+      - name: mtd_credits
+        description: Month-to-date cumulative credits for the service type.
+        expr: mtd_credits
+        data_type: NUMBER
+        access_modifier: public_access
+
+      - name: mtd_cost_usd
+        synonyms:
+          - month to date cost
+          - MTD spend
+        description: Month-to-date cumulative USD cost for the service type.
+        expr: mtd_cost_usd
+        data_type: NUMBER
+
+    metrics:
+      - name: total_credits
+        synonyms:
+          - total credit usage
+          - total consumption
+          - total spend credits
+        description: Sum of all credits consumed.
+        expr: SUM(credits)
+
+      - name: total_cost_usd
+        synonyms:
+          - total cost
+          - total spend
+          - total dollars
+        description: Sum of all estimated USD costs.
+        expr: SUM(cost_usd)
+
+      - name: total_operations
+        synonyms:
+          - total requests
+          - total calls
+        description: Total number of operations across all services.
+        expr: SUM(operations)
+
+      - name: total_tokens
+        synonyms:
+          - total token usage
+        description: Total tokens processed.
+        expr: SUM(tokens_total)
+
+      - name: unique_users
+        synonyms:
+          - number of users
+          - user count
+          - active users
+        description: Count of distinct users.
+        expr: COUNT(DISTINCT user_name)
+
+      - name: avg_credits_per_operation
+        synonyms:
+          - cost per request
+          - cost per call
+          - unit cost
+        description: Average credits consumed per operation.
+        expr: CASE WHEN SUM(operations) > 0 THEN SUM(credits) / SUM(operations) ELSE 0 END
+
+      - name: avg_cost_per_user
+        synonyms:
+          - cost per user
+          - spend per user
+        description: Average USD cost per unique user.
+        expr: CASE WHEN COUNT(DISTINCT user_name) > 0 THEN SUM(cost_usd) / COUNT(DISTINCT user_name) ELSE 0 END
+
+    filters:
+      - name: last_7_days
+        description: Filter to the last 7 days of usage.
+        expr: usage_date >= DATEADD('day', -7, CURRENT_DATE())
+
+      - name: last_30_days
+        description: Filter to the last 30 days of usage.
+        expr: usage_date >= DATEADD('day', -30, CURRENT_DATE())
+
+      - name: current_month
+        description: Filter to the current calendar month.
+        expr: usage_month = DATE_TRUNC('month', CURRENT_DATE())
+
+      - name: previous_month
+        description: Filter to the previous calendar month.
+        expr: usage_month = DATE_TRUNC('month', DATEADD('month', -1, CURRENT_DATE()))
+
+      - name: non_system_users
+        description: Exclude SYSTEM-attributed rows to show only real user activity.
+        expr: user_name != 'SYSTEM'
+
+verified_queries:
+  - name: total_spend_last_month
+    question: What was our total Cortex spend last month?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT
+        SUM(cost_usd) AS total_cost_usd,
+        SUM(credits) AS total_credits
+      FROM cortex_cost_intelligence
+      WHERE usage_month = DATE_TRUNC('month', DATEADD('month', -1, CURRENT_DATE()))
+
+  - name: top_spenders_this_month
+    question: Who are the top 10 spenders this month?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT
+        user_name,
+        SUM(cost_usd) AS total_cost_usd,
+        SUM(credits) AS total_credits,
+        SUM(operations) AS total_operations
+      FROM cortex_cost_intelligence
+      WHERE usage_month = DATE_TRUNC('month', CURRENT_DATE())
+        AND user_name != 'SYSTEM'
+      GROUP BY user_name
+      ORDER BY total_cost_usd DESC
+      LIMIT 10
+
+  - name: cost_by_service
+    question: How much does each Cortex service cost?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT
+        service_type,
+        SUM(cost_usd) AS total_cost_usd,
+        SUM(credits) AS total_credits,
+        COUNT(DISTINCT user_name) AS unique_users
+      FROM cortex_cost_intelligence
+      WHERE usage_date >= DATEADD('day', -30, CURRENT_DATE())
+      GROUP BY service_type
+      ORDER BY total_cost_usd DESC
+
+  - name: daily_cortex_agent_cost
+    question: Show me daily Cortex Agent costs for the last 30 days
+    sql: |
+      SELECT
+        usage_date,
+        SUM(cost_usd) AS daily_cost_usd,
+        SUM(credits) AS daily_credits,
+        SUM(operations) AS daily_operations
+      FROM cortex_cost_intelligence
+      WHERE service_type = 'Cortex Agent'
+        AND usage_date >= DATEADD('day', -30, CURRENT_DATE())
+      GROUP BY usage_date
+      ORDER BY usage_date
+
+  - name: cheapest_model_complete
+    question: What is the cheapest model for AI_COMPLETE?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT
+        model_name,
+        SUM(credits) AS total_credits,
+        SUM(operations) AS total_operations,
+        CASE WHEN SUM(operations) > 0
+             THEN SUM(credits) / SUM(operations)
+             ELSE 0
+        END AS credits_per_operation
+      FROM cortex_cost_intelligence
+      WHERE function_name = 'COMPLETE'
+        AND model_name IS NOT NULL
+        AND usage_date >= DATEADD('day', -30, CURRENT_DATE())
+      GROUP BY model_name
+      ORDER BY credits_per_operation ASC
+
+  - name: cost_per_analyst_user
+    question: How much does Cortex Analyst cost per user per month?
+    sql: |
+      SELECT
+        usage_month,
+        COUNT(DISTINCT user_name) AS unique_users,
+        SUM(cost_usd) AS total_cost_usd,
+        CASE WHEN COUNT(DISTINCT user_name) > 0
+             THEN SUM(cost_usd) / COUNT(DISTINCT user_name)
+             ELSE 0
+        END AS cost_per_user
+      FROM cortex_cost_intelligence
+      WHERE service_type = 'Cortex Analyst'
+        AND user_name != 'SYSTEM'
+      GROUP BY usage_month
+      ORDER BY usage_month DESC
+
+  - name: fastest_growing_service
+    question: Which service is growing fastest week over week?
+    sql: |
+      WITH weekly AS (
+          SELECT
+              usage_week,
+              service_type,
+              SUM(credits) AS weekly_credits
+          FROM cortex_cost_intelligence
+          GROUP BY usage_week, service_type
+      ),
+      with_prev AS (
+          SELECT
+              usage_week,
+              service_type,
+              weekly_credits,
+              LAG(weekly_credits) OVER (PARTITION BY service_type ORDER BY usage_week) AS prev_week
+          FROM weekly
+      )
+      SELECT
+          service_type,
+          usage_week,
+          weekly_credits,
+          prev_week,
+          CASE WHEN prev_week > 0
+               THEN ROUND((weekly_credits - prev_week) / prev_week * 100, 1)
+               ELSE NULL
+          END AS wow_growth_pct
+      FROM with_prev
+      WHERE prev_week IS NOT NULL
+      ORDER BY usage_week DESC, wow_growth_pct DESC
+
+  - name: search_cost_per_query
+    question: What is our average cost per Cortex Search query?
+    sql: |
+      SELECT
+        SUM(credits) AS total_credits,
+        SUM(operations) AS total_queries,
+        CASE WHEN SUM(operations) > 0
+             THEN SUM(credits) / SUM(operations)
+             ELSE 0
+        END AS avg_credits_per_query,
+        SUM(cost_usd) AS total_cost_usd,
+        CASE WHEN SUM(operations) > 0
+             THEN SUM(cost_usd) / SUM(operations)
+             ELSE 0
+        END AS avg_cost_per_query
+      FROM cortex_cost_intelligence
+      WHERE service_type IN ('Cortex Search', 'Cortex Search Serving')
+        AND usage_date >= DATEADD('day', -30, CURRENT_DATE())
+
+  - name: fine_tuning_cost_this_quarter
+    question: How much did fine-tuning cost us this quarter?
+    sql: |
+      SELECT
+        SUM(credits) AS total_credits,
+        SUM(cost_usd) AS total_cost_usd,
+        SUM(operations) AS total_jobs
+      FROM cortex_cost_intelligence
+      WHERE service_type = 'Fine-Tuning'
+        AND usage_date >= DATE_TRUNC('quarter', CURRENT_DATE())
+
+  - name: spend_trend_by_week
+    question: What is the weekly spend trend for the last 3 months?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT
+        usage_week,
+        service_type,
+        SUM(credits) AS weekly_credits,
+        SUM(cost_usd) AS weekly_cost_usd
+      FROM cortex_cost_intelligence
+      WHERE usage_date >= DATEADD('month', -3, CURRENT_DATE())
+      GROUP BY usage_week, service_type
+      ORDER BY usage_week, service_type
