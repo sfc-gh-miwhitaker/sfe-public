@@ -89,12 +89,12 @@ Expected: Training view has ~2K rows. Model exists. Scoring returns ranked playe
 
 What goes wrong: Without AGENTS.md v2, the AI doesn't know about `DT_PLAYER_FEATURES` or the 16 behavioral columns. It may:
 - Create its own feature query from raw tables (duplicating Step 3)
-- Use different column names like `daily_avg_wager` instead of `avg_daily_wager`
-- Choose a different feature set entirely, breaking the scoring procedure
+- Use a different feature set entirely, breaking the scoring procedure
+- Miss the Dynamic Table name and query raw tables directly
 
 This is the inflection point of the workshop. Steps 1-4 work fine without AGENTS.md because each step is self-contained. But Step 5 must reference objects from Steps 1 and 3 simultaneously. AGENTS.md is what makes the AI aware of your full project state.
 
-The fix: Update AGENTS.md to v2 (from Step 3) before running this prompt. The AI should reference `DT_PLAYER_FEATURES` by name and use all 16 column names exactly.
+The fix: Update AGENTS.md to v2 (from Step 3) before running this prompt. The AI should reference `DT_PLAYER_FEATURES` by name and use your actual feature column names (whatever Step 3 generated).
 
 ## What Just Happened
 

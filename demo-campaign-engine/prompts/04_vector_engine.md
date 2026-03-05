@@ -6,7 +6,7 @@ Complex operations are best described as a pipeline: input -> transform -> compa
 
 ## Before You Start
 
-- [ ] Step 3 complete: `DT_PLAYER_VECTORS` has ~500 rows with `behavior_vector` VECTOR(FLOAT,16)
+- [ ] Step 3 complete: `DT_PLAYER_VECTORS` has ~500 rows with a VECTOR(FLOAT,16) column
 - [ ] Dynamic Tables are in ACTIVE scheduling state (`SHOW DYNAMIC TABLES LIKE 'DT_%'`)
 
 ## The Prompt
@@ -59,7 +59,7 @@ Key pattern to notice: The Python stored procedure is a thin wrapper around SQL.
 
 **"Unsupported type: VECTOR" or similar type error?** The procedure was created with LANGUAGE SQL. Drop it and recreate with LANGUAGE PYTHON. See the Common Mistake section above.
 
-**All similarity scores are 1.0?** Your seed set and results overlap too much, or vectors aren't properly normalized. Check that `DT_PLAYER_VECTORS` has varied values: `SELECT behavior_vector::ARRAY FROM DT_PLAYER_VECTORS LIMIT 5;` -- if all arrays look identical, go back to Step 3 and verify the normalization math.
+**All similarity scores are 1.0?** Your seed set and results overlap too much, or vectors aren't properly normalized. Check that `DT_PLAYER_VECTORS` has varied values: `SELECT * FROM DT_PLAYER_VECTORS LIMIT 5;` -- if all vectors look identical, go back to Step 3 and verify the normalization math.
 
 **Procedure returns 0 rows?** The seed player IDs may not exist. Verify with: `SELECT player_id FROM DT_PLAYER_VECTORS WHERE player_id IN (1, 5, 12);`
 

@@ -104,7 +104,7 @@ The AI produces exactly 4 tables but with different column choices: UUIDs instea
 
 Why it happens: Without naming conventions in AGENTS.md, the AI applies generic best practices -- UUIDs are "standard" for distributed systems, marketing funnels are "richer" than boolean flags, exact birth dates are "more flexible" than age bands. These are reasonable choices in isolation but break the downstream pipeline.
 
-Why it breaks: Step 2's GENERATOR() produces integer sequences, not UUIDs. Step 5's ML classifier needs `responded` as a BOOLEAN target variable. Step 3 computes `loyalty_tier_num` from mixed-case tier names ('Bronze', not 'BRONZE'). Each deviation creates a mismatch that surfaces 2-3 steps later.
+Why it breaks: Step 2's GENERATOR() produces integer sequences, not UUIDs. Step 5's ML classifier needs `responded` as a BOOLEAN target variable. Step 3 encodes loyalty tiers numerically from mixed-case names ('Bronze' = 1, not 'BRONZE' = 1). Each deviation creates a mismatch that surfaces 2-3 steps later.
 
 The fix: Verify AGENTS.md v1 exists with naming conventions before running the prompt. The Development Standards (RAW_ prefix, integer PKs) prevent the most common deviations. For column-level drift, run the validation queries and use the recovery prompts in "If Something Went Wrong."
 
