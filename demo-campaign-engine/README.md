@@ -5,6 +5,7 @@
 
 # Casino Campaign Recommendation Engine
 
+> [!CAUTION]
 > DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
 > This demo uses Snowflake features current as of March 2026.
 > After expiration, a warning banner will be added to this README and deploy_all.sql.
@@ -84,6 +85,7 @@ This project is designed for AI-pair development.
 - **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
 - **Cursor** -- Open locally with Cursor for AI-pair coding
 
+> [!TIP]
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ## First Time Here?
@@ -95,7 +97,8 @@ This project is designed for AI-pair development.
 
 ## Build It Yourself
 
-Want to learn AI-pair programming instead of just deploying the finished product? The **[Guided Build](GUIDED_BUILD.md)** walks you through constructing this entire project from scratch -- one prompt at a time, with validation at every step.
+> [!TIP]
+> Want to learn AI-pair programming instead of just deploying the finished product? The **[Guided Build](GUIDED_BUILD.md)** walks you through constructing this entire project from scratch -- one prompt at a time, with validation at every step.
 
 You'll learn 7 AI-pair techniques (one per step), evolve AGENTS.md from 3 lines to full project context, and see how each prompting pattern avoids a specific anti-pattern that would break the build. Takes ~90 minutes and produces ~1,200 lines of working code.
 
@@ -132,7 +135,9 @@ You'll learn 7 AI-pair techniques (one per step), evolve AGENTS.md from 3 lines 
 | Streamlit | Per-viewer | Included in warehouse |
 
 **Total estimated cost:** <2 credits for full deployment + 1 hour of exploration.
-**Edition required:** Enterprise (for ML CLASSIFICATION and Dynamic Tables).
+
+> [!IMPORTANT]
+> **Edition required:** Enterprise (for ML CLASSIFICATION and Dynamic Tables).
 
 ## Prompt Catalog
 
@@ -140,12 +145,17 @@ Every SQL and Python file in this project was generated from a natural-language 
 
 ## Troubleshooting
 
+<details>
+<summary><strong>Common issues and fixes</strong></summary>
+
 | Symptom | Fix |
 |---------|-----|
 | ML CLASSIFICATION fails | Ensure Enterprise edition. Classification requires Enterprise or higher. |
 | Dynamic table stuck | Check `SELECT * FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY())` for errors. |
 | Streamlit app not visible | Navigate to Snowsight > Streamlit. The app deploys as part of `deploy_all.sql`. |
 | Vector similarity returns no results | Verify `DT_PLAYER_FEATURES` has refreshed. Check `SYSTEM$DYNAMIC_TABLE_GRAPH_REFRESH_STATUS()`. |
+
+</details>
 
 ## Cleanup
 

@@ -28,24 +28,28 @@ Each step teaches one AI-pair programming technique. By the end you'll have a to
 
 ## Prerequisites
 
-- Snowflake account with **Enterprise** edition (required for ML CLASSIFICATION and Dynamic Tables)
-- `SYSADMIN` and `ACCOUNTADMIN` role access
+> [!IMPORTANT]
+> - Snowflake account with **Enterprise** edition (required for ML CLASSIFICATION and Dynamic Tables)
+> - `SYSADMIN` and `ACCOUNTADMIN` role access
+
 - **Cortex Code CLI** ([install guide](https://docs.snowflake.com/en/user-guide/snowflake-cli/cortex-code/cortex-code-overview)) -- the primary tool for this Hands-on Lab
 - Also works with: Cursor, Claude Code, or Cortex Code in Snowsight
 
 ### New to AI Pair-Programming?
 
-If this is your first time using an AI coding tool, complete the [Cortex Code Setup Guide](../guide-coco-setup/README.md) first (~45 minutes). It teaches the context management concepts this workshop assumes:
-
-- **How your AI tool finds its instructions** -- the guidance hierarchy, always-on context (AGENTS.md) vs on-demand skills, and why this matters
-- **What to do when the AI forgets your conventions** -- context compaction happens in long sessions and silently drops your AGENTS.md content. The setup guide teaches you to recognize and recover from it.
-- **Your first custom skill** -- a team-standards template that prevents common drift patterns (naming conventions, SQL quality rules) before they compound across steps
+> [!TIP]
+> If this is your first time using an AI coding tool, complete the [Cortex Code Setup Guide](../guide-coco-setup/README.md) first (~45 minutes). It teaches the context management concepts this workshop assumes:
+>
+> - **How your AI tool finds its instructions** -- the guidance hierarchy, always-on context (AGENTS.md) vs on-demand skills, and why this matters
+> - **What to do when the AI forgets your conventions** -- context compaction happens in long sessions and silently drops your AGENTS.md content. The setup guide teaches you to recognize and recover from it.
+> - **Your first custom skill** -- a team-standards template that prevents common drift patterns (naming conventions, SQL quality rules) before they compound across steps
 
 This workshop teaches *prompting techniques* (one per step). The setup guide teaches *context management* -- how to keep the AI aligned across a multi-step build. Both skills are essential; the setup guide is where the second one is taught.
 
 ## Before You Start
 
-**Don't skip this.** Two setup tasks before Step 1.
+> [!WARNING]
+> **Don't skip this.** Two setup tasks before Step 1.
 
 ### 1. Create the Snowflake Schema
 
@@ -98,9 +102,10 @@ Each step follows the same rhythm:
 
 ### The One Anti-Pattern That Ruins Everything
 
+> [!CAUTION]
 > **"Build me a complete casino campaign engine with ML, vectors, Streamlit, and a Cortex Agent."**
-
-This mega-prompt approach fails for three reasons: the AI loses coherence across 1,200 lines, naming conventions drift between components, and you can't validate intermediate states. The whole point of this workshop is learning that 7 focused prompts with progressive context (AGENTS.md) beats one wall of text.
+>
+> This mega-prompt approach fails for three reasons: the AI loses coherence across 1,200 lines, naming conventions drift between components, and you can't validate intermediate states. The whole point of this workshop is learning that 7 focused prompts with progressive context (AGENTS.md) beats one wall of text.
 
 ## The 7 Steps
 
@@ -186,7 +191,10 @@ This is the real test of whether your AGENTS.md is complete enough for the AI to
 
 ## The AGENTS.md Story
 
-The hidden curriculum of this workshop is AGENTS.md. You create it before Step 1 with environment and naming standards, then update it at Steps 3, 5, and 7 as the project grows. By the end you'll have a complete project context file that any AI tool can use to work on this project. See [prompts/00_agents_evolution.md](prompts/00_agents_evolution.md) for the full evolution story.
+> [!TIP]
+> The hidden curriculum of this workshop is AGENTS.md. You create it before Step 1, then update it at Steps 3, 5, and 7 as the project grows. By the end you'll have a complete project context file that any AI tool can use.
+
+See [prompts/00_agents_evolution.md](prompts/00_agents_evolution.md) for the full evolution story.
 
 | When | AGENTS.md Version | What the AI Now Knows |
 |---|---|---|
