@@ -1,5 +1,6 @@
 # Get Started with Cortex Code CLI
 
+> [!CAUTION]
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
 A curated on-ramp for AI pair-programming with Snowflake. Install the CLI, understand how it finds its instructions, and build your first custom skill.
@@ -18,7 +19,8 @@ Anyone new to AI pair-programming who wants to use Cortex Code with Snowflake. Y
 
 If someone sent you a link to a GitHub project and you've never used GitHub before, this section is for you. If you already have the code on your computer, skip to [Part 1](#part-1-the-learning-path).
 
-### Downloading from GitHub (No Experience Required)
+<details>
+<summary><strong>Downloading from GitHub (No Experience Required)</strong></summary>
 
 1. **Click the link** you were given -- you'll arrive at a page showing the project name at the top and a list of files below
 
@@ -40,6 +42,16 @@ If someone sent you a link to a GitHub project and you've never used GitHub befo
 
 **That's it -- you have the code.** Continue to Part 1 to install Cortex Code.
 
+#### Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| "I don't see a green Code button" | You might be on a file page, not the main project page. Look for a link near the top that shows just the project name (no file path after it) and click it. |
+| "The ZIP file won't open" | On Windows, you may need to right-click and "Extract All" rather than double-clicking. On Mac, double-click should work -- if not, try right-click > "Open With" > "Archive Utility". |
+| "I can't find my Downloads folder" | **Mac:** Click the Finder icon (smiley face) in your dock, then click "Downloads" in the left sidebar. **Windows:** Click the folder icon in your taskbar, then click "Downloads" in the left sidebar. |
+
+</details>
+
 ### Already Comfortable with Terminal?
 
 Clone the full repo (under 4 MB):
@@ -60,14 +72,6 @@ cd sfe-public/<project-name>
 
 Most **demo** projects deploy entirely inside Snowflake -- open the project's `deploy_all.sql` on GitHub, copy it into a Snowsight worksheet, and click **Run All**. This guide, however, is a walkthrough -- you'll need the files locally to follow along and build your first skill.
 
-### Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| "I don't see a green Code button" | You might be on a file page, not the main project page. Look for a link near the top that shows just the project name (no file path after it) and click it. |
-| "The ZIP file won't open" | On Windows, you may need to right-click and "Extract All" rather than double-clicking. On Mac, double-click should work -- if not, try right-click > "Open With" > "Archive Utility". |
-| "I can't find my Downloads folder" | **Mac:** Click the Finder icon (smiley face) in your dock, then click "Downloads" in the left sidebar. **Windows:** Click the folder icon in your taskbar, then click "Downloads" in the left sidebar. |
-
 ---
 
 ## Part 1: The Learning Path
@@ -84,7 +88,8 @@ These official resources cover install, connect, and basic usage. Read them in t
 | 6 | [How to Create a Skill](https://medium.com/snowflake/how-to-create-a-skill-for-cortex-code-55bc5b38a223) | Step-by-step skill creation walkthrough | 5 min |
 | 7 | [Advanced Skill Techniques](https://medium.com/snowflake/advanced-techniques-for-creating-skills-in-cortex-code-cli-38f768eb2dcf) | Front-load research, build validators, iterate continuously | 8 min |
 
-**After Step 2, come back here.** The rest of this guide covers concepts the official docs don't.
+> [!IMPORTANT]
+> **After Step 2, come back here.** The rest of this guide covers concepts the official docs don't.
 
 ---
 
@@ -94,35 +99,64 @@ This is the single most important concept for getting good results from AI pair-
 
 ### The Guidance Hierarchy
 
-See [diagrams/guidance-hierarchy.md](diagrams/guidance-hierarchy.md) for the full visual, but here's the summary:
+Higher layers override lower ones. See [diagrams/guidance-hierarchy.md](diagrams/guidance-hierarchy.md) for the full visual set.
 
-| Override Precedence | Scope | Location | Loaded When |
-|---------------------|-------|----------|-------------|
-| 1 (overrides all below) | Organization | `managed-settings.json` (macOS: `/Library/Application Support/Cortex/`, Linux: `/etc/cortex/`) | Always (if exists) |
-| 2 | User | `~/.claude/CLAUDE.md` + `~/.claude/skills/` + `~/.snowflake/cortex/skills/` | Always |
-| 3 | Project | `AGENTS.md` (or `CLAUDE.md`) at project root + `.cortex/skills/` or `.claude/skills/` | When working in that project |
-| 4 | Session | Temporary skills, `/plan` mode, model overrides | Current session only |
-| 5 (overridden by all above) | Built-in | ~11 bundled skills (semantic views, dbt, etc.) | Always available |
+```mermaid
+flowchart TB
+    subgraph org ["Organization (IT-managed)"]
+        ManagedSettings["managed-settings.json
+        macOS: /Library/Application Support/Cortex/
+        Linux: /etc/cortex/"]
+    end
 
-> **Note:** "Override precedence" means higher layers can override instructions from lower layers. Organization policies override user preferences, which override project settings, etc.
+    subgraph user ["User (your machine)"]
+        UserClaude["~/.claude/CLAUDE.md
+        Always-on rules"]
+        UserSkills["~/.claude/skills/
+        Personal skills library"]
+        UserCortex["~/.snowflake/cortex/skills/
+        CoCo-specific skills"]
+    end
+
+    subgraph project ["Project (repo root)"]
+        AgentsMd["AGENTS.md or CLAUDE.md
+        Project context and standards"]
+        ProjectSkills[".claude/skills/ or .cortex/skills/
+        Project-specific skills"]
+    end
+
+    subgraph session ["Session (ephemeral)"]
+        TempSkills["Temporary skills
+        Added via /skill add"]
+        SessionConfig["/plan mode, /model overrides
+        Session-only settings"]
+    end
+
+    subgraph builtin ["Built-in"]
+        BundledSkills["~11 bundled skills
+        Semantic views, dbt, docs, etc."]
+    end
+
+    org -->|"overrides"| user
+    user -->|"overrides"| project
+    project -->|"overrides"| session
+    session -->|"overrides"| builtin
+```
+
+1. **Organization** -- `managed-settings.json` (if IT deploys one). Always loaded, overrides everything below.
+2. **User** -- `~/.claude/CLAUDE.md` + `~/.claude/skills/` + `~/.snowflake/cortex/skills/`. Always loaded.
+3. **Project** -- `AGENTS.md` (or `CLAUDE.md`) at project root + `.cortex/skills/` or `.claude/skills/`. Loaded when working in that project.
+4. **Session** -- Temporary skills, `/plan` mode, model overrides. Current session only.
+5. **Built-in** -- ~11 bundled skills (semantic views, dbt, etc.). Always available, overridden by everything above.
 
 ### Always-On vs On-Demand
 
 There are two kinds of guidance, and confusing them is a common mistake:
 
-**Always-on (loaded automatically):**
-- `AGENTS.md` or `CLAUDE.md` at your project root
-- `~/.claude/CLAUDE.md` (user-level)
-- Managed settings (org-level)
-
-These are read by the AI at the start of every conversation. Put your non-negotiable standards here -- naming conventions, security rules, project context.
-
-**On-demand (invoked explicitly):**
-- Skills (in `.cortex/skills/`, `.claude/skills/`, or `~/.claude/skills/`)
-- Subagents
-- MCP tools
-
-These are loaded when you reference them by name or when the AI recognizes a matching trigger. Put specialized workflows here -- things you need sometimes, not always.
+> [!TIP]
+> **Always-on** files (`AGENTS.md`, `~/.claude/CLAUDE.md`, managed settings) are read at the start of every conversation. Put non-negotiable standards here.
+>
+> **On-demand** extensions (skills, subagents, MCP tools) are loaded when you reference them by name or the AI recognizes a matching trigger. Put specialized workflows here -- things you need sometimes, not always.
 
 ### AGENTS.md Explained
 
@@ -162,7 +196,12 @@ One-sentence description.
 
 ### CoCo + Cursor: What's Shared, What's Not
 
-If you use both Cortex Code CLI and Cursor (or Claude Code), several files are shared between them:
+The practical takeaway: if you write your project guidance in `AGENTS.md` and your skills in `.claude/skills/`, they work in Cortex Code CLI, Cursor, and Claude Code. Use `.cortex/`-specific or `.cursor/`-specific paths only for tool-specific functionality.
+
+> **Cursor note:** `AGENTS.md` loading in Cursor can be unreliable in some versions, particularly with background agents. If Cursor ignores your `AGENTS.md`, create a `.cursor/rules/` file with the same content as a workaround.
+
+<details>
+<summary>Full compatibility matrix</summary>
 
 | File / Directory | Cortex Code CLI | Cursor | Claude Code |
 |-----------------|-----------------|--------|-------------|
@@ -177,9 +216,7 @@ If you use both Cortex Code CLI and Cursor (or Claude Code), several files are s
 | `.cortex/skills/` (project) | Read as skills | Not used | Not used |
 | `~/.snowflake/cortex/skills/` | Read as skills | Not used | Not used |
 
-The practical takeaway: if you write your project guidance in `AGENTS.md` and your skills in `.claude/skills/`, they work in all three tools. Use `.cortex/`-specific or `.cursor/`-specific paths only for tool-specific functionality.
-
-> **Cursor note:** `AGENTS.md` loading in Cursor can be unreliable in some versions, particularly with background agents. If Cursor ignores your `AGENTS.md`, create a `.cursor/rules/` file with the same content as a workaround.
+</details>
 
 ---
 
@@ -194,7 +231,7 @@ Part 2 taught the distinction between always-on and on-demand. Standards belong 
 - **Always-on standards** go in `~/.claude/CLAUDE.md` -- loaded into the system prompt at every session start. These survive context compaction better because the system prompt is re-applied after compaction, while conversation content gets summarized.
 - **The review procedure** goes in a skill -- a step-by-step workflow for checking code against your standards, plus compaction recovery and evolution guidance. Skills are procedures; CLAUDE.md is reference.
 
-This split follows the [agentskills.io specification](https://agentskills.io/specification): skills should be *procedures* (what to do, in what order, with verification steps), not *documentation* (lists of rules). The `description` field in SKILL.md frontmatter is the sole trigger mechanism -- agents decide whether to load a skill based on the description, not a separate `triggers:` field.
+This split follows the [agentskills.io specification](https://agentskills.io/specification): skills should be *procedures* (what to do, in what order, with verification steps), not *documentation* (lists of rules).
 
 ### Step 1: Add Standards to CLAUDE.md
 
@@ -238,7 +275,10 @@ The always-on rules in CLAUDE.md should prevent SELECT \* and enforce QUALIFY. I
 
 ### Step 5: Evolve it
 
-After every session where the AI made a mistake your standards should have caught, ask: *"What did we just learn that should be added to our standards?"* Update `~/.claude/CLAUDE.md` for always-on rules, or the skill's `references/standards.md` for detailed reference patterns. Over time, your standards accumulate hard-won knowledge that's impossible to anticipate upfront.
+> [!TIP]
+> After every session where the AI made a mistake your standards should have caught, ask: *"What did we just learn that should be added to our standards?"*
+
+Update `~/.claude/CLAUDE.md` for always-on rules, or the skill's `references/standards.md` for detailed reference patterns. Over time, your standards accumulate hard-won knowledge that's impossible to anticipate upfront.
 
 ### Project-Level vs User-Level: When to Use Which
 
@@ -253,7 +293,8 @@ Start with user-level. Move things to project-level when they're project-specifi
 
 ## Troubleshooting
 
-### "My AGENTS.md isn't being followed"
+<details>
+<summary><strong>"My AGENTS.md isn't being followed"</strong></summary>
 
 **1. Wrong directory**
 - AGENTS.md must be at the **root** of your project, not in a subdirectory
@@ -279,7 +320,10 @@ Start with user-level. Move things to project-level when they're project-specifi
 - AGENTS.md changes aren't picked up until the file is saved
 - Some editors don't auto-save; check for unsaved changes
 
-### "CoCo ignores my skill"
+</details>
+
+<details>
+<summary><strong>"CoCo ignores my skill"</strong></summary>
 
 **1. Description doesn't match your request**
 - The `description` field in SKILL.md frontmatter is the primary trigger mechanism -- agents use it to decide when to activate a skill
@@ -295,11 +339,16 @@ Start with user-level. Move things to project-level when they're project-specifi
 - Project skills: `.claude/skills/<name>/SKILL.md` or `.cortex/skills/<name>/SKILL.md`
 - The directory name becomes the skill name and must match the `name` field in frontmatter
 
-### "Settings from one project leak into another"
+</details>
+
+<details>
+<summary><strong>"Settings from one project leak into another"</strong></summary>
 
 - User-level files (`~/.claude/CLAUDE.md`, `~/.claude/skills/`) apply to ALL projects
 - Move project-specific content to the project's AGENTS.md or `.claude/skills/` directory
 - Check for stale context: start a new session with `cortex` (not `cortex --continue`)
+
+</details>
 
 ---
 
@@ -311,7 +360,8 @@ You now have a working Cortex Code CLI, an understanding of how it finds instruc
 
 This guide taught you *context management* -- how the AI finds instructions, why AGENTS.md matters, and how skills prevent drift. The natural next step is to apply these concepts in a real build.
 
-The [Campaign Engine GUIDED_BUILD](../demo-campaign-engine/GUIDED_BUILD.md) walks through building a complete ML-powered application from scratch using 7 focused prompts (~90 minutes). Each step teaches one *prompting technique*, and the concepts you learned here -- especially the AGENTS.md mental model and the team-standards skill -- directly prevent the most common failure modes in Steps 5-7.
+> [!TIP]
+> The [Campaign Engine GUIDED_BUILD](../demo-campaign-engine/GUIDED_BUILD.md) walks through building a complete ML-powered application from scratch using 7 focused prompts (~90 minutes). Each step teaches one *prompting technique*, and the concepts you learned here -- especially the AGENTS.md mental model and the team-standards skill -- directly prevent the most common failure modes in Steps 5-7.
 
 What you'll use from this guide:
 - **AGENTS.md** -- You'll create one in the campaign engine's "Before You Start" and update it three times as the project grows. You now understand *why* each update matters and why recording specific column names (not just table names) is critical.
