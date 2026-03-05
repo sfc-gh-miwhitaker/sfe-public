@@ -6,7 +6,8 @@ Cortex Code (and compatible tools like Cursor and Claude Code) look for guidance
 flowchart TB
     subgraph org ["Organization (IT-managed)"]
         ManagedSettings["managed-settings.json
-        /Library/Application Support/Cortex/"]
+        macOS: /Library/Application Support/Cortex/
+        Linux: /etc/cortex/"]
     end
 
     subgraph user ["User (your machine)"]
@@ -87,11 +88,17 @@ flowchart TB
         C4["~/.snowflake/cortex/skills/"]
     end
 
+    subgraph cursorOnly ["Cursor-Specific"]
+        CR1[".cursor/rules/"]
+        CR2[".cursor/skills/"]
+    end
+
     shared --> CoCo["Cortex Code CLI"]
     shared --> Cursor["Cursor"]
     shared --> ClaudeCode["Claude Code"]
 
     cocoOnly --> CoCo
+    cursorOnly --> Cursor
 ```
 
 ## Key Takeaway

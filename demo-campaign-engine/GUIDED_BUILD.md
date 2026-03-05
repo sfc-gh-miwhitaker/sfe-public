@@ -33,6 +33,16 @@ Each step teaches one AI-pair programming technique. By the end you'll have a to
 - **Cortex Code CLI** ([install guide](https://docs.snowflake.com/en/user-guide/snowflake-cli/cortex-code/cortex-code-overview)) -- the primary tool for this Hands-on Lab
 - Also works with: Cursor, Claude Code, or Cortex Code in Snowsight
 
+### New to AI Pair-Programming?
+
+If this is your first time using an AI coding tool, complete the [Cortex Code Setup Guide](../guide-coco-setup/README.md) first (~45 minutes). It teaches the context management concepts this workshop assumes:
+
+- **How your AI tool finds its instructions** -- the guidance hierarchy, always-on context (AGENTS.md) vs on-demand skills, and why this matters
+- **What to do when the AI forgets your conventions** -- context compaction happens in long sessions and silently drops your AGENTS.md content. The setup guide teaches you to recognize and recover from it.
+- **Your first custom skill** -- a team-standards template that prevents common drift patterns (naming conventions, SQL quality rules) before they compound across steps
+
+This workshop teaches *prompting techniques* (one per step). The setup guide teaches *context management* -- how to keep the AI aligned across a multi-step build. Both skills are essential; the setup guide is where the second one is taught.
+
 ## Before You Start
 
 **Don't skip this.** Two setup tasks before Step 1.
@@ -147,12 +157,16 @@ Go to: [prompts/07_cortex_agent.md](prompts/07_cortex_agent.md)
 
 ### Compare Your Version
 
-Your AI-generated code won't be identical to the reference implementation in `sql/`. That's expected -- the point is that it *works*, not that it matches character-for-character. Compare approaches:
+Your AI-generated code won't be identical to the reference implementation in `sql/`. That's expected -- the point is that it *works*, not that it matches character-for-character. Each step's prompt guide links to its specific reference file(s) -- compare only against those files, not the entire directory. Some directories contain files from multiple steps (e.g., `sql/04_engine/` has Step 4's lookalike procedure *and* Step 5's classifier).
 
 ```
-sql/02_data/01_create_tables.sql      -- reference data model
-sql/03_features/01_player_features.sql -- reference feature pipeline
-sql/04_engine/02_campaign_classifier.sql -- reference ML classifier
+sql/02_data/01_create_tables.sql        -- Step 1 reference
+sql/02_data/02_load_sample_data.sql     -- Step 2 reference
+sql/03_features/01_player_features.sql  -- Step 3 reference
+sql/03_features/02_player_vectors.sql   -- Step 3 reference
+sql/04_engine/01_lookalike_procedure.sql -- Step 4 reference
+sql/04_engine/02_campaign_classifier.sql -- Step 5 reference
+sql/04_engine/03_campaign_recommendations.sql -- Step 5 reference
 ```
 
 ### Deploy From Git

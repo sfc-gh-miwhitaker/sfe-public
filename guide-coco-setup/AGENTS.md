@@ -4,7 +4,9 @@ Curated on-ramp for AI pair-programming with Cortex Code CLI. Links to official 
 
 ## Project Structure
 - `README.md` -- Main guide (single walkthrough, 4 parts + troubleshooting)
-- `reference/first-skill/SKILL.md` -- Fill-in-the-blank team-standards skill template
+- `reference/first-skill/SKILL.md` -- Procedural team-standards skill (review workflow)
+- `reference/first-skill/references/standards.md` -- Detailed standards reference (loaded on demand via progressive disclosure)
+- `reference/claudemd-snippet.md` -- Template for ~/.claude/CLAUDE.md (always-on standards)
 - `diagrams/guidance-hierarchy.md` -- Mermaid diagram of CoCo's context lookup order
 
 ## Content Principles

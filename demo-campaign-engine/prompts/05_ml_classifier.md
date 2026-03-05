@@ -10,6 +10,41 @@ One prompt can produce multiple connected artifacts -- a training view, a model,
 - [ ] `DT_PLAYER_FEATURES` has ~500 rows with 16 behavioral metrics
 - [ ] `RAW_CAMPAIGN_RESPONSES` has ~2K rows with `responded` BOOLEAN
 - [ ] **AGENTS.md is updated to v2** (from Step 3) -- this is critical
+- [ ] **AGENTS.md v2 includes your actual column names** (see Step 3 guidance)
+- [ ] Run the schema reconciliation check below
+
+### Schema Reconciliation Check
+
+Step 5 joins objects from Steps 1 and 3 simultaneously. If column names drifted at either step, this is where it surfaces. Run this before prompting:
+
+```sql
+USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
+
+-- Feature columns: these are the 16 names the AI must use in OBJECT_CONSTRUCT
+-- Verify they match what's in your AGENTS.md
+SELECT COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
+  AND TABLE_NAME = 'DT_PLAYER_FEATURES'
+  AND COLUMN_NAME NOT IN ('PLAYER_ID', 'LOYALTY_TIER')
+ORDER BY ORDINAL_POSITION;
+
+-- Campaign responses: verify the ML target column exists
+SELECT COLUMN_NAME, DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
+  AND TABLE_NAME = 'RAW_CAMPAIGN_RESPONSES'
+  AND COLUMN_NAME IN ('RESPONDED', 'CAMPAIGN_ID', 'PLAYER_ID');
+
+-- Players: verify the join key and display column
+SELECT COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
+  AND TABLE_NAME = 'RAW_PLAYERS'
+  AND COLUMN_NAME IN ('PLAYER_ID', 'NAME', 'LOYALTY_TIER');
+```
+
+The first query is the critical one. Those column names are what the AI must use in `OBJECT_CONSTRUCT('COLUMN_NAME', column_name, ...)` for ML prediction. If they don't match what's in your AGENTS.md, update AGENTS.md now -- otherwise the scoring procedure will fail at runtime with a prediction error.
 
 ### Why AGENTS.md Matters Here
 
@@ -18,7 +53,7 @@ If you skipped the AGENTS.md update at Step 3, this is where it hurts. Without c
 - Use different column names than what Step 3 created
 - Choose a different number of features (8 or 32 instead of 16)
 
-The fix is simple: make sure your AGENTS.md includes the Key Patterns section from Step 3 before you continue.
+The fix is simple: make sure your AGENTS.md includes the Key Patterns section from Step 3 -- including your actual column names -- before you continue.
 
 ## The Prompt
 

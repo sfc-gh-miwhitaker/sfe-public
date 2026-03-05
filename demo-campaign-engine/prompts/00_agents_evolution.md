@@ -27,6 +27,8 @@ Campaign recommendation engine for casino operators.
 
 After Dynamic Tables and VECTOR construction. The AI now knows the feature pipeline patterns.
 
+**Important:** The template below includes a placeholder for your actual column names. Step 3 tells you to query `INFORMATION_SCHEMA.COLUMNS` and add the result. This is critical -- Step 5's ML classifier must reference your exact column names in an OBJECT_CONSTRUCT, and the AI can only reuse names it knows about.
+
 ```markdown
 # Casino Campaign Recommendation Engine
 
@@ -42,6 +44,7 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 - VECTOR(FLOAT, 16) data type for player behavior embeddings
 - Min-max normalization across all players for each feature
 - COALESCE/NULLIF guards against division by zero
+- DT_PLAYER_FEATURES columns: <your 16 column names from Step 3>
 
 ## Development Standards
 - Naming: RAW_ prefix for staging tables; SFE_ prefix for account-level objects only

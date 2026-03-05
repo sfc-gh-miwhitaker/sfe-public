@@ -1,118 +1,28 @@
 ---
 name: team-standards
-description: "Team coding standards and operational best practices. Loaded automatically to enforce SQL quality, security, naming conventions, and session hygiene across all projects."
-triggers:
-  - team standards
-  - coding standards
-  - naming conventions
-  - sql standards
+description: "Use when reviewing SQL for quality, checking naming conventions, or verifying code before commit. Handles SQL sargability, window function patterns, credential scanning, and naming convention enforcement."
 ---
 
-# Team Standards
-
-> **This is a template.** Replace all `{PLACEHOLDER}` values with your team's conventions before deploying. Search for `{` to find all placeholders.
+# Team Standards Review
 
 ## When to Use
 
-This skill is always relevant. It encodes non-negotiable standards for SQL quality, security, naming, and operational discipline. Load it at the start of every session, and reload it after context compaction.
+Invoke this skill when writing or reviewing SQL, checking code before commit, or when you notice the AI drifting from conventions mid-session.
 
-## SQL Standards
+## Workflow
 
-### Explicit Columns Only
-- **Never use SELECT \*** in production or demo code
-- Always project the specific columns needed
-- Exception: `SELECT *` is acceptable in ad-hoc exploration during a conversation, but never in saved SQL files
+1. **Check SQL quality** -- scan for SELECT *, non-sargable WHERE predicates, window functions without QUALIFY, and mismatched join types. See `references/standards.md` for the full rules.
+2. **Check naming** -- verify objects follow the team's naming patterns ({TEAM_PREFIX}_, RAW_, STG_ prefixes, COMMENT on all objects).
+3. **Check security** -- confirm no credentials, API keys, account IDs, or customer names appear in code or output.
+4. **Report** -- list any violations found with the specific line and fix.
 
-### Sargable Predicates
-- Never wrap columns in functions in WHERE clauses
-- Wrong: `WHERE YEAR(order_date) = 2024`
-- Right: `WHERE order_date >= '2024-01-01' AND order_date < '2025-01-01'`
+## Compaction Recovery
 
-### QUALIFY Over Subqueries
-- Use QUALIFY for window function filtering instead of wrapping in a subquery
-- Wrong: `SELECT * FROM (SELECT *, ROW_NUMBER() OVER (...) AS rn FROM t) WHERE rn = 1`
-- Right: `SELECT ... FROM t QUALIFY ROW_NUMBER() OVER (...) = 1`
+If the AI forgets conventions mid-session, context compaction likely happened. Recovery:
+1. Re-read `~/.claude/CLAUDE.md` (the always-on standards)
+2. Re-invoke this skill
+3. Re-read the project's `AGENTS.md`
 
-### Join Hygiene
-- Join keys must have matching types -- no implicit casts
-- No OR in join predicates -- use UNION ALL with deduplication instead
+## Evolving This Skill
 
-## Security Rules
-
-- **Never commit** credentials, API keys, `.env` files, or account identifiers
-- Use Snowflake secrets or environment variables for all credentials
-- Never include account IDs, org names, or customer names in code or output
-- Global gitignore only -- never commit `.gitignore` files to repos
-
-## Naming Conventions
-
-> **Define your team's prefix.** Replace `{TEAM_PREFIX}` with your team or org abbreviation (e.g., `ACME`, `DS`, `FINANCE`). Replace `{DEFAULT_DB}` with your shared database name.
-
-These patterns apply to Snowflake project objects. Customize to match your organization's standards:
-
-| Object | Pattern | Your Example |
-|--------|---------|--------------|
-| Database | `{DEFAULT_DB}` | _(e.g., `ANALYTICS`, `DATA_WAREHOUSE`)_ |
-| Schema | `{PROJECT_NAME}` | _(e.g., `SALES_PIPELINE`)_ |
-| Warehouse | `{TEAM_PREFIX}_{PROJECT}_WH` | _(e.g., `ACME_SALES_WH`)_ |
-| Table (raw) | `RAW_{entity}` | `RAW_ORDERS` |
-| Table (staging) | `STG_{entity}` | `STG_ORDERS` |
-| Table (curated) | `{entity}` | `ORDERS` |
-| Semantic View | `SV_{domain}_{entity}` | `SV_SALES_ORDERS` |
-
-### Placeholder Reference
-
-| Placeholder | Description | Your Value |
-|-------------|-------------|------------|
-| `{TEAM_PREFIX}` | Short team/org identifier (3-6 chars) | ________________ |
-| `{DEFAULT_DB}` | Shared database for your team's objects | ________________ |
-| `{PROJECT_NAME}` | Current project name (used as schema) | ________________ |
-
-All objects should include a COMMENT describing their purpose.
-
-## Attribution
-
-> **Customize your attribution line.** Replace the example below with your team's preferred attribution format.
-
-- Author line: `{YOUR_ATTRIBUTION}` _(e.g., `Built with Cortex Code`, `Data Team + AI`, or omit entirely)_
-- No customer names or meeting references in code
-
-## Operational Best Practices
-
-### Reload Context After Compaction
-When a long session triggers context compaction (the conversation is summarized to free up space), critical instructions from CLAUDE.md and skills may be lost. After compaction:
-1. Re-read the project's AGENTS.md
-2. Re-read your user-level CLAUDE.md (`~/.claude/CLAUDE.md`)
-3. Re-invoke any active skills that were loaded before compaction
-
-If you notice the AI forgetting conventions mid-session, compaction likely happened. Re-state your core requirements or start a new session.
-
-### New Session vs Continue
-- **Start a new session** (`cortex` or `/new`) when switching to a different project or task
-- **Continue the last session** (`cortex --continue`) when resuming the same task after a break
-- Long sessions accumulate context debt -- if the AI starts drifting from your standards, a fresh session with a clear prompt often works better than correcting mid-conversation
-
-### Search Docs Before Answering
-- Always search Snowflake documentation before answering syntax, feature, or troubleshooting questions from memory
-- In Cortex Code CLI: `cortex search docs "<specific query>"`
-- Use specific queries: `"CREATE STREAM APPEND_ONLY syntax"` not `"streams"`
-- Read all returned snippets before composing an answer
-
-### Plan Before Acting
-- For multi-step tasks, use `/plan` mode first to review the approach before execution
-- For destructive operations (DDL, DML), always show the SQL and ask for confirmation
-- For large refactors, break the work into focused prompts rather than one mega-prompt
-
-## Common Patterns
-
-### Starting a New Project
-1. Create the project directory
-2. Write an AGENTS.md with project name, database, schema, warehouse
-3. Create `.claude/skills/` if the project needs project-specific skills
-4. Start CoCo with `cortex -w /path/to/project`
-
-### Reviewing AI Output
-1. Read generated SQL before running it
-2. Check for SELECT *, non-sargable predicates, missing COMMENTs
-3. Verify naming conventions match the patterns above
-4. Confirm no credentials or account IDs leaked into code
+After every session where the AI made a mistake your standards should have caught, ask: "What did we just learn that should be added to our standards?" Update `~/.claude/CLAUDE.md` for always-on rules, or `references/standards.md` for detailed reference.

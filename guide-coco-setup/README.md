@@ -10,6 +10,8 @@ A curated on-ramp for AI pair-programming with Snowflake. Install the CLI, under
 
 Anyone new to AI pair-programming who wants to use Cortex Code with Snowflake. You don't need prior experience with AI coding tools, prompt engineering, or skills. You do need a Snowflake account.
 
+**Already experienced with AI coding tools?** Skip to [Part 2](#part-2-how-coco-finds-its-instructions) for the guidance hierarchy mental model, then [Part 3](#part-3-build-your-first-skill----team-standards) for the two-file standards pattern. These are the concepts the [campaign engine workshop](../demo-campaign-engine/GUIDED_BUILD.md) assumes.
+
 ---
 
 ## Part 0: Getting the Code
@@ -56,7 +58,7 @@ cd sfe-public/<project-name>
 
 ### Don't Need Local Files?
 
-Most projects deploy entirely inside Snowflake. Open the project's `deploy_all.sql` on GitHub, copy it into a Snowsight worksheet, and click **Run All**. No local clone needed.
+Most **demo** projects deploy entirely inside Snowflake -- open the project's `deploy_all.sql` on GitHub, copy it into a Snowsight worksheet, and click **Run All**. This guide, however, is a walkthrough -- you'll need the files locally to follow along and build your first skill.
 
 ### Troubleshooting
 
@@ -96,7 +98,7 @@ See [diagrams/guidance-hierarchy.md](diagrams/guidance-hierarchy.md) for the ful
 
 | Override Precedence | Scope | Location | Loaded When |
 |---------------------|-------|----------|-------------|
-| 1 (overrides all below) | Organization | `/Library/Application Support/Cortex/managed-settings.json` (macOS) | Always (if exists) |
+| 1 (overrides all below) | Organization | `managed-settings.json` (macOS: `/Library/Application Support/Cortex/`, Linux: `/etc/cortex/`) | Always (if exists) |
 | 2 | User | `~/.claude/CLAUDE.md` + `~/.claude/skills/` + `~/.snowflake/cortex/skills/` | Always |
 | 3 | Project | `AGENTS.md` (or `CLAUDE.md`) at project root + `.cortex/skills/` or `.claude/skills/` | When working in that project |
 | 4 | Session | Temporary skills, `/plan` mode, model overrides | Current session only |
@@ -154,6 +156,8 @@ One-sentence description.
 - When the AI gets something wrong that it should know about
 - When onboarding a new team member who will use AI tools on this project
 
+**The specificity principle:** AGENTS.md needs *specifics*, not just *categories*. "We use Dynamic Tables" is too vague -- "Dynamic Tables with TARGET_LAG = '1 hour', columns: PLAYER_ID, TOTAL_WAGERS, AVG_BET_SIZE" is what the AI needs. In multi-step builds, the AI generates column names that vary between sessions. If you don't record the actual names in AGENTS.md, later steps that reference those columns will fail silently or produce mismatched code.
+
 **The evolution pattern:** AGENTS.md starts sparse and grows as the project grows. After Step 1 of a project, it might only have the database and schema names. By Step 7, it contains every naming convention, every feature pattern, and every gotcha the AI needs to know. See the [campaign-engine GUIDED_BUILD](../demo-campaign-engine/GUIDED_BUILD.md) for a worked example of this evolution across 7 steps.
 
 ### CoCo + Cursor: What's Shared, What's Not
@@ -166,12 +170,16 @@ If you use both Cortex Code CLI and Cursor (or Claude Code), several files are s
 | `.claude/skills/` (project) | Read as skills | Read as skills | Read as skills |
 | `~/.claude/CLAUDE.md` | Read automatically | Read via rules | Read automatically |
 | `~/.claude/skills/` | Read as skills | Read as skills | Read as skills |
+| `.cursor/rules/` (project) | Not used | Project rules (highest priority) | Not used |
+| `.cursor/skills/` (project) | Not used | Read as skills | Not used |
 | `~/.snowflake/connections.toml` | Snowflake connection | Not used | Not used |
 | `~/.snowflake/cortex/settings.json` | CoCo settings | Not used | Not used |
 | `.cortex/skills/` (project) | Read as skills | Not used | Not used |
 | `~/.snowflake/cortex/skills/` | Read as skills | Not used | Not used |
 
-The practical takeaway: if you write your project guidance in `AGENTS.md` and your skills in `.claude/skills/`, they work in all three tools. Use `.cortex/`-specific paths only for CoCo-only functionality.
+The practical takeaway: if you write your project guidance in `AGENTS.md` and your skills in `.claude/skills/`, they work in all three tools. Use `.cortex/`-specific or `.cursor/`-specific paths only for tool-specific functionality.
+
+> **Cursor note:** `AGENTS.md` loading in Cursor can be unreliable in some versions, particularly with background agents. If Cursor ignores your `AGENTS.md`, create a `.cursor/rules/` file with the same content as a workaround.
 
 ---
 
@@ -179,38 +187,36 @@ The practical takeaway: if you write your project guidance in `AGENTS.md` and yo
 
 Most skill tutorials show you how to automate a task (CSV ingestion, test running, etc.). That's useful, but it's not the highest-leverage first skill. The highest-leverage first skill encodes your team's standards so that every session, in every project, starts with the right guardrails.
 
-### Why Standards First
+### Why Two Files, Not One
 
-Without a standards skill, you repeat the same corrections across sessions: "don't use SELECT \*", "use QUALIFY instead of subqueries", "don't commit credentials." A standards skill eliminates this by front-loading your non-negotiable rules into every conversation.
+Part 2 taught the distinction between always-on and on-demand. Standards belong in both:
 
-### Create the Skill
+- **Always-on standards** go in `~/.claude/CLAUDE.md` -- loaded into the system prompt at every session start. These survive context compaction better because the system prompt is re-applied after compaction, while conversation content gets summarized.
+- **The review procedure** goes in a skill -- a step-by-step workflow for checking code against your standards, plus compaction recovery and evolution guidance. Skills are procedures; CLAUDE.md is reference.
 
-The example skill lives in [`reference/first-skill/SKILL.md`](reference/first-skill/SKILL.md). Here's how to install it:
+This split follows the [agentskills.io specification](https://agentskills.io/specification): skills should be *procedures* (what to do, in what order, with verification steps), not *documentation* (lists of rules). The `description` field in SKILL.md frontmatter is the sole trigger mechanism -- agents decide whether to load a skill based on the description, not a separate `triggers:` field.
 
-**Step 1: Create the directory**
+### Step 1: Add Standards to CLAUDE.md
 
-```bash
-mkdir -p ~/.claude/skills/team-standards
-```
-
-This puts it at user-level scope -- it applies to every project you work on.
-
-**Step 2: Copy the skill**
-
-```bash
-cp reference/first-skill/SKILL.md ~/.claude/skills/team-standards/SKILL.md
-```
-
-Or open [`reference/first-skill/SKILL.md`](reference/first-skill/SKILL.md) and customize it before copying. The example is a **fill-in-the-blank template** that covers:
+Open (or create) `~/.claude/CLAUDE.md` and add your team's non-negotiable rules. A template is in [`reference/claudemd-snippet.md`](reference/claudemd-snippet.md). The key sections:
 
 - **SQL standards** -- no SELECT \*, sargable predicates, QUALIFY for window functions, explicit columns
 - **Security rules** -- no credentials in code, use Snowflake secrets, no account IDs in output
 - **Naming conventions** -- customizable `{TEAM_PREFIX}_` patterns, COMMENT on all objects
-- **Operational best practices** -- reload core context on compaction, search docs before answering Snowflake syntax from memory, when to start a new session vs continue
 
-Before deploying, replace all `{PLACEHOLDER}` values with your team's conventions. Search for `{` in the file to find everything that needs customization.
+Replace all `{PLACEHOLDER}` values with your team's conventions.
 
-**Step 3: Verify**
+### Step 2: Install the Skill
+
+```bash
+mkdir -p ~/.claude/skills/team-standards
+cp reference/first-skill/SKILL.md ~/.claude/skills/team-standards/SKILL.md
+cp -r reference/first-skill/references ~/.claude/skills/team-standards/
+```
+
+The skill at [`reference/first-skill/SKILL.md`](reference/first-skill/SKILL.md) is a **procedural review workflow** -- it tells the AI *how* to check your code against the standards in CLAUDE.md. The detailed rules live in [`references/standards.md`](reference/first-skill/references/standards.md) and load only when the AI needs specifics (progressive disclosure).
+
+### Step 3: Verify
 
 In Cortex Code CLI:
 
@@ -220,7 +226,7 @@ In Cortex Code CLI:
 
 You should see `team-standards` in the output. If using Cursor or Claude Code, the skill will appear in their respective skill listings since it's in `~/.claude/skills/`.
 
-**Step 4: Test it**
+### Step 4: Test it
 
 Ask CoCo something that should trigger your standards:
 
@@ -228,14 +234,18 @@ Ask CoCo something that should trigger your standards:
 Write a query that finds the top 10 customers by revenue from the ORDERS table
 ```
 
-With the skill loaded, the AI should use explicit columns (not SELECT \*), use QUALIFY if window functions are involved, and follow your naming conventions.
+The always-on rules in CLAUDE.md should prevent SELECT \* and enforce QUALIFY. If you explicitly invoke the team-standards skill, the AI should run the full review procedure.
+
+### Step 5: Evolve it
+
+After every session where the AI made a mistake your standards should have caught, ask: *"What did we just learn that should be added to our standards?"* Update `~/.claude/CLAUDE.md` for always-on rules, or the skill's `references/standards.md` for detailed reference patterns. Over time, your standards accumulate hard-won knowledge that's impossible to anticipate upfront.
 
 ### Project-Level vs User-Level: When to Use Which
 
 | Scope | Path | Use When |
 |-------|------|----------|
-| User-level | `~/.claude/skills/` | Standards that apply to ALL your projects (SQL rules, security, attribution) |
-| Project-level | `.claude/skills/` in the project | Standards specific to ONE project (schema names, domain vocabulary, project patterns) |
+| User-level | `~/.claude/CLAUDE.md` + `~/.claude/skills/` | Standards that apply to ALL your projects (SQL rules, security, attribution) |
+| Project-level | `AGENTS.md` + `.claude/skills/` in the project | Standards specific to ONE project (schema names, domain vocabulary, project patterns) |
 
 Start with user-level. Move things to project-level when they're project-specific or when you're sharing a repo with others who have different standards.
 
@@ -269,20 +279,21 @@ Start with user-level. Move things to project-level when they're project-specifi
 - AGENTS.md changes aren't picked up until the file is saved
 - Some editors don't auto-save; check for unsaved changes
 
-### "CoCo ignores my skill triggers"
+### "CoCo ignores my skill"
 
-**1. Triggers not defined**
-- Check your SKILL.md has a `triggers:` section in the frontmatter
-- Triggers are keyword phrases that auto-invoke the skill
+**1. Description doesn't match your request**
+- The `description` field in SKILL.md frontmatter is the primary trigger mechanism -- agents use it to decide when to activate a skill
+- Use specific keywords: "Use when reviewing SQL for quality" not "Helps with coding"
+- Note: `triggers:` in frontmatter is a convention field for catalogs -- agents do not use it for activation
 
-**2. Triggers too generic**
-- Triggers like "help" or "code" match too much and may be deprioritized
-- Use specific phrases: "team standards", "sql conventions", "deploy pipeline"
+**2. Description summarizes the workflow**
+- If your description explains *what the skill does* step by step, the agent may skip loading the full body
+- Write descriptions that say *when to activate* and *what capabilities exist*, not the procedure itself
 
 **3. Skill not in a recognized path**
 - User skills: `~/.claude/skills/<name>/SKILL.md` or `~/.snowflake/cortex/skills/<name>/SKILL.md`
 - Project skills: `.claude/skills/<name>/SKILL.md` or `.cortex/skills/<name>/SKILL.md`
-- The directory name becomes the skill name
+- The directory name becomes the skill name and must match the `name` field in frontmatter
 
 ### "Settings from one project leak into another"
 
@@ -294,15 +305,26 @@ Start with user-level. Move things to project-level when they're project-specifi
 
 ## Part 4: What's Next
 
-You now have a working Cortex Code CLI, an understanding of how it finds instructions, and a team-standards skill that improves every session. Here's where to go from here:
+You now have a working Cortex Code CLI, an understanding of how it finds instructions, and a team-standards skill that improves every session.
+
+### Continue to the AI-Pair Workshop
+
+This guide taught you *context management* -- how the AI finds instructions, why AGENTS.md matters, and how skills prevent drift. The natural next step is to apply these concepts in a real build.
+
+The [Campaign Engine GUIDED_BUILD](../demo-campaign-engine/GUIDED_BUILD.md) walks through building a complete ML-powered application from scratch using 7 focused prompts (~90 minutes). Each step teaches one *prompting technique*, and the concepts you learned here -- especially the AGENTS.md mental model and the team-standards skill -- directly prevent the most common failure modes in Steps 5-7.
+
+What you'll use from this guide:
+- **AGENTS.md** -- You'll create one in the campaign engine's "Before You Start" and update it three times as the project grows. You now understand *why* each update matters and why recording specific column names (not just table names) is critical.
+- **The guidance hierarchy** -- When the AI forgets your conventions mid-build (context compaction), you'll know how to recover: standards in CLAUDE.md survive compaction; the skill provides explicit recovery steps.
+- **Your team-standards setup** -- The SQL quality rules in `~/.claude/CLAUDE.md` and the review procedure in your team-standards skill act as a safety net across all 7 steps.
+
+### Other Directions
 
 **Build a project-specific skill.** Follow [Jacob Prall's guide](https://medium.com/snowflake/how-to-create-a-skill-for-cortex-code-55bc5b38a223) to create a skill that automates a workflow you repeat often (data ingestion, test scaffolding, deployment).
 
 **Add MCP servers.** Connect CoCo to GitHub, Jira, or other tools via [Model Context Protocol](https://docs.snowflake.com/en/user-guide/cortex-code/extensibility). Run `/mcp` in CoCo to see what's configured.
 
 **Create custom subagents.** Define specialized agents for code review, testing, or exploration. See [Extensibility docs](https://docs.snowflake.com/en/user-guide/cortex-code/extensibility) for the agent definition format.
-
-**Try the full AI-pair workshop.** The [Campaign Engine GUIDED_BUILD](../demo-campaign-engine/GUIDED_BUILD.md) walks through building a complete ML-powered application from scratch using 7 focused prompts. It's the best way to see AGENTS.md evolution in action.
 
 **Write an AGENTS.md for your next project.** Start with the template in [Part 2](#agentsmd-explained) and let it grow as you build.
 

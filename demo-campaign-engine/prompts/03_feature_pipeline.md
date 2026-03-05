@@ -46,6 +46,18 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 
 Notice what changed: the description now includes "ML audience targeting and vector-based player lookalike matching." Key Patterns is new. Development Standards carries forward v1's naming conventions and adds SQL and deployment patterns. From this point forward, the AI knows about Dynamic Tables and VECTOR when you ask it to build new features.
 
+**Also add your actual column names.** The v2 template above tells the AI that 16 features exist, but not what they're called. Step 5's ML classifier must reference your exact column names in an OBJECT_CONSTRUCT -- if AGENTS.md doesn't list them, the AI has to guess. After validation, run this and append the output to your AGENTS.md Key Patterns section:
+
+```sql
+SELECT LISTAGG(COLUMN_NAME, ', ') WITHIN GROUP (ORDER BY ORDINAL_POSITION)
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
+  AND TABLE_NAME = 'DT_PLAYER_FEATURES'
+  AND COLUMN_NAME != 'PLAYER_ID';
+```
+
+Add a line like: `- DT_PLAYER_FEATURES columns: avg_daily_wager, session_frequency, ...` (using your actual column names). This is the difference between the AI *knowing about* your features and *knowing what they're called*.
+
 ## Validate Your Work
 
 ```sql

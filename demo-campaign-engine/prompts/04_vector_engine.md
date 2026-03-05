@@ -73,3 +73,5 @@ Key pattern to notice: The Python stored procedure is a thin wrapper around SQL.
 ## Reference Implementation
 
 Compare your AI's output to [sql/04_engine/01_lookalike_procedure.sql](../sql/04_engine/01_lookalike_procedure.sql).
+
+**Scope note:** Only compare against this one file. The `sql/04_engine/` directory also contains `02_campaign_classifier.sql` and `03_campaign_recommendations.sql` -- those are built in Step 5 and don't exist yet.
