@@ -51,9 +51,9 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE;
 USE WAREHOUSE SFE_CAMPAIGN_ENGINE_WH;
 ```
 
-### 2. Create AGENTS.md (Project Context)
+### 2. Create AGENTS.md
 
-Create an `AGENTS.md` file in your project root with this content. Your AI tool reads this automatically as project context -- it must exist **before** you open your first AI conversation.
+Create an `AGENTS.md` file in your project root with this content. This is your project context file -- your AI tool reads it automatically. It must exist **before** you open your first AI conversation.
 
 ```markdown
 # Casino Campaign Recommendation Engine

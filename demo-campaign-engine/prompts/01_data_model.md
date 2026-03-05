@@ -8,14 +8,14 @@ Don't specify column names and data types -- describe your business domain and u
 
 - [ ] Snowflake schema `SNOWFLAKE_EXAMPLE.CAMPAIGN_ENGINE` exists (see [GUIDED_BUILD.md](../GUIDED_BUILD.md#before-you-start))
 - [ ] Warehouse `SFE_CAMPAIGN_ENGINE_WH` is running
-- [ ] `AGENTS.md` exists in your project root with naming conventions (see [GUIDED_BUILD.md](../GUIDED_BUILD.md#2-create-agentsmd-project-context))
+- [ ] `AGENTS.md` exists in your project root with naming conventions (see [GUIDED_BUILD.md](../GUIDED_BUILD.md#2-create-agentsmd))
 - [ ] Your AI tool is open with this project directory as context (start a **fresh conversation** so AGENTS.md is loaded)
 
 ## The Prompt
 
 Paste this into your AI tool:
 
-> "I'm a casino operator. I need 4 raw staging tables for a campaign recommendation engine. Players have loyalty tiers (Bronze through Diamond) and a home property. Player activity is a single event stream where each session has a game type (slots, table games, poker, sports book), duration, wager, and device. I run marketing campaigns (retention, acquisition, upsell, reactivation) and track which players respond with a simple boolean. Keep the model flat -- these are raw tables that a feature engineering pipeline will build on in later steps. The two downstream use cases are ML audience targeting and vector-based player similarity. Create only the CREATE TABLE DDL -- do not generate sample data."
+> "I'm a casino operator. I need 4 raw staging tables for a campaign recommendation engine. Players have a name, email, age band (not date of birth), loyalty tier (Bronze through Diamond), registration date, and a home property stored as a name like 'Las Vegas Strip'. Player activity is a single event stream where each session has a game type (slots, table games, poker, sports book), specific game name within that type, session duration, amount wagered, amount won, and device used. I run marketing campaigns (retention, acquisition, upsell, reactivation) that each target a segment with a date range and offer description. Campaign responses track whether a player responded (simple boolean), when they responded, and how much they redeemed. Keep the model flat -- these are raw tables that a feature engineering pipeline will build on in later steps. The two downstream use cases are ML audience targeting and vector-based player similarity. Create only the CREATE TABLE DDL -- do not generate sample data."
 
 ## Validate Your Work
 
@@ -46,13 +46,27 @@ WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
   AND TABLE_NAME = 'RAW_CAMPAIGN_RESPONSES'
   AND COLUMN_NAME IN ('RESPONDED', 'REDEMPTION_AMOUNT');
 
--- 4. Feature-critical columns on activity table
+-- 4. Feature-critical columns on activity table (expect 6 rows)
 SELECT COLUMN_NAME
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
   AND TABLE_NAME = 'RAW_PLAYER_ACTIVITY'
   AND COLUMN_NAME IN ('GAME_TYPE', 'GAME_NAME', 'SESSION_DURATION_MIN',
                        'TOTAL_WAGERED', 'TOTAL_WON', 'DEVICE');
+
+-- 5. Player demographics (expect 4 rows)
+SELECT COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
+  AND TABLE_NAME = 'RAW_PLAYERS'
+  AND COLUMN_NAME IN ('NAME', 'AGE_BAND', 'LOYALTY_TIER', 'HOME_PROPERTY');
+
+-- 6. Campaign definition columns (expect 2 rows)
+SELECT COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'CAMPAIGN_ENGINE'
+  AND TABLE_NAME = 'RAW_CAMPAIGNS'
+  AND COLUMN_NAME IN ('TARGET_SEGMENT', 'OFFER_DESCRIPTION');
 ```
 
 Expected:
@@ -60,7 +74,9 @@ Expected:
 1. Exactly 4 tables: `RAW_CAMPAIGNS`, `RAW_CAMPAIGN_RESPONSES`, `RAW_PLAYER_ACTIVITY`, `RAW_PLAYERS`
 2. All `_ID` columns are `NUMBER` (not `VARCHAR`) -- Step 2 needs integer IDs for GENERATOR
 3. `RESPONDED` is `BOOLEAN`, `REDEMPTION_AMOUNT` is `NUMBER` -- Step 5 ML needs a binary target
-4. All 6 columns present -- Step 3 feature pipeline needs game_type, game_name, duration, wager, winnings, and device
+4. All 6 activity columns present -- Step 3 feature pipeline needs game_type, game_name, duration, wager, winnings, and device
+5. All 4 player columns present -- `NAME` (single field, not first/last), `AGE_BAND` (not date_of_birth), `LOYALTY_TIER`, `HOME_PROPERTY` as VARCHAR (not a foreign key)
+6. Both campaign columns present -- `TARGET_SEGMENT` for audience matching, `OFFER_DESCRIPTION` for Cortex Agent queries
 
 ## Common Mistakes
 
@@ -121,9 +137,19 @@ The AI made these decisions because the prompt described *what the data means*, 
 
 **Marketing funnel instead of `responded` boolean?** If you got sent_at/opened_at/clicked_at/converted_at columns, follow up with: "Replace the funnel timestamp columns with a single `responded BOOLEAN NOT NULL` column and a `response_date DATE`. The ML classifier in Step 5 needs a binary target variable, not a multi-stage funnel."
 
-**Missing `game_name`?** Follow up with: "Add a `game_name VARCHAR(50)` column to the activity table -- each game type has specific titles (e.g. 'Lucky 7s' for slots, 'Blackjack' for table games). The feature pipeline needs this for game diversity metrics."
+**Home property as a foreign key (NUMBER) instead of a name (VARCHAR)?** Follow up with: "Change home_property to VARCHAR(50) storing the property name directly, like 'Las Vegas Strip' or 'Atlantic City'. Don't use a foreign key to a property dimension -- we don't have a separate property table."
 
-**`date_of_birth` instead of `age_band`?** Follow up with: "Replace date_of_birth with `age_band VARCHAR(10)` using bands like '21-30', '31-40', etc. Pre-banded ages are simpler for ML features and avoid PII concerns."
+**Missing `total_won` on activity?** Follow up with: "Add a total_won column (NUMBER with 2 decimal places) to the activity table. The win/loss ratio is a key behavioral signal for the feature pipeline in Step 3."
+
+**Missing `game_name` on activity?** Follow up with: "Add a game_name VARCHAR(50) column -- each game type has specific titles (e.g. 'Lucky 7s' for slots, 'Blackjack' for table games). The feature pipeline needs this for game diversity metrics."
+
+**Missing `target_segment` or `offer_description` on campaigns?** Follow up with: "Add target_segment VARCHAR(50) for the audience segment (e.g. 'Gold+', 'Inactive', 'All') and offer_description VARCHAR(500) for the free-text offer details. The Cortex Agent in Step 7 needs offer_description to answer questions about campaign content."
+
+**Missing `redemption_amount` on responses?** Follow up with: "Add redemption_amount NUMBER(38,2) DEFAULT 0 to campaign responses. This tracks the dollar value when a player redeems an offer -- Step 7's Cortex Agent needs it for revenue questions."
+
+**`date_of_birth` instead of `age_band`?** Follow up with: "Replace date_of_birth with age_band VARCHAR(10) using bands like '21-30', '31-40', etc. Pre-banded ages are simpler for ML features and avoid PII concerns."
+
+**Timestamps where dates should be?** If activity_date or response_date came back as TIMESTAMP instead of DATE, follow up with: "Use DATE type for activity_date and response_date -- the feature pipeline aggregates by day, and TIMESTAMP precision adds no value here."
 
 **Missing a table?** The AI occasionally combines campaigns and responses into one table. Follow up with: "Separate campaign definitions from campaign responses -- I need a normalized schema where campaign metadata is defined once and responses reference it."
 
