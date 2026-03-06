@@ -1,0 +1,41 @@
+/*==============================================================================
+TEARDOWN - Secrets Rotation Workbook
+WARNING: This will DELETE all project objects. Cannot be undone.
+==============================================================================*/
+
+USE ROLE SECURITYADMIN;
+
+-- Drop authentication policy assignment first (must unset before dropping)
+ALTER USER IF EXISTS SFE_SVC_ROTATION_EXAMPLE
+  UNSET AUTHENTICATION POLICY;
+
+ALTER USER IF EXISTS SFE_SVC_ROTATION_EXAMPLE
+  UNSET NETWORK_POLICY;
+
+-- Drop PATs on the example user (if any remain)
+-- Note: dropping the user removes its PATs automatically
+
+-- Drop example objects created by notebook cells
+DROP USER IF EXISTS SFE_SVC_ROTATION_EXAMPLE;
+DROP ROLE IF EXISTS SFE_SVC_ROTATION_ROLE;
+DROP ROLE IF EXISTS SFE_SVC_ROTATION_ROTATOR_ROLE;
+
+USE ROLE SYSADMIN;
+
+-- Drop policies and rules (schema-scoped objects)
+DROP AUTHENTICATION POLICY IF EXISTS SNOWFLAKE_EXAMPLE.SECRETS_ROTATION.SFE_SVC_ROTATION_AUTH_POLICY;
+DROP NETWORK POLICY IF EXISTS SFE_SVC_ROTATION_NETWORK_POLICY;
+DROP NETWORK RULE IF EXISTS SNOWFLAKE_EXAMPLE.SECRETS_ROTATION.SFE_SVC_ROTATION_NETWORK_RULE;
+
+-- Drop notebook and schema
+DROP NOTEBOOK IF EXISTS SNOWFLAKE_EXAMPLE.SECRETS_ROTATION.SECRETS_ROTATION_WORKBOOK;
+DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.SECRETS_ROTATION CASCADE;
+
+-- PROTECTED - NEVER DROP:
+-- SNOWFLAKE_EXAMPLE database
+-- SNOWFLAKE_EXAMPLE.GIT_REPOS schema
+-- SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS schema
+-- SFE_GIT_API_INTEGRATION
+-- SFE_TOOLS_WH
+
+SELECT 'Teardown complete!' AS status;
