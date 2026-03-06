@@ -94,15 +94,15 @@ Open the guide directory and follow the README.
 
 ## Shared Infrastructure
 
-Each deploy script creates the shared infrastructure it needs (using `IF NOT EXISTS`):
+Every deploy script is fully self-contained. Each one creates the shared infrastructure it needs inline (using `IF NOT EXISTS`), so no separate setup step is ever required:
 
 | Resource | Name | Purpose |
 |---|---|---|
 | Database | `SNOWFLAKE_EXAMPLE` | Shared demo database |
-| Warehouse | `SFE_TOOLS_WH` | Shared compute (X-SMALL) |
 | API Integration | `SFE_GIT_API_INTEGRATION` | GitHub access for Git Repository stages |
+| Git Repository | `SFE_DEMOS_REPO` | Shared monorepo Git stage (in `GIT_REPOS` schema) |
 
-Each project creates its own schema within `SNOWFLAKE_EXAMPLE`. No separate setup step is required.
+Each project creates its own schema and warehouse within `SNOWFLAKE_EXAMPLE`.
 
 ## License
 

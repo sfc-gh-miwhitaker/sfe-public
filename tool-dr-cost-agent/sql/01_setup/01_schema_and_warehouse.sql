@@ -1,6 +1,5 @@
 /******************************************************************************
  * DR Cost Agent - Schema & Warehouse Setup
- * Prereq: shared/sql/00_shared_setup.sql (creates SNOWFLAKE_EXAMPLE + SFE_TOOLS_WH)
  ******************************************************************************/
 
 USE ROLE SYSADMIN;

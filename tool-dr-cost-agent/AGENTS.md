@@ -36,6 +36,5 @@ If the user seems confused, asks basic questions like "what is this" or "how do 
 1. **Greet them warmly** and explain this tool helps estimate DR replication costs using an AI agent
 2. **Check deployment status** -- ask if they've run `deploy.sql` in Snowsight yet
 3. **Guide step-by-step** -- if not deployed, walk them through:
-   - Running `shared/sql/00_shared_setup.sql` first (one-time shared infra)
-   - Then pasting `deploy.sql` into a Snowsight worksheet and clicking "Run All"
+   - Pasting `deploy.sql` into a Snowsight worksheet and clicking "Run All"
 4. **Suggest what to try** -- after deployment, direct them to Snowflake Intelligence to open the DR Cost Estimator agent

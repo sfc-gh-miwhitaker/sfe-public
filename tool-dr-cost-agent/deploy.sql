@@ -7,8 +7,7 @@
  * Expires: 2026-05-01
  *
  * Prerequisites:
- *   1. Run shared/sql/00_shared_setup.sql once (creates SNOWFLAKE_EXAMPLE + SFE_TOOLS_WH)
- *   2. SYSADMIN role access (ACCOUNTADMIN only for USAGE_VIEWER grant)
+ *   SYSADMIN role access (ACCOUNTADMIN only for API integration + USAGE_VIEWER grant)
  *
  * How to Deploy:
  *   1. Copy this ENTIRE script into Snowsight
@@ -39,9 +38,36 @@ SELECT
     END AS tool_status;
 
 -- ============================================================================
+-- SHARED INFRASTRUCTURE (idempotent -- safe to re-run)
+-- ============================================================================
+USE ROLE ACCOUNTADMIN;
+CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
+  API_PROVIDER = git_https_api
+  API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-miwhitaker/sfe-public')
+  ENABLED = TRUE
+  COMMENT = 'Shared Git integration for sfe-public monorepo | Author: SE Community';
+
+USE ROLE SYSADMIN;
+CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
+CREATE WAREHOUSE IF NOT EXISTS SFE_TOOLS_WH
+  WAREHOUSE_SIZE = 'X-SMALL'
+  AUTO_SUSPEND = 60
+  AUTO_RESUME = TRUE
+  INITIALLY_SUSPENDED = TRUE
+  COMMENT = 'Shared warehouse for Snowflake Tools Collection | Author: SE Community';
+USE WAREHOUSE SFE_TOOLS_WH;
+
+CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
+  COMMENT = 'Shared schema for Git repository stages across demo projects';
+
+CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO
+  API_INTEGRATION = SFE_GIT_API_INTEGRATION
+  ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
+  COMMENT = 'Shared monorepo Git repository | Author: SE Community';
+
+-- ============================================================================
 -- FETCH LATEST CODE (monorepo Git integration)
 -- ============================================================================
-USE ROLE SYSADMIN;
 ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO FETCH;
 
 -- ============================================================================

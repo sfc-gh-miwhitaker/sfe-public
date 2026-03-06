@@ -18,10 +18,9 @@
 
 **Deploy in Snowsight (no clone needed):**
 
-1. Run [`shared/sql/00_shared_setup.sql`](../shared/sql/00_shared_setup.sql) once (creates shared infrastructure)
-2. Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**
-3. Open **Snowflake Intelligence** and find **DR Cost Estimator**
-4. Click a suggested prompt or ask your own question
+1. Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**
+2. Open **Snowflake Intelligence** and find **DR Cost Estimator**
+3. Click a suggested prompt or ask your own question
 
 **Develop with Cortex Code:**
 ```bash
