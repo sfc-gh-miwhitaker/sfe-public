@@ -23,9 +23,12 @@
 
 ## Network Requirements
 
-- [ ] **No network policies** blocking Snowflake (Teams integration does not support network policies)
-- [ ] **No Private Link** configured (not supported with this integration)
-- [ ] If either is enabled, see `sql/01_setup/05_grant_permissions.sql` for disable instructions
+- [ ] **Network policies** are supported (since March 2026) with two caveats:
+  - IP addresses from Entra ID can be stale -- users may need to re-login to refresh
+  - IPv6 addresses from Entra ID are not yet supported by Snowflake
+  - See [Network Policies documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-teams-integration#network-policies)
+- [ ] **Private Link** is **not supported** with this integration (under evaluation)
+- [ ] If network policy issues arise, see [Troubleshooting Network Policies](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-teams-integration#network-policy-issues)
 
 ## User Mapping
 

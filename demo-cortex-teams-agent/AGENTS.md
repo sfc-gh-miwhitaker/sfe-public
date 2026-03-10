@@ -33,3 +33,7 @@ and Microsoft 365 Copilot using a joke-generator demo with content safety guardr
 - Agent tool type is `custom_tool` in YAML spec, `generic` in REST API
 - Security integration requires TWO Entra ID app consents (Resource + Client)
 - SHOW AGENTS (not SHOW CORTEX AGENTS) for listing agents
+- Network policies ARE supported (March 2026); Private Link is NOT supported
+- Default user role must not be an admin role (ACCOUNTADMIN, SECURITYADMIN)
+- Each Microsoft user must map to exactly one Snowflake user (strict 1:1)
+- Custom branding available for Teams app (1.2.0+) via Teams Admin Center

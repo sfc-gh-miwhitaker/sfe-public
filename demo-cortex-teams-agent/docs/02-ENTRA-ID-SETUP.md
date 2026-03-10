@@ -118,6 +118,8 @@ Entra ID -> Security -> Conditional Access -> New policy
 
 ## Troubleshooting
 
+### Quick Reference
+
 | Error | Cause | Fix |
 |---|---|---|
 | "Need admin approval" | Consent not granted | Re-do Part 1 steps |
@@ -126,6 +128,80 @@ Entra ID -> Security -> Conditional Access -> New policy
 | 390304 (User mapping failed) | EMAIL_ADDRESS mismatch | Verify Snowflake email matches Entra ID |
 | 390317 (Role not in token) | ANY_ROLE_MODE disabled | Set `EXTERNAL_OAUTH_ANY_ROLE_MODE = 'ENABLE'` |
 | 390186 (Role not granted) | Default role blocked | Check BLOCKED_ROLES_LIST |
+
+### Diagnose Security Integration Failures
+
+For any OAuth login failure, retrieve the detailed error:
+
+```sql
+SELECT SYSTEM$GET_LOGIN_FAILURE_DETAILS('<YOUR_FAILURE_ID>');
+```
+
+Reference: [SYSTEM$GET_LOGIN_FAILURE_DETAILS](https://docs.snowflake.com/en/sql-reference/functions/system_get_login_failure_details)
+
+### Default Role Must Not Be an Admin Role
+
+The default user role should **not** be set to ACCOUNTADMIN, SECURITYADMIN, or
+other administrative roles. The security integration blocks these by default.
+
+Set the default role to PUBLIC or a purpose-built role:
+
+```sql
+DESCRIBE USER <your_username>;
+ALTER USER <your_username> SET DEFAULT_ROLE = 'PUBLIC';
+GRANT ROLE PUBLIC TO USER <your_username>;
+```
+
+Use secondary roles to access additional privileges without changing the default:
+
+```sql
+ALTER USER <your_username> SET DEFAULT_SECONDARY_ROLES = ('ALL');
+```
+
+### Default Role Not Set
+
+If no default role is assigned to the Snowflake user, authentication will fail.
+Verify and fix:
+
+```sql
+DESCRIBE USER <your_username>;
+ALTER USER <your_username> SET DEFAULT_ROLE = <role_name>;
+GRANT ROLE <role_name> TO USER <your_username>;
+```
+
+### Strict One-to-One User Mapping
+
+Each Microsoft user must map to **exactly one** Snowflake user. If a single email
+address is shared by multiple Snowflake users, authentication will fail.
+
+Verify uniqueness:
+
+```sql
+SHOW USERS;
+-- Then check for duplicates:
+SELECT LOWER("email") AS email, COUNT(*) AS cnt
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
+WHERE "email" IS NOT NULL
+GROUP BY email
+HAVING cnt > 1;
+```
+
+### Agents Not Visible in Teams
+
+If agents do not appear in the Teams agent picker:
+
+1. Verify [SHOW AGENTS access control requirements](https://docs.snowflake.com/en/sql-reference/sql/show-agents#access-control-requirements)
+   are met for the user's default role
+2. Confirm the agent grant exists:
+   ```sql
+   SHOW GRANTS ON AGENT <database>.<schema>.<agent_name>;
+   ```
+3. If a specific agent is missing, ensure the user's default role has USAGE:
+   ```sql
+   GRANT USAGE ON AGENT <database>.<schema>.<agent_name> TO ROLE <role>;
+   ```
+
+Reference: [Set up access to the agent](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-manage#set-up-access-to-the-agent)
 
 ---
 

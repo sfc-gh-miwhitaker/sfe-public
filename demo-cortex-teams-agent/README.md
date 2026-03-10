@@ -11,7 +11,7 @@
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-10 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
 ---
 
@@ -82,6 +82,7 @@ This project is designed for AI-pair development.
 - Cortex Guard filters unsafe content
 - Natural language understanding
 - Works in Teams AND Microsoft 365 Copilot
+- Custom branding available for Teams (app 1.2.0+)
 
 ---
 
@@ -163,6 +164,7 @@ See `docs/04-CUSTOMIZATION.md` for production agent patterns.
 - **Snowflake data** never leaves Snowflake's environment
 - **RBAC enforced** on all queries (users see only permitted data)
 - **Row-level security** and **data masking** policies respected
+- **Network policies** supported (March 2026); Private Link not yet supported
 - **Audit logs** in QUERY_HISTORY and CORTEX_AGENT_USAGE_HISTORY
 
 ---
@@ -210,6 +212,9 @@ Preserves: SNOWFLAKE_EXAMPLE database, security integration.
 - [AI_COMPLETE](https://docs.snowflake.com/en/sql-reference/functions/ai_complete)
 - [Build Agents (Snowflake Intelligence)](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-intelligence/build-agents)
 - [Best Practices for Building Cortex Agents](https://www.snowflake.com/en/developers/guides/best-practices-to-building-cortex-agents/)
+- [Monitoring Cortex Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-monitor)
+- [Feedback API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-feedback-rest-api)
+- [Threads API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-threads-rest-api)
 
 **Quickstart:**
 - [Getting Started with Cortex Agents for Microsoft Teams and M365 Copilot](https://quickstarts.snowflake.com/guide/getting_started_with_the_microsoft_teams_and_365_copilot_cortex_app)

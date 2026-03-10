@@ -174,6 +174,38 @@ Changes to instructions, tools, or permissions reflect across all three immediat
 
 ---
 
+## Custom Branding (Teams Only)
+
+Starting with app release 1.2.0, a Teams administrator can customize the app
+appearance in the [Teams Admin Center](https://admin.teams.microsoft.com/):
+
+1. Go to **Teams apps** > **Manage apps** > search **"Snowflake Cortex Agents"**
+2. Click **Settings and customization** > **Add a customization**
+
+Customizable elements:
+- App name
+- App icon
+- Short and long description
+- Accent color
+
+Custom branding applies only to the Teams app -- it does **not** apply to M365
+Copilot. Different customizations can be applied per user group within the same
+tenant.
+
+---
+
+## Known Limitations
+
+| Area | Status |
+|---|---|
+| **Mobile apps** | Planned for a future release; no ETA |
+| **Private Link** | Not supported; evaluating on-customer-infrastructure deployment |
+| **Data Residency** | All traffic routes through Azure US East 2; EU-based data residency under evaluation |
+| **Network policies** | Supported (March 2026); IPv6 from Entra ID not yet supported |
+| **Feedback in M365 Copilot** | Thumbs up/down not propagated to Snowflake (Microsoft limitation) |
+
+---
+
 ## Customer Validation Checklist
 
 - [ ] Agent responds correctly to sample questions
@@ -209,7 +241,11 @@ ORDER BY usage_date DESC;
 ## Reference
 
 - [Cortex Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents)
+- [Cortex Agents for Teams and M365 Copilot](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-teams-integration)
 - [CREATE AGENT](https://docs.snowflake.com/en/sql-reference/sql/create-agent)
 - [AI_COMPLETE](https://docs.snowflake.com/en/sql-reference/functions/ai_complete)
 - [Build Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-intelligence/build-agents)
 - [Best Practices for Building Cortex Agents](https://www.snowflake.com/en/developers/guides/best-practices-to-building-cortex-agents/)
+- [Monitoring Cortex Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-monitor)
+- [Feedback API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-feedback-rest-api)
+- [Threads API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-threads-rest-api)

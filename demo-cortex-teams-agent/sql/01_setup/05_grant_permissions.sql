@@ -56,9 +56,11 @@ SHOW GRANTS ON AGENT SNOWFLAKE_EXAMPLE.TEAMS_AGENT_UNI.JOKE_ASSISTANT;
  *   GRANT ROLE CORTEX_AGENT_USERS TO USER alice;
  *   ALTER USER alice SET DEFAULT_SECONDARY_ROLES = ('ALL');
  *
- * NETWORK POLICY WARNING:
- * The Teams integration does NOT support network policies or Private Link.
- * Disable if configured:
- *   SHOW NETWORK POLICIES;
- *   ALTER ACCOUNT UNSET NETWORK_POLICY;
+ * NETWORK POLICY NOTES (March 2026):
+ * Network policies ARE supported with two caveats:
+ *   1. IP from Entra ID can be stale -- user may need to re-login
+ *   2. IPv6 addresses from Entra ID not yet supported by Snowflake
+ * Private Link is NOT supported.
+ * Docs: https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-teams-integration#network-policies
+ * Troubleshooting: https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-teams-integration#network-policy-issues
  */
