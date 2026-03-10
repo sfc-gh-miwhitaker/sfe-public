@@ -57,10 +57,10 @@ This project is designed for AI-pair development.
 
 | Object Type | Name | Purpose |
 |---|---|---|
-| Schema | `SNOWFLAKE_EXAMPLE.TEAMS_AGENT` | Demo schema |
-| Warehouse | `SFE_TEAMS_AGENT_WH` | Demo compute |
-| Agent | `JOKE_AGENT` | Cortex Agent for Teams/M365 |
-| Function | `TELL_JOKE` | AI_COMPLETE joke generator |
+| Schema | `SNOWFLAKE_EXAMPLE.TEAMS_AGENT_UNI` | Demo schema |
+| Warehouse | `SFE_TEAMS_AGENT_UNI_WH` | Demo compute |
+| Agent | `JOKE_ASSISTANT` | Cortex Agent for Teams/M365 |
+| Function | `GENERATE_SAFE_JOKE` | AI_COMPLETE joke generator |
 | Security Integration | OAuth with Microsoft Entra ID | Teams authentication |
 
 ## What You Get
@@ -106,7 +106,7 @@ teams-agent-uni/
 |-- README.md                              # You are here
 |-- deploy_all.sql                         # One-click deployment (Run All)
 |-- teardown_all.sql                       # Complete removal
-|-- .cortex/skills/demo-guide/SKILL.md     # Project-specific AI skill
+|-- .claude/skills/demo-cortex-teams-agent/SKILL.md  # Project-specific AI skill
 |-- diagrams/
 |   |-- data-model.md                      # Object model
 |   |-- data-flow.md                       # Data flow diagram
