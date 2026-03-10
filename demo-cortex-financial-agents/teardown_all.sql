@@ -3,6 +3,11 @@ TEARDOWN - Cortex Financial Agents
 WARNING: This will DELETE all project objects. Cannot be undone.
 ==============================================================================*/
 
+-- Remove agent from Snowflake Intelligence before dropping
+USE ROLE ACCOUNTADMIN;
+ALTER SNOWFLAKE INTELLIGENCE IF EXISTS SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT
+  DROP AGENT SNOWFLAKE_EXAMPLE.FINANCIAL_AGENTS.PORTFOLIO_RISK_AGENT;
+
 USE ROLE SYSADMIN;
 
 DROP AGENT IF EXISTS SNOWFLAKE_EXAMPLE.FINANCIAL_AGENTS.PORTFOLIO_RISK_AGENT;
