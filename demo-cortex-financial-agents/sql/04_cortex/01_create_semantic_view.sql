@@ -46,7 +46,7 @@ CREATE OR REPLACE SEMANTIC VIEW SV_FINANCIAL_PORTFOLIO
     facilities.commitment_amount AS commitment_amount
       COMMENT = 'Total committed facility size in dollars',
 
-    facilities.outstanding_balance AS facility_outstanding
+    facilities.facility_outstanding AS facilities.outstanding_balance
       COMMENT = 'Current drawn amount on the facility in dollars',
 
     facilities.interest_rate AS interest_rate
@@ -55,7 +55,7 @@ CREATE OR REPLACE SEMANTIC VIEW SV_FINANCIAL_PORTFOLIO
     facilities.advance_rate AS advance_rate
       COMMENT = 'Maximum advance rate on eligible collateral as a percentage (ABL facilities only)',
 
-    facilities.ltv_ratio AS facility_ltv
+    facilities.facility_ltv AS facilities.ltv_ratio
       COMMENT = 'Loan-to-value ratio as a percentage at origination',
 
     borrowers.annual_revenue AS annual_revenue
@@ -70,13 +70,13 @@ CREATE OR REPLACE SEMANTIC VIEW SV_FINANCIAL_PORTFOLIO
     borrowers.risk_rating AS risk_rating
       COMMENT = 'Internal risk rating from 1 (Superior) to 5 (Loss). 1=Superior, 2=Satisfactory, 3=Watch, 4=Substandard, 5=Loss',
 
-    covenants.threshold_value AS covenant_threshold
+    covenants.covenant_threshold AS covenants.threshold_value
       COMMENT = 'Covenant limit or minimum requirement. For leverage ratio this is the maximum allowed; for coverage ratios this is the minimum required',
 
-    covenants.actual_value AS covenant_actual
+    covenants.covenant_actual AS covenants.actual_value
       COMMENT = 'Actual measured value for the covenant test',
 
-    metrics.outstanding_balance AS metrics_outstanding
+    metrics.metrics_outstanding AS metrics.outstanding_balance
       COMMENT = 'Outstanding balance at the reporting date snapshot',
 
     metrics.collateral_value AS collateral_value
@@ -107,7 +107,7 @@ CREATE OR REPLACE SEMANTIC VIEW SV_FINANCIAL_PORTFOLIO
       WITH SYNONYMS = ('sector', 'business type', 'industry segment')
       COMMENT = 'Industry classification: manufacturing, healthcare, technology, logistics, energy, etc.',
 
-    borrowers.state AS borrower_state
+    borrowers.borrower_state AS borrowers.state
       WITH SYNONYMS = ('location', 'state', 'geography')
       COMMENT = 'US state where the borrower is headquartered',
 
@@ -118,7 +118,7 @@ CREATE OR REPLACE SEMANTIC VIEW SV_FINANCIAL_PORTFOLIO
       WITH SYNONYMS = ('loan type', 'product type', 'facility kind')
       COMMENT = 'Type of credit facility: asset_based_line, term_loan, equipment_finance, real_estate_bridge, working_capital_revolver',
 
-    facilities.status AS facility_status
+    facilities.facility_status AS facilities.status
       WITH SYNONYMS = ('loan status', 'facility condition', 'performance status')
       COMMENT = 'Current facility status: performing, watchlist, default, paid_off',
 
