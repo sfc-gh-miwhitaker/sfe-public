@@ -36,7 +36,8 @@ Start with the [Getting Started Guide](../guide-coco-setup/) -- it walks you thr
 | `RAW_COVENANTS` | Table | Quarterly covenant test results (leverage, coverage, EBITDA) |
 | `RAW_PORTFOLIO_METRICS` | Table | Time-series facility health (DSCR, LTV, days past due) |
 | `RAW_DOCUMENTS` | Table | Unstructured credit memos, legal docs, compliance certificates |
-| `FACILITY_DOCUMENT_SEARCH` | Cortex Search | RAG over documents with citation support |
+| `DOC_STAGE` | Stage | Internal stage with 40 PDF financial documents (SSE encrypted) |
+| `FACILITY_DOCUMENT_SEARCH` | Cortex Search | RAG over documents with clickable PDF citation links |
 | `SV_FINANCIAL_PORTFOLIO` | Semantic View | Structured portfolio analytics for Cortex Analyst |
 | `PORTFOLIO_RISK_AGENT` | Agent | Dual-tool conversational agent (Analyst + Search) |
 
@@ -52,6 +53,8 @@ flowchart LR
     end
 
     subgraph unstructured [Unstructured Documents]
+        PDFs["documents/*.pdf"]
+        Stage["@DOC_STAGE"]
         Docs[RAW_DOCUMENTS]
     end
 
@@ -67,10 +70,11 @@ flowchart LR
     Facilities --> SV
     Covenants --> SV
     Metrics --> SV
-    Docs --> CSS
+    PDFs -->|COPY FILES| Stage
+    Docs -->|"text + GET_PRESIGNED_URL"| CSS
 
     SV --> Agent[PORTFOLIO_RISK_AGENT]
-    CSS --> Agent
+    CSS -->|clickable citations| Agent
 ```
 
 ## Estimated Demo Costs
@@ -80,7 +84,7 @@ flowchart LR
 | Warehouse | X-SMALL | ~0.3 | Sample data load + queries |
 | Cortex Search | — | ~0.5 | Index ~40 documents |
 | Cortex Agent | — | ~0.2 | Per conversation turn |
-| Storage | — | Minimal | <1 MB synthetic data |
+| Storage | — | Minimal | <1 MB synthetic data + 160 KB PDFs |
 | **Total** | | **~1.0 credits** | Single deployment run |
 
 **Edition Required:** Enterprise (for Cortex Search + Intelligence Agents)
@@ -93,6 +97,8 @@ flowchart LR
 | Agent not visible | Ensure the semantic view `SV_FINANCIAL_PORTFOLIO` exists in `SEMANTIC_MODELS` schema. |
 | Agent can't answer structured questions | Verify `SV_FINANCIAL_PORTFOLIO` has correct table references and the warehouse is running. |
 | Agent can't find documents | Check that `FACILITY_DOCUMENT_SEARCH` service is active: `SHOW CORTEX SEARCH SERVICES`. |
+| Citations open chat instead of PDF | Verify `@DOC_STAGE` contains PDFs (`LIST @DOC_STAGE`) and `title_column` is `source_url` in agent spec. |
+| Citation links expired | Presigned URLs expire after 7 days. The search service refreshes hourly so URLs stay fresh automatically. |
 
 ## Cleanup
 

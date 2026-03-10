@@ -103,7 +103,7 @@ CREATE OR REPLACE AGENT PORTFOLIO_RISK_AGENT
     DocumentSearch:
       name: "SNOWFLAKE_EXAMPLE.FINANCIAL_AGENTS.FACILITY_DOCUMENT_SEARCH"
       max_results: "5"
-      title_column: "title"
+      title_column: "source_url"
       id_column: "doc_id"
   $$;
 

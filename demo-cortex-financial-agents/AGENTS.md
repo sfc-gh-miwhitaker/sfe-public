@@ -6,12 +6,15 @@ Conversational agent for specialty finance portfolio risk assessment -- unifying
 - `deploy_all.sql` -- Single entry point (Run All in Snowsight)
 - `teardown_all.sql` -- Complete cleanup
 - `sql/` -- Individual SQL scripts (numbered)
+- `documents/` -- 40 PDF financial documents (credit memos, compliance certs, appraisals, etc.)
+- `scripts/generate_pdfs.py` -- Local helper to regenerate PDFs from SQL content
 - `.claude/skills/` -- Project-specific AI skill
 
 ## Snowflake Environment
 - Database: SNOWFLAKE_EXAMPLE
 - Schema: FINANCIAL_AGENTS
 - Warehouse: SFE_FINANCIAL_AGENTS_WH
+- Stage: DOC_STAGE (internal, SSE encrypted, directory table)
 - Semantic View: SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_FINANCIAL_PORTFOLIO
 - Cortex Search: FACILITY_DOCUMENT_SEARCH
 - Agent: PORTFOLIO_RISK_AGENT
@@ -20,7 +23,8 @@ Conversational agent for specialty finance portfolio risk assessment -- unifying
 - Dual-tool Intelligence agent (Cortex Analyst for structured data + Cortex Search for RAG)
 - Specialty finance domain: facilities, covenants, credit memos, collateral appraisals
 - Synthetic data -- all borrowers, facilities, and documents are fictional
-- Cortex Search with doc_type filtering and citation support (id_column + title_column)
+- Real PDF documents staged in @DOC_STAGE with GET_PRESIGNED_URL for clickable citations
+- Cortex Search with doc_type filtering and citation support (title_column = source_url for PDF links)
 
 ## Development Standards
 - SQL: Explicit columns, sargable predicates, QUALIFY for window functions
