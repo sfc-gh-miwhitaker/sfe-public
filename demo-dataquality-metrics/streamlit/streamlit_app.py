@@ -8,7 +8,6 @@ from snowflake.snowpark.context import get_active_session
 import pandas as pd
 import streamlit as st
 
-# Page configuration
 st.set_page_config(
     page_title="Data Quality Dashboard",
     page_icon="✓",
@@ -16,7 +15,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom styling for a modern, clean look
 st.markdown("""
 <style>
     .stMetric {
@@ -27,8 +25,6 @@ st.markdown("""
     }
     .stMetric label { color: #a8d5e5; }
     .stMetric [data-testid="stMetricValue"] { color: #ffffff; font-weight: 600; }
-    .quality-pass { color: #4ecdc4; font-weight: bold; }
-    .quality-fail { color: #ff6b6b; font-weight: bold; }
     div[data-testid="stTabs"] button { font-weight: 500; }
     .block-container { padding-top: 2rem; }
 </style>
@@ -36,21 +32,51 @@ st.markdown("""
 
 session = get_active_session()
 
-# Header
 st.title("Data Quality Dashboard")
-st.caption("Real-time data quality monitoring using Snowflake Data Metric Functions")
+st.caption("Real-time monitoring powered by Snowflake Data Metric Functions and Object Tagging")
 
-# Tabs for different views
 tab_realtime, tab_trends, tab_datasets, tab_system, tab_tags = st.tabs([
-    "⚡ Real-Time Quality",
-    "📈 Quality Trends",
-    "📊 Dataset Explorer",
-    "🔧 System Metrics",
-    "🏷️ Tags & Governance"
+    "Real-Time Quality",
+    "Quality Trends",
+    "Dataset Explorer",
+    "System DMFs",
+    "Tags & Governance"
 ])
 
+FRIENDLY_COLS = {
+    "ATHLETE_ID": "Athlete ID",
+    "NGB_CODE": "NGB Code",
+    "SPORT": "Sport",
+    "METRIC_TYPE": "Metric Type",
+    "METRIC_VALUE": "Metric Value",
+    "DATA_SOURCE": "Data Source",
+    "ENGAGEMENT_ID": "Engagement ID",
+    "FAN_ID": "Fan ID",
+    "CHANNEL": "Channel",
+    "EVENT_TYPE": "Event Type",
+    "SESSION_DURATION": "Session Duration",
+    "CONVERSION_FLAG": "Conversion",
+    "ISSUE": "Issue",
+    "METRIC_DATE": "Date",
+    "TABLE_NAME": "Table",
+    "METRIC_NAME": "Metric",
+    "RECORDS_EVALUATED": "Records Evaluated",
+    "FAILURES_DETECTED": "Failures Detected",
+    "AVG_QUALITY_SCORE": "Avg Quality Score",
+    "TAG_NAME": "Tag",
+    "TAG_VALUE": "Value",
+    "OBJECT_NAME": "Object",
+    "DOMAIN": "Domain",
+    "COLUMN_NAME": "Column",
+    "LEVEL": "Level",
+}
+
+def friendly(df):
+    """Rename SCREAMING_CASE columns to Title Case for display."""
+    return df.rename(columns={c: FRIENDLY_COLS.get(c, c.replace("_", " ").title()) for c in df.columns})
+
 # =============================================================================
-# TAB 1: Real-Time Quality Checks (THE KEY DEMO FEATURE)
+# TAB 1: Real-Time Quality Checks
 # =============================================================================
 with tab_realtime:
     st.header("Live Quality Scores")
@@ -59,9 +85,8 @@ with tab_realtime:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("🏃 Athlete Performance")
+        st.subheader("Athlete Performance")
 
-        # Call DMF directly for real-time result
         athlete_dmf_query = """
         SELECT SNOWFLAKE_EXAMPLE.DATA_QUALITY.DMF_METRIC_VALUE_VALID_PCT(
             SELECT metric_value FROM SNOWFLAKE_EXAMPLE.DATA_QUALITY.RAW_ATHLETE_PERFORMANCE
@@ -73,7 +98,6 @@ with tab_realtime:
         except Exception:
             athlete_validity = 0.0
 
-        # Get record counts
         athlete_counts = session.sql("""
             SELECT
                 (SELECT COUNT(*) FROM SNOWFLAKE_EXAMPLE.DATA_QUALITY.RAW_ATHLETE_PERFORMANCE) AS raw_count,
@@ -84,20 +108,17 @@ with tab_realtime:
         clean_count = int(athlete_counts["CLEAN_COUNT"])
         filtered_out = raw_count - clean_count
 
-        # Display metrics
         m1, m2, m3 = st.columns(3)
         m1.metric("Validity Score", f"{athlete_validity:.1f}%")
         m2.metric("Total Records", f"{raw_count:,}")
         m3.metric("Filtered Out", f"{filtered_out:,}", delta=f"-{filtered_out}" if filtered_out > 0 else None, delta_color="inverse")
 
-        # Quality status indicator
         if athlete_validity >= 90:
-            st.success(f"✓ PASSING - Validity {athlete_validity:.1f}% meets 90% threshold")
+            st.success(f"Passing — validity {athlete_validity:.1f}% meets the 90% threshold")
         else:
-            st.error(f"✗ FAILING - Validity {athlete_validity:.1f}% below 90% threshold")
+            st.error(f"Failing — validity {athlete_validity:.1f}% is below the 90% threshold")
 
-        # Show sample bad records
-        with st.expander("View Quality Issues"):
+        with st.expander("View quality issues"):
             bad_records = session.sql("""
                 SELECT athlete_id, sport, metric_type, metric_value,
                     CASE
@@ -110,14 +131,13 @@ with tab_realtime:
                 LIMIT 10
             """).to_pandas()
             if not bad_records.empty:
-                st.dataframe(bad_records, use_container_width=True, hide_index=True)
+                st.dataframe(friendly(bad_records), use_container_width=True, hide_index=True)
             else:
-                st.info("No quality issues found!")
+                st.info("No quality issues found.")
 
     with col2:
-        st.subheader("👥 Fan Engagement")
+        st.subheader("Fan Engagement")
 
-        # Call DMF directly for real-time result
         fan_dmf_query = """
         SELECT SNOWFLAKE_EXAMPLE.DATA_QUALITY.DMF_SESSION_DURATION_VALID_PCT(
             SELECT session_duration FROM SNOWFLAKE_EXAMPLE.DATA_QUALITY.RAW_FAN_ENGAGEMENT
@@ -129,7 +149,6 @@ with tab_realtime:
         except Exception:
             fan_validity = 0.0
 
-        # Get record counts
         fan_counts = session.sql("""
             SELECT
                 (SELECT COUNT(*) FROM SNOWFLAKE_EXAMPLE.DATA_QUALITY.RAW_FAN_ENGAGEMENT) AS raw_count,
@@ -140,20 +159,17 @@ with tab_realtime:
         fan_clean = int(fan_counts["CLEAN_COUNT"])
         fan_filtered = fan_raw - fan_clean
 
-        # Display metrics
         m1, m2, m3 = st.columns(3)
         m1.metric("Validity Score", f"{fan_validity:.1f}%")
         m2.metric("Total Records", f"{fan_raw:,}")
         m3.metric("Filtered Out", f"{fan_filtered:,}", delta=f"-{fan_filtered}" if fan_filtered > 0 else None, delta_color="inverse")
 
-        # Quality status indicator
         if fan_validity >= 90:
-            st.success(f"✓ PASSING - Validity {fan_validity:.1f}% meets 90% threshold")
+            st.success(f"Passing — validity {fan_validity:.1f}% meets the 90% threshold")
         else:
-            st.error(f"✗ FAILING - Validity {fan_validity:.1f}% below 90% threshold")
+            st.error(f"Failing — validity {fan_validity:.1f}% is below the 90% threshold")
 
-        # Show sample bad records
-        with st.expander("View Quality Issues"):
+        with st.expander("View quality issues"):
             bad_fan = session.sql("""
                 SELECT engagement_id, channel, event_type, session_duration,
                     CASE
@@ -166,23 +182,21 @@ with tab_realtime:
                 LIMIT 10
             """).to_pandas()
             if not bad_fan.empty:
-                st.dataframe(bad_fan, use_container_width=True, hide_index=True)
+                st.dataframe(friendly(bad_fan), use_container_width=True, hide_index=True)
             else:
-                st.info("No quality issues found!")
+                st.info("No quality issues found.")
 
-    # Refresh button
     st.markdown("---")
-    if st.button("🔄 Refresh Quality Scores", type="primary"):
+    if st.button("Refresh Quality Scores", type="primary"):
         st.rerun()
 
 # =============================================================================
-# TAB 2: Quality Trends (Historical Data from Task)
+# TAB 2: Quality Trends
 # =============================================================================
 with tab_trends:
     st.header("Quality Score Trends")
     st.markdown("Historical quality metrics captured by the scheduled task (runs every 5 minutes).")
 
-    # Get trend data
     trend_df = session.sql("""
         SELECT
             metric_date,
@@ -199,7 +213,6 @@ with tab_trends:
     else:
         trend_df["METRIC_DATE"] = pd.to_datetime(trend_df["METRIC_DATE"])
 
-        # Summary cards
         col1, col2, col3 = st.columns(3)
         with col1:
             latest_avg = trend_df.groupby("METRIC_DATE")["AVG_QUALITY_SCORE"].mean().iloc[-1] if len(trend_df) > 0 else 0
@@ -211,16 +224,14 @@ with tab_trends:
             days_tracked = trend_df["METRIC_DATE"].nunique()
             st.metric("Days Tracked", days_tracked)
 
-        # Trend charts
         st.subheader("Quality Score Over Time")
         for table in trend_df["TABLE_NAME"].unique():
             table_df = trend_df[trend_df["TABLE_NAME"] == table].sort_values("METRIC_DATE")
             if not table_df.empty:
                 chart_df = table_df.set_index("METRIC_DATE")[["AVG_QUALITY_SCORE"]]
-                chart_df.columns = [table]
+                chart_df.columns = [table.replace("_", " ").title()]
                 st.line_chart(chart_df)
 
-        # Detailed metrics table
         st.subheader("Metric History")
         metrics_df = session.sql("""
             SELECT
@@ -236,17 +247,17 @@ with tab_trends:
         """).to_pandas()
 
         if not metrics_df.empty:
-            st.dataframe(metrics_df, use_container_width=True, hide_index=True)
+            st.dataframe(friendly(metrics_df), use_container_width=True, hide_index=True)
 
 # =============================================================================
-# TAB 3: Dataset Explorer (Raw vs Clean comparison)
+# TAB 3: Dataset Explorer
 # =============================================================================
 with tab_datasets:
     st.header("Dataset Explorer")
-    st.markdown("Compare raw data with quality-filtered 'golden' views.")
+    st.markdown("Compare raw data with quality-filtered golden views.")
 
     dataset = st.radio(
-        "Select Dataset",
+        "Select dataset",
         ["Athlete Performance", "Fan Engagement"],
         horizontal=True
     )
@@ -263,19 +274,18 @@ with tab_datasets:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("📦 Raw Data")
+        st.subheader("Raw Data")
         raw_df = session.sql(f"SELECT {key_cols} FROM {raw_table} LIMIT 100").to_pandas()
         st.caption(f"Showing first 100 of {session.sql(f'SELECT COUNT(*) AS c FROM {raw_table}').collect()[0]['C']:,} records")
-        st.dataframe(raw_df, use_container_width=True, hide_index=True)
+        st.dataframe(friendly(raw_df), use_container_width=True, hide_index=True)
 
     with col2:
-        st.subheader("✨ Clean Data (Golden View)")
+        st.subheader("Clean Data (Golden View)")
         clean_df = session.sql(f"SELECT {key_cols} FROM {clean_view} LIMIT 100").to_pandas()
         st.caption(f"Showing first 100 of {session.sql(f'SELECT COUNT(*) AS c FROM {clean_view}').collect()[0]['C']:,} records")
-        st.dataframe(clean_df, use_container_width=True, hide_index=True)
+        st.dataframe(friendly(clean_df), use_container_width=True, hide_index=True)
 
-    # Aggregation preview
-    st.subheader("📊 Clean Data Aggregation")
+    st.subheader("Clean Data Aggregation")
     if dataset == "Athlete Performance":
         agg_df = session.sql("""
             SELECT
@@ -300,21 +310,21 @@ with tab_datasets:
             ORDER BY engagements DESC
         """).to_pandas()
 
-    st.dataframe(agg_df, use_container_width=True, hide_index=True)
+    st.dataframe(friendly(agg_df), use_container_width=True, hide_index=True)
 
 # =============================================================================
-# TAB 4: System DMF Calls
+# TAB 4: System DMFs
 # =============================================================================
 with tab_system:
     st.header("System Data Metric Functions")
-    st.markdown("Snowflake built-in DMFs provide instant insights without custom code.")
+    st.markdown("Built-in Snowflake DMFs provide instant insights without custom code.")
 
     dataset = st.selectbox(
-        "Analyze Table",
-        ["RAW_ATHLETE_PERFORMANCE", "RAW_FAN_ENGAGEMENT"]
+        "Analyze table",
+        ["Athlete Performance", "Fan Engagement"]
     )
 
-    if dataset == "RAW_ATHLETE_PERFORMANCE":
+    if dataset == "Athlete Performance":
         target_col = "metric_value"
         id_col = "athlete_id"
         table_path = "SNOWFLAKE_EXAMPLE.DATA_QUALITY.RAW_ATHLETE_PERFORMANCE"
@@ -325,46 +335,41 @@ with tab_system:
 
     col1, col2, col3, col4 = st.columns(4)
 
-    # NULL_COUNT
     with col1:
         null_count = session.sql(f"""
             SELECT SNOWFLAKE.CORE.NULL_COUNT(SELECT {target_col} FROM {table_path}) AS val
         """).collect()[0]["VAL"]
-        st.metric("NULL Count", f"{int(null_count):,}" if null_count else "0")
+        st.metric("Null Count", f"{int(null_count):,}" if null_count else "0")
 
-    # NULL_PERCENT
     with col2:
         null_pct = session.sql(f"""
             SELECT SNOWFLAKE.CORE.NULL_PERCENT(SELECT {target_col} FROM {table_path}) AS val
         """).collect()[0]["VAL"]
-        st.metric("NULL %", f"{float(null_pct):.2f}%" if null_pct else "0%")
+        st.metric("Null %", f"{float(null_pct):.2f}%" if null_pct else "0%")
 
-    # DUPLICATE_COUNT
     with col3:
         dup_count = session.sql(f"""
             SELECT SNOWFLAKE.CORE.DUPLICATE_COUNT(SELECT {id_col} FROM {table_path}) AS val
         """).collect()[0]["VAL"]
         st.metric("Duplicate IDs", f"{int(dup_count):,}" if dup_count else "0")
 
-    # Row count
     with col4:
         row_count = session.sql(f"SELECT COUNT(*) AS val FROM {table_path}").collect()[0]["VAL"]
         st.metric("Total Rows", f"{int(row_count):,}")
 
     st.markdown("---")
-    st.subheader("📋 DMF Reference")
-
-    st.code(f"""
--- NULL_COUNT: Count of NULL values in a column
+    with st.expander("SQL Reference"):
+        st.code(f"""
+-- Null count for a column
 SELECT SNOWFLAKE.CORE.NULL_COUNT(SELECT {target_col} FROM {table_path});
 
--- NULL_PERCENT: Percentage of NULL values
+-- Null percentage
 SELECT SNOWFLAKE.CORE.NULL_PERCENT(SELECT {target_col} FROM {table_path});
 
--- DUPLICATE_COUNT: Count of duplicate values
+-- Duplicate count
 SELECT SNOWFLAKE.CORE.DUPLICATE_COUNT(SELECT {id_col} FROM {table_path});
 
--- Custom DMF: Call your own quality checks
+-- Custom DMF
 SELECT SNOWFLAKE_EXAMPLE.DATA_QUALITY.DMF_METRIC_VALUE_VALID_PCT(
     SELECT metric_value FROM SNOWFLAKE_EXAMPLE.DATA_QUALITY.RAW_ATHLETE_PERFORMANCE
 );
@@ -389,7 +394,6 @@ with tab_tags:
     if tag_df.empty:
         st.warning("No tag data available. Ensure the tagging script has been deployed.")
     else:
-        # Distribution metrics across the three tag types
         col1, col2, col3 = st.columns(3)
 
         domain_counts = tag_df[tag_df["TAG_NAME"] == "DATA_DOMAIN"]["TAG_VALUE"].value_counts()
@@ -399,29 +403,27 @@ with tab_tags:
         with col1:
             st.subheader("Data Domain")
             for val, cnt in domain_counts.items():
-                st.metric(val, cnt)
+                st.metric(val.title(), cnt)
 
         with col2:
             st.subheader("Sensitivity")
             for val, cnt in sensitivity_counts.items():
-                st.metric(val, cnt)
+                st.metric(val.title(), cnt)
 
         with col3:
             st.subheader("Quality Tier")
             for val, cnt in tier_counts.items():
-                st.metric(val, cnt)
+                st.metric(val.title(), cnt)
 
         st.markdown("---")
 
-        # Full tag assignment table
         st.subheader("All Tag Assignments")
         display_df = tag_df.copy()
         display_df["COLUMN_NAME"] = display_df["COLUMN_NAME"].fillna("—")
-        st.dataframe(display_df, use_container_width=True, hide_index=True)
+        st.dataframe(friendly(display_df), use_container_width=True, hide_index=True)
 
-        # Masking policy callout
         st.markdown("---")
-        st.subheader("🔒 Tag-Based Masking")
+        st.subheader("Tag-Based Masking")
         st.markdown(
             "Columns tagged `DATA_SENSITIVITY = 'CONFIDENTIAL'` are automatically masked "
             "for non-admin roles via a **tag-based masking policy**. No per-column policy assignment needed."
@@ -432,10 +434,9 @@ with tab_tags:
         ][["OBJECT_NAME", "COLUMN_NAME"]].reset_index(drop=True)
 
         if not confidential_cols.empty:
-            st.dataframe(confidential_cols, use_container_width=True, hide_index=True)
+            st.dataframe(friendly(confidential_cols), use_container_width=True, hide_index=True)
         else:
-            st.info("No CONFIDENTIAL columns found.")
+            st.info("No confidential columns found.")
 
-# Footer
 st.markdown("---")
-st.caption("Data Quality Dashboard | Powered by Snowflake Data Metric Functions & Object Tagging | Author: SE Community")
+st.caption("Data Quality Dashboard | Powered by Snowflake Data Metric Functions & Object Tagging")
