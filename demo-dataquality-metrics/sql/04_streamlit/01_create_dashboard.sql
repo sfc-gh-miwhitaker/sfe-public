@@ -7,7 +7,7 @@
 -- ============================================================================
 
 CREATE OR REPLACE STREAMLIT SNOWFLAKE_EXAMPLE.DATA_QUALITY.DATA_QUALITY_DASHBOARD
-  FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/streamlit'
+  FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/streamlit'
   MAIN_FILE = 'streamlit_app.py'
   QUERY_WAREHOUSE = 'SFE_DATA_QUALITY_WH'
   COMMENT = 'DEMO: Data quality dashboard | Author: SE Community | Expires: 2026-05-01';
