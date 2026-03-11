@@ -53,7 +53,7 @@ cd sfe-public/demo-dataquality-metrics && cortex
 
 ## The Demo Story
 
-> "Raw data has quality issues. Snowflake automatically detects bad records, filters them for analytics, and provides a dashboard to monitor quality over time."
+> "Raw data has quality issues. Snowflake automatically detects bad records, filters them for analytics, provides a dashboard to monitor quality over time, and classifies data assets with governance tags that enforce masking policies."
 
 | Part | What You Show | Key Query/Action |
 |------|---------------|------------------|
@@ -62,6 +62,7 @@ cd sfe-public/demo-dataquality-metrics && cortex
 | 3. The Outcome | "Golden" views filter bad records | Compare `RAW` count vs `V_` view count |
 | 4. Monitoring | **Native Snowsight Data Quality UI** | Catalog → Table → Data Quality tab |
 | 5. Live Demo | Insert bad data, watch metrics update | `INSERT` → Refresh Data Quality tab |
+| 6. Governance Tags | Classify & protect data assets with tags | `TAG_REFERENCES` + masked query demo |
 
 ## Native Snowsight Visualization
 
@@ -85,6 +86,8 @@ tools/00_master.sh cleanup  # Print cleanup steps
 
 - **Data Metric Functions (DMFs)** - Native Snowflake quality rules with event-driven scheduling
 - **Streams and Tasks** - Incremental CDC pattern for quality metric computation
+- **Object Tagging** - Classify tables/columns by domain, sensitivity, and quality tier
+- **Tag-Based Masking** - CONFIDENTIAL columns automatically masked for non-admin roles
 - **Streamlit Dashboard** - Native visualization deployed from Git repository
 - **Golden Dataset Views** - Cleaned views filtering invalid records
 - **TRANSIENT Tables** - Cost-optimized storage for demo/regenerable data
@@ -96,6 +99,8 @@ tools/00_master.sh cleanup  # Print cleanup steps
 |---------|----------------|
 | Data Quality | Custom DMFs with `TRIGGER_ON_CHANGES` (event-driven) |
 | Incremental Processing | Streams + Tasks for CDC |
+| Object Tagging | `DATA_DOMAIN`, `DATA_SENSITIVITY`, `DATA_QUALITY_TIER` with `ALLOWED_VALUES` |
+| Tag-Based Masking | `CONFIDENTIAL_STRING_MASK` auto-applied via `DATA_SENSITIVITY` tag |
 | Streamlit Deployment | Modern `FROM` syntax with Git integration |
 | Cost Optimization | TRANSIENT tables (no Fail-safe overhead) |
 | Golden Dataset | Views with data quality filtering |
@@ -124,6 +129,15 @@ tools/00_master.sh cleanup  # Print cleanup steps
 - `V_FAN_ENGAGEMENT` - Cleaned engagement data (valid sessions only)
 - `V_DATA_QUALITY_METRICS` - Quality metrics reporting
 - `V_QUALITY_SCORE_TREND` - Aggregated quality trends
+- `V_TAG_GOVERNANCE_SUMMARY` - All tag assignments via TAG_REFERENCES
+
+**Tags (with ALLOWED_VALUES):**
+- `DATA_DOMAIN` - Business domain (PERFORMANCE, ENGAGEMENT, QUALITY_METRICS)
+- `DATA_SENSITIVITY` - Column sensitivity (PUBLIC, INTERNAL, CONFIDENTIAL)
+- `DATA_QUALITY_TIER` - Quality tier (RAW, VALIDATED, CURATED)
+
+**Masking Policy:**
+- `CONFIDENTIAL_STRING_MASK` - Tag-based policy masking CONFIDENTIAL columns for non-admin roles
 
 **Task:**
 - `refresh_data_quality_metrics_task` - 5-minute incremental refresh

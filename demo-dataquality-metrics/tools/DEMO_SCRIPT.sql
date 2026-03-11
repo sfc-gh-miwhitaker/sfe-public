@@ -178,6 +178,57 @@ SELECT * FROM V_DATA_QUALITY_METRICS ORDER BY metric_date DESC LIMIT 5;
 -- "Refresh the Streamlit dashboard to see the update!"
 
 -- ============================================================================
+-- PART 6: GOVERNANCE TAGS - Classify and protect data assets
+-- ============================================================================
+
+-- "Beyond quality, we also classify our data for governance..."
+
+-- Show the tags we created
+SHOW TAGS IN SCHEMA SNOWFLAKE_EXAMPLE.DATA_QUALITY;
+
+-- "Every table is tagged with its business domain and quality tier..."
+SELECT
+  TAG_NAME,
+  TAG_VALUE,
+  OBJECT_NAME,
+  DOMAIN
+FROM TABLE(INFORMATION_SCHEMA.TAG_REFERENCES('DATA_QUALITY.RAW_ATHLETE_PERFORMANCE', 'TABLE'))
+ORDER BY TAG_NAME;
+-- Shows: DATA_DOMAIN = PERFORMANCE, DATA_QUALITY_TIER = RAW
+
+-- "And columns are tagged by sensitivity level..."
+SELECT
+  TAG_NAME,
+  TAG_VALUE,
+  OBJECT_NAME,
+  COLUMN_NAME
+FROM TABLE(INFORMATION_SCHEMA.TAG_REFERENCES('DATA_QUALITY.RAW_ATHLETE_PERFORMANCE.ATHLETE_ID', 'COLUMN'));
+-- Shows: DATA_SENSITIVITY = CONFIDENTIAL
+
+-- "Here's the full governance map across all our objects..."
+SELECT * FROM V_TAG_GOVERNANCE_SUMMARY ORDER BY TAG_NAME, OBJECT_NAME;
+
+-- "The best part? CONFIDENTIAL columns are automatically masked!"
+-- "We have a tag-based masking policy: any VARCHAR column tagged
+--  DATA_SENSITIVITY = 'CONFIDENTIAL' is masked for non-admin roles."
+
+-- As ACCOUNTADMIN you see the real values:
+SELECT athlete_id, sport, metric_value
+FROM RAW_ATHLETE_PERFORMANCE
+LIMIT 5;
+-- Shows: A-000000, A-000001, ... (full values visible)
+
+-- If you switch to a non-admin role, athlete_id shows ***MASKED***
+-- (Uncomment and run if you have a demo role set up)
+-- USE ROLE PUBLIC;
+-- SELECT athlete_id, sport, metric_value
+-- FROM RAW_ATHLETE_PERFORMANCE
+-- LIMIT 5;
+-- USE ROLE ACCOUNTADMIN;
+
+-- "Tag one column, protect it everywhere — no per-column policy needed."
+
+-- ============================================================================
 -- KEY TAKEAWAYS
 -- ============================================================================
 -- 1. Raw data has quality issues (NULLs, out-of-range values)
@@ -185,4 +236,6 @@ SELECT * FROM V_DATA_QUALITY_METRICS ORDER BY metric_date DESC LIMIT 5;
 -- 3. DMFs also run automatically on TRIGGER_ON_CHANGES (async, takes time)
 -- 4. "Golden" views filter bad records for clean analytics
 -- 5. Multiple monitoring options: Native UI, SQL queries, custom dashboards
--- 6. All native Snowflake - no external tools needed
+-- 6. Governance tags classify objects by domain, sensitivity, and quality tier
+-- 7. Tag-based masking policies protect CONFIDENTIAL columns automatically
+-- 8. All native Snowflake - no external tools needed

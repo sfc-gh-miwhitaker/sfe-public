@@ -99,6 +99,7 @@ EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branch
 EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/03_transformations/01_create_streams.sql;
 EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/03_transformations/02_create_views.sql;
 EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/03_transformations/03_create_tasks.sql;
+EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/03_transformations/04_create_tags.sql;
 EXECUTE IMMEDIATE FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO/branches/main/demo-dataquality-metrics/sql/04_streamlit/01_create_dashboard.sql;
 
 /*******************************************************************************

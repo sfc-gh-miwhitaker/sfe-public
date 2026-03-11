@@ -19,6 +19,9 @@ Reference implementation for automated data quality monitoring and reporting usi
 - Scheduled quality monitoring with TRIGGER_ON_CHANGES
 - Dynamic Tables for quality trend aggregation
 - Streamlit dashboard for visual quality reporting
+- Object tagging (DATA_DOMAIN, DATA_SENSITIVITY, DATA_QUALITY_TIER)
+- Tag-based masking policy on CONFIDENTIAL columns
+- TAG_REFERENCES for governance reporting
 
 ## Development Standards
 - SQL: Explicit columns, sargable predicates, QUALIFY for window functions
@@ -33,3 +36,6 @@ Reference implementation for automated data quality monitoring and reporting usi
 - All new objects need COMMENT = 'DEMO: ... (Expires: 2026-05-01)'
 - DMF schedule uses TRIGGER_ON_CHANGES (not cron)
 - Allow 10 min after deploy for first DMF run to populate metrics
+- Tags: DATA_DOMAIN, DATA_SENSITIVITY, DATA_QUALITY_TIER (with ALLOWED_VALUES)
+- Tag-based masking: CONFIDENTIAL_STRING_MASK assigned to DATA_SENSITIVITY tag
+- Teardown must UNSET MASKING POLICY from tag before dropping tags or policies

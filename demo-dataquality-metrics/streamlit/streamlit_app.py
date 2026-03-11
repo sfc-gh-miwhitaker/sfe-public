@@ -41,11 +41,12 @@ st.title("Data Quality Dashboard")
 st.caption("Real-time data quality monitoring using Snowflake Data Metric Functions")
 
 # Tabs for different views
-tab_realtime, tab_trends, tab_datasets, tab_system = st.tabs([
+tab_realtime, tab_trends, tab_datasets, tab_system, tab_tags = st.tabs([
     "⚡ Real-Time Quality",
     "📈 Quality Trends",
     "📊 Dataset Explorer",
-    "🔧 System Metrics"
+    "🔧 System Metrics",
+    "🏷️ Tags & Governance"
 ])
 
 # =============================================================================
@@ -369,6 +370,72 @@ SELECT SNOWFLAKE_EXAMPLE.DATA_QUALITY.DMF_METRIC_VALUE_VALID_PCT(
 );
 """, language="sql")
 
+# =============================================================================
+# TAB 5: Tags & Governance
+# =============================================================================
+with tab_tags:
+    st.header("Tags & Governance")
+    st.markdown("Object tags classify data assets by **domain**, **sensitivity**, and **quality tier**.")
+
+    try:
+        tag_df = session.sql("""
+            SELECT TAG_NAME, TAG_VALUE, OBJECT_NAME, DOMAIN, COLUMN_NAME, LEVEL
+            FROM SNOWFLAKE_EXAMPLE.DATA_QUALITY.V_TAG_GOVERNANCE_SUMMARY
+            ORDER BY TAG_NAME, OBJECT_NAME, COLUMN_NAME
+        """).to_pandas()
+    except Exception:
+        tag_df = pd.DataFrame()
+
+    if tag_df.empty:
+        st.warning("No tag data available. Ensure the tagging script has been deployed.")
+    else:
+        # Distribution metrics across the three tag types
+        col1, col2, col3 = st.columns(3)
+
+        domain_counts = tag_df[tag_df["TAG_NAME"] == "DATA_DOMAIN"]["TAG_VALUE"].value_counts()
+        sensitivity_counts = tag_df[tag_df["TAG_NAME"] == "DATA_SENSITIVITY"]["TAG_VALUE"].value_counts()
+        tier_counts = tag_df[tag_df["TAG_NAME"] == "DATA_QUALITY_TIER"]["TAG_VALUE"].value_counts()
+
+        with col1:
+            st.subheader("Data Domain")
+            for val, cnt in domain_counts.items():
+                st.metric(val, cnt)
+
+        with col2:
+            st.subheader("Sensitivity")
+            for val, cnt in sensitivity_counts.items():
+                st.metric(val, cnt)
+
+        with col3:
+            st.subheader("Quality Tier")
+            for val, cnt in tier_counts.items():
+                st.metric(val, cnt)
+
+        st.markdown("---")
+
+        # Full tag assignment table
+        st.subheader("All Tag Assignments")
+        display_df = tag_df.copy()
+        display_df["COLUMN_NAME"] = display_df["COLUMN_NAME"].fillna("—")
+        st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+        # Masking policy callout
+        st.markdown("---")
+        st.subheader("🔒 Tag-Based Masking")
+        st.markdown(
+            "Columns tagged `DATA_SENSITIVITY = 'CONFIDENTIAL'` are automatically masked "
+            "for non-admin roles via a **tag-based masking policy**. No per-column policy assignment needed."
+        )
+
+        confidential_cols = tag_df[
+            (tag_df["TAG_NAME"] == "DATA_SENSITIVITY") & (tag_df["TAG_VALUE"] == "CONFIDENTIAL")
+        ][["OBJECT_NAME", "COLUMN_NAME"]].reset_index(drop=True)
+
+        if not confidential_cols.empty:
+            st.dataframe(confidential_cols, use_container_width=True, hide_index=True)
+        else:
+            st.info("No CONFIDENTIAL columns found.")
+
 # Footer
 st.markdown("---")
-st.caption("Data Quality Dashboard | Powered by Snowflake Data Metric Functions | Author: SE Community")
+st.caption("Data Quality Dashboard | Powered by Snowflake Data Metric Functions & Object Tagging | Author: SE Community")
