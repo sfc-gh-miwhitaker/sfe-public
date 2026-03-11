@@ -9,6 +9,25 @@
 USE SCHEMA SNOWFLAKE_EXAMPLE.DATA_QUALITY;
 
 -- ============================================================================
+-- STEP 0: Idempotency — unset masking policy from tag so re-runs succeed
+--         (a tag cannot be replaced while a policy is attached)
+-- ============================================================================
+
+EXECUTE IMMEDIATE $$
+BEGIN
+  ALTER TAG DATA_SENSITIVITY UNSET MASKING POLICY CONFIDENTIAL_STRING_MASK;
+EXCEPTION WHEN OTHER THEN NULL;
+END;
+$$;
+
+EXECUTE IMMEDIATE $$
+BEGIN
+  DROP MASKING POLICY CONFIDENTIAL_STRING_MASK;
+EXCEPTION WHEN OTHER THEN NULL;
+END;
+$$;
+
+-- ============================================================================
 -- STEP 1: Create governance tags with constrained allowed values
 -- ============================================================================
 
