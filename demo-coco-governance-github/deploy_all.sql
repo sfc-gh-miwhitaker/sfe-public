@@ -14,15 +14,27 @@ INSTRUCTIONS: Open in Snowsight -> Click "Run All"
  * PURPOSE: Show how AGENTS.md and skills in a GitHub repo deliver consistent
  *          Cortex Code standards across CLI and Snowsight workspaces
  *
- * PREREQUISITES:
- * - ACCOUNTADMIN role access
- * - Cortex Code enabled in your account
- *
  * WARNING: NOT FOR PRODUCTION USE - EXAMPLE IMPLEMENTATION ONLY
  ******************************************************************************/
 
 -- ============================================================================
--- EXPIRATION CHECK (informational - warns but does not block)
+-- 1. ROLE + WAREHOUSE (must be first -- all subsequent ops need compute)
+-- ============================================================================
+
+USE ROLE ACCOUNTADMIN;
+
+CREATE WAREHOUSE IF NOT EXISTS SFE_COCO_GOVERNANCE_GITHUB_WH WITH
+    WAREHOUSE_SIZE = 'XSMALL'
+    AUTO_SUSPEND = 60
+    AUTO_RESUME = TRUE
+    INITIALLY_SUSPENDED = TRUE
+    STATEMENT_TIMEOUT_IN_SECONDS = 120
+    COMMENT = 'DEMO: coco-governance-github - Compute for sample queries (Expires: 2026-04-15)';
+
+USE WAREHOUSE SFE_COCO_GOVERNANCE_GITHUB_WH;
+
+-- ============================================================================
+-- 2. EXPIRATION CHECK (informational - warns but does not block)
 -- ============================================================================
 
 SELECT
@@ -38,13 +50,16 @@ SELECT
     END AS demo_status;
 
 -- ============================================================================
--- 1. SETUP CONTEXT
+-- 3. SHARED INFRASTRUCTURE (idempotent - safe to re-run)
 -- ============================================================================
 
-USE ROLE ACCOUNTADMIN;
+CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
+    COMMENT = 'DEMO: Repository for example/demo projects - NOT FOR PRODUCTION (Expires: 2026-04-15)';
+
+USE DATABASE SNOWFLAKE_EXAMPLE;
 
 -- ============================================================================
--- 2. SHARED INFRASTRUCTURE (idempotent - safe to re-run)
+-- 4. GIT REPOSITORY (enables Snowsight workspace connection)
 -- ============================================================================
 
 CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
@@ -52,13 +67,6 @@ CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
     API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-miwhitaker/sfe-public')
     ENABLED = TRUE
     COMMENT = 'Shared Git integration for sfe-public monorepo | Author: SE Community';
-
-CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
-    COMMENT = 'DEMO: Repository for example/demo projects - NOT FOR PRODUCTION (Expires: 2026-04-15)';
-
--- ============================================================================
--- 3. GIT REPOSITORY (enables Snowsight workspace connection)
--- ============================================================================
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
     COMMENT = 'Shared schema for Git repository stages across demo projects';
@@ -71,13 +79,13 @@ CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO
 ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO FETCH;
 
 -- ============================================================================
--- 4. EXECUTE SETUP (schema, warehouse, sample tables with seed data)
+-- 5. EXECUTE SETUP (schema, sample tables with seed data)
 -- ============================================================================
 
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-coco-governance-github/sql/01_setup/01_create_demo_objects.sql';
 
 -- ============================================================================
--- 5. DEPLOYMENT SUMMARY
+-- 6. DEPLOYMENT SUMMARY
 -- ============================================================================
 
 SELECT

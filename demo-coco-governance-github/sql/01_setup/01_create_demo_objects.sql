@@ -1,21 +1,12 @@
-USE ROLE ACCOUNTADMIN;
-
-CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
-    COMMENT = 'DEMO: Repository for example/demo projects - NOT FOR PRODUCTION (Expires: 2026-04-15)';
+-- ============================================================================
+-- Project-specific objects for coco-governance-github
+-- Inherits role, warehouse, and database context from deploy_all.sql
+-- ============================================================================
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB
     COMMENT = 'DEMO: coco-governance-github - GitHub-powered project tooling for Cortex Code (Expires: 2026-04-15)';
 
-CREATE WAREHOUSE IF NOT EXISTS SFE_COCO_GOVERNANCE_GITHUB_WH WITH
-    WAREHOUSE_SIZE = 'XSMALL'
-    AUTO_SUSPEND = 60
-    AUTO_RESUME = TRUE
-    INITIALLY_SUSPENDED = TRUE
-    STATEMENT_TIMEOUT_IN_SECONDS = 120
-    COMMENT = 'DEMO: coco-governance-github - Compute for sample queries (Expires: 2026-04-15)';
-
 USE SCHEMA SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB;
-USE WAREHOUSE SFE_COCO_GOVERNANCE_GITHUB_WH;
 
 -- ---------------------------------------------------------------------------
 -- Sample tables -- give Cortex Code something real to write queries against
