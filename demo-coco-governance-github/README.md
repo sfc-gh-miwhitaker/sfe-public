@@ -2,6 +2,8 @@
 
 <!-- DEMO_STATUS: ACTIVE | Expires: 2026-04-15 -->
 
+![Expires](https://img.shields.io/badge/Expires-2026--04--15-yellow)
+
 > [!CAUTION]
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -11,26 +13,16 @@ Same `AGENTS.md`, same skill, both surfaces. Store your project standards in a G
 
 ## Quick Start
 
-### Path A: Cortex Code CLI
+**Deploy in Snowsight (no clone needed):**
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
 
+**Develop with Cortex Code:**
 ```bash
-git clone https://github.com/sfc-gh-miwhitaker/sfe-public.git
-cd sfe-public/demo-coco-governance-github
-cortex
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-coco-governance-github
+cd sfe-public/demo-coco-governance-github && cortex
 ```
 
-Ask Cortex Code: *"Write a query that finds the top 5 customers by total order amount"*
-
-The standards in `AGENTS.md` are already active.
-
-### Path B: Cortex Code in Snowsight
-
-1. Open `deploy_all.sql` in a Snowsight worksheet and click **Run All**
-2. Go to **Projects > Workspaces > Create > From Git repository**
-3. Paste: `https://github.com/sfc-gh-miwhitaker/sfe-public`
-4. Open the Cortex Code panel and try the same prompt
-
-Same standards, same behavior, same repo.
+The standards in `AGENTS.md` are already active. Try: *"Write a query that finds the top 5 customers by total order amount"*
 
 ## Three Acts
 
@@ -80,6 +72,17 @@ Same standards, same behavior, same repo.
 - Cortex Code CLI installed ([install guide](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli))
 - Cortex Code enabled in Snowsight ([docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-snowsight))
 - GitHub account (for Act 2 MCP setup)
+
+## Development Tools
+
+This project is pair-programmed with AI coding assistants. The following files configure their behavior:
+
+| File | Purpose |
+|------|---------|
+| `AGENTS.md` | Project context and standards -- loaded automatically by Cortex Code, Cursor, and Claude Code |
+| `.claude/skills/demo-coco-governance-github/SKILL.md` | SQL review procedure skill -- invoked on demand for structured code review |
+
+These files are the demo's primary deliverable. They demonstrate how project tooling in a Git repo serves both CLI and Snowsight surfaces.
 
 ## Cleanup
 

@@ -11,18 +11,22 @@ flowchart LR
     Repo["GitHub Repo
     (AGENTS.md + skills)"]
 
-    Repo -->|"git clone"| CLI["Cortex Code CLI
+    Repo -->|"get-project.sh"| CLI["Cortex Code CLI
     Standards active immediately"]
 
     Repo -->|"From Git repository"| Snowsight["Snowsight Workspace
     Standards active immediately"]
 ```
 
-**CLI path:** `git clone <repo>` -> `cd` into project -> `cortex`
+**CLI path:**
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-coco-governance-github
+cd sfe-public/demo-coco-governance-github && cortex
+```
 
 **Snowsight path:** Projects > Workspaces > Create > From Git repository -> paste URL
 
-No setup scripts. No config files to copy. No "ask your tech lead for the standards doc." Clone or connect, and the standards are live.
+No setup scripts. No config files to copy. No "ask your tech lead for the standards doc." Get the project or connect, and the standards are live.
 
 ## 2. Standards Evolution via Pull Requests
 

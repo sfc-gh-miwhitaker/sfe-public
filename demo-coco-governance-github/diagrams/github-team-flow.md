@@ -7,7 +7,7 @@ flowchart LR
     Repo["GitHub Repo
     AGENTS.md + skills"]
 
-    Repo -->|"git clone"| CLI["CLI Developer
+    Repo -->|"get-project.sh"| CLI["CLI Developer
     Standards active"]
 
     Repo -->|"From Git repository"| SS["Snowsight Developer

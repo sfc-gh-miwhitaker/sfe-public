@@ -12,7 +12,7 @@ flowchart TB
     end
 
     subgraph cli ["Cortex Code CLI"]
-        Clone["git clone"] --> CDDir["cd into project"]
+        Clone["get-project.sh"] --> CDDir["cd into project"]
         CDDir --> Cortex["cortex"]
         Cortex --> CLIActive["AGENTS.md active
         Skill available via /skill list"]

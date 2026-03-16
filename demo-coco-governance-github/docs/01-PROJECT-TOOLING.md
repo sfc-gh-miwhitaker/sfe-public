@@ -1,6 +1,6 @@
 # Act 1: Project Tooling -- Same Files, Both Surfaces
 
-The core idea: an `AGENTS.md` file and a custom skill live in a GitHub repo. Clone the repo for CLI. Connect a workspace for Snowsight. Cortex Code reads the same project tooling on both surfaces automatically.
+The core idea: an `AGENTS.md` file and a custom skill live in a GitHub repo. Get the project for CLI. Connect a workspace for Snowsight. Cortex Code reads the same project tooling on both surfaces automatically.
 
 No custom agents. No SQL functions. The files ARE the tooling.
 
@@ -21,12 +21,12 @@ These two files embody the **always-on vs on-demand** split:
 ### Setup
 
 ```bash
-git clone https://github.com/sfc-gh-miwhitaker/sfe-public.git
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-coco-governance-github
 cd sfe-public/demo-coco-governance-github
 cortex
 ```
 
-That's it. Cortex Code CLI reads `AGENTS.md` from the working directory and loads skills from `.claude/skills/`.
+This clones only this project (not the full monorepo) using git sparse-checkout. Cortex Code CLI reads `AGENTS.md` from the working directory and loads skills from `.claude/skills/`.
 
 ### Verify
 
@@ -103,7 +103,7 @@ You should see the same standards applied: explicit columns, `QUALIFY` for ranki
 
 | Aspect | CLI | Snowsight |
 |--------|-----|-----------|
-| How AGENTS.md is loaded | From working directory (`cd` into repo) | From Git-connected workspace |
+| How AGENTS.md is loaded | From working directory (`cd` into project) | From Git-connected workspace |
 | How skills are loaded | From `.claude/skills/` in repo | Personal skills in workspace |
 | How standards are applied | Every conversation, automatically | Every conversation, automatically |
 | How you test | Ask CoCo to write/review SQL | Ask CoCo to write/review SQL |
