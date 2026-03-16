@@ -1,5 +1,5 @@
 /*==============================================================================
-DEPLOY ALL - Governed GitHub Integration for Cortex Code
+DEPLOY ALL - GitHub-Powered Project Tooling for Cortex Code
 Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-15
 INSTRUCTIONS: Open in Snowsight -> Click "Run All"
 ==============================================================================*/
@@ -11,13 +11,12 @@ INSTRUCTIONS: Open in Snowsight -> Click "Run All"
  * CREATED: 2026-03-16
  * EXPIRES: 2026-04-15
  * GITHUB_REPO: sfe-public
- * PURPOSE: Governed GitHub MCP integration with progressive unlock pattern
+ * PURPOSE: Show how AGENTS.md and skills in a GitHub repo deliver consistent
+ *          Cortex Code standards across CLI and Snowsight workspaces
  *
  * PREREQUISITES:
  * - ACCOUNTADMIN role access
- * - Cortex AI enabled in your account
- * - GitHub PAT or 1Password CLI (for MCP configuration)
- * - Completed general governance workshop (recommended)
+ * - Cortex Code enabled in your account
  *
  * WARNING: NOT FOR PRODUCTION USE - EXAMPLE IMPLEMENTATION ONLY
  ******************************************************************************/
@@ -58,21 +57,7 @@ CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE
     COMMENT = 'DEMO: Repository for example/demo projects - NOT FOR PRODUCTION (Expires: 2026-04-15)';
 
 -- ============================================================================
--- 3. CREATE SCHEMA + WAREHOUSE
--- ============================================================================
-
-CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB
-    COMMENT = 'DEMO: coco-governance-github - Governed GitHub MCP integration for Cortex Code (Expires: 2026-04-15)';
-
-CREATE WAREHOUSE IF NOT EXISTS SFE_COCO_GOVERNANCE_GITHUB_WH WITH
-    WAREHOUSE_SIZE = 'XSMALL'
-    AUTO_SUSPEND = 60
-    AUTO_RESUME = TRUE
-    INITIALLY_SUSPENDED = TRUE
-    COMMENT = 'DEMO: coco-governance-github - Compute for governance advisor queries (Expires: 2026-04-15)';
-
--- ============================================================================
--- 4. GIT REPOSITORY
+-- 3. GIT REPOSITORY (enables Snowsight workspace connection)
 -- ============================================================================
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
@@ -86,19 +71,17 @@ CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO
 ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO FETCH;
 
 -- ============================================================================
--- 5. EXECUTE SETUP SCRIPTS
+-- 4. EXECUTE SETUP (schema, warehouse, sample tables with seed data)
 -- ============================================================================
 
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-coco-governance-github/sql/01_setup/01_create_demo_objects.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-coco-governance-github/sql/01_setup/02_create_audit_tables.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-coco-governance-github/sql/01_setup/04_create_policy_check_function.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-coco-governance-github/sql/01_setup/03_create_governance_advisor.sql';
 
 -- ============================================================================
--- 6. DEPLOYMENT SUMMARY
+-- 5. DEPLOYMENT SUMMARY
 -- ============================================================================
 
 SELECT
     'Deployment complete!' AS status,
     CURRENT_TIMESTAMP() AS completed_at,
-    'Ask GOVERNANCE_ADVISOR: Am I ready to enable GitHub?' AS next_step;
+    'SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB' AS schema_created,
+    'Try: ask Cortex Code to write a query against the ORDERS table' AS next_step;

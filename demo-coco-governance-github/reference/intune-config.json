@@ -1,0 +1,53 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/Intune-ACMG/main/schema/intune-custom-config.schema.json",
+
+  "_comment": [
+    "Microsoft Intune Custom Configuration for Cortex Code",
+    "",
+    "INSTRUCTIONS:",
+    "1. Replace [Your Company] with your organization name",
+    "2. Create a Custom Configuration Profile in Intune",
+    "3. Deploy via Intune Scripts (shell/PowerShell) to write the config file",
+    "",
+    "NOTE: Intune doesn't directly support arbitrary file deployment.",
+    "Use Intune Scripts (shell/PowerShell) to deploy the config file."
+  ],
+
+  "displayName": "Cortex Code Governance Policy",
+  "description": "Organization security policy for Cortex Code CLI",
+
+  "platforms": ["macOS", "linux"],
+
+  "settings": {
+    "cortex_managed_settings": {
+      "version": "1.0",
+      "permissions": {
+        "dangerouslyAllowAll": false,
+        "defaultMode": "allow"
+      },
+      "settings": {
+        "forceSandboxEnabled": true,
+        "forceSandboxMode": "regular"
+      },
+      "required": {
+        "minimumVersion": "1.0.0"
+      },
+      "ui": {
+        "showManagedBanner": true,
+        "bannerText": "[Your Company] Managed",
+        "hideDangerousOptions": true
+      }
+    }
+  },
+
+  "_deployment_scripts": {
+    "macOS": {
+      "language": "bash",
+      "script": "#!/bin/bash\nmkdir -p '/Library/Application Support/Cortex'\ncat > '/Library/Application Support/Cortex/managed-settings.json' << 'EOF'\n{\n  \"version\": \"1.0\",\n  \"permissions\": {\n    \"dangerouslyAllowAll\": false,\n    \"defaultMode\": \"allow\"\n  },\n  \"settings\": {\n    \"forceSandboxEnabled\": true\n  },\n  \"ui\": {\n    \"showManagedBanner\": true,\n    \"bannerText\": \"[Your Company] Managed\",\n    \"hideDangerousOptions\": true\n  }\n}\nEOF\nchmod 644 '/Library/Application Support/Cortex/managed-settings.json'"
+    },
+    "linux": {
+      "language": "bash",
+      "script": "#!/bin/bash\nmkdir -p /etc/cortex\ncat > /etc/cortex/managed-settings.json << 'EOF'\n{\n  \"version\": \"1.0\",\n  \"permissions\": {\n    \"dangerouslyAllowAll\": false,\n    \"defaultMode\": \"allow\"\n  },\n  \"settings\": {\n    \"forceSandboxEnabled\": true\n  },\n  \"ui\": {\n    \"showManagedBanner\": true,\n    \"bannerText\": \"[Your Company] Managed\",\n    \"hideDangerousOptions\": true\n  }\n}\nEOF\nchmod 644 /etc/cortex/managed-settings.json"
+    }
+  }
+}

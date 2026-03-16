@@ -1,86 +1,79 @@
 ---
 name: demo-coco-governance-github
-description: "Governed GitHub MCP integration for Cortex Code. Progressive unlock pattern where governance gates external tool connections. Triggers: github governance, MCP governance, progressive unlock, governed github, managed-settings MCP, github mcp setup, copilot cortex bridge."
+description: SQL review procedure for project standards. Use when reviewing SQL code, checking query quality, auditing naming conventions, or validating Snowflake best practices against team standards.
 ---
 
-# Governed GitHub Integration for Cortex Code
+# SQL Review Procedure
 
-## Purpose
+Review SQL code against the project standards defined in AGENTS.md. This skill provides a step-by-step procedure -- the rules themselves live in AGENTS.md (always-on) and this skill is invoked on demand for structured review.
 
-Demonstrate the progressive unlock pattern: GitHub MCP integration for Cortex Code is gated by organization governance. A Cortex Agent validates governance readiness before GitHub tools become available. Includes future architecture for GitHub Copilot delegating Snowflake work to Cortex.
+## When to Activate
 
-## Architecture
+- User asks to "review", "check", or "audit" SQL code
+- User asks about query quality, naming conventions, or best practices
+- User submits SQL and wants feedback before running it
+
+## Review Procedure
+
+### Step 1: Collect the SQL
+
+Identify the SQL to review. If the user hasn't provided it, ask for it. Accept SQL from:
+- Pasted code in the conversation
+- A file path (read it)
+- "Review the last query I wrote"
+
+### Step 2: Check Query Quality
+
+Run through each rule in order. For each violation found, quote the offending line and show the fix.
+
+1. **SELECT * check** -- Are all columns listed explicitly? If `SELECT *` appears, flag it and list the columns from the target table.
+2. **Sargable predicates** -- Are there functions wrapping columns in WHERE clauses? Flag `YEAR(col)`, `MONTH(col)`, `UPPER(col)`, `TRIM(col)` patterns and show the range-predicate alternative.
+3. **QUALIFY usage** -- Is there a subquery or CTE just to filter on a window function result? Flag it and show the QUALIFY rewrite.
+4. **Join type safety** -- Do join keys have matching types? Flag implicit casts (e.g., joining VARCHAR to NUMBER).
+5. **Timeout safety** -- For DDL that creates warehouses, is STATEMENT_TIMEOUT_IN_SECONDS set?
+
+### Step 3: Check Naming Conventions
+
+1. **Warehouse names** -- Must follow `SFE_<PROJECT>_WH` pattern
+2. **Table names** -- Must follow `RAW_`, `STG_`, or plain `<ENTITY>` convention
+3. **Object comments** -- Every CREATE must include `COMMENT = 'DEMO: ...'` with expiration date
+
+### Step 4: Check Security
+
+1. **No hardcoded credentials** -- Scan for patterns: `ghp_`, `sk-`, `password`, API keys, connection strings
+2. **No account identifiers** -- Scan for Snowflake locator patterns (e.g., `xy12345.us-east-1`)
+3. **Attribution** -- If there's an author line, it should say `Pair-programmed by SE Community + Cortex Code`
+
+### Step 5: Report
+
+Format the review as:
 
 ```
-IT Admin                          Developer
-   │                                 │
-   ▼                                 │
-managed-settings.json                │
-(MDM deploy)                         │
-   │                                 │
-   ▼                                 │
-MCP policy: allowed ─────────────────▶ mcp.json (GitHub MCP)
-                                     │
-                                     ▼
-                              Toolset scoping
-                              (minimal/standard/full)
-                                     │
-                                     ▼
-GOVERNANCE_ADVISOR ◄──── "Am I ready?" queries
-   │
-   ▼
-VALIDATE_GOVERNANCE_POLICY (UDF)
-   │
-   ▼
-GOVERNANCE_POLICY_LOG + MCP_CONNECTION_AUDIT
+## SQL Review Results
+
+**Reviewed:** <description of what was reviewed>
+**Verdict:** PASS | NEEDS FIXES (<count> issues)
+
+### Issues Found
+1. [QUALITY] <description> -- Line: <line> -- Fix: <fix>
+2. [NAMING] <description> -- Fix: <fix>
+...
+
+### What Looks Good
+- <positive observations>
 ```
 
-## Key Files
+If no issues are found, report PASS with positive observations only.
 
-| File | Role |
-|------|------|
-| `deploy_all.sql` | Single entry point for Snowsight deployment |
-| `sql/01_setup/01_create_demo_objects.sql` | Schema, warehouse creation |
-| `sql/01_setup/02_create_audit_tables.sql` | Governance and MCP audit tables |
-| `sql/01_setup/03_create_governance_advisor.sql` | CREATE AGENT DDL |
-| `sql/01_setup/04_create_policy_check_function.sql` | VALIDATE_GOVERNANCE_POLICY UDF |
-| `docs/02-GOVERNANCE-FIRST.md` | Progressive unlock concept (the thesis) |
-| `docs/03-GITHUB-MCP-SETUP.md` | Secure GitHub MCP configuration |
-| `reference/managed-settings-mcp-enabled.json` | Org policy enabling MCP |
-| `reference/mcp-github-1password.json` | 1Password-secured GitHub MCP template |
+## Extension: Adding New Rules
 
-## Adding a New Governance Check
-
-1. Add a new validation query to `VALIDATE_GOVERNANCE_POLICY` function
-2. Insert a row into `GOVERNANCE_POLICY_LOG` for the new check type
-3. Update the agent's `instructions.orchestration` to reference the new check
-4. Recreate the agent: `CREATE OR REPLACE AGENT ... FROM SPECIFICATION $$...$$;`
-5. Test: ask the advisor about the new governance dimension
-6. Update `docs/02-GOVERNANCE-FIRST.md` with the new check
-
-## Adding a New MCP Toolset Profile
-
-1. Create `reference/toolset-profiles/<profile-name>.json` with enabled toolsets
-2. Add the profile to the comparison table in `docs/04-TOOLSET-SCOPING.md`
-3. Insert a row into `MCP_CONNECTION_AUDIT` for the new profile
-4. Update `VALIDATE_GOVERNANCE_POLICY` to recognize the new profile
-
-## Snowflake Objects
-
-| Object | Name |
-|--------|------|
-| Schema | `SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB` |
-| Warehouse | `SFE_COCO_GOVERNANCE_GITHUB_WH` |
-| Agent | `GOVERNANCE_ADVISOR` |
-| Function | `VALIDATE_GOVERNANCE_POLICY(VARCHAR)` |
-| Table | `GOVERNANCE_POLICY_LOG` |
-| Table | `MCP_CONNECTION_AUDIT` |
+When the team discovers a new pattern that should be caught:
+1. Add the rule to AGENTS.md under the appropriate section
+2. Add a corresponding check step in this skill under the appropriate phase
+3. Open a PR so the team reviews the new rule before it applies to everyone
 
 ## Gotchas
 
-- managed-settings.json is OS-specific: macOS `/Library/Application Support/Cortex/`, Linux `/etc/cortex/`
-- mcp.json lives at `~/.snowflake/cortex/mcp.json` (not in the project)
-- GitHub MCP server is `@modelcontextprotocol/server-github` (npm package)
-- Toolset scoping uses `--toolsets` flag on the GitHub MCP server, not managed-settings
-- The progressive unlock is conceptual (governance awareness), not a hard technical gate
-- SHOW AGENTS not SHOW CORTEX AGENTS
+- This skill reviews against THIS project's standards. Other projects may have different conventions.
+- AGENTS.md rules are always-on (applied every session). This skill is on-demand (invoked explicitly or by trigger).
+- After context compaction in long sessions, re-read AGENTS.md if standards seem forgotten.

@@ -1,128 +1,90 @@
-![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
-![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--04--15-orange)
-![Status](https://img.shields.io/badge/Status-Active-success)
+# GitHub-Powered Project Tooling for Cortex Code
 
-# Governed GitHub Integration for Cortex Code
+<!-- DEMO_STATUS: ACTIVE | Expires: 2026-04-15 -->
 
-> **DEMONSTRATION PROJECT - EXPIRES: 2026-04-15**
-> This demo uses Snowflake features current as of March 2026.
-> After expiration, a warning banner will be added to this README and deploy_all.sql.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> [!CAUTION]
+> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
-**Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-16 | **Expires:** 2026-04-15 | **Status:** ACTIVE
+Same `AGENTS.md`, same skill, both surfaces. Store your project standards in a GitHub repo. Cortex Code reads them automatically in CLI (from your clone) and in Snowsight (from a Git-connected workspace). GitHub's collaboration features become your team management layer. Intune adds the enterprise wrapper.
 
----
+**Time:** ~30 minutes | **Result:** Working project tooling on CLI + Snowsight
 
-**Enable GitHub MCP integration for Cortex Code — only after governance is in place.**
+## Quick Start
 
-This demo implements the **progressive unlock** pattern: GitHub tooling is blocked by default and only becomes available after organization governance is deployed and validated. A Cortex Agent acts as a governance advisor, answering "Am I ready to enable GitHub?"
+### Path A: Cortex Code CLI
 
----
+```bash
+git clone https://github.com/sfc-gh-miwhitaker/sfe-public.git
+cd sfe-public/demo-coco-governance-github
+cortex
+```
 
-## Brand New to GitHub or Cortex Code?
+Ask Cortex Code: *"Write a query that finds the top 5 customers by total order amount"*
 
-Start with the [Getting Started Guide](../guide-coco-setup/) -- it walks you through downloading the code and installing Cortex Code (the AI assistant that will help you with everything else).
+The standards in `AGENTS.md` are already active.
+
+### Path B: Cortex Code in Snowsight
+
+1. Open `deploy_all.sql` in a Snowsight worksheet and click **Run All**
+2. Go to **Projects > Workspaces > Create > From Git repository**
+3. Paste: `https://github.com/sfc-gh-miwhitaker/sfe-public`
+4. Open the Cortex Code panel and try the same prompt
+
+Same standards, same behavior, same repo.
+
+## Three Acts
+
+| Act | What | Doc |
+|-----|------|-----|
+| **1. Project Tooling** | `AGENTS.md` + custom skill work in both CLI and Snowsight | [docs/01-PROJECT-TOOLING.md](docs/01-PROJECT-TOOLING.md) |
+| **2. GitHub Team Management** | PRs, Issues, branch protection, and GitHub MCP for team-wide standards | [docs/02-GITHUB-TEAM-MANAGEMENT.md](docs/02-GITHUB-TEAM-MANAGEMENT.md) |
+| **3. Intune Enterprise** | `managed-settings.json` via MDM for org-level enforcement | [docs/03-INTUNE-ENTERPRISE.md](docs/03-INTUNE-ENTERPRISE.md) |
+
+## What's in the Repo
+
+### Project tooling (the core deliverable)
+
+| File | Purpose |
+|------|---------|
+| `AGENTS.md` | Project standards -- loaded automatically by Cortex Code on both surfaces |
+| `.claude/skills/.../SKILL.md` | SQL review procedure -- invoked on demand |
+
+### Supporting SQL
+
+| Object | Purpose |
+|--------|---------|
+| Schema: `SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB` | Demo workspace |
+| Warehouse: `SFE_COCO_GOVERNANCE_GITHUB_WH` | Compute for sample queries |
+| Tables: `CUSTOMERS`, `ORDERS`, `PRODUCTS` | Sample data to test standards against |
+
+### Reference configs
+
+| File | Purpose |
+|------|---------|
+| `reference/mcp-github-1password.json` | GitHub MCP config with 1Password (recommended) |
+| `reference/mcp-github-pat.json` | GitHub MCP config with PAT |
+| `reference/managed-settings-mcp-enabled.json` | Org-level managed settings template |
+| `reference/intune-config.json` | Intune deployment config for managed-settings |
+
+### Diagrams
+
+| File | Shows |
+|------|-------|
+| `diagrams/dual-surface.md` | CLI and Snowsight reading the same AGENTS.md |
+| `diagrams/github-team-flow.md` | Team onboarding and standards evolution cycle |
+| `diagrams/governance-stack.md` | Three-layer stack: project, team, enterprise |
 
 ## Prerequisites
 
-- [ ] Completed the [general governance workshop](../guide-coco-governance-general/) (or equivalent knowledge)
-- [ ] Cortex Code CLI installed and connected
-- [ ] GitHub Personal Access Token (or 1Password CLI configured)
-- [ ] ACCOUNTADMIN role access in Snowflake
+- ACCOUNTADMIN role access (for `deploy_all.sql`)
+- Cortex Code CLI installed ([install guide](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli))
+- Cortex Code enabled in Snowsight ([docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-snowsight))
+- GitHub account (for Act 2 MCP setup)
 
-## First Time Here?
+## Cleanup
 
-1. **Deploy** -- Copy `deploy_all.sql` into Snowsight, click "Run All"
-2. **Ask the advisor** -- In Snowflake Intelligence, ask `GOVERNANCE_ADVISOR`: "Am I ready to enable GitHub?"
-3. **Configure governance** -- Follow [docs/02-GOVERNANCE-FIRST.md](docs/02-GOVERNANCE-FIRST.md)
-4. **Enable GitHub MCP** -- Follow [docs/03-GITHUB-MCP-SETUP.md](docs/03-GITHUB-MCP-SETUP.md)
-5. **Scope toolsets** -- Follow [docs/04-TOOLSET-SCOPING.md](docs/04-TOOLSET-SCOPING.md)
-6. **Verify** -- Ask the advisor again: "Am I ready now?"
-7. **Cleanup** -- Run `teardown_all.sql` when done
-
-**Total setup time: ~30 minutes** (after general governance workshop)
-
-## The Progressive Unlock Model
-
-```
-  No Governance             Governance Deployed          GitHub Enabled
-  ─────────────             ───────────────────          ──────────────
-  MCP: blocked              MCP: allowed (constrained)   MCP: active
-  Agent: "not ready"        Agent: "ready to connect"    Agent: "connected"
-  GitHub: unavailable       GitHub: configurable         GitHub: scoped toolsets
-```
-
-| Phase | Gate | What Unlocks |
-|-------|------|--------------|
-| 1. Deploy Snowflake objects | `deploy_all.sql` | Governance advisor agent |
-| 2. Deploy managed-settings | IT deploys org policy | MCP connections allowed |
-| 3. Configure GitHub MCP | User adds mcp.json | GitHub tools available |
-| 4. Scope toolsets | Admin selects profile | Only approved GitHub ops |
-
-## Development Tools
-
-This project is designed for AI-pair development.
-
-- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
-- **.claude/skills/** -- Project-specific AI skill teaching the AI this project's patterns
-- **Cortex Code in Snowsight** -- Open in a Workspace for AI-assisted development
-- **Cursor** -- Open locally for AI-pair coding
-
-> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
+Run `teardown_all.sql` in Snowsight to remove all Snowflake objects.
 
 ---
 
-## What This Creates
-
-| Object Type | Name | Purpose |
-|---|---|---|
-| Schema | `SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB` | Demo workspace |
-| Warehouse | `SFE_COCO_GOVERNANCE_GITHUB_WH` | Demo compute |
-| Table | `GOVERNANCE_POLICY_LOG` | Tracks governance config deployment events |
-| Table | `MCP_CONNECTION_AUDIT` | Tracks MCP connection configurations |
-| Function | `VALIDATE_GOVERNANCE_POLICY` | Checks governance readiness |
-| Agent | `GOVERNANCE_ADVISOR` | Answers "Am I ready to enable GitHub?" |
-
-## Future: Copilot-to-Cortex Bridge
-
-This demo lays the groundwork for a future integration where GitHub Copilot delegates Snowflake-specific work to Cortex Code as a subagent. See [future/copilot-cortex-bridge.md](future/copilot-cortex-bridge.md) for the architecture.
-
----
-
-## Complete Cleanup
-
-```sql
--- Run in Snowsight:
--- teardown_all.sql
-```
-
-Removes: Agent, function, tables, schema, warehouse.
-Preserves: SNOWFLAKE_EXAMPLE database, Git integration.
-
----
-
-## Reference
-
-**Snowflake Documentation:**
-- [Cortex Code CLI Settings](https://docs.snowflake.com/en/user-guide/cortex-code/settings)
-- [Cortex Code CLI Extensibility](https://docs.snowflake.com/en/user-guide/cortex-code/extensibility)
-- [Security Best Practices](https://docs.snowflake.com/en/user-guide/cortex-code/security)
-- [CREATE AGENT](https://docs.snowflake.com/en/sql-reference/sql/create-agent)
-
-**GitHub Documentation:**
-- [About MCP in GitHub Copilot](https://docs.github.com/en/copilot/concepts/context/mcp)
-- [GitHub MCP Server](https://github.com/github/github-mcp-server)
-
-**Related Projects:**
-- [General Governance Workshop](../guide-coco-governance-general/) -- Tool-agnostic governance fundamentals
-- [Cortex Code Setup Guide](../guide-coco-setup/) -- Install and configure basics
-
----
-
-## License
-
-This demo project is provided as-is for educational purposes.
-
-**Snowflake Terms:** [snowflake.com/legal](https://www.snowflake.com/legal/)
+*Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-15*
