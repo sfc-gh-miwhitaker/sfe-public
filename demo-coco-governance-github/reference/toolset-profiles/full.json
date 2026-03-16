@@ -1,0 +1,6 @@
+{
+  "description": "Full toolset - all GitHub MCP capabilities",
+  "toolsets": "all",
+  "use_case": "Power users, CI/CD integration, admin workflows",
+  "restrictions": "None - all toolsets enabled"
+}

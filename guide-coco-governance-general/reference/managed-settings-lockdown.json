@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+
+  "permissions": {
+    "dangerouslyAllowAll": false,
+    "onlyAllow": [
+      "account(mycompany-prod)",
+      "account(mycompany-staging)",
+      "account(mycompany-dev)"
+    ],
+    "deny": [],
+    "defaultMode": "deny"
+  },
+
+  "settings": {
+    "forceNoHistoryMode": false,
+    "forceSandboxEnabled": true,
+    "forceSandboxMode": "regular"
+  },
+
+  "required": {
+    "minimumVersion": "1.0.0"
+  },
+
+  "defaults": {
+    "connectionName": "prod",
+    "profileName": "corporate",
+    "theme": "dark"
+  },
+
+  "ui": {
+    "showManagedBanner": true,
+    "bannerText": "[SECURE] Approved Accounts Only",
+    "hideDangerousOptions": true
+  }
+}

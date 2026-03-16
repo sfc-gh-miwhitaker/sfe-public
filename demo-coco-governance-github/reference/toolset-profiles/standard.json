@@ -1,0 +1,6 @@
+{
+  "description": "Standard toolset - repos + issues",
+  "toolsets": "repos,issues",
+  "use_case": "Daily development, issue tracking, PR reviews",
+  "restrictions": "No pull request creation, no code search, no user management"
+}

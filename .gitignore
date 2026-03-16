@@ -86,3 +86,7 @@ package-lock.json
 *.swp
 *.swo
 *~
+
+# ---- Audit Output (applyrules --monorepo) ----
+audit_reports/
+AUDIT_REPORT.md

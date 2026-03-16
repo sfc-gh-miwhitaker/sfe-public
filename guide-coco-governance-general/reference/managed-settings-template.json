@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+
+  "permissions": {
+    "dangerouslyAllowAll": false,
+    "defaultMode": "allow"
+  },
+
+  "settings": {
+    "forceSandboxEnabled": true,
+    "forceSandboxMode": "regular"
+  },
+
+  "required": {
+    "minimumVersion": "1.0.0"
+  },
+
+  "defaults": {
+    "connectionName": "default",
+    "theme": "dark"
+  },
+
+  "ui": {
+    "showManagedBanner": true,
+    "bannerText": "[COMPANY] Managed",
+    "hideDangerousOptions": true
+  }
+}

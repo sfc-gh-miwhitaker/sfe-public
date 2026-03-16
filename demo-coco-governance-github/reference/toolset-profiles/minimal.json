@@ -1,0 +1,6 @@
+{
+  "description": "Minimal toolset - read-only repository access",
+  "toolsets": "repos",
+  "use_case": "Governance review, code browsing, branch inspection",
+  "restrictions": "No issue or PR access, no write operations"
+}
