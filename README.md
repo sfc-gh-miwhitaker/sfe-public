@@ -17,6 +17,7 @@ quadrantChart
     quadrant-3 Foundations
     quadrant-4 Quick Wins
     guide-csv-import: [0.15, 0.15]
+    guide-cost-drivers: [0.25, 0.20]
     guide-coco-setup: [0.3, 0.65]
     tool-cost-intelligence: [0.35, 0.55]
     demo-dataquality: [0.45, 0.35]
