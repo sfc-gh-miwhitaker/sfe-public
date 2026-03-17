@@ -18,9 +18,11 @@
 
 **Deploy in Snowsight (no clone needed):**
 
-1. Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**
+1. Copy [`deploy_standalone.sql`](deploy_standalone.sql) into a Snowsight worksheet and click **Run All**
 2. Open **Snowflake Intelligence** and find **DR Cost Estimator**
 3. Click a suggested prompt or ask your own question
+
+> **Two deploy options:** `deploy_standalone.sql` is self-contained (no Git integration needed -- just paste and run). `deploy.sql` uses Git integration for automatic updates when the repo changes.
 
 **Develop with Cortex Code:**
 ```bash
@@ -36,7 +38,7 @@ Start with the [Getting Started Guide](../guide-coco-setup/) -- it walks you thr
 
 **This is a 100% Snowflake-native tool. No local setup required!**
 
-1. `deploy.sql` -- Deploy all objects in Snowsight (5 min)
+1. `deploy_standalone.sql` -- Deploy all objects in Snowsight (5 min, no Git integration)
 2. Open Snowflake Intelligence -- find **DR Cost Estimator** agent
 3. Click a suggested prompt to get started immediately
 4. `teardown.sql` -- Remove everything when done
@@ -49,6 +51,7 @@ Start with the [Getting Started Guide](../guide-coco-setup/) -- it walks you thr
 - Hybrid-table-aware database sizing (hybrid tables are skipped during replication)
 - Pre-loaded Business Critical pricing rates for AWS, Azure, and GCP regions (60 entries)
 - Custom cost projection tool for deterministic calculations
+- Pricing admin procedure (`UPDATE_PRICING`) for rate management without direct table access
 - Backward-looking actual replication cost analysis (if replication is configured)
 - Built-in charting for region comparisons and cost breakdowns
 - Semantic view powering accurate SQL generation from natural language

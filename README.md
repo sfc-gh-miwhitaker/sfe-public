@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-25-blue)
+![Projects](https://img.shields.io/badge/Projects-24-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -64,7 +64,7 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 | Directory | Description | Features |
 |---|---|---|
 | [tool-cortex-cost-intelligence](tool-cortex-cost-intelligence/) | Cortex cost governance with semantic views and Cortex Agents | ACCOUNT_USAGE, Semantic Views, Cortex Agents, Streamlit |
-| [tool-replication-cost-calculator](tool-replication-cost-calculator/) | Streamlit DR Replication Cost Calculator for Business Critical | Streamlit, Replication Metadata |
+| [tool-dr-cost-agent](tool-dr-cost-agent/) | DR replication cost estimation agent with hybrid table awareness | Snowflake Intelligence, Semantic Views, ACCOUNT_USAGE |
 | [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |
 | [tool-streamlit-contact-form](tool-streamlit-contact-form/) | Streamlit form that writes submissions to a Snowflake table | Streamlit in Snowflake, Snowpark |
 | [tool-api-data-fetcher](tool-api-data-fetcher/) | Python stored procedure that fetches from a REST API via external access | External Access, Python Stored Procedures |
