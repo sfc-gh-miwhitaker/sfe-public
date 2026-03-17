@@ -13,30 +13,30 @@ One-time setup:
     openssl rsa -in rsa_key.pem -pubout -out rsa_key.pub
 
     # 2. Get public key content (strip header/footer)
-    grep -v "BEGIN\|END" rsa_key.pub | tr -d '\\n'
+    grep -v "BEGIN\\|END" rsa_key.pub | tr -d '\\n'
 
     # 3. Assign to Snowflake user (run as ACCOUNTADMIN)
     ALTER USER MY_SERVICE_USER SET RSA_PUBLIC_KEY='MIIBIjANBgkqhki...';
 
 Prerequisites:
-    export SNOWFLAKE_ACCOUNT="myorg-myaccount"
-    export SNOWFLAKE_USER="MY_SERVICE_USER"
-    export SNOWFLAKE_PRIVATE_KEY_PATH="./rsa_key.pem"
-    pip install anthropic httpx cryptography
+    cp .env.example .env   # fill in your credentials
+    pip3 install -r requirements.txt
 
 Usage:
-    python python/06_keypair_auth.py
+    python3 python/06_keypair_auth.py
 """
 
 import os
 import sys
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 missing = [v for v in ("SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER", "SNOWFLAKE_PRIVATE_KEY_PATH") if not os.environ.get(v)]
 if missing:
     print(f"ERROR: Missing environment variable(s): {', '.join(missing)}")
-    print("  export SNOWFLAKE_ACCOUNT=\"myorg-myaccount\"")
-    print("  export SNOWFLAKE_USER=\"MY_SERVICE_USER\"")
-    print("  export SNOWFLAKE_PRIVATE_KEY_PATH=\"./rsa_key.pem\"")
+    print("  Add them to your .env file or export manually.")
     sys.exit(1)
 
 from snowflake_auth import build_cortex_client_keypair

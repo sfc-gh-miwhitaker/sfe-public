@@ -4,10 +4,8 @@ Streaming comparison: token-by-token output from both APIs.
 Shows that streaming works identically through Cortex.
 
 Prerequisites:
-    export ANTHROPIC_API_KEY="sk-ant-..."  # pragma: allowlist secret
-    export SNOWFLAKE_ACCOUNT="myorg-myaccount"
-    export SNOWFLAKE_PAT="ver:1:..."
-    pip install anthropic httpx
+    cp .env.example .env   # fill in your credentials
+    pip3 install -r requirements.txt
 
 Usage:
     python3 python/04_streaming.py
@@ -17,13 +15,17 @@ import os
 import sys
 import time
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import anthropic
 import httpx
 
 missing = [v for v in ("ANTHROPIC_API_KEY", "SNOWFLAKE_ACCOUNT", "SNOWFLAKE_PAT") if not os.environ.get(v)]
 if missing:
     print(f"ERROR: Missing environment variable(s): {', '.join(missing)}")
-    print("  See .env.example for the full list.")
+    print("  Add them to your .env file or export manually.")
     sys.exit(1)
 
 PROMPT = "Write a haiku about data governance."

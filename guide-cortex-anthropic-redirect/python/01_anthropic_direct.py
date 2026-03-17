@@ -5,8 +5,8 @@ This is the "before" code -- exactly what an existing Anthropic user runs today.
 The next script (02_cortex_redirect.py) shows the same call routed through Cortex.
 
 Prerequisites:
-    export ANTHROPIC_API_KEY="sk-ant-..."  # pragma: allowlist secret
-    pip install anthropic
+    cp .env.example .env   # fill in your credentials
+    pip3 install -r requirements.txt
 
 Usage:
     python3 python/01_anthropic_direct.py
@@ -15,11 +15,15 @@ Usage:
 import os
 import sys
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import anthropic
 
 if not os.environ.get("ANTHROPIC_API_KEY"):
     print("ERROR: ANTHROPIC_API_KEY not set.")
-    print("  export ANTHROPIC_API_KEY=\"sk-ant-...\"")
+    print("  Add it to your .env file or: export ANTHROPIC_API_KEY=\"sk-ant-...\"")
     sys.exit(1)
 
 PROMPT = "Explain how a snowflake forms in exactly two sentences."

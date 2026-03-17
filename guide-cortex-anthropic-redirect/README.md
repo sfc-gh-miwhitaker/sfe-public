@@ -23,7 +23,6 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip3 install -r requirements.txt
 cp .env.example .env   # fill in your credentials
-source .env
 
 # 1. Verify Anthropic direct access
 python3 python/01_anthropic_direct.py

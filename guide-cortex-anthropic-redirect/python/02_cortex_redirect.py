@@ -9,9 +9,8 @@ Three changes from the baseline:
 Everything after client creation is identical.
 
 Prerequisites:
-    export SNOWFLAKE_ACCOUNT="myorg-myaccount"
-    export SNOWFLAKE_PAT="ver:1:..."
-    pip install anthropic httpx
+    cp .env.example .env   # fill in your credentials
+    pip3 install -r requirements.txt
 
 Usage:
     python3 python/02_cortex_redirect.py
@@ -20,14 +19,17 @@ Usage:
 import os
 import sys
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import anthropic
 import httpx
 
 missing = [v for v in ("SNOWFLAKE_ACCOUNT", "SNOWFLAKE_PAT") if not os.environ.get(v)]
 if missing:
     print(f"ERROR: Missing environment variable(s): {', '.join(missing)}")
-    print("  export SNOWFLAKE_ACCOUNT=\"myorg-myaccount\"")
-    print("  export SNOWFLAKE_PAT=\"ver:1:...\"")
+    print("  Add them to your .env file or export manually.")
     sys.exit(1)
 
 PROMPT = "Explain how a snowflake forms in exactly two sentences."
