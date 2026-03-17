@@ -227,15 +227,108 @@ All features below work identically through Cortex (Claude models only):
 
 For non-Claude models (OpenAI, Llama, Mistral, DeepSeek), use the Cortex Chat Completions API with the OpenAI SDK instead.
 
-## Why Cortex?
+## When to Use Which
 
-| Benefit | Detail |
-|---------|--------|
-| **Governance** | Inference runs within Snowflake -- data never leaves your perimeter |
+This guide shows _how_ to redirect -- but _should_ you? Here's a fair comparison.
+
+### Anthropic Direct Wins
+
+| Scenario | Why |
+|----------|-----|
+| **High-volume batch processing** | 50% discount via [Batch API](https://docs.anthropic.com/en/docs/build-with-claude/batch-processing) (async, 24h turnaround) |
+| **Aggressive caching** | 90% discount on prompt cache hits (vs 5-min TTL on Cortex) |
+| **Cost-only optimization** | Lower per-token rates when governance isn't a constraint |
+
+### Cortex Wins
+
+| Scenario | Why |
+|----------|-----|
+| **Data governance required** | Inference runs within Snowflake -- data never leaves your perimeter |
+| **Agent workloads** | Built-in [Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations) for systematic testing |
 | **Unified billing** | LLM costs appear on your Snowflake bill as credits |
-| **Multi-model** | Access Claude, GPT, Llama, Mistral, DeepSeek from one endpoint |
-| **No model keys** | No Anthropic API key needed in production -- just Snowflake auth (PAT or key-pair JWT) |
-| **Rate limits** | Up to 600 RPM / 600K TPM for claude-sonnet-4-5 (higher with cross-region) |
+| **Multi-model access** | Claude, GPT, Llama, Mistral, DeepSeek from one endpoint |
+| **No model API keys** | Just Snowflake auth (PAT or key-pair JWT) in production |
+| **Cost controls** | Native per-user spend limits and budget alerts via [ACCOUNT_USAGE](https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management) |
+
+### Quick Decision Tree
+
+```
+Are you building agents?
+  └─ Yes → Cortex (Agent Evaluations alone saves weeks of build time)
+  └─ No, just completions:
+       └─ Is data governance required?
+            └─ Yes → Cortex
+            └─ No → Is this high-volume batch?
+                 └─ Yes → Anthropic (50% batch discount)
+                 └─ No → Either works (Cortex adds observability)
+```
+
+## Total Cost of Ownership
+
+Token pricing tells only part of the story. Consider these secondary costs:
+
+### Anthropic Direct -- Hidden Costs
+
+| Cost Category | What You Build/Pay For |
+|---------------|------------------------|
+| API key management | Rotation, secrets vaults, access control |
+| Data egress | Cloud provider fees when data leaves your VPC |
+| Compliance overhead | Auditing data that crosses security boundaries |
+| Billing reconciliation | Separate vendor invoice vs unified Snowflake bill |
+| Rate limit engineering | Backoff logic, queue management, retry handling |
+| Cost attribution | Custom tagging to track spend by team/project |
+
+### Cortex -- Hidden Costs
+
+| Cost Category | What You Pay For |
+|---------------|------------------|
+| Credit price variability | Contract-dependent ($2-4/credit typical) |
+| No batch discount | Full price for async workloads |
+| Cross-region inference | Additional cost if enabled for higher limits |
+| Migration effort | One-time: adapting existing Anthropic code |
+
+### What Cortex Includes (No Extra Build)
+
+| Capability | Anthropic Direct | Cortex |
+|------------|------------------|--------|
+| Data residency compliance | Build yourself | Built-in |
+| Audit trail | Build yourself | [ACCOUNT_USAGE views](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_functions_usage_history) |
+| Per-user spend tracking | Build yourself | Native |
+| Budget alerts | Build yourself | Native (alerts + tasks) |
+| Cost attribution by query | Build yourself | Query-level tracking |
+
+## Agent Workloads
+
+If you're building agents (not just simple completions), Cortex has a significant advantage: **[Cortex Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations)**.
+
+### The Evaluation Gap
+
+Building equivalent eval infrastructure yourself requires:
+
+| Component | Estimated Effort |
+|-----------|------------------|
+| Evaluation framework | 2-4 weeks engineering |
+| LLM judge infrastructure | $500-2K/month (judge model calls) |
+| Trace storage & debugging UI | 1-2 weeks + hosting |
+| Custom metric framework | 1 week |
+| **Total** | **$20K-50K+ to replicate** |
+
+### What Agent Evaluations Provides
+
+- **Tool selection accuracy** -- Did the agent pick the right tools?
+- **Tool execution accuracy** -- Did inputs/outputs match expectations?
+- **Answer correctness** -- Does the response match the expected answer?
+- **Logical consistency** -- Is reasoning coherent across the trace?
+- **Custom LLM judges** -- Define domain-specific scoring criteria
+- **Deep observability** -- Thread and trace-level debugging
+
+Snowflake's research shows these built-in metrics capture **95% of human-annotated errors** and localize them to specific trace spans with **86% accuracy**.
+
+### Real-World Impact
+
+> _"We were able to increase accuracy from 75% to 85%"_ -- Sanofi, using Cortex Agent Evaluations to optimize their agent and semantic views
+
+The evaluation framework doesn't just measure quality -- it improves it by surfacing exactly where reasoning breaks down.
 
 ## Development Tools
 

@@ -42,6 +42,22 @@ If the user seems confused or asks basic questions:
 3. **Start simple** -- run `01_anthropic_direct.py` first to verify Anthropic access works, then `02_cortex_redirect.py` to verify Cortex access
 4. **Show the comparison** -- `03_side_by_side.py` is the "wow" moment
 
+## Cost & Value Narrative
+
+The README includes a balanced "When to Use Which" comparison. Key points to know:
+
+**When Anthropic Direct wins:**
+- High-volume batch processing (50% discount via Batch API)
+- Aggressive prompt caching (90% discount on cache hits)
+- Pure cost optimization when governance isn't required
+
+**When Cortex wins:**
+- Data governance requirements (data stays in Snowflake)
+- Agent workloads (built-in Agent Evaluations saves weeks of build time)
+- Unified billing, cost controls, and observability
+
+**Be honest:** Don't oversell Cortex. If someone is doing batch text processing with no governance needs, Anthropic direct is likely cheaper. If they're building agents or need compliance, Cortex adds significant value beyond token pricing.
+
 ## Related Projects
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent:Run REST API examples with three auth methods
 - [`tool-secrets-rotation-aws`](../tool-secrets-rotation-aws/) -- PAT credential rotation patterns
