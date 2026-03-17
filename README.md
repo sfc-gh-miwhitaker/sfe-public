@@ -26,50 +26,6 @@ quadrantChart
     guide-governance: [0.6, 0.8]
 ```
 
-<details>
-<summary><b>📊 Full Project Map</b></summary>
-
-```mermaid
-mindmap
-  root((sfe-public))
-    Demos
-      Cortex Agents
-        agent-multicontext
-        cortex-teams-agent
-        financial-agents
-      Data Pipelines
-        quickbooks-medallion
-        campaign-engine
-      AI Classification
-        product-classification
-        openai-enrichment
-      Data Quality
-        dataquality-metrics
-    Tools
-      Cost Analysis
-        cortex-cost-calculator
-        replication-calculator
-        dr-cost-agent
-      Utilities
-        api-data-fetcher
-        streamlit-contact-form
-        secrets-rotation-aws
-    Guides
-      Getting Started
-        coco-setup
-        csv-import
-      Agent Patterns
-        agent-multi-tenant
-        api-agent-context
-        cortex-search
-      Governance
-        coco-governance
-        agent-skills
-        replication-workbook
-```
-
-</details>
-
 ---
 
 ## Brand New to All of This?
