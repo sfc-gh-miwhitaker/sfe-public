@@ -19,20 +19,20 @@ cd sfe-public/guide-cortex-anthropic-redirect
 
 **Install and run:**
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 cp .env.example .env   # fill in your credentials
 source .env
 
 # 1. Verify Anthropic direct access
-python python/01_anthropic_direct.py
+python3 python/01_anthropic_direct.py
 
 # 2. Verify Cortex redirect
-python python/02_cortex_redirect.py
+python3 python/02_cortex_redirect.py
 
 # 3. Run side-by-side comparison (the key demo)
-python python/03_side_by_side.py
+python3 python/03_side_by_side.py
 ```
 
 ## What Changes (and What Doesn't)
@@ -165,7 +165,7 @@ export SNOWFLAKE_PRIVATE_KEY_PATH="./rsa_key.pem"
 ### Run It
 
 ```bash
-python python/06_keypair_auth.py
+python3 python/06_keypair_auth.py
 ```
 
 ### The Code

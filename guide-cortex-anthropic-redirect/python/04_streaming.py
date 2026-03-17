@@ -10,14 +10,21 @@ Prerequisites:
     pip install anthropic httpx
 
 Usage:
-    python python/04_streaming.py
+    python3 python/04_streaming.py
 """
 
 import os
+import sys
 import time
 
 import anthropic
 import httpx
+
+missing = [v for v in ("ANTHROPIC_API_KEY", "SNOWFLAKE_ACCOUNT", "SNOWFLAKE_PAT") if not os.environ.get(v)]
+if missing:
+    print(f"ERROR: Missing environment variable(s): {', '.join(missing)}")
+    print("  See .env.example for the full list.")
+    sys.exit(1)
 
 PROMPT = "Write a haiku about data governance."
 

@@ -28,6 +28,17 @@ Usage:
     python python/06_keypair_auth.py
 """
 
+import os
+import sys
+
+missing = [v for v in ("SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER", "SNOWFLAKE_PRIVATE_KEY_PATH") if not os.environ.get(v)]
+if missing:
+    print(f"ERROR: Missing environment variable(s): {', '.join(missing)}")
+    print("  export SNOWFLAKE_ACCOUNT=\"myorg-myaccount\"")
+    print("  export SNOWFLAKE_USER=\"MY_SERVICE_USER\"")
+    print("  export SNOWFLAKE_PRIVATE_KEY_PATH=\"./rsa_key.pem\"")
+    sys.exit(1)
+
 from snowflake_auth import build_cortex_client_keypair
 
 PROMPT = "Explain how a snowflake forms in exactly two sentences."

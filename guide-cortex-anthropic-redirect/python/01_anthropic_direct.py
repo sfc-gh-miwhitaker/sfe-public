@@ -9,10 +9,18 @@ Prerequisites:
     pip install anthropic
 
 Usage:
-    python python/01_anthropic_direct.py
+    python3 python/01_anthropic_direct.py
 """
 
+import os
+import sys
+
 import anthropic
+
+if not os.environ.get("ANTHROPIC_API_KEY"):
+    print("ERROR: ANTHROPIC_API_KEY not set.")
+    print("  export ANTHROPIC_API_KEY=\"sk-ant-...\"")
+    sys.exit(1)
 
 PROMPT = "Explain how a snowflake forms in exactly two sentences."
 

@@ -10,14 +10,21 @@ Prerequisites:
     pip install anthropic httpx
 
 Usage:
-    python python/03_side_by_side.py
+    python3 python/03_side_by_side.py
 """
 
 import os
+import sys
 import time
 
 import anthropic
 import httpx
+
+missing = [v for v in ("ANTHROPIC_API_KEY", "SNOWFLAKE_ACCOUNT", "SNOWFLAKE_PAT") if not os.environ.get(v)]
+if missing:
+    print(f"ERROR: Missing environment variable(s): {', '.join(missing)}")
+    print("  See .env.example for the full list.")
+    sys.exit(1)
 
 PROMPT = "Name the three largest oceans by area and give each one's approximate size in square kilometers. Reply in a markdown table."
 

@@ -14,13 +14,21 @@ Prerequisites:
     pip install anthropic httpx
 
 Usage:
-    python python/02_cortex_redirect.py
+    python3 python/02_cortex_redirect.py
 """
 
 import os
+import sys
 
 import anthropic
 import httpx
+
+missing = [v for v in ("SNOWFLAKE_ACCOUNT", "SNOWFLAKE_PAT") if not os.environ.get(v)]
+if missing:
+    print(f"ERROR: Missing environment variable(s): {', '.join(missing)}")
+    print("  export SNOWFLAKE_ACCOUNT=\"myorg-myaccount\"")
+    print("  export SNOWFLAKE_PAT=\"ver:1:...\"")
+    sys.exit(1)
 
 PROMPT = "Explain how a snowflake forms in exactly two sentences."
 

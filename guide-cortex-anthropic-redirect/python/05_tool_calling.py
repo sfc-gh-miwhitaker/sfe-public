@@ -14,14 +14,21 @@ Prerequisites:
     pip install anthropic httpx
 
 Usage:
-    python python/05_tool_calling.py
+    python3 python/05_tool_calling.py
 """
 
 import json
 import os
+import sys
 
 import anthropic
 import httpx
+
+missing = [v for v in ("ANTHROPIC_API_KEY", "SNOWFLAKE_ACCOUNT", "SNOWFLAKE_PAT") if not os.environ.get(v)]
+if missing:
+    print(f"ERROR: Missing environment variable(s): {', '.join(missing)}")
+    print("  See .env.example for the full list.")
+    sys.exit(1)
 
 ACCOUNT = os.environ["SNOWFLAKE_ACCOUNT"]
 PAT = os.environ["SNOWFLAKE_PAT"]
