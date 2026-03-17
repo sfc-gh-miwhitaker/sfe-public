@@ -197,7 +197,6 @@ Token pricing tells only part of the story. Consider these secondary costs:
 |---------------|------------------|
 | Fixed token pricing | REST API rates are USD-per-token (not credit-based), so no contract discount applies |
 | No batch discount | Full price for async workloads |
-| Cross-region inference | No added token cost; enables models unavailable in your region ([docs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cross-region-inference)) |
 | Provisioned throughput | Optional reserved capacity (PTUs) for guaranteed throughput; billed monthly whether used or not ([docs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/provisioned-throughput)) |
 | Migration effort | One-time: adapting existing Anthropic code |
 
