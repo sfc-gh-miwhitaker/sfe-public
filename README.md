@@ -8,7 +8,6 @@ Snowflake demos, tools, and guides -- each self-contained with deployment script
 > **No support is provided.** All code is shared for reference and learning. Review, test, and modify thoroughly before any production use.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'quadrant1Fill': '#e8f5e9', 'quadrant2Fill': '#fff3e0', 'quadrant3Fill': '#e3f2fd', 'quadrant4Fill': '#fce4ec'}}}%%
 quadrantChart
     title Find Your Starting Point
     x-axis Simpler --> More Complex
