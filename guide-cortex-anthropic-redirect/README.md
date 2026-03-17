@@ -35,6 +35,8 @@ python3 python/02_cortex_redirect.py
 python3 python/03_side_by_side.py
 ```
 
+![Side-by-side comparison output](assets/side-by-side.png)
+
 ## What Changes (and What Doesn't)
 
 | | Anthropic Direct | Cortex Redirect |
