@@ -53,6 +53,26 @@ cd sfe-public/demo-dataquality-metrics && cortex
 
 ## The Demo Story
 
+```mermaid
+journey
+    title Data Quality Journey
+    section The Problem
+      Raw data has NULLs: 2: Data
+      Out-of-range values: 2: Data
+    section The Solution
+      DMFs detect issues automatically: 5: Snowflake
+      Event-driven on data change: 5: Snowflake
+    section The Outcome
+      Golden views filter bad records: 5: Analyst
+      Quality scores visible: 5: Analyst
+    section Live Demo
+      Insert bad data: 4: You
+      Watch metrics update: 5: Snowflake
+    section Governance
+      Classify with tags: 5: You
+      Enforce masking policies: 5: Snowflake
+```
+
 > "Raw data has quality issues. Snowflake automatically detects bad records, filters them for analytics, provides a dashboard to monitor quality over time, and classifies data assets with governance tags that enforce masking policies."
 
 | Part | What You Show | Key Query/Action |

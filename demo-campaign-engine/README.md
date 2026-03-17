@@ -70,21 +70,21 @@ This project was built in five acts, each driven by a single natural-language pr
 
 ```mermaid
 journey
-    title Building the Campaign Engine (~2 hours)
-    section Act 1: Data Model
+    title Building the Campaign Engine
+    section Data Model
       Describe casino use case: 5: You
-      Generate schema + ER diagram: 5: CoCo
-    section Act 2: Feature Pipeline
+      Generate schema and ER diagram: 5: CoCo
+    section Feature Pipeline
       Request behavioral features: 5: You
-      Build Dynamic Tables + VECTOR: 5: CoCo
-    section Act 3: ML Engine
-      Specify lookalike + scoring: 5: You
-      Create ML model + procedures: 5: CoCo
-    section Act 4: Presentation
-      Request dashboard + agent: 5: You
-      Deploy Streamlit + Semantic View: 5: CoCo
-    section Act 5: Live Extension
-      Audience builds something new: 4: Audience, CoCo
+      Build Dynamic Tables: 5: CoCo
+    section ML Engine
+      Specify lookalike scoring: 5: You
+      Create ML model: 5: CoCo
+    section Presentation
+      Request dashboard: 5: You
+      Deploy Streamlit app: 5: CoCo
+    section Live Extension
+      Audience builds something new: 4: Audience
 ```
 
 | Act | Prompt | What Was Built |

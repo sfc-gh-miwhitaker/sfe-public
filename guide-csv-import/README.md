@@ -10,6 +10,23 @@
 
 A step-by-step guide to loading CSV files into Snowflake using Snowsight. Covers one-time setup, a repeatable import process, and optional automation.
 
+```mermaid
+journey
+    title CSV Import Learning Path
+    section Part 1 Setup
+      Create database and schema: 5: You
+      Define file format: 5: You
+      Create upload stage: 5: You
+    section Part 2 Import
+      Upload CSV to stage: 5: You
+      Run COPY INTO: 5: Snowflake
+      Verify row counts: 5: You
+    section Part 3 Automation
+      Configure Snowpipe: 4: You
+      Set up scheduled tasks: 4: You
+      Monitor with alerts: 5: Snowflake
+```
+
 **Time:** ~15 minutes for first import | **Result:** CSV data queryable in Snowflake
 
 ## Who This Is For

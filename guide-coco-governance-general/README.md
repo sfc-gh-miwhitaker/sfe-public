@@ -25,6 +25,29 @@ IT leaders, team leads, and developers responsible for AI tool governance. You s
 
 ## The 6 Steps
 
+```mermaid
+journey
+    title Governance Workshop
+    section Visibility
+      Inspect the hierarchy: 5: You
+      See where instructions come from: 5: CoCo
+    section Org Policy
+      Create managed-settings.json: 4: IT
+      Deploy via MDM: 5: IT
+    section User Standards
+      Build CLAUDE.md: 5: You
+      Create team skill: 5: You
+    section Project Scope
+      Write AGENTS.md constraints: 4: You
+      Per-project guardrails: 5: CoCo
+    section Assurance
+      Red team exercise: 4: You
+      Prove controls work: 5: You
+    section Distribution
+      Operational playbook: 5: IT
+      Onboard new users: 5: IT
+```
+
 | Step | What You Build | Governance Lesson |
 |------|----------------|-------------------|
 | [1. Visibility](prompts/01_visibility.md) | Inspect the hierarchy | See exactly where instructions come from |

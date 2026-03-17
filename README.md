@@ -13,10 +13,10 @@ quadrantChart
     title Find Your Starting Point
     x-axis Simpler --> More Complex
     y-axis Traditional --> AI-Native
-    quadrant-1 🚀 AI Frontier
-    quadrant-2 🎓 Deep Dive
-    quadrant-3 📚 Foundations
-    quadrant-4 ⚡ Quick Wins
+    quadrant-1 AI Frontier
+    quadrant-2 Deep Dive
+    quadrant-3 Foundations
+    quadrant-4 Quick Wins
     guide-csv-import: [0.15, 0.15]
     guide-coco-setup: [0.3, 0.65]
     tool-cost-calculator: [0.35, 0.4]

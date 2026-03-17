@@ -52,6 +52,25 @@ cd sfe-public/demo-cortex-product-classification && cortex
 
 ## The Four Approaches
 
+```mermaid
+journey
+    title Classification Evolution
+    section Traditional SQL
+      CASE and LIKE patterns: 3: Dev
+      Keyword lookup tables: 3: Dev
+      Breaks on non-English: 2: Dev
+    section Cortex Simple
+      Single AI_COMPLETE call: 5: Dev
+      Works across languages: 5: Cortex
+    section Cortex Robust
+      Language detection: 5: Cortex
+      Structured JSON output: 5: Cortex
+      Hierarchical classification: 5: Cortex
+    section SPCS Vision
+      Custom image classifier: 4: Dev
+      SQL-callable service: 5: Cortex
+```
+
 ### 1. Traditional SQL (Baseline)
 CASE/LIKE/regex with keyword lookup tables. Works for English, breaks on Japanese katakana, fails entirely on image-only products. Requires constant maintenance as the catalog grows.
 

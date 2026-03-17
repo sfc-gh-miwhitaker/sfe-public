@@ -70,6 +70,23 @@ This demo covers three data formats: **Chat Completions**, **Batch API output**,
 
 ## Three Approaches
 
+```mermaid
+journey
+    title Choose Your Pattern
+    section Cortex Enrichment
+      Load raw OpenAI JSON: 5: You
+      AI_CLASSIFY and AI_SENTIMENT: 5: Cortex
+      PII detection built-in: 5: Cortex
+    section Medallion Pipeline
+      Bronze raw tables: 5: You
+      Silver Dynamic Tables: 5: Snowflake
+      Gold analytics views: 5: Snowflake
+    section Schema-on-Read
+      FLATTEN and LATERAL: 4: You
+      Zero storage overhead: 5: Snowflake
+      Always current: 5: Snowflake
+```
+
 ### Approach 1: Cortex AI Enrichment (The Headline Feature)
 
 Use Snowflake Cortex to classify, score, summarize, and scan OpenAI outputs - 

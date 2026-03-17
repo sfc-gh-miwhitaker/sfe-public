@@ -52,6 +52,27 @@ SELECT * FROM DQ_EXPECTATION_SUMMARY;
 
 ## Architecture
 
+```mermaid
+journey
+    title Medallion Layer Progression
+    section Bronze
+      OAuth 2.0 connection: 4: You
+      Python stored proc with CDC: 5: Snowflake
+      RAW tables as VARIANT: 5: Snowflake
+    section Silver
+      Dynamic Tables auto-refresh: 5: Snowflake
+      JSON path extraction: 5: Snowflake
+      Cortex AI enrichment: 5: Cortex
+    section Gold
+      AR Aging analytics: 5: Analyst
+      Revenue dashboards: 5: Analyst
+      Customer classification: 5: Cortex
+    section Data Quality
+      System DMFs serverless: 5: Snowflake
+      Custom expectations: 4: You
+      Anomaly notifications: 5: Snowflake
+```
+
 ```
 QuickBooks Online API
         │
