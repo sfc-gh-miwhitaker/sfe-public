@@ -23,6 +23,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip3 install -r requirements.txt
 cp .env.example .env   # fill in your credentials
+source .env
 
 # 1. Verify Anthropic direct access
 python3 python/01_anthropic_direct.py
@@ -83,18 +84,20 @@ Everything after client creation is identical -- `client.messages.create(...)`, 
 
 ## Prerequisites
 
+All credentials go in your `.env` file (copied from `.env.example` during Quick Start).
+
 ### 1. Anthropic API Key
 
-You already have this. Set it:
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."  # pragma: allowlist secret
+You already have this. Add it to `.env`:
+```
+ANTHROPIC_API_KEY=sk-ant-api03-...
 ```
 
-### 2. Snowflake Account URL
+### 2. Snowflake Account Identifier
 
-Your Snowflake account identifier (e.g., `myorg-myaccount`):
-```bash
-export SNOWFLAKE_ACCOUNT="myorg-myaccount"
+Your Snowflake account identifier (e.g., `myorg-myaccount`). Add it to `.env`:
+```
+SNOWFLAKE_ACCOUNT=myorg-myaccount
 ```
 
 ### 3. Snowflake Programmatic Access Token (PAT)
@@ -115,9 +118,12 @@ ALTER USER my_user ADD PROGRAMMATIC ACCESS TOKEN cortex_api_demo
 ```
 Copy the `token_secret` value from the result (shown only once -- no way to retrieve it later).
 
-```bash
-export SNOWFLAKE_PAT="ver:1:..."
+Add it to `.env`:
 ```
+SNOWFLAKE_PAT=ver:1:...
+```
+
+After updating `.env`, re-source it: `source .env`
 
 ### 4. Verify Cortex Access
 
@@ -155,11 +161,13 @@ grep -v "BEGIN\|END" rsa_key.pub | tr -d '\n'
 
 ### Set Environment Variables
 
-```bash
-export SNOWFLAKE_ACCOUNT="myorg-myaccount"
-export SNOWFLAKE_USER="MY_SERVICE_USER"
-export SNOWFLAKE_PRIVATE_KEY_PATH="./rsa_key.pem"
+Uncomment and fill in the key-pair variables in your `.env`:
 ```
+SNOWFLAKE_USER=MY_SERVICE_USER
+SNOWFLAKE_PRIVATE_KEY_PATH=./rsa_key.pem
+```
+
+Then re-source: `source .env`
 
 ### Run It
 
