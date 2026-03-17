@@ -259,6 +259,21 @@ Deploy both monitoring and calculator in your own Snowflake account to track and
 
 ## What This Tool Does
 
+```mermaid
+sankey-beta
+%%{init: {"sankey": {"showValues": false}}}%%
+ACCOUNT_USAGE,Cortex Analyst,20
+ACCOUNT_USAGE,Cortex Search,15
+ACCOUNT_USAGE,Cortex Functions,30
+ACCOUNT_USAGE,Document AI,10
+Cortex Analyst,Daily Summary,20
+Cortex Search,Daily Summary,15
+Cortex Functions,Daily Summary,30
+Document AI,Daily Summary,10
+Daily Summary,Streamlit Calculator,50
+Daily Summary,CSV Export,25
+```
+
 ### Cortex Services Tracked
 
 This tool monitors all Snowflake Cortex services:

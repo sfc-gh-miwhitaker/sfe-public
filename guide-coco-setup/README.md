@@ -76,6 +76,21 @@ Most **demo** projects deploy entirely inside Snowflake -- open the project's `d
 
 ## Part 1: The Learning Path
 
+```mermaid
+journey
+    title Your First Hour with Cortex Code
+    section Install (5 min)
+      Run one-liner installer: 5: You
+      Connect to Snowflake: 4: You
+    section Explore (15 min)
+      Run first prompt: 5: You, CoCo
+      Try workflow examples: 5: CoCo
+    section Customize (25 min)
+      Create ~/.claude/CLAUDE.md: 4: You
+      Build first skill: 5: You, CoCo
+      Test with a project: 5: CoCo
+```
+
 These official resources cover install, connect, and basic usage. Read them in this order -- each builds on the previous.
 
 | # | Resource | What You'll Get | Time |

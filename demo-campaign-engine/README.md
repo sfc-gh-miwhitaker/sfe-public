@@ -68,6 +68,25 @@ cd sfe-public/demo-campaign-engine && cortex
 
 This project was built in five acts, each driven by a single natural-language prompt. See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the full presenter playbook.
 
+```mermaid
+journey
+    title Building the Campaign Engine (~2 hours)
+    section Act 1: Data Model
+      Describe casino use case: 5: You
+      Generate schema + ER diagram: 5: CoCo
+    section Act 2: Feature Pipeline
+      Request behavioral features: 5: You
+      Build Dynamic Tables + VECTOR: 5: CoCo
+    section Act 3: ML Engine
+      Specify lookalike + scoring: 5: You
+      Create ML model + procedures: 5: CoCo
+    section Act 4: Presentation
+      Request dashboard + agent: 5: You
+      Deploy Streamlit + Semantic View: 5: CoCo
+    section Act 5: Live Extension
+      Audience builds something new: 4: Audience, CoCo
+```
+
 | Act | Prompt | What Was Built |
 |---|---|---|
 | 1 | "Describe the casino use case..." | Data model (4 tables, ER diagram) |

@@ -7,6 +7,70 @@ Snowflake demos, tools, and guides -- each self-contained with deployment script
 
 > **No support is provided.** All code is shared for reference and learning. Review, test, and modify thoroughly before any production use.
 
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'quadrant1Fill': '#e8f5e9', 'quadrant2Fill': '#fff3e0', 'quadrant3Fill': '#e3f2fd', 'quadrant4Fill': '#fce4ec'}}}%%
+quadrantChart
+    title Find Your Starting Point
+    x-axis Simpler --> More Complex
+    y-axis Traditional --> AI-Native
+    quadrant-1 🚀 AI Frontier
+    quadrant-2 🎓 Deep Dive
+    quadrant-3 📚 Foundations
+    quadrant-4 ⚡ Quick Wins
+    guide-csv-import: [0.15, 0.15]
+    guide-coco-setup: [0.3, 0.65]
+    tool-cost-calculator: [0.35, 0.4]
+    demo-dataquality: [0.45, 0.35]
+    guide-agent-skills: [0.5, 0.75]
+    demo-campaign-engine: [0.7, 0.85]
+    demo-multicontext: [0.85, 0.9]
+    guide-governance: [0.6, 0.8]
+```
+
+<details>
+<summary><b>📊 Full Project Map</b></summary>
+
+```mermaid
+mindmap
+  root((sfe-public))
+    Demos
+      Cortex Agents
+        agent-multicontext
+        cortex-teams-agent
+        financial-agents
+      Data Pipelines
+        quickbooks-medallion
+        campaign-engine
+      AI Classification
+        product-classification
+        openai-enrichment
+      Data Quality
+        dataquality-metrics
+    Tools
+      Cost Analysis
+        cortex-cost-calculator
+        replication-calculator
+        dr-cost-agent
+      Utilities
+        api-data-fetcher
+        streamlit-contact-form
+        secrets-rotation-aws
+    Guides
+      Getting Started
+        coco-setup
+        csv-import
+      Agent Patterns
+        agent-multi-tenant
+        api-agent-context
+        cortex-search
+      Governance
+        coco-governance
+        agent-skills
+        replication-workbook
+```
+
+</details>
+
 ---
 
 ## Brand New to All of This?
