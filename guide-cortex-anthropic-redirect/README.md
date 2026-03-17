@@ -142,7 +142,7 @@ This guide shows _how_ to redirect -- but _should_ you? Here's a fair comparison
 |----------|-----|
 | **Data governance required** | Inference runs within Snowflake -- data never leaves your perimeter |
 | **Agent workloads** | Built-in [Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations) for systematic testing |
-| **Unified billing** | LLM costs appear on your Snowflake bill as credits |
+| **Unified billing** | LLM costs appear on your Snowflake bill (REST API billed in USD/token; SQL functions in credits) |
 | **Multi-model access** | Claude, GPT, Llama, Mistral, DeepSeek from one endpoint |
 | **No model API keys** | Just Snowflake auth (PAT or key-pair JWT) in production |
 | **Cost controls** | Native per-user spend limits and budget alerts via [ACCOUNT_USAGE](https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management) |
@@ -195,7 +195,7 @@ Token pricing tells only part of the story. Consider these secondary costs:
 
 | Cost Category | What You Pay For |
 |---------------|------------------|
-| Credit price variability | Contract-dependent ($2-4/credit typical) |
+| Fixed token pricing | REST API rates are USD-per-token (not credit-based), so no contract discount applies |
 | No batch discount | Full price for async workloads |
 | Cross-region inference | Additional cost if enabled for higher limits |
 | Migration effort | One-time: adapting existing Anthropic code |
@@ -218,8 +218,6 @@ If you're building agents (not just simple completions), Cortex has a significan
 - **Deep observability** -- Thread and trace-level debugging
 
 Snowflake's research shows these built-in metrics capture **95% of human-annotated errors** and localize them to specific trace spans with **86% accuracy**.
-
-> _"We were able to increase accuracy from 75% to 85%"_ -- Sanofi, using Cortex Agent Evaluations to optimize their agent and semantic views
 
 The evaluation framework doesn't just measure quality -- it improves it by surfacing exactly where reasoning breaks down.
 

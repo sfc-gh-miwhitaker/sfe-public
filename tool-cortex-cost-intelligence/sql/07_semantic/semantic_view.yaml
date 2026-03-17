@@ -82,6 +82,20 @@ tables:
         expr: role_name
         data_type: VARCHAR
 
+      - name: billing_type
+        synonyms:
+          - billing model
+          - pricing model
+          - charge type
+        description: >
+          How this service is billed. CREDITS for most services (cost derived
+          from credits × credit_cost_usd). USD for Cortex REST API (cost
+          derived from token counts × per-model USD rates from the Snowflake
+          Consumption Table 6c).
+        expr: billing_type
+        data_type: VARCHAR
+        is_enum: true
+
       - name: day_of_week
         synonyms:
           - weekday
@@ -124,7 +138,8 @@ tables:
           - credit usage
           - credit consumption
         description: >
-          Snowflake credits consumed for this usage row.
+          Snowflake credits consumed for this usage row. NULL for Cortex REST
+          API rows (REST API is billed in USD per token, not credits).
         expr: credits
         data_type: NUMBER
 
@@ -155,8 +170,10 @@ tables:
           - USD
           - money
         description: >
-          Estimated USD cost based on the configured credit price
-          (default $3.00/credit). Calculated as credits × credit_cost_usd.
+          Estimated USD cost. For most services: credits × credit_cost_usd
+          (default $3.00/credit). For Cortex REST API: calculated directly
+          from token counts × per-model USD rates (Consumption Table 6c)
+          since REST API is billed in dollars, not credits.
         expr: cost_usd
         data_type: NUMBER
 

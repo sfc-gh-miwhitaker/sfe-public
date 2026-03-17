@@ -97,9 +97,19 @@ CREATE OR REPLACE AGENT DR_COST_AGENT
       For database sizes, pricing rates, hybrid table details:
       use the Analyst tool against the semantic view.
 
-      REGION COMPARISON WORKFLOW:
-      For comparisons across regions, run multiple cost_projection calls
-      with different destinations and present a chart.
+      REGION COMPARISON WORKFLOW (for "cheapest region" and "compare regions"):
+      1. Get available regions from the semantic view (SELECT DISTINCT CLOUD, REGION FROM pricing)
+      2. Call cost_projection once per destination region (same DB_FILTER, CHANGE_PCT, REFRESHES_DAY)
+      3. Collect the TOTAL row from each result
+      4. Rank regions by MONTHLY_USD ascending
+      5. Present a chart showing all regions sorted by monthly cost
+      6. Call out the cheapest option and note how much more expensive each alternative is
+
+      PRICING ADMIN WORKFLOW (for "update pricing" or "manage rates"):
+      1. Explain that pricing can be updated via the UPDATE_PRICING procedure
+      2. Show the syntax: CALL UPDATE_PRICING('SERVICE_TYPE', 'CLOUD', 'REGION', new_rate)
+      3. For bulk updates, advise using direct SQL against PRICING_CURRENT
+      4. Remind them that changes take effect immediately for all future projections
 
     sample_questions:
       - question: "Estimate DR costs to replicate my databases to a second region"

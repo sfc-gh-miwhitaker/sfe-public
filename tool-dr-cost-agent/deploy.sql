@@ -17,7 +17,7 @@
  *   - Schema: SNOWFLAKE_EXAMPLE.DR_COST_AGENT
  *   - Table: PRICING_CURRENT (60 baseline pricing rows)
  *   - Views: DB_METADATA_V2, HYBRID_TABLE_METADATA, REPLICATION_HISTORY
- *   - Procedure: COST_PROJECTION (custom tool for agent)
+ *   - Procedures: COST_PROJECTION (custom tool for agent), UPDATE_PRICING (admin)
  *   - Semantic View: SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_DR_COST
  *   - Agent: DR_COST_AGENT (Snowflake Intelligence)
  ******************************************************************************/
@@ -79,6 +79,7 @@ EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/mai
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-dr-cost-agent/sql/03_views/02_hybrid_table_metadata.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-dr-cost-agent/sql/03_views/03_replication_history.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-dr-cost-agent/sql/04_procedures/01_cost_projection.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-dr-cost-agent/sql/04_procedures/02_update_pricing.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-dr-cost-agent/sql/05_semantic/01_semantic_view.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-dr-cost-agent/sql/06_agent/01_agent.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-dr-cost-agent/sql/99_grants/01_grants.sql';

@@ -153,10 +153,10 @@ rest_api AS (
         r.model_name,
         NULL                AS function_name,
         NULL                AS role_name,
-        0::NUMBER(38,6)     AS credits,
+        NULL::NUMBER(38,6)  AS credits,
         1                   AS operations,
-        NULL::NUMBER        AS tokens_input,
-        NULL::NUMBER        AS tokens_output,
+        r.tokens_input,
+        r.tokens_output,
         r.tokens            AS tokens_total
     FROM V_CORTEX_REST_API_DETAIL r
     LEFT JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS u ON r.user_id = u.user_id
@@ -221,9 +221,23 @@ enriched AS (
         c.tokens_input,
         c.tokens_output,
         c.tokens_total,
-        ROUND(c.credits * cfg.credit_cost_usd, 4)            AS cost_usd
+        CASE
+            WHEN c.service_type = 'Cortex REST API' THEN 'USD'
+            ELSE 'CREDITS'
+        END                                                   AS billing_type,
+        CASE
+            WHEN c.service_type = 'Cortex REST API'
+            THEN ROUND(
+                  (COALESCE(c.tokens_input,  0) / 1e6 * COALESCE(p.input_usd_per_m,  0))
+                + (COALESCE(c.tokens_output, 0) / 1e6 * COALESCE(p.output_usd_per_m, 0)),
+            4)
+            ELSE ROUND(c.credits * cfg.credit_cost_usd, 4)
+        END                                                   AS cost_usd
     FROM combined c
     CROSS JOIN config cfg
+    LEFT JOIN REST_API_PRICING p
+        ON c.service_type = 'Cortex REST API'
+       AND c.model_name   = p.model_name
 )
 SELECT
     usage_date,
@@ -240,6 +254,7 @@ SELECT
     tokens_input,
     tokens_output,
     tokens_total,
+    billing_type,
     cost_usd,
     SUM(credits) OVER (
         PARTITION BY service_type, DATE_TRUNC('month', usage_date)

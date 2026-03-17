@@ -18,7 +18,7 @@ quadrantChart
     quadrant-4 Quick Wins
     guide-csv-import: [0.15, 0.15]
     guide-coco-setup: [0.3, 0.65]
-    tool-cost-calculator: [0.35, 0.4]
+    tool-cost-intelligence: [0.35, 0.55]
     demo-dataquality: [0.45, 0.35]
     guide-agent-skills: [0.5, 0.75]
     demo-campaign-engine: [0.7, 0.85]
@@ -63,7 +63,7 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 
 | Directory | Description | Features |
 |---|---|---|
-| [tool-cortex-cost-calculator](tool-cortex-cost-calculator/) | Cortex spend attribution dashboard with 12-month forecasting | ACCOUNT_USAGE, Streamlit, Views |
+| [tool-cortex-cost-intelligence](tool-cortex-cost-intelligence/) | Cortex cost governance with semantic views and Cortex Agents | ACCOUNT_USAGE, Semantic Views, Cortex Agents, Streamlit |
 | [tool-replication-cost-calculator](tool-replication-cost-calculator/) | Streamlit DR Replication Cost Calculator for Business Critical | Streamlit, Replication Metadata |
 | [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |
 | [tool-streamlit-contact-form](tool-streamlit-contact-form/) | Streamlit form that writes submissions to a Snowflake table | Streamlit in Snowflake, Snowpark |

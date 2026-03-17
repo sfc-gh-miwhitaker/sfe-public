@@ -41,6 +41,40 @@ WHEN MATCHED THEN UPDATE SET
 WHEN NOT MATCHED THEN INSERT (setting_name, setting_value, description, data_type)
 VALUES (source.setting_name, source.setting_value, source.description, source.data_type);
 
+-- REST API is billed in USD per token (not credits) per Consumption Table 6(c).
+-- This table stores per-model rates so cost_usd can be calculated from token counts.
+CREATE TRANSIENT TABLE IF NOT EXISTS REST_API_PRICING (
+    model_name          VARCHAR(100) PRIMARY KEY,
+    input_usd_per_m     NUMBER(10,4) NOT NULL,
+    output_usd_per_m    NUMBER(10,4) NOT NULL,
+    effective_date       DATE DEFAULT CURRENT_DATE(),
+    updated_at           TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+)
+COMMENT = 'DEMO: Cortex Cost Intelligence - REST API USD-per-token rates from Consumption Table 6(c) | See deploy_all.sql for expiration';
+
+MERGE INTO REST_API_PRICING AS target
+USING (
+    SELECT column1 AS model_name, column2 AS input_usd_per_m, column3 AS output_usd_per_m
+    FROM VALUES
+        ('claude-3-5-sonnet',          3.00,   15.00),
+        ('deepseek-r1',                1.35,    5.40),
+        ('llama3.1-405b',              2.40,    2.40),
+        ('llama3.1-70b',               0.72,    0.72),
+        ('llama3.1-8b',                0.22,    0.22),
+        ('llama3.2-1b',                0.10,    0.10),
+        ('llama3.2-3b',                0.15,    0.15),
+        ('llama3.3-70b',               0.72,    0.72),
+        ('llama4-maverick',            0.24,    0.97),
+        ('mistral-large',              4.00,   12.00),
+        ('mistral-large2',             2.00,    6.00),
+        ('mistral-7b',                 0.15,    0.20),
+        ('openai-gpt-oss-120b',        0.15,    0.60),
+        ('snowflake-llama-3.3-70b',    0.72,    0.72)
+) AS source
+ON target.model_name = source.model_name
+WHEN NOT MATCHED THEN INSERT (model_name, input_usd_per_m, output_usd_per_m)
+VALUES (source.model_name, source.input_usd_per_m, source.output_usd_per_m);
+
 CREATE TRANSIENT TABLE IF NOT EXISTS CORTEX_USAGE_SNAPSHOTS (
     snapshot_date               DATE        NOT NULL,
     service_type                VARCHAR(100),

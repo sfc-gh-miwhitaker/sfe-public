@@ -45,6 +45,12 @@ tables:
         description: "The Snowflake role used. Only populated for Cortex AI Functions."
         expr: role_name
         data_type: VARCHAR
+      - name: billing_type
+        synonyms: ["billing model", "pricing model", "charge type"]
+        description: "How this service is billed. CREDITS for most services; USD for Cortex REST API (token-based pricing from Consumption Table 6c)."
+        expr: billing_type
+        data_type: VARCHAR
+        is_enum: true
       - name: day_of_week
         synonyms: ["weekday", "day name"]
         description: "Day of the week (Mon, Tue, etc.)"
@@ -70,7 +76,7 @@ tables:
     facts:
       - name: credits
         synonyms: ["credit usage", "credit consumption"]
-        description: "Snowflake credits consumed."
+        description: "Snowflake credits consumed. NULL for Cortex REST API (billed in USD per token, not credits)."
         expr: credits
         data_type: NUMBER
       - name: operations
@@ -85,7 +91,7 @@ tables:
         data_type: NUMBER
       - name: cost_usd
         synonyms: ["cost", "dollars", "spend", "USD", "money"]
-        description: "Estimated USD cost (credits x credit_cost_usd)."
+        description: "Estimated USD cost. Most services: credits × credit_cost_usd. REST API: token counts × per-model USD rates (Consumption Table 6c)."
         expr: cost_usd
         data_type: NUMBER
       - name: mtd_credits

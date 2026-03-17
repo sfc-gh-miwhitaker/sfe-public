@@ -64,6 +64,38 @@ WHEN MATCHED THEN UPDATE SET
 WHEN NOT MATCHED THEN INSERT (setting_name, setting_value, description, data_type)
 VALUES (source.setting_name, source.setting_value, source.description, source.data_type);
 
+-- REST API pricing (billed in USD per token, not credits — Consumption Table 6c)
+CREATE TRANSIENT TABLE IF NOT EXISTS REST_API_PRICING (
+    model_name          VARCHAR(100) PRIMARY KEY,
+    input_usd_per_m     NUMBER(10,4) NOT NULL,
+    output_usd_per_m    NUMBER(10,4) NOT NULL,
+    effective_date       DATE DEFAULT CURRENT_DATE(),
+    updated_at           TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);
+
+MERGE INTO REST_API_PRICING AS target
+USING (
+    SELECT column1 AS model_name, column2 AS input_usd_per_m, column3 AS output_usd_per_m
+    FROM VALUES
+        ('claude-3-5-sonnet',          3.00,   15.00),
+        ('deepseek-r1',                1.35,    5.40),
+        ('llama3.1-405b',              2.40,    2.40),
+        ('llama3.1-70b',               0.72,    0.72),
+        ('llama3.1-8b',                0.22,    0.22),
+        ('llama3.2-1b',                0.10,    0.10),
+        ('llama3.2-3b',                0.15,    0.15),
+        ('llama3.3-70b',               0.72,    0.72),
+        ('llama4-maverick',            0.24,    0.97),
+        ('mistral-large',              4.00,   12.00),
+        ('mistral-large2',             2.00,    6.00),
+        ('mistral-7b',                 0.15,    0.20),
+        ('openai-gpt-oss-120b',        0.15,    0.60),
+        ('snowflake-llama-3.3-70b',    0.72,    0.72)
+) AS source
+ON target.model_name = source.model_name
+WHEN NOT MATCHED THEN INSERT (model_name, input_usd_per_m, output_usd_per_m)
+VALUES (source.model_name, source.input_usd_per_m, source.output_usd_per_m);
+
 -- Snapshot table
 CREATE TRANSIENT TABLE IF NOT EXISTS CORTEX_USAGE_SNAPSHOTS (
     snapshot_date               DATE        NOT NULL,
@@ -154,7 +186,9 @@ WHERE start_time >= DATEADD('day', -90, CURRENT_TIMESTAMP());
 CREATE OR REPLACE VIEW V_CORTEX_REST_API_DETAIL AS
 SELECT start_time, end_time, DATE_TRUNC('day', start_time)::DATE AS usage_date,
     request_id, model_name, user_id, inference_region,
-    'Cortex REST API' AS service_type, tokens, tokens_granular
+    'Cortex REST API' AS service_type, tokens, tokens_granular,
+    tokens_granular:"input"::NUMBER AS tokens_input,
+    tokens_granular:"output"::NUMBER AS tokens_output
 FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_REST_API_USAGE_HISTORY
 WHERE start_time >= DATEADD('day', -90, CURRENT_TIMESTAMP());
 
@@ -234,29 +268,38 @@ FROM all_models ORDER BY function_name NULLS LAST, avg_credits_per_request ASC;
 -- ============================================================
 
 CREATE OR REPLACE VIEW V_CORTEX_DAILY_SUMMARY AS
-WITH analyst AS (SELECT usage_date, service_type, COUNT(DISTINCT user_name) AS daily_unique_users, SUM(operations) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_ANALYST_DETAIL GROUP BY usage_date, service_type),
-ai_functions AS (SELECT usage_date, service_type, COUNT(DISTINCT user_id) AS daily_unique_users, COUNT(query_id) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_AI_FUNCTIONS_DETAIL GROUP BY usage_date, service_type),
-search AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_SEARCH_DETAIL GROUP BY usage_date, service_type),
-search_serving AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_SEARCH_SERVING_DETAIL GROUP BY usage_date, service_type),
-agent AS (SELECT usage_date, service_type, COUNT(DISTINCT user_name) AS daily_unique_users, COUNT(request_id) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_AGENT_DETAIL GROUP BY usage_date, service_type),
-intelligence AS (SELECT usage_date, service_type, COUNT(DISTINCT user_name) AS daily_unique_users, COUNT(request_id) AS total_operations, SUM(credits) AS total_credits FROM V_SNOWFLAKE_INTELLIGENCE_DETAIL GROUP BY usage_date, service_type),
-code_cli AS (SELECT usage_date, service_type, COUNT(DISTINCT user_id) AS daily_unique_users, COUNT(request_id) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_CODE_CLI_DETAIL GROUP BY usage_date, service_type),
-fine_tuning AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_FINE_TUNING_DETAIL GROUP BY usage_date, service_type),
-doc_processing AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(query_id) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_DOCUMENT_PROCESSING_DETAIL GROUP BY usage_date, service_type),
-rest_api AS (SELECT usage_date, service_type, COUNT(DISTINCT user_id) AS daily_unique_users, COUNT(request_id) AS total_operations, 0::NUMBER(38,6) AS total_credits FROM V_CORTEX_REST_API_DETAIL GROUP BY usage_date, service_type),
-legacy_functions AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_FUNCTIONS_DETAIL GROUP BY usage_date, service_type),
-provisioned AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits FROM V_CORTEX_PROVISIONED_THROUGHPUT_DETAIL GROUP BY usage_date, service_type),
+WITH config AS (SELECT setting_value::NUMBER(10,2) AS credit_cost_usd FROM CORTEX_USAGE_CONFIG WHERE setting_name = 'CREDIT_COST_USD'),
+analyst AS (SELECT usage_date, service_type, COUNT(DISTINCT user_name) AS daily_unique_users, SUM(operations) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_ANALYST_DETAIL GROUP BY usage_date, service_type),
+ai_functions AS (SELECT usage_date, service_type, COUNT(DISTINCT user_id) AS daily_unique_users, COUNT(query_id) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_AI_FUNCTIONS_DETAIL GROUP BY usage_date, service_type),
+search AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_SEARCH_DETAIL GROUP BY usage_date, service_type),
+search_serving AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_SEARCH_SERVING_DETAIL GROUP BY usage_date, service_type),
+agent AS (SELECT usage_date, service_type, COUNT(DISTINCT user_name) AS daily_unique_users, COUNT(request_id) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_AGENT_DETAIL GROUP BY usage_date, service_type),
+intelligence AS (SELECT usage_date, service_type, COUNT(DISTINCT user_name) AS daily_unique_users, COUNT(request_id) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_SNOWFLAKE_INTELLIGENCE_DETAIL GROUP BY usage_date, service_type),
+code_cli AS (SELECT usage_date, service_type, COUNT(DISTINCT user_id) AS daily_unique_users, COUNT(request_id) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_CODE_CLI_DETAIL GROUP BY usage_date, service_type),
+fine_tuning AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_FINE_TUNING_DETAIL GROUP BY usage_date, service_type),
+doc_processing AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(query_id) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_DOCUMENT_PROCESSING_DETAIL GROUP BY usage_date, service_type),
+rest_api AS (
+    SELECT r.usage_date, r.service_type, COUNT(DISTINCT r.user_id) AS daily_unique_users, COUNT(r.request_id) AS total_operations,
+        NULL::NUMBER(38,6) AS total_credits,
+        ROUND(SUM((COALESCE(r.tokens_input, 0) / 1e6 * COALESCE(p.input_usd_per_m, 0)) + (COALESCE(r.tokens_output, 0) / 1e6 * COALESCE(p.output_usd_per_m, 0))), 4) AS total_cost_usd_direct
+    FROM V_CORTEX_REST_API_DETAIL r LEFT JOIN REST_API_PRICING p ON r.model_name = p.model_name
+    GROUP BY r.usage_date, r.service_type
+),
+legacy_functions AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_FUNCTIONS_DETAIL GROUP BY usage_date, service_type),
+provisioned AS (SELECT usage_date, service_type, 0 AS daily_unique_users, COUNT(*) AS total_operations, SUM(credits) AS total_credits, NULL::NUMBER(38,6) AS total_cost_usd_direct FROM V_CORTEX_PROVISIONED_THROUGHPUT_DETAIL GROUP BY usage_date, service_type),
 combined AS (
     SELECT * FROM analyst UNION ALL SELECT * FROM ai_functions UNION ALL SELECT * FROM search
     UNION ALL SELECT * FROM search_serving UNION ALL SELECT * FROM agent UNION ALL SELECT * FROM intelligence
     UNION ALL SELECT * FROM code_cli UNION ALL SELECT * FROM fine_tuning UNION ALL SELECT * FROM doc_processing
     UNION ALL SELECT * FROM rest_api UNION ALL SELECT * FROM legacy_functions UNION ALL SELECT * FROM provisioned
 )
-SELECT usage_date, service_type, daily_unique_users, total_operations,
-    ROUND(total_credits, 6) AS total_credits,
-    CASE WHEN daily_unique_users > 0 THEN ROUND(total_credits / daily_unique_users, 6) ELSE 0 END AS credits_per_user,
-    CASE WHEN total_operations > 0 THEN ROUND(total_credits / total_operations, 6) ELSE 0 END AS credits_per_operation
-FROM combined ORDER BY usage_date DESC, total_credits DESC;
+SELECT c.usage_date, c.service_type, c.daily_unique_users, c.total_operations,
+    ROUND(c.total_credits, 6) AS total_credits,
+    CASE WHEN c.daily_unique_users > 0 THEN ROUND(c.total_credits / c.daily_unique_users, 6) ELSE 0 END AS credits_per_user,
+    CASE WHEN c.total_operations > 0 THEN ROUND(c.total_credits / c.total_operations, 6) ELSE 0 END AS credits_per_operation,
+    ROUND(COALESCE(c.total_cost_usd_direct, c.total_credits * cfg.credit_cost_usd), 4) AS total_cost_usd
+FROM combined c CROSS JOIN config cfg
+ORDER BY c.usage_date DESC, total_cost_usd DESC;
 
 CREATE OR REPLACE VIEW V_COST_ANOMALIES AS
 WITH weekly_spend AS (
@@ -315,7 +358,7 @@ search AS (SELECT usage_date, 'Cortex Search' AS service_type, NULL AS user_name
 search_serving AS (SELECT usage_date, 'Cortex Search Serving' AS service_type, NULL AS user_name, NULL AS model_name, service_name AS function_name, NULL AS role_name, credits, 1 AS operations, NULL::NUMBER AS tokens_input, NULL::NUMBER AS tokens_output, NULL::NUMBER AS tokens_total FROM V_CORTEX_SEARCH_SERVING_DETAIL),
 fine_tuning AS (SELECT usage_date, 'Fine-Tuning' AS service_type, NULL AS user_name, model_name, NULL AS function_name, NULL AS role_name, credits, 1 AS operations, NULL::NUMBER AS tokens_input, NULL::NUMBER AS tokens_output, tokens AS tokens_total FROM V_CORTEX_FINE_TUNING_DETAIL),
 doc_processing AS (SELECT usage_date, 'Document Processing' AS service_type, NULL AS user_name, model_name, function_name, NULL AS role_name, credits, document_count AS operations, NULL::NUMBER AS tokens_input, NULL::NUMBER AS tokens_output, NULL::NUMBER AS tokens_total FROM V_CORTEX_DOCUMENT_PROCESSING_DETAIL),
-rest_api AS (SELECT r.usage_date, 'Cortex REST API' AS service_type, u.name AS user_name, r.model_name, NULL AS function_name, NULL AS role_name, 0::NUMBER(38,6) AS credits, 1 AS operations, NULL::NUMBER AS tokens_input, NULL::NUMBER AS tokens_output, r.tokens AS tokens_total FROM V_CORTEX_REST_API_DETAIL r LEFT JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS u ON r.user_id = u.user_id),
+rest_api AS (SELECT r.usage_date, 'Cortex REST API' AS service_type, u.name AS user_name, r.model_name, NULL AS function_name, NULL AS role_name, NULL::NUMBER(38,6) AS credits, 1 AS operations, r.tokens_input, r.tokens_output, r.tokens AS tokens_total FROM V_CORTEX_REST_API_DETAIL r LEFT JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS u ON r.user_id = u.user_id),
 legacy_functions AS (SELECT usage_date, 'Cortex Functions (Legacy)' AS service_type, NULL AS user_name, model_name, function_name, NULL AS role_name, credits, 1 AS operations, NULL::NUMBER AS tokens_input, NULL::NUMBER AS tokens_output, tokens AS tokens_total FROM V_CORTEX_FUNCTIONS_DETAIL),
 provisioned AS (SELECT usage_date, 'Provisioned Throughput' AS service_type, NULL AS user_name, model_name, ai_service AS function_name, NULL AS role_name, credits, 1 AS operations, NULL::NUMBER AS tokens_input, NULL::NUMBER AS tokens_output, NULL::NUMBER AS tokens_total FROM V_CORTEX_PROVISIONED_THROUGHPUT_DETAIL),
 combined AS (
@@ -327,11 +370,17 @@ enriched AS (
     SELECT c.usage_date, DATE_TRUNC('week', c.usage_date)::DATE AS usage_week, DATE_TRUNC('month', c.usage_date)::DATE AS usage_month,
         DAYNAME(c.usage_date) AS day_of_week, c.service_type, COALESCE(c.user_name, 'SYSTEM') AS user_name,
         c.model_name, c.function_name, c.role_name, c.credits, c.operations, c.tokens_input, c.tokens_output, c.tokens_total,
-        ROUND(c.credits * cfg.credit_cost_usd, 4) AS cost_usd
+        CASE WHEN c.service_type = 'Cortex REST API' THEN 'USD' ELSE 'CREDITS' END AS billing_type,
+        CASE
+            WHEN c.service_type = 'Cortex REST API'
+            THEN ROUND((COALESCE(c.tokens_input, 0) / 1e6 * COALESCE(p.input_usd_per_m, 0)) + (COALESCE(c.tokens_output, 0) / 1e6 * COALESCE(p.output_usd_per_m, 0)), 4)
+            ELSE ROUND(c.credits * cfg.credit_cost_usd, 4)
+        END AS cost_usd
     FROM combined c CROSS JOIN config cfg
+    LEFT JOIN REST_API_PRICING p ON c.service_type = 'Cortex REST API' AND c.model_name = p.model_name
 )
 SELECT usage_date, usage_week, usage_month, day_of_week, service_type, user_name, model_name, function_name, role_name,
-    ROUND(credits, 6) AS credits, operations, tokens_input, tokens_output, tokens_total, cost_usd,
+    ROUND(credits, 6) AS credits, operations, tokens_input, tokens_output, tokens_total, billing_type, cost_usd,
     SUM(credits) OVER (PARTITION BY service_type, DATE_TRUNC('month', usage_date) ORDER BY usage_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS mtd_credits,
     SUM(cost_usd) OVER (PARTITION BY service_type, DATE_TRUNC('month', usage_date) ORDER BY usage_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS mtd_cost_usd
 FROM enriched;
@@ -393,6 +442,12 @@ tables:
         description: "Snowflake role used."
         expr: role_name
         data_type: VARCHAR
+      - name: billing_type
+        synonyms: ["billing model", "pricing model", "charge type"]
+        description: "How this service is billed. CREDITS for most services; USD for Cortex REST API (token-based pricing from Consumption Table 6c)."
+        expr: billing_type
+        data_type: VARCHAR
+        is_enum: true
       - name: day_of_week
         synonyms: ["weekday"]
         description: "Day of week."
@@ -418,7 +473,7 @@ tables:
     facts:
       - name: credits
         synonyms: ["credit usage"]
-        description: "Credits consumed."
+        description: "Credits consumed. NULL for Cortex REST API (billed in USD per token, not credits)."
         expr: credits
         data_type: NUMBER
       - name: operations
@@ -433,7 +488,7 @@ tables:
         data_type: NUMBER
       - name: cost_usd
         synonyms: ["cost", "dollars", "spend"]
-        description: "Estimated USD cost."
+        description: "Estimated USD cost. Most services: credits × credit_cost_usd. REST API: token counts × per-model USD rates (Consumption Table 6c)."
         expr: cost_usd
         data_type: NUMBER
       - name: mtd_credits
