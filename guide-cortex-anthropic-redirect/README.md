@@ -1,3 +1,5 @@
+![Guide](https://img.shields.io/badge/Type-Guide-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--04--16-orange)
 
 # Cortex Anthropic API Redirect Guide
@@ -5,9 +7,86 @@
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-17 | **Expires:** 2026-04-16 | **Status:** ACTIVE
 
-Existing Anthropic API code running against `api.anthropic.com`? Change **3 lines** and it runs through Snowflake Cortex instead -- same SDK, same request body, same response format. Your data stays within Snowflake's governance boundary.
+**Time:** ~15 minutes | **Result:** Existing Anthropic code running through Snowflake Cortex
 
+Keep your data within Snowflake's governance boundary without rewriting your Anthropic code. Change **3 lines** of SDK configuration and your existing `client.messages.create(...)` calls, streaming, and tool calling all route through Cortex instead -- same request body, same response format, same model names.
+
+> [!CAUTION]
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+
+## Who This Is For
+
+Anyone with existing Anthropic API code who wants to route it through Snowflake Cortex for data governance, unified billing, or multi-model access. You need a Snowflake account and an Anthropic API key.
+
+**Already decided to migrate?** Jump to [Quick Start](#quick-start).
+**Evaluating whether to migrate?** Start with [When to Use Which](#when-to-use-which).
+
+---
+
+## In This Guide
+
+| | Section | What You'll Find |
+|---|---------|-----------------|
+| 1 | [The 3-Line Change](#the-3-line-change) | The code diff -- what changes and what stays the same |
+| 2 | [Quick Start](#quick-start) | Install and run in 5 minutes |
+| 3 | [When to Use Which](#when-to-use-which) | Decision tree: Cortex vs Anthropic Direct |
+| 4 | [Total Cost of Ownership](#total-cost-of-ownership) | Hidden costs on both sides |
+| 5 | [Agent Workloads](#agent-workloads) | Why Cortex wins for agents ($20-50K eval gap) |
+| 6 | [Feature Compatibility](#feature-compatibility) | What works through Cortex |
+| 7 | [Prerequisites](#prerequisites) | Credentials and access setup |
+| 8 | [Production Auth](#production-auth-key-pair-jwt) | Key-pair JWT for service accounts and CI/CD |
+| 9 | [Scripts](#scripts----learning-path) | All runnable examples, organized as a progression |
+
+---
+
+## The 3-Line Change
+
+**Before** (Anthropic direct):
+```python
+import anthropic
+
+client = anthropic.Anthropic()  # uses ANTHROPIC_API_KEY
+```
+
+**After** (Cortex redirect):
+```python
+import anthropic, httpx, os
+
+PAT = os.environ["SNOWFLAKE_PAT"]
+ACCOUNT = os.environ["SNOWFLAKE_ACCOUNT"]
+
+client = anthropic.Anthropic(
+    api_key="not-used",  # pragma: allowlist secret
+    base_url=f"https://{ACCOUNT}.snowflakecomputing.com/api/v2/cortex",
+    http_client=httpx.Client(headers={"Authorization": f"Bearer {PAT}"}),
+    default_headers={"Authorization": f"Bearer {PAT}"},
+)
+```
+
+Everything after client creation is identical -- `client.messages.create(...)`, streaming, tool calling, all of it.
+
+### What Changes (and What Doesn't)
+
+| | Anthropic Direct | Cortex Redirect |
+|---|---|---|
+| **Endpoint** | `api.anthropic.com` | `<account>.snowflakecomputing.com/api/v2/cortex` |
+| **Auth** | `x-api-key` header (API key) | `Authorization: Bearer` (Snowflake PAT) |
+| **SDK `api_key`** | Your Anthropic key | `"not-used"` (required but ignored) |
+| **Request body** | _unchanged_ | _unchanged_ |
+| **Model names** | _unchanged_ (e.g., `claude-sonnet-4-5`) | _unchanged_ |
+| **Response format** | _unchanged_ | _unchanged_ |
+| **Streaming** | _unchanged_ | _unchanged_ |
+| **Tool calling** | _unchanged_ | _unchanged_ |
+
+```mermaid
+flowchart LR
+    App[Your App] --> SDK[Anthropic SDK]
+    SDK -->|"Before: x-api-key"| Anthropic[api.anthropic.com]
+    SDK -->|"After: Bearer PAT"| Cortex["account.snowflakecomputing.com<br/>/api/v2/cortex"]
+    Cortex --> SF[Snowflake Governance Boundary]
+```
+
+---
 
 ## Quick Start
 
@@ -35,54 +114,149 @@ python3 python/02_cortex_redirect.py
 python3 python/03_side_by_side.py
 ```
 
+> [!TIP]
+> Script `03_side_by_side.py` is the best one for live demos -- it runs the same prompt through both APIs and shows timing side by side.
+
 ![Side-by-side comparison output](assets/side-by-side.png)
 
-## What Changes (and What Doesn't)
+> [!IMPORTANT]
+> Need help with credentials? See [Prerequisites](#prerequisites) for step-by-step setup of your Anthropic key, Snowflake account, and PAT.
 
-| | Anthropic Direct | Cortex Redirect |
-|---|---|---|
-| **Endpoint** | `api.anthropic.com` | `<account>.snowflakecomputing.com/api/v2/cortex` |
-| **Auth** | `x-api-key` header (API key) | `Authorization: Bearer` (Snowflake PAT) |
-| **SDK `api_key`** | Your Anthropic key | `"not-used"` (required but ignored) |
-| **Request body** | _unchanged_ | _unchanged_ |
-| **Model names** | _unchanged_ (e.g., `claude-sonnet-4-5`) | _unchanged_ |
-| **Response format** | _unchanged_ | _unchanged_ |
-| **Streaming** | _unchanged_ | _unchanged_ |
-| **Tool calling** | _unchanged_ | _unchanged_ |
+---
+
+## When to Use Which
+
+This guide shows _how_ to redirect -- but _should_ you? Here's a fair comparison.
+
+### Anthropic Direct Wins
+
+| Scenario | Why |
+|----------|-----|
+| **High-volume batch processing** | 50% discount via [Batch API](https://docs.anthropic.com/en/docs/build-with-claude/batch-processing) (async, 24h turnaround) |
+| **Aggressive caching** | 90% discount on prompt cache hits (vs 5-min TTL on Cortex) |
+| **Cost-only optimization** | Lower per-token rates when governance isn't a constraint |
+
+### Cortex Wins
+
+| Scenario | Why |
+|----------|-----|
+| **Data governance required** | Inference runs within Snowflake -- data never leaves your perimeter |
+| **Agent workloads** | Built-in [Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations) for systematic testing |
+| **Unified billing** | LLM costs appear on your Snowflake bill as credits |
+| **Multi-model access** | Claude, GPT, Llama, Mistral, DeepSeek from one endpoint |
+| **No model API keys** | Just Snowflake auth (PAT or key-pair JWT) in production |
+| **Cost controls** | Native per-user spend limits and budget alerts via [ACCOUNT_USAGE](https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management) |
+
+### Quick Decision Tree
 
 ```mermaid
-flowchart LR
-    App[Your App] --> SDK[Anthropic SDK]
-    SDK -->|"Before: x-api-key"| Anthropic[api.anthropic.com]
-    SDK -->|"After: Bearer PAT"| Cortex["account.snowflakecomputing.com<br/>/api/v2/cortex"]
-    Cortex --> SF[Snowflake Governance Boundary]
+flowchart TD
+    Start["Building agents?"]
+    Start -->|Yes| Cortex["Cortex -- Agent Evaluations saves weeks"]
+    Start -->|No| Gov["Data governance required?"]
+    Gov -->|Yes| Cortex2[Cortex]
+    Gov -->|No| Batch["High-volume batch?"]
+    Batch -->|Yes| Anthropic["Anthropic Direct -- 50pct batch discount"]
+    Batch -->|No| Either["Either works -- Cortex adds observability"]
 ```
 
-## The 3-Line Change
+---
 
-**Before** (Anthropic direct):
-```python
-import anthropic
+## Total Cost of Ownership
 
-client = anthropic.Anthropic()  # uses ANTHROPIC_API_KEY
-```
+Token pricing tells only part of the story. Consider these secondary costs:
 
-**After** (Cortex redirect):
-```python
-import anthropic, httpx, os
+### What Cortex Includes (No Extra Build)
 
-PAT = os.environ["SNOWFLAKE_PAT"]
-ACCOUNT = os.environ["SNOWFLAKE_ACCOUNT"]
+| Capability | Anthropic Direct | Cortex |
+|------------|------------------|--------|
+| Data residency compliance | Build yourself | Built-in |
+| Audit trail | Build yourself | [ACCOUNT_USAGE views](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_functions_usage_history) |
+| Per-user spend tracking | Build yourself | Native |
+| Budget alerts | Build yourself | Native (alerts + tasks) |
+| Cost attribution by query | Build yourself | Query-level tracking |
 
-client = anthropic.Anthropic(
-    api_key="not-used",  # pragma: allowlist secret
-    base_url=f"https://{ACCOUNT}.snowflakecomputing.com/api/v2/cortex",
-    http_client=httpx.Client(headers={"Authorization": f"Bearer {PAT}"}),
-    default_headers={"Authorization": f"Bearer {PAT}"},
-)
-```
+<details>
+<summary><strong>Anthropic Direct -- Hidden Costs</strong></summary>
 
-Everything after client creation is identical -- `client.messages.create(...)`, streaming, tool calling, all of it.
+| Cost Category | What You Build/Pay For |
+|---------------|------------------------|
+| API key management | Rotation, secrets vaults, access control |
+| Data egress | Cloud provider fees when data leaves your VPC |
+| Compliance overhead | Auditing data that crosses security boundaries |
+| Billing reconciliation | Separate vendor invoice vs unified Snowflake bill |
+| Rate limit engineering | Backoff logic, queue management, retry handling |
+| Cost attribution | Custom tagging to track spend by team/project |
+
+</details>
+
+<details>
+<summary><strong>Cortex -- Hidden Costs</strong></summary>
+
+| Cost Category | What You Pay For |
+|---------------|------------------|
+| Credit price variability | Contract-dependent ($2-4/credit typical) |
+| No batch discount | Full price for async workloads |
+| Cross-region inference | Additional cost if enabled for higher limits |
+| Migration effort | One-time: adapting existing Anthropic code |
+
+</details>
+
+---
+
+## Agent Workloads
+
+If you're building agents (not just simple completions), Cortex has a significant advantage: **[Cortex Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations)**.
+
+### What Agent Evaluations Provides
+
+- **Tool selection accuracy** -- Did the agent pick the right tools?
+- **Tool execution accuracy** -- Did inputs/outputs match expectations?
+- **Answer correctness** -- Does the response match the expected answer?
+- **Logical consistency** -- Is reasoning coherent across the trace?
+- **Custom LLM judges** -- Define domain-specific scoring criteria
+- **Deep observability** -- Thread and trace-level debugging
+
+Snowflake's research shows these built-in metrics capture **95% of human-annotated errors** and localize them to specific trace spans with **86% accuracy**.
+
+> _"We were able to increase accuracy from 75% to 85%"_ -- Sanofi, using Cortex Agent Evaluations to optimize their agent and semantic views
+
+The evaluation framework doesn't just measure quality -- it improves it by surfacing exactly where reasoning breaks down.
+
+<details>
+<summary><strong>The Evaluation Gap -- What It Costs to Build This Yourself</strong></summary>
+
+| Component | Estimated Effort |
+|-----------|------------------|
+| Evaluation framework | 2-4 weeks engineering |
+| LLM judge infrastructure | $500-2K/month (judge model calls) |
+| Trace storage & debugging UI | 1-2 weeks + hosting |
+| Custom metric framework | 1 week |
+| **Total** | **$20K-50K+ to replicate** |
+
+</details>
+
+---
+
+## Feature Compatibility
+
+All features below work identically through Cortex (Claude models only):
+
+| Feature | Supported | Notes |
+|---------|-----------|-------|
+| Text completion | Yes | Same request/response format |
+| Streaming | Yes | SSE with `client.messages.stream()` |
+| Tool calling | Yes | Identical tool definitions and responses |
+| Structured output | Yes | Via `tool_use` pattern |
+| Prompt caching | Yes | `cache_control` with 5-min TTL |
+| Image input | Yes | Base64 source blocks |
+| Extended thinking | Yes | `thinking` parameter with `type: "adaptive"` |
+| Beta features | Yes | Via `anthropic-beta` header |
+| Multi-turn conversations | Yes | Same message array format |
+
+For non-Claude models (OpenAI, Llama, Mistral, DeepSeek), use the Cortex Chat Completions API with the OpenAI SDK instead.
+
+---
 
 ## Prerequisites
 
@@ -125,7 +299,8 @@ Add it to `.env`:
 SNOWFLAKE_PAT=ver:1:...
 ```
 
-After updating `.env`, re-source it: `source .env`
+> [!IMPORTANT]
+> After updating `.env`, re-source it: `source .env`
 
 ### 4. Verify Cortex Access
 
@@ -135,7 +310,10 @@ SELECT CURRENT_ROLE();
 -- If needed: GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE my_role;
 ```
 
-## Production Auth: Key-Pair JWT
+---
+
+<details>
+<summary><h2>Production Auth: Key-Pair JWT</h2></summary>
 
 PAT is great for testing. For production, service accounts, and CI/CD, use key-pair JWT:
 
@@ -196,139 +374,43 @@ response = client.messages.create(
 
 The only difference from PAT auth: the `Authorization` header carries a signed JWT, and `X-Snowflake-Authorization-Token-Type: KEYPAIR_JWT` is added. The helper handles JWT generation, caching, and auto-refresh.
 
-## Files
+</details>
 
-| File | What It Shows |
-|------|---------------|
-| [`python/01_anthropic_direct.py`](python/01_anthropic_direct.py) | Baseline: standard Anthropic SDK call |
-| [`python/02_cortex_redirect.py`](python/02_cortex_redirect.py) | Same call via Cortex (3 changes highlighted) |
-| [`python/03_side_by_side.py`](python/03_side_by_side.py) | Both APIs, same prompt, side-by-side with timing |
-| [`python/04_streaming.py`](python/04_streaming.py) | Streaming token-by-token from both APIs |
-| [`python/05_tool_calling.py`](python/05_tool_calling.py) | Tool calling with identical tool definitions |
-| [`python/06_keypair_auth.py`](python/06_keypair_auth.py) | Production key-pair JWT auth |
-| [`python/snowflake_auth.py`](python/snowflake_auth.py) | Shared helper: builds Cortex client (PAT or key-pair) |
+---
+
+## Scripts -- Learning Path
+
+Start with verification, then explore features:
+
+### Verify
+
+| Script | What You'll See |
+|--------|-----------------|
+| [`01_anthropic_direct.py`](python/01_anthropic_direct.py) | Baseline: confirm your Anthropic key works |
+| [`02_cortex_redirect.py`](python/02_cortex_redirect.py) | Same call via Cortex (3 changes highlighted) |
+
+### Compare
+
+| Script | What You'll See |
+|--------|-----------------|
+| [`03_side_by_side.py`](python/03_side_by_side.py) | Both APIs, same prompt, side-by-side with timing |
+
+### Explore
+
+| Script | What You'll See |
+|--------|-----------------|
+| [`04_streaming.py`](python/04_streaming.py) | Streaming token-by-token from both APIs |
+| [`05_tool_calling.py`](python/05_tool_calling.py) | Tool calling with identical tool definitions |
+
+### Production
+
+| Script | What You'll See |
+|--------|-----------------|
+| [`06_keypair_auth.py`](python/06_keypair_auth.py) | Key-pair JWT auth for service accounts |
+| [`snowflake_auth.py`](python/snowflake_auth.py) | Shared helper: builds Cortex client (PAT or key-pair) |
 | [`curl_examples.sh`](curl_examples.sh) | Raw curl for both APIs |
 
-## Feature Compatibility
-
-All features below work identically through Cortex (Claude models only):
-
-| Feature | Supported | Notes |
-|---------|-----------|-------|
-| Text completion | Yes | Same request/response format |
-| Streaming | Yes | SSE with `client.messages.stream()` |
-| Tool calling | Yes | Identical tool definitions and responses |
-| Structured output | Yes | Via `tool_use` pattern |
-| Prompt caching | Yes | `cache_control` with 5-min TTL |
-| Image input | Yes | Base64 source blocks |
-| Extended thinking | Yes | `thinking` parameter with `type: "adaptive"` |
-| Beta features | Yes | Via `anthropic-beta` header |
-| Multi-turn conversations | Yes | Same message array format |
-
-For non-Claude models (OpenAI, Llama, Mistral, DeepSeek), use the Cortex Chat Completions API with the OpenAI SDK instead.
-
-## When to Use Which
-
-This guide shows _how_ to redirect -- but _should_ you? Here's a fair comparison.
-
-### Anthropic Direct Wins
-
-| Scenario | Why |
-|----------|-----|
-| **High-volume batch processing** | 50% discount via [Batch API](https://docs.anthropic.com/en/docs/build-with-claude/batch-processing) (async, 24h turnaround) |
-| **Aggressive caching** | 90% discount on prompt cache hits (vs 5-min TTL on Cortex) |
-| **Cost-only optimization** | Lower per-token rates when governance isn't a constraint |
-
-### Cortex Wins
-
-| Scenario | Why |
-|----------|-----|
-| **Data governance required** | Inference runs within Snowflake -- data never leaves your perimeter |
-| **Agent workloads** | Built-in [Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations) for systematic testing |
-| **Unified billing** | LLM costs appear on your Snowflake bill as credits |
-| **Multi-model access** | Claude, GPT, Llama, Mistral, DeepSeek from one endpoint |
-| **No model API keys** | Just Snowflake auth (PAT or key-pair JWT) in production |
-| **Cost controls** | Native per-user spend limits and budget alerts via [ACCOUNT_USAGE](https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management) |
-
-### Quick Decision Tree
-
-```
-Are you building agents?
-  └─ Yes → Cortex (Agent Evaluations alone saves weeks of build time)
-  └─ No, just completions:
-       └─ Is data governance required?
-            └─ Yes → Cortex
-            └─ No → Is this high-volume batch?
-                 └─ Yes → Anthropic (50% batch discount)
-                 └─ No → Either works (Cortex adds observability)
-```
-
-## Total Cost of Ownership
-
-Token pricing tells only part of the story. Consider these secondary costs:
-
-### Anthropic Direct -- Hidden Costs
-
-| Cost Category | What You Build/Pay For |
-|---------------|------------------------|
-| API key management | Rotation, secrets vaults, access control |
-| Data egress | Cloud provider fees when data leaves your VPC |
-| Compliance overhead | Auditing data that crosses security boundaries |
-| Billing reconciliation | Separate vendor invoice vs unified Snowflake bill |
-| Rate limit engineering | Backoff logic, queue management, retry handling |
-| Cost attribution | Custom tagging to track spend by team/project |
-
-### Cortex -- Hidden Costs
-
-| Cost Category | What You Pay For |
-|---------------|------------------|
-| Credit price variability | Contract-dependent ($2-4/credit typical) |
-| No batch discount | Full price for async workloads |
-| Cross-region inference | Additional cost if enabled for higher limits |
-| Migration effort | One-time: adapting existing Anthropic code |
-
-### What Cortex Includes (No Extra Build)
-
-| Capability | Anthropic Direct | Cortex |
-|------------|------------------|--------|
-| Data residency compliance | Build yourself | Built-in |
-| Audit trail | Build yourself | [ACCOUNT_USAGE views](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_functions_usage_history) |
-| Per-user spend tracking | Build yourself | Native |
-| Budget alerts | Build yourself | Native (alerts + tasks) |
-| Cost attribution by query | Build yourself | Query-level tracking |
-
-## Agent Workloads
-
-If you're building agents (not just simple completions), Cortex has a significant advantage: **[Cortex Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations)**.
-
-### The Evaluation Gap
-
-Building equivalent eval infrastructure yourself requires:
-
-| Component | Estimated Effort |
-|-----------|------------------|
-| Evaluation framework | 2-4 weeks engineering |
-| LLM judge infrastructure | $500-2K/month (judge model calls) |
-| Trace storage & debugging UI | 1-2 weeks + hosting |
-| Custom metric framework | 1 week |
-| **Total** | **$20K-50K+ to replicate** |
-
-### What Agent Evaluations Provides
-
-- **Tool selection accuracy** -- Did the agent pick the right tools?
-- **Tool execution accuracy** -- Did inputs/outputs match expectations?
-- **Answer correctness** -- Does the response match the expected answer?
-- **Logical consistency** -- Is reasoning coherent across the trace?
-- **Custom LLM judges** -- Define domain-specific scoring criteria
-- **Deep observability** -- Thread and trace-level debugging
-
-Snowflake's research shows these built-in metrics capture **95% of human-annotated errors** and localize them to specific trace spans with **86% accuracy**.
-
-### Real-World Impact
-
-> _"We were able to increase accuracy from 75% to 85%"_ -- Sanofi, using Cortex Agent Evaluations to optimize their agent and semantic views
-
-The evaluation framework doesn't just measure quality -- it improves it by surfacing exactly where reasoning breaks down.
+---
 
 ## Development Tools
 
@@ -339,6 +421,7 @@ This project is designed for AI-pair development.
 - **Cortex Code in Snowsight** -- Open in a Workspace for AI-assisted development
 - **Cursor** -- Open locally for AI-pair coding
 
+> [!TIP]
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
 ## Learn More
