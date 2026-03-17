@@ -110,12 +110,11 @@ Create a PAT in Snowsight or SQL:
 
 **Option B -- SQL:**
 ```sql
-ALTER USER my_user ADD PROGRAMMATIC ACCESS TOKEN
-  TOKEN_NAME = 'cortex_api_demo'
-  TOKEN_COMMENT = 'For Cortex Anthropic redirect guide'
-  DAYS_TO_EXPIRY = 30;
+ALTER USER my_user ADD PROGRAMMATIC ACCESS TOKEN cortex_api_demo
+  DAYS_TO_EXPIRY = 30
+  COMMENT = 'Cortex Anthropic redirect guide';
 ```
-Copy the token from the result.
+Copy the `token_secret` value from the result (shown only once -- no way to retrieve it later).
 
 ```bash
 export SNOWFLAKE_PAT="ver:1:..."
