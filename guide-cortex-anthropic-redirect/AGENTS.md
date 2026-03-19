@@ -12,6 +12,7 @@ with minimal code changes -- runnable Python scripts that call both APIs side by
 - `python/05_tool_calling.py` -- Tool calling comparison
 - `python/06_keypair_auth.py` -- Production key-pair JWT auth
 - `python/snowflake_auth.py` -- Shared helper: builds Cortex client (PAT or key-pair JWT)
+- `claude-code-jwt-helper.sh` -- apiKeyHelper script for Claude Code key-pair JWT auth
 - `curl_examples.sh` -- Raw curl equivalents for both APIs
 - `.claude/skills/cortex-anthropic-redirect/SKILL.md` -- Project-specific AI skill
 
@@ -24,6 +25,8 @@ with minimal code changes -- runnable Python scripts that call both APIs side by
 - Two auth methods: PAT (testing) and key-pair JWT (production)
 - Key-pair JWT requires extra header: `X-Snowflake-Authorization-Token-Type: KEYPAIR_JWT`
 - `python/snowflake_auth.py` provides `build_cortex_client_pat()` and `build_cortex_client_keypair()`
+- Claude Code redirect uses `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` env vars (same base_url, different auth mechanism)
+- Claude Code key-pair JWT uses `apiKeyHelper` setting pointing to `claude-code-jwt-helper.sh`
 
 ## When Helping with This Project
 - This is a guide, not a demo -- no deploy_all.sql, no Snowflake objects
@@ -32,6 +35,7 @@ with minimal code changes -- runnable Python scripts that call both APIs side by
 - Each Python script is self-contained and independently runnable
 - The `03_side_by_side.py` script is the best one for live demos
 - Cortex Messages API supports: streaming, tool calling, structured output, thinking, image input, prompt caching
+- The guide covers two redirect targets: the Anthropic Python SDK (code changes) and Claude Code (env var changes)
 
 ## Helping New Users
 

@@ -35,7 +35,8 @@ Anyone with existing Anthropic API code who wants to route it through Snowflake 
 | 6 | [Feature Compatibility](#feature-compatibility) | What works through Cortex |
 | 7 | [Prerequisites](#prerequisites) | Credentials and access setup |
 | 8 | [Production Auth](#production-auth-key-pair-jwt) | Key-pair JWT for service accounts and CI/CD |
-| 9 | [Scripts](#scripts----learning-path) | All runnable examples, organized as a progression |
+| 9 | [Claude Code](#claude-code) | Redirect Claude Code's API traffic through Cortex |
+| 10 | [Scripts](#scripts----learning-path) | All runnable examples, organized as a progression |
 
 ---
 
@@ -376,6 +377,101 @@ The only difference from PAT auth: the `Authorization` header carries a signed J
 
 ---
 
+## Claude Code
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) uses the same Anthropic Messages API under the hood, so it redirects to Cortex the same way -- through environment variables instead of SDK constructor args.
+
+### The 2-Variable Change
+
+**Before** (Anthropic direct -- default):
+```bash
+# Claude Code talks to api.anthropic.com using your Anthropic subscription
+claude
+```
+
+**After** (Cortex redirect):
+```bash
+export ANTHROPIC_BASE_URL="https://<account>.snowflakecomputing.com/api/v2/cortex"
+export ANTHROPIC_AUTH_TOKEN="<your-snowflake-PAT>"
+claude
+```
+
+That's it. Claude Code appends `/v1/messages` to the base URL automatically, which maps to Cortex's Messages API endpoint. The `ANTHROPIC_AUTH_TOKEN` value is sent as the `Authorization: Bearer` header -- exactly what Snowflake expects.
+
+### PAT Auth (Quick Start)
+
+Set two environment variables and launch:
+
+```bash
+export ANTHROPIC_BASE_URL="https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com/api/v2/cortex"
+export ANTHROPIC_AUTH_TOKEN="${SNOWFLAKE_PAT}"
+claude
+```
+
+Or persist them in Claude Code's settings file (`~/.claude/settings.json`), substituting your actual values:
+
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://<account>.snowflakecomputing.com/api/v2/cortex",
+    "ANTHROPIC_AUTH_TOKEN": "<your-snowflake-PAT>"
+  }
+}
+```
+
+> [!TIP]
+> Don't have a PAT yet? See [Prerequisites](#prerequisites) above for step-by-step creation.
+
+### Key-Pair JWT Auth (Production)
+
+PATs expire and require manual rotation. For long-running or team-wide setups, use Claude Code's `apiKeyHelper` to generate key-pair JWTs on demand.
+
+**1. Set environment variables** (or add to `settings.json` under `"env"`):
+
+```bash
+export ANTHROPIC_BASE_URL="https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com/api/v2/cortex"
+export ANTHROPIC_CUSTOM_HEADERS="X-Snowflake-Authorization-Token-Type: KEYPAIR_JWT"
+export SNOWFLAKE_ACCOUNT=<account>
+export SNOWFLAKE_USER=MY_SERVICE_USER
+export SNOWFLAKE_PRIVATE_KEY_PATH=./rsa_key.pem
+export CLAUDE_CODE_API_KEY_HELPER_TTL_MS=3300000
+```
+
+**2. Configure the API key helper** in `~/.claude/settings.json`:
+
+```json
+{
+  "apiKeyHelper": "/path/to/guide-cortex-anthropic-redirect/claude-code-jwt-helper.sh"
+}
+```
+
+**3. Launch Claude Code** -- the helper script generates a fresh JWT automatically, and Claude Code refreshes it every ~55 minutes (before the 1-hour expiry):
+
+```bash
+claude
+```
+
+The helper script ([`claude-code-jwt-helper.sh`](claude-code-jwt-helper.sh)) calls the same `snowflake_auth.py` module used by the Python examples. See [Production Auth](#production-auth-key-pair-jwt) above for one-time key-pair setup.
+
+### Known Limitations
+
+| Consideration | Detail |
+|---------------|--------|
+| **MCP tool search** | Disabled by default when `ANTHROPIC_BASE_URL` points to a non-Anthropic host. Re-enable with `ENABLE_TOOL_SEARCH=true` if needed ([docs](https://docs.anthropic.com/en/docs/claude-code/mcp)) |
+| **Token counting** | Cortex does not expose `/v1/messages/count_tokens`, so Claude Code's token-counting features may be unavailable |
+| **Claude models only** | The Cortex Messages API serves Claude models; other models require the Chat Completions API |
+| **Beta headers** | If Cortex rejects unknown `anthropic-beta` header values, set `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1` |
+
+### Claude Code Documentation
+
+These Anthropic docs cover the full environment variable and gateway configuration:
+
+- [Environment variables reference](https://docs.anthropic.com/en/docs/claude-code/settings) -- all env vars Claude Code supports
+- [LLM gateway configuration](https://docs.anthropic.com/en/docs/claude-code/llm-gateway) -- gateway requirements, `apiKeyHelper`, and model selection
+- [Enterprise network configuration](https://docs.anthropic.com/en/docs/claude-code/corporate-proxy) -- proxy, custom CA, and mTLS setup
+
+---
+
 ## Scripts -- Learning Path
 
 Start with verification, then explore features:
@@ -406,6 +502,7 @@ Start with verification, then explore features:
 |--------|-----------------|
 | [`06_keypair_auth.py`](python/06_keypair_auth.py) | Key-pair JWT auth for service accounts |
 | [`snowflake_auth.py`](python/snowflake_auth.py) | Shared helper: builds Cortex client (PAT or key-pair) |
+| [`claude-code-jwt-helper.sh`](claude-code-jwt-helper.sh) | JWT helper for Claude Code's `apiKeyHelper` |
 | [`curl_examples.sh`](curl_examples.sh) | Raw curl for both APIs |
 
 ---

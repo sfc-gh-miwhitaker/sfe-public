@@ -1,20 +1,24 @@
 ---
 name: cortex-anthropic-redirect
-description: "Cortex Anthropic API redirect guide. Shows how to reroute Anthropic SDK calls to Snowflake Cortex REST API. Use when: anthropic migration, cortex messages api, api redirect, sdk base_url override."
+description: "Cortex Anthropic API redirect guide. Shows how to reroute Anthropic SDK calls and Claude Code to Snowflake Cortex REST API. Use when: anthropic migration, cortex messages api, api redirect, sdk base_url override, claude code cortex."
 ---
 
 # Cortex Anthropic API Redirect Guide
 
 ## Purpose
-Show existing Anthropic API users how to redirect their Python SDK calls to Snowflake Cortex with 3 code changes, keeping the same request body and response format.
+Show existing Anthropic API users how to redirect their Python SDK calls and Claude Code to Snowflake Cortex, keeping the same request body and response format. The SDK redirect is a 3-line code change; the Claude Code redirect is 2 environment variables.
 
 ## Architecture
 ```
 Anthropic Direct:   App --> anthropic SDK --> api.anthropic.com/v1/messages
 Cortex Redirect:    App --> anthropic SDK --> <account>.snowflakecomputing.com/api/v2/cortex/v1/messages
                                               (base_url + Bearer auth override)
+
+Claude Code Direct: claude --> api.anthropic.com/v1/messages
+Claude Code Cortex: claude --> <account>.snowflakecomputing.com/api/v2/cortex/v1/messages
+                               (ANTHROPIC_BASE_URL + ANTHROPIC_AUTH_TOKEN env vars)
 ```
-The SDK appends `/v1/messages` to the base_url automatically. Auth is swapped from `x-api-key` to `Authorization: Bearer <PAT>` via a custom httpx client.
+The SDK and Claude Code both append `/v1/messages` to the base_url automatically. Auth is swapped from `x-api-key` to `Authorization: Bearer <PAT>` -- via httpx client for the SDK, via `ANTHROPIC_AUTH_TOKEN` for Claude Code.
 
 ## Key Files
 
@@ -27,6 +31,7 @@ The SDK appends `/v1/messages` to the base_url automatically. Auth is swapped fr
 | `python/05_tool_calling.py` | Tool calling comparison with identical tool defs |
 | `python/06_keypair_auth.py` | Production key-pair JWT auth example |
 | `python/snowflake_auth.py` | Shared helper: builds Cortex client (PAT or key-pair JWT) |
+| `claude-code-jwt-helper.sh` | apiKeyHelper script for Claude Code key-pair JWT auth |
 | `curl_examples.sh` | Raw curl for both APIs |
 | `requirements.txt` | anthropic, httpx, cryptography |
 | `.env.example` | Credential template (PAT + key-pair variables) |
@@ -51,3 +56,6 @@ The SDK appends `/v1/messages` to the base_url automatically. Auth is swapped fr
 - Key-pair JWT account identifier must be UPPERCASE with dots replaced by hyphens
 - Model names are identical between Anthropic and Cortex (e.g., `claude-sonnet-4-5`)
 - Cortex Messages API supports Claude models only; for other models use the Chat Completions API
+- Claude Code: MCP tool search is disabled by default when ANTHROPIC_BASE_URL points to a non-first-party host
+- Claude Code: Cortex does not expose `/v1/messages/count_tokens`, so token-counting features may be unavailable
+- Claude Code: key-pair JWT requires `ANTHROPIC_CUSTOM_HEADERS` for the token-type header (env var, not httpx)
