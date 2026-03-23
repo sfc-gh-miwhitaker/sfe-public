@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-24-blue)
+![Projects](https://img.shields.io/badge/Projects-25-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -64,6 +64,7 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 
 | Directory | Description | Features |
 |---|---|---|
+| [tool-cortex-agent-cost](tool-cortex-agent-cost/) | Granular Cortex Agent cost reporting with per-model token/credit breakdowns and forecasting | ACCOUNT_USAGE, LATERAL FLATTEN, Streamlit in Snowflake |
 | [tool-cortex-cost-intelligence](tool-cortex-cost-intelligence/) | Cortex cost governance with semantic views and Cortex Agents | ACCOUNT_USAGE, Semantic Views, Cortex Agents, Streamlit |
 | [tool-dr-cost-agent](tool-dr-cost-agent/) | DR replication cost estimation agent with hybrid table awareness | Snowflake Intelligence, Semantic Views, ACCOUNT_USAGE |
 | [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |
