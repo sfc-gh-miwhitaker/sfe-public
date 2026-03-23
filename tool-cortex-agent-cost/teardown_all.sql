@@ -1,5 +1,5 @@
 /******************************************************************************
- * Tool: Cortex Agent Cost
+ * Tool: Cortex REST API Cost
  * File: teardown_all.sql
  * Author: SE Community
  *
@@ -44,5 +44,5 @@ DROP WAREHOUSE IF EXISTS SFE_CORTEX_AGENT_COST_WH;
 SELECT
     'TEARDOWN COMPLETE' AS status,
     CURRENT_TIMESTAMP() AS completed_at,
-    'Cortex Agent Cost' AS tool,
+    'Cortex REST API Cost' AS tool,
     'Schema CORTEX_AGENT_COST, warehouse, and Streamlit app removed' AS message;

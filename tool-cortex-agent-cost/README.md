@@ -1,82 +1,54 @@
-# Cortex Agent Cost
+# Cortex REST API Cost
 
 ![Expires](https://img.shields.io/badge/Expires-2026--04--22-orange)
+**TOOL PROJECT** | Pair-programmed by SE Community + Cortex Code
 
-> TOOL PROJECT - EXPIRES: 2026-04-22
-> This tool uses Snowflake features current as of March 2026.
-
-Granular cost reporting and forecasting for Cortex Agent and Snowflake Intelligence usage with per-model token and credit breakdowns.
-
-**Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-23 | **Expires:** 2026-04-22 | **Status:** ACTIVE
-
-## Brand New to GitHub or Cortex Code?
-
-Start with the [Getting Started Guide](../guide-coco-setup/) -- it walks you through downloading the code and installing Cortex Code (the AI assistant that will help you with everything else).
-
-## First Time Here?
-
-1. **Deploy** - Copy `deploy_all.sql` into Snowsight, click "Run All"
-2. **Open** - Navigate to Projects > Streamlit > CORTEX_AGENT_COST_APP
-3. **Explore** - Browse the 5-page dashboard (Overview, Agent Deep Dive, Model Breakdown, User Attribution, Forecasting)
-4. **Cleanup** - Run `teardown_all.sql` when done
+Track and visualize the dollar cost of Snowflake Cortex REST API calls.
 
 ## What This Does
 
-Zooms into the `TOKENS_GRANULAR` and `CREDITS_GRANULAR` arrays from `CORTEX_AGENT_USAGE_HISTORY` and `SNOWFLAKE_INTELLIGENCE_USAGE_HISTORY` to show:
+Queries `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_REST_API_USAGE_HISTORY` for direct REST API
+model calls, applies pricing rates from the Service Consumption Table (Tables 6b/6c),
+and displays usage and cost in a single-page Streamlit dashboard.
 
-- **Per-model credit and token breakdown** within agent orchestration calls
-- **Cache efficiency analysis** (cache read tokens vs total input tokens)
-- **Per-agent cost comparison** across all agents in your account
-- **Per-user spend attribution** to identify top consumers
-- **Cost forecasting** with growth rate scenario planning
+REST API calls are billed in **dollars per million tokens** (not credits). This tool
+calculates the dollar cost from token counts and model-specific rates.
 
-## Architecture
+## Quick Start
 
-```
-ACCOUNT_USAGE
-  ├─ CORTEX_AGENT_USAGE_HISTORY
-  └─ SNOWFLAKE_INTELLIGENCE_USAGE_HISTORY
-          │
-    Detail Views ──► Combined View ──► Granular Views ──► Summary Views
-                                       (LATERAL FLATTEN)
-          │
-    Streamlit Dashboard (5 pages)
-```
+1. Copy `deploy_all.sql` into Snowsight
+2. Click **Run All**
+3. Open **Projects > Streamlit > CORTEX_AGENT_COST_APP**
 
 ## What Gets Deployed
 
 | Object | Type | Purpose |
 |--------|------|---------|
-| `SNOWFLAKE_EXAMPLE.CORTEX_AGENT_COST` | Schema | All project objects |
-| `SFE_CORTEX_AGENT_COST_WH` | Warehouse | XSmall, auto-suspend 60s |
-| `AGENT_COST_CONFIG` | Table | Lookback days, credit cost USD |
-| `V_AGENT_DETAIL` | View | Cortex Agent usage (90-day window) |
-| `V_INTELLIGENCE_DETAIL` | View | Snowflake Intelligence usage (90-day window) |
-| `V_AGENT_COMBINED` | View | Union of both sources |
-| `V_TOKEN_GRANULAR` | View | Flattened per-model token breakdown |
-| `V_CREDIT_GRANULAR` | View | Flattened per-model credit breakdown |
-| `V_DAILY_SUMMARY` | View | Daily aggregation by agent/user |
-| `V_AGENT_COST_SUMMARY` | View | Per-agent totals and averages |
-| `V_MODEL_COST_SUMMARY` | View | Per-model cost analysis |
-| `V_USER_AGENT_SPEND` | View | Per-user per-agent attribution |
-| `V_CACHE_EFFICIENCY` | View | Cache read token ratio by model |
-| `V_FORECAST_BASE` | View | Daily totals for forecasting |
-| `CORTEX_AGENT_COST_APP` | Streamlit | 5-page dashboard |
+| `SNOWFLAKE_EXAMPLE.CORTEX_AGENT_COST` | Schema | All tool objects |
+| `SFE_CORTEX_AGENT_COST_WH` | Warehouse | XS, auto-suspend 60s |
+| `CORTEX_API_PRICING` | Table | $/M-token rates from Tables 6(b)/6(c) |
+| `V_API_USAGE_DETAIL` | View | Flattened token breakdown per request |
+| `V_API_USAGE_COSTED` | View | Dollar cost per request |
+| `V_DAILY_COST_SUMMARY` | View | Daily aggregation |
+| `V_MODEL_COST_SUMMARY` | View | Per-model aggregation |
+| `CORTEX_AGENT_COST_APP` | Streamlit | Single-page cost dashboard |
 
-## Prerequisites
+## Teardown
 
-- `ACCOUNTADMIN` role (for API integration creation)
-- Account with Cortex Agent or Snowflake Intelligence usage data
-- ACCOUNT_USAGE views lag up to 45 minutes — recent activity may not appear immediately
+Copy `teardown_all.sql` into Snowsight and click **Run All**.
 
-## Development Tools
+## Updating Pricing
 
-This project is designed for AI-pair development.
+When Snowflake updates the Service Consumption Table, update the rows in
+`CORTEX_API_PRICING`. The table is keyed on `(MODEL_NAME, REGION_CATEGORY)`.
 
-- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
-- **.claude/skills/** -- Project-specific AI skill teaching the AI this project's patterns
-- **Cortex Code in Snowsight** -- Open in a Workspace for AI-assisted development
-- **Cursor** -- Open locally for AI-pair coding
+## Data Source
 
-> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
+`SNOWFLAKE.ACCOUNT_USAGE.CORTEX_REST_API_USAGE_HISTORY` -- tracks direct REST API
+calls to Cortex models. Columns: `START_TIME`, `END_TIME`, `REQUEST_ID`, `MODEL_NAME`,
+`TOKENS`, `TOKENS_GRANULAR`, `USER_ID`, `INFERENCE_REGION`.
+
+This view does **not** include:
+- Cortex Agent framework calls (see `CORTEX_AGENT_USAGE_HISTORY`)
+- SQL-invoked AI functions (see `CORTEX_AI_FUNCTIONS_USAGE_HISTORY`)
+- Snowflake Intelligence usage (see `SNOWFLAKE_INTELLIGENCE_USAGE_HISTORY`)

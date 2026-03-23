@@ -1,5 +1,5 @@
 /******************************************************************************
- * Tool: Cortex Agent Cost
+ * Tool: Cortex REST API Cost
  * File: deploy_all.sql
  * Author: SE Community
  * Created: 2026-03-23
@@ -15,9 +15,13 @@
  * What This Creates:
  *   - Schema: SNOWFLAKE_EXAMPLE.CORTEX_AGENT_COST
  *   - Warehouse: SFE_CORTEX_AGENT_COST_WH
- *   - Config table: AGENT_COST_CONFIG
- *   - Views: 11 monitoring views (detail, granular, summary)
- *   - Streamlit: CORTEX_AGENT_COST_APP (5-page dashboard)
+ *   - Pricing table: CORTEX_API_PRICING (Tables 6b/6c rates)
+ *   - Views: 4 (usage detail, costed, daily summary, model summary)
+ *   - Streamlit: CORTEX_AGENT_COST_APP (single-page dashboard)
+ *
+ * Data Source:
+ *   SNOWFLAKE.ACCOUNT_USAGE.CORTEX_REST_API_USAGE_HISTORY
+ *   Billing: $ per million tokens (not credits)
  ******************************************************************************/
 
 -- ============================================================================
@@ -52,7 +56,7 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_CORTEX_AGENT_COST_WH
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
   INITIALLY_SUSPENDED = TRUE
-  COMMENT = 'TOOL: Cortex Agent Cost compute (Expires: 2026-04-22)';
+  COMMENT = 'TOOL: Cortex REST API Cost compute (Expires: 2026-04-22)';
 USE WAREHOUSE SFE_CORTEX_AGENT_COST_WH;
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
@@ -72,18 +76,11 @@ ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO FETCH;
 -- EXECUTE SCRIPTS IN ORDER
 -- ============================================================================
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/01_setup/01_schema_and_warehouse.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/02_config/01_config_table.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/01_agent_detail.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/02_intelligence_detail.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/03_combined.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/04_token_granular.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/05_credit_granular.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/06_daily_summary.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/07_agent_cost_summary.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/08_model_cost_summary.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/09_user_agent_spend.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/10_cache_efficiency.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/11_forecast_base.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/02_config/01_pricing_table.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/01_usage_detail.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/02_usage_with_cost.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/03_daily_summary.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/04_model_summary.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/04_streamlit/01_create_streamlit.sql';
 
 -- ============================================================================
@@ -92,6 +89,6 @@ EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/mai
 SELECT
     'DEPLOYMENT COMPLETE' AS status,
     CURRENT_TIMESTAMP() AS completed_at,
-    'Cortex Agent Cost' AS tool,
+    'Cortex REST API Cost' AS tool,
     '2026-04-22' AS expires,
     'Open Projects > Streamlit > CORTEX_AGENT_COST_APP' AS next_step;
