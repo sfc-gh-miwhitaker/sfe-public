@@ -64,7 +64,7 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 
 | Directory | Description | Features |
 |---|---|---|
-| [tool-cortex-agent-cost](tool-cortex-agent-cost/) | Cortex REST API cost dashboard -- tracks direct API calls and calculates dollar cost from token pricing | CORTEX_REST_API_USAGE_HISTORY, Streamlit in Snowflake |
+| [tool-cortex-rest-api-cost](tool-cortex-rest-api-cost/) | Cortex REST API cost dashboard -- tracks direct API calls and calculates dollar cost from token pricing | CORTEX_REST_API_USAGE_HISTORY, Streamlit in Snowflake |
 | [tool-cortex-cost-intelligence](tool-cortex-cost-intelligence/) | Cortex cost governance with semantic views and Cortex Agents | ACCOUNT_USAGE, Semantic Views, Cortex Agents, Streamlit |
 | [tool-dr-cost-agent](tool-dr-cost-agent/) | DR replication cost estimation agent with hybrid table awareness | Snowflake Intelligence, Semantic Views, ACCOUNT_USAGE |
 | [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |

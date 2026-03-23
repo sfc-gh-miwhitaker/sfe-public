@@ -29,7 +29,8 @@ The `ACCOUNT_USAGE` views have up to **45 minutes of latency** -- recent API cal
 
 1. Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet
 2. Click **Run All**
-3. Open **Projects > Streamlit > CORTEX_AGENT_COST_APP**
+3. Open **Projects > Streamlit > CORTEX_REST_API_COST_APP** for the dashboard
+4. Open **Projects > Notebooks > CORTEX_REST_API_COST_NOTEBOOK** to walk through the queries yourself
 
 No data? Make a Cortex REST API call (e.g. via the [Anthropic-redirect pattern](../guide-cortex-anthropic-redirect/) or the [inference:complete endpoint](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-llm-rest-api)) and check back after the `ACCOUNT_USAGE` latency window.
 
@@ -37,14 +38,15 @@ No data? Make a Cortex REST API call (e.g. via the [Anthropic-redirect pattern](
 
 | Object | Type | Purpose |
 |--------|------|---------|
-| `SNOWFLAKE_EXAMPLE.CORTEX_AGENT_COST` | Schema | All tool objects live here |
-| `SFE_CORTEX_AGENT_COST_WH` | Warehouse | XS, auto-suspend 60s |
+| `SNOWFLAKE_EXAMPLE.CORTEX_REST_API_COST` | Schema | All tool objects live here |
+| `SFE_CORTEX_REST_API_COST_WH` | Warehouse | XS, auto-suspend 60s |
 | `CORTEX_API_PRICING` | Table | $/million-token rates per model and region |
 | `V_API_USAGE_DETAIL` | View | Flattens `TOKENS_GRANULAR` into input/output columns |
 | `V_API_USAGE_COSTED` | View | Joins usage with pricing to compute dollar cost per request |
 | `V_DAILY_COST_SUMMARY` | View | Daily aggregation |
 | `V_MODEL_COST_SUMMARY` | View | Per-model aggregation with % of total |
-| `CORTEX_AGENT_COST_APP` | Streamlit | Single-page cost dashboard |
+| `CORTEX_REST_API_COST_APP` | Streamlit | Single-page cost dashboard |
+| `CORTEX_REST_API_COST_NOTEBOOK` | Notebook | 10-step query walkthrough |
 
 ## How Pricing Works
 

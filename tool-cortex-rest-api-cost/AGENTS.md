@@ -12,15 +12,17 @@ model from Cortex Agents, SQL AI functions, and Snowflake Intelligence (all cred
 ## Project Structure
 
 ```
-tool-cortex-agent-cost/
+tool-cortex-rest-api-cost/
 ├── deploy_all.sql              # One-command deployment (Run All in Snowsight)
 ├── teardown_all.sql            # Complete cleanup
 ├── sql/
 │   ├── 01_setup/               # Schema + warehouse
 │   ├── 02_config/              # CORTEX_API_PRICING table ($/M-token rates)
 │   ├── 03_views/               # 4 views: detail → costed → daily + model summaries
-│   └── 04_streamlit/           # CREATE STREAMLIT + GRANT
-└── streamlit/cortex_agent_cost/
+│   └── 04_streamlit/           # CREATE STREAMLIT + notebook
+├── notebook/
+│   └── cortex_rest_api_cost.ipynb  # 10-step query walkthrough notebook
+└── streamlit/cortex_rest_api_cost/
     ├── streamlit_app.py        # Single-page dashboard (no multi-page)
     ├── environment.yml         # streamlit=1.35.0, plotly, snowpark
     └── utils/data.py           # Three query functions (totals, daily, model)
@@ -29,8 +31,8 @@ tool-cortex-agent-cost/
 ## Snowflake Environment
 
 - **Database:** SNOWFLAKE_EXAMPLE
-- **Schema:** CORTEX_AGENT_COST
-- **Warehouse:** SFE_CORTEX_AGENT_COST_WH (XS, auto-suspend 60s)
+- **Schema:** CORTEX_REST_API_COST
+- **Warehouse:** SFE_CORTEX_REST_API_COST_WH (XS, auto-suspend 60s)
 
 ## Key Concepts
 

@@ -16,19 +16,20 @@
 USE ROLE SYSADMIN;
 
 -- ============================================================================
--- DROP STREAMLIT
+-- DROP STREAMLIT AND NOTEBOOK
 -- ============================================================================
-DROP STREAMLIT IF EXISTS SNOWFLAKE_EXAMPLE.CORTEX_AGENT_COST.CORTEX_AGENT_COST_APP;
+DROP NOTEBOOK IF EXISTS SNOWFLAKE_EXAMPLE.CORTEX_REST_API_COST.CORTEX_REST_API_COST_NOTEBOOK;
+DROP STREAMLIT IF EXISTS SNOWFLAKE_EXAMPLE.CORTEX_REST_API_COST.CORTEX_REST_API_COST_APP;
 
 -- ============================================================================
 -- DROP SCHEMA (CASCADE removes all tables, views)
 -- ============================================================================
-DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.CORTEX_AGENT_COST CASCADE;
+DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.CORTEX_REST_API_COST CASCADE;
 
 -- ============================================================================
 -- DROP WAREHOUSE
 -- ============================================================================
-DROP WAREHOUSE IF EXISTS SFE_CORTEX_AGENT_COST_WH;
+DROP WAREHOUSE IF EXISTS SFE_CORTEX_REST_API_COST_WH;
 
 -- ============================================================================
 -- PROTECTED - NEVER DROP:
@@ -45,4 +46,4 @@ SELECT
     'TEARDOWN COMPLETE' AS status,
     CURRENT_TIMESTAMP() AS completed_at,
     'Cortex REST API Cost' AS tool,
-    'Schema CORTEX_AGENT_COST, warehouse, and Streamlit app removed' AS message;
+    'Schema CORTEX_REST_API_COST, warehouse, Streamlit app, and notebook removed' AS message;

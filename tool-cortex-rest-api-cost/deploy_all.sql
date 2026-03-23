@@ -13,11 +13,12 @@
  *   2. Click "Run All"
  *
  * What This Creates:
- *   - Schema: SNOWFLAKE_EXAMPLE.CORTEX_AGENT_COST
- *   - Warehouse: SFE_CORTEX_AGENT_COST_WH
+ *   - Schema: SNOWFLAKE_EXAMPLE.CORTEX_REST_API_COST
+ *   - Warehouse: SFE_CORTEX_REST_API_COST_WH
  *   - Pricing table: CORTEX_API_PRICING (Tables 6b/6c rates)
  *   - Views: 4 (usage detail, costed, daily summary, model summary)
- *   - Streamlit: CORTEX_AGENT_COST_APP (single-page dashboard)
+ *   - Streamlit: CORTEX_REST_API_COST_APP (single-page dashboard)
+ *   - Notebook: CORTEX_REST_API_COST_NOTEBOOK (query walkthrough)
  *
  * Data Source:
  *   SNOWFLAKE.ACCOUNT_USAGE.CORTEX_REST_API_USAGE_HISTORY
@@ -51,13 +52,13 @@ CREATE API INTEGRATION IF NOT EXISTS SFE_GIT_API_INTEGRATION
 
 USE ROLE SYSADMIN;
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
-CREATE WAREHOUSE IF NOT EXISTS SFE_CORTEX_AGENT_COST_WH
+CREATE WAREHOUSE IF NOT EXISTS SFE_CORTEX_REST_API_COST_WH
   WAREHOUSE_SIZE = 'XSMALL'
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
   INITIALLY_SUSPENDED = TRUE
   COMMENT = 'TOOL: Cortex REST API Cost compute (Expires: 2026-04-22)';
-USE WAREHOUSE SFE_CORTEX_AGENT_COST_WH;
+USE WAREHOUSE SFE_CORTEX_REST_API_COST_WH;
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
   COMMENT = 'Shared schema for Git repository stages across demo projects';
@@ -75,13 +76,14 @@ ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO FETCH;
 -- ============================================================================
 -- EXECUTE SCRIPTS IN ORDER
 -- ============================================================================
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/01_setup/01_schema_and_warehouse.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/02_config/01_pricing_table.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/01_usage_detail.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/02_usage_with_cost.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/03_daily_summary.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/03_views/04_model_summary.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-agent-cost/sql/04_streamlit/01_create_streamlit.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-rest-api-cost/sql/01_setup/01_schema_and_warehouse.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-rest-api-cost/sql/02_config/01_pricing_table.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-rest-api-cost/sql/03_views/01_usage_detail.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-rest-api-cost/sql/03_views/02_usage_with_cost.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-rest-api-cost/sql/03_views/03_daily_summary.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-rest-api-cost/sql/03_views/04_model_summary.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-rest-api-cost/sql/04_streamlit/01_create_streamlit.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-rest-api-cost/sql/04_streamlit/02_create_notebook.sql';
 
 -- ============================================================================
 -- DEPLOYMENT COMPLETE
@@ -91,4 +93,4 @@ SELECT
     CURRENT_TIMESTAMP() AS completed_at,
     'Cortex REST API Cost' AS tool,
     '2026-04-22' AS expires,
-    'Open Projects > Streamlit > CORTEX_AGENT_COST_APP' AS next_step;
+    'Dashboard: Projects > Streamlit > CORTEX_REST_API_COST_APP  |  Notebook: Projects > Notebooks > CORTEX_REST_API_COST_NOTEBOOK' AS next_step;
