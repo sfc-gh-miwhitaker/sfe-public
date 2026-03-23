@@ -6,7 +6,6 @@ from utils.data import (
 from utils.formatting import format_credits, format_usd, format_pct
 from utils.charts import credits_bar, donut_chart, COLORS
 
-st.set_page_config(page_title="Model Breakdown", layout="wide")
 st.title("Model Breakdown")
 st.caption("Per-model cost and token analysis from flattened TOKENS_GRANULAR and CREDITS_GRANULAR arrays.")
 

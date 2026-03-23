@@ -7,7 +7,6 @@ from utils.data import (
 from utils.formatting import format_credits, format_usd, format_tokens, format_latency
 from utils.charts import daily_credits_area, COLORS
 
-st.set_page_config(page_title="Agent Deep Dive", layout="wide")
 st.title("Agent Deep Dive")
 
 agents_df = get_agent_list()

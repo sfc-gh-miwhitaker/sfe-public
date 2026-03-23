@@ -3,7 +3,6 @@ from utils.data import get_overview_kpis, get_daily_credits, get_top_agents, get
 from utils.formatting import format_credits, format_usd, format_tokens, format_latency
 from utils.charts import daily_credits_area, SERVICE_COLORS
 
-st.set_page_config(page_title="Overview", layout="wide")
 st.title("Overview")
 
 credit_cost = get_credit_cost()

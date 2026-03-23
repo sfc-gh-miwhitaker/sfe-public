@@ -4,7 +4,6 @@ from utils.data import get_forecast_data, get_credit_cost
 from utils.formatting import format_credits, format_usd
 from utils.charts import daily_credits_area, COLORS
 
-st.set_page_config(page_title="Forecasting", layout="wide")
 st.title("Forecasting")
 
 credit_cost = get_credit_cost()

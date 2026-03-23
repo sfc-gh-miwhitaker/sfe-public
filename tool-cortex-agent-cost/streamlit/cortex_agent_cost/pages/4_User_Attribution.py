@@ -3,7 +3,6 @@ from utils.data import get_user_spend, get_user_agent_detail, get_credit_cost
 from utils.formatting import format_credits, format_usd
 from utils.charts import horizontal_bar, COLORS
 
-st.set_page_config(page_title="User Attribution", layout="wide")
 st.title("User Attribution")
 st.caption("Per-user spend leaderboard with drill-down to agent-level detail.")
 
