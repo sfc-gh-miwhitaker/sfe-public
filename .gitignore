@@ -24,6 +24,9 @@ Desktop.ini
 .cortex/mcp_oauth/
 .cortex/memory/
 
+# ---- Snowflake CLI / Cortex Code plans ----
+.snowflake/cortex/plans/
+
 # ---- Secrets & Credentials (CRITICAL) ----
 .env
 .env.*
