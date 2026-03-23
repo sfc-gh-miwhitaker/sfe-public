@@ -11,6 +11,8 @@ This tool queries the usage history for those REST API calls, applies the publis
 
 ## What You See
 
+![Cortex REST API Cost Dashboard](images/dashboard.png)
+
 - **Total requests, tokens, and dollar cost** for a selectable lookback window (7 / 30 / 90 days)
 - **Daily cost trend** as a bar chart
 - **Cost by model** with request counts, token breakdown, and percentage of total spend
@@ -31,6 +33,8 @@ The `ACCOUNT_USAGE` views have up to **45 minutes of latency** -- recent API cal
 2. Click **Run All**
 3. Open **Projects > Streamlit > CORTEX_REST_API_COST_APP** for the dashboard
 4. Open **Projects > Notebooks > CORTEX_REST_API_COST_NOTEBOOK** to walk through the queries yourself
+
+![Cortex REST API Cost Notebook](images/notebook.png)
 
 No data? Make a Cortex REST API call (e.g. via the [Anthropic-redirect pattern](../guide-cortex-anthropic-redirect/) or the [inference:complete endpoint](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-llm-rest-api)) and check back after the `ACCOUNT_USAGE` latency window.
 
