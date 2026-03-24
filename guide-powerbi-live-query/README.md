@@ -55,8 +55,8 @@ flowchart LR
 | 1 | [Cost Realities](#cost-realities) | Billing model for each table type |
 | 2 | [Decision Framework](#decision-framework) | Flowchart to pick the right architecture |
 | 3 | [What NOT to Do](#what-not-to-do) | Five anti-patterns that cause "Power BI is slow" complaints |
-| 4 | [Interactive Tables Deep Dive](#interactive-tables-deep-dive) | Create, refresh, size, and scale interactive tables and warehouses |
-| 5 | [Hybrid Tables for Operational Dashboards](#hybrid-tables-for-operational-dashboards) | Point-lookup pattern with enforced keys and indexes |
+| 4 | [Interactive Tables Deep Dive](#interactive-tables-deep-dive) | [Why Interactive Analytics](#why-interactive-analytics), architecture visuals, create, refresh, size, and scale |
+| 5 | [Hybrid Tables for Operational Dashboards](#hybrid-tables-for-operational-dashboards) | [What Are Hybrid Tables](#what-are-hybrid-tables), architecture visuals, point-lookup pattern with enforced keys and indexes |
 | 6 | [Power BI Configuration](#power-bi-configuration) | SSO, DirectQuery setup, query folding patterns |
 | 7 | [Monitoring and Tuning](#monitoring-and-tuning) | Query history, partition efficiency, scaling triggers |
 | 8 | [Beyond Power BI: Cortex Analyst](#beyond-power-bi-cortex-analyst) | AI-assisted analytics as a complement to BI |
@@ -160,7 +160,23 @@ Hybrid tables use row-oriented primary storage optimized for point reads and sin
 
 Interactive tables and interactive warehouses (GA December 2025) are designed specifically for the workload pattern Power BI DirectQuery creates: many concurrent, short, selective queries.
 
+### Why Interactive Analytics
+
+Traditional BI architectures split real-time and analytical workloads across separate systems -- a data warehouse for complex queries and a dedicated low-latency database for dashboards. This creates data inconsistencies, unpredictable latency, increased points of failure, and unpredictable TCO at scale.
+
+![Today, BI and real-time analytics live in different systems -- creating data inconsistencies, unpredictable latency, and increased failure points](images/ia-problem-split-systems.png)
+
+Power BI DirectQuery at scale creates exactly this split-system pressure. Interactive tables and warehouses eliminate it by serving low-latency queries from the same governed Snowflake platform where the data already lives -- no separate serving layer, no data movement, no governance gaps.
+
+![One platform: integrated, governed, and effortless -- real-time decision making, sub-second latency, high concurrency, price-for-performance](images/ia-solution-one-platform.png)
+
+The performance difference is substantial. In internal benchmarks at 200-concurrent-user load, interactive warehouses deliver 9x higher queries per second and 3x lower latency than standard (Gen1) warehouses, at 40% lower cost on equal warehouse sizes.
+
+![Interactive vs. Gen1: 9x higher QPS, 3x lower latency, 40% lower cost at 200-concurrent-user benchmark load](images/ia-performance-vs-gen1.png)
+
 ### How It Works
+
+![How interactive tables work: any table feeds a CTAS into an interactive table, which is served by an interactive warehouse with SSD cache](images/ia-how-it-works.png)
 
 1. You create an **interactive table** with a required `CLUSTER BY` clause, populated from a source table
 2. You create an **interactive warehouse** and associate the interactive table with it
@@ -190,6 +206,8 @@ AS
 > The `CLUSTER BY` columns should match the columns Power BI filters on most. If your dashboards have a date slicer and a region dropdown, cluster on `(sale_date, region)`.
 
 ### Auto-Refresh with TARGET_LAG
+
+![Auto incremental refresh: batch sources flow through a refresh definition on a standard warehouse to keep interactive tables current](images/ia-auto-refresh.png)
 
 To keep the interactive table current with its source, add `TARGET_LAG` and specify a standard warehouse for refresh operations:
 
@@ -298,6 +316,16 @@ These constraints are unchanged since GA. Plan your architecture around them.
 ## Hybrid Tables for Operational Dashboards
 
 Use hybrid tables when the Power BI workload is dominated by point lookups -- retrieving one or a few rows by a key value. This is common in operational dashboards (e.g., "show me customer 12345's account details").
+
+### What Are Hybrid Tables
+
+Hybrid tables are a specialized table type in Snowflake that adds row-oriented primary storage with enforced primary keys, foreign keys, secondary indexes, and referential integrity -- capabilities traditionally requiring a separate operational database. They sit alongside standard columnar tables within the same Snowflake architecture, governed by the same role-based access controls and sharing the same query engine.
+
+![Snowflake architecture with hybrid tables: where hybrid tables fit across the cloud services, query processing, and storage layers](images/ht-architecture.png)
+
+Under the hood, hybrid tables maintain a dual storage model. Writes land in a fast row store optimized for single-row inserts and updates, while data is asynchronously compacted into the columnar object store for analytical queries. This means point lookups on primary or secondary keys resolve in single-digit milliseconds, while broader scans still benefit from Snowflake's columnar engine.
+
+![Hybrid tables storage under the hood: row store for fast writes and point lookups, object store for analytical scans, with automatic compaction between them](images/ht-storage-under-hood.png)
 
 ### When to Choose Hybrid Over Interactive
 

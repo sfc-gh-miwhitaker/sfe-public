@@ -1,13 +1,13 @@
 ---
 name: demo-cortex-product-classification
-description: "Four classification approaches for multilingual product catalogs. Triggers: product classification, glaze and classify, bakery catalog, multilingual classification, SQL keyword classification, cortex AI classification, SPCS vision model, image classification, semantic view agent, classification comparison."
+description: "Four classification approaches for multilingual product catalogs. Triggers: product classification, glaze and classify, bakery catalog, multilingual classification, AI translate, translate and classify, SQL keyword classification, cortex AI classification, SPCS vision model, image classification, semantic view agent, classification comparison."
 ---
 
 # Glaze & Classify: Product Classification Showdown
 
 ## Purpose
 
-Four progressively sophisticated approaches to classifying an international bakery catalog across 6 markets and 5+ languages: SQL keyword matching, simple Cortex AI, robust Cortex pipeline, and SPCS vision model for image-only products. Includes a semantic view + Intelligence agent for natural language querying and a Streamlit comparison dashboard.
+Four progressively sophisticated approaches to classifying an international bakery catalog across 6 markets and 5+ languages: SQL keyword matching, simple Cortex AI (AI_TRANSLATE + AI_COMPLETE), robust Cortex pipeline with structured JSON output, and SPCS vision model for image-only products. Includes a semantic view + Intelligence agent for natural language querying and a Streamlit comparison dashboard.
 
 ## When to Use
 
@@ -47,7 +47,7 @@ RAW_CATEGORY_TAXONOMY + RAW_KEYWORD_MAP
 |------|---------|
 | `sql/02_data/02_load_sample_data.sql` | 200 products across 6 markets, multilingual |
 | `sql/03_classification/01_traditional_sql.sql` | SQL keyword + regex + 3-tier fallback |
-| `sql/03_classification/02_cortex_simple.sql` | Single AI_COMPLETE with LATERAL |
+| `sql/03_classification/02_cortex_simple.sql` | AI_TRANSLATE + AI_COMPLETE with LATERAL |
 | `sql/03_classification/03_cortex_robust.sql` | Multi-step pipeline with structured JSON |
 | `sql/03_classification/04_comparison_view.sql` | Cross-approach accuracy comparison |
 | `sql/04_cortex/01_create_semantic_view.sql` | SV_GLAZE_PRODUCTS semantic view |
@@ -60,7 +60,7 @@ RAW_CATEGORY_TAXONOMY + RAW_KEYWORD_MAP
 | Approach | Accuracy | Multilingual | Cost | Image Support |
 |----------|----------|-------------|------|---------------|
 | SQL Keyword | Low | No (English keywords) | Zero | No |
-| Simple Cortex | Medium | Yes (LLM native) | Low | No |
+| Simple Cortex | Medium | Yes (AI_TRANSLATE + AI_COMPLETE) | Low (SwiftKV) | No |
 | Robust Pipeline | High | Yes + detection | Medium | No |
 | SPCS Vision | Variable | N/A (image-based) | High (container) | Yes |
 
@@ -97,6 +97,6 @@ RAW_CATEGORY_TAXONOMY + RAW_KEYWORD_MAP
 - SPCS deployment is wrapped in BEGIN/EXCEPTION -- fails gracefully if compute pools unavailable
 - Semantic view lives in `SEMANTIC_MODELS` schema, not the project schema
 - Agent uses `cortex_analyst_text_to_sql` + `data_to_chart` (two tools)
-- Robust pipeline uses `AI_COMPLETE` with structured JSON output parsing via `TRY_PARSE_JSON`
+- Robust pipeline uses `AI_COMPLETE` with `response_format => TYPE OBJECT(...)` and `TRY_PARSE_JSON`
 - Image classification service is a simple Python HTTP server, not a GPU model
 - `deploy_all.sql` uses EXECUTE IMMEDIATE FROM (Git-integrated, not monolithic)

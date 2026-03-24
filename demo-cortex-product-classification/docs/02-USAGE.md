@@ -63,9 +63,9 @@ When presenting this demo, walk through the approaches in order:
 
 1. **Start with Traditional SQL** — Show the CASE/LIKE/regex code. It works for English but the audience will immediately see the problem with Japanese (katakana), French (accented characters), and image-only products.
 
-2. **Simple Cortex AI** — Show the ~10 lines of SQL. Same catalog, dramatically better results. "This took 5 minutes to write."
+2. **Simple Cortex AI** — Show the ~15 lines of SQL with `AI_TRANSLATE()` + `AI_COMPLETE()`. Same catalog, dramatically better results. "Translate then classify — the exact pattern the customer asked for."
 
-3. **Robust Cortex Pipeline** — Show structured output, confidence scores, language detection. "This is what production looks like." The type literal response format is the star here.
+3. **Robust Cortex Pipeline** — Show structured output via TYPE literal, confidence scores, language detection. "This is what production looks like." The `response_format => TYPE OBJECT(...)` pattern is the star here.
 
 4. **SPCS Vision** — Show the container service pattern. "When you need a specialized model that goes beyond what LLMs can do."
 

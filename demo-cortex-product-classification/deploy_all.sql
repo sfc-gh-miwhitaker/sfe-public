@@ -1,13 +1,13 @@
 /*==============================================================================
 DEPLOY ALL - Glaze & Classify
-Author: SE Community | Expires: 2026-05-01
+Author: SE Community | Expires: 2026-07-01
 INSTRUCTIONS: Open in Snowsight → Click "Run All"
 
 Product classification showdown: traditional SQL vs Cortex AI vs SPCS vision.
 ==============================================================================*/
 
 -- 1. SSOT: Expiration date — change ONLY here
-SET DEMO_EXPIRES = '2026-05-01';
+SET DEMO_EXPIRES = '2026-07-01';
 
 -- 2. Expiration check (informational — warns but does not block)
 SELECT
@@ -37,7 +37,7 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_GLAZE_AND_CLASSIFY_WH
   WAREHOUSE_SIZE = 'XSMALL'
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
-  COMMENT = 'DEMO: Glaze & Classify compute (Expires: 2026-05-01)';
+  COMMENT = 'DEMO: Glaze & Classify compute (Expires: 2026-07-01)';
 USE WAREHOUSE SFE_GLAZE_AND_CLASSIFY_WH;
 
 -- 5. Fetch latest from Git
@@ -47,7 +47,7 @@ CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
 CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO
   API_INTEGRATION = SFE_GIT_API_INTEGRATION
   ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
-  COMMENT = 'DEMO: Glaze & Classify Git repo (Expires: 2026-05-01)';
+  COMMENT = 'DEMO: Glaze & Classify Git repo (Expires: 2026-07-01)';
 
 ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO FETCH;
 

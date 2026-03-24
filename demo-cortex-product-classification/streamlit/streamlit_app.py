@@ -3,7 +3,7 @@ Glaze & Classify — Classification Comparison Dashboard
 
 Side-by-side comparison of four product classification approaches:
 1. Traditional SQL (CASE/LIKE/regex)
-2. Cortex AI_COMPLETE — Simple
+2. Cortex AI_TRANSLATE + AI_COMPLETE — Simple
 3. Cortex AI_COMPLETE — Robust Pipeline
 4. SPCS Custom Vision Model
 """
@@ -243,20 +243,21 @@ st.markdown("Enter a product name to see how each approach would classify it in 
 user_input = st.text_input("Product name", placeholder="e.g., チョコレート グレーズド リング")
 
 if user_input:
-    with st.spinner("Classifying with Cortex AI..."):
+    with st.spinner("Translating & classifying with Cortex AI..."):
         try:
-            result = session.sql(f"""
+            result = session.sql("""
                 SELECT AI_COMPLETE(
-                    model => 'llama3.1-70b',
+                    model => 'snowflake-llama-3.3-70b',
                     prompt => CONCAT(
                         'You are a product classifier for a bakery/donut company. ',
                         'Classify this product into exactly one category and subcategory. ',
                         'Categories: Glazed, Frosted, Filled, Cake, Specialty, Seasonal, Beverages, Merchandise. ',
-                        'Respond ONLY with JSON: {{"category": "...", "subcategory": "..."}}\n\n',
-                        'Product name: ', '{user_input.replace(chr(39), chr(39)+chr(39))}'
+                        'Respond ONLY with JSON: {"category": "...", "subcategory": "..."}',
+                        '\n\nProduct name (translated): ',
+                        AI_TRANSLATE(?, '', 'en')
                     )
                 ) AS result
-            """).to_pandas()
+            """, params=[user_input]).to_pandas()
 
             if not result.empty:
                 st.json(result.iloc[0]["RESULT"])
@@ -268,5 +269,5 @@ st.divider()
 st.caption(
     "**Glaze & Classify** | SE Community | "
     "Data: SNOWFLAKE_EXAMPLE.GLAZE_AND_CLASSIFY | "
-    "Powered by: Cortex AI_COMPLETE, SPCS, Streamlit in Snowflake"
+    "Powered by: Cortex AI_TRANSLATE, AI_COMPLETE, SPCS, Streamlit in Snowflake"
 )

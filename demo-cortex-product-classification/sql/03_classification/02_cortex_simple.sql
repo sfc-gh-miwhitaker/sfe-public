@@ -1,8 +1,8 @@
 /*==============================================================================
-CLASSIFICATION APPROACH 2: Cortex AI_COMPLETE — Simple
-Single AI_COMPLETE() call with a classification prompt.
-~10 lines of core SQL. Handles multiple languages out of the box.
-Shows how fast you can get started with AI classification.
+CLASSIFICATION APPROACH 2: Cortex AI — Translate & Classify
+AI_TRANSLATE + AI_COMPLETE in a single query.
+Mirrors the original use case: translate product names to English, then classify.
+~15 lines of core SQL. Handles any language out of the box.
 ==============================================================================*/
 
 USE SCHEMA SNOWFLAKE_EXAMPLE.GLAZE_AND_CLASSIFY;
@@ -19,16 +19,18 @@ SELECT
     'auto'                                   AS model_used
 FROM RAW_PRODUCTS p,
     LATERAL (
-        SELECT SNOWFLAKE.CORTEX.COMPLETE(
-            'llama3.1-70b',
-            CONCAT(
+        SELECT AI_COMPLETE(
+            model => 'snowflake-llama-3.3-70b',
+            prompt => CONCAT(
                 'You are a product classifier for a bakery/donut company. ',
                 'Classify the following product into exactly one category and subcategory. ',
                 'Categories: Glazed, Frosted, Filled, Cake, Specialty, Seasonal, Beverages, Merchandise. ',
                 'Respond ONLY with JSON: {"category": "...", "subcategory": "..."}\n\n',
-                'Product name: ', p.product_name,
+                'Product name (translated): ',
+                AI_TRANSLATE(p.product_name, '', 'en'),
                 CASE WHEN p.product_description IS NOT NULL
-                     THEN CONCAT('\nDescription: ', p.product_description)
+                     THEN CONCAT('\nDescription (translated): ',
+                                 AI_TRANSLATE(p.product_description, '', 'en'))
                      ELSE '' END,
                 CASE WHEN p.market_code IS NOT NULL
                      THEN CONCAT('\nMarket: ', p.market_code)

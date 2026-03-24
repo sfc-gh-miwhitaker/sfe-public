@@ -22,7 +22,7 @@ CREATE OR REPLACE TABLE RAW_PRODUCTS (
     gold_category       VARCHAR(100),
     gold_subcategory    VARCHAR(100),
     created_at          TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP()
-) COMMENT = 'DEMO: International bakery product catalog — 6 markets, 5+ languages (Expires: 2026-05-01)';
+) COMMENT = 'DEMO: International bakery product catalog — 6 markets, 5+ languages (Expires: 2026-07-01)';
 
 -- Gold-standard category hierarchy
 CREATE OR REPLACE TABLE RAW_CATEGORY_TAXONOMY (
@@ -31,7 +31,7 @@ CREATE OR REPLACE TABLE RAW_CATEGORY_TAXONOMY (
     subcategory     VARCHAR(100)    NOT NULL,
     description     VARCHAR(500),
     sort_order      NUMBER
-) COMMENT = 'DEMO: Canonical category hierarchy for classification accuracy measurement (Expires: 2026-05-01)';
+) COMMENT = 'DEMO: Canonical category hierarchy for classification accuracy measurement (Expires: 2026-07-01)';
 
 -- Keyword-to-category lookup for traditional SQL classification
 CREATE OR REPLACE TABLE RAW_KEYWORD_MAP (
@@ -41,7 +41,7 @@ CREATE OR REPLACE TABLE RAW_KEYWORD_MAP (
     mapped_category VARCHAR(100)    NOT NULL,
     mapped_subcategory VARCHAR(100),
     priority        NUMBER          DEFAULT 100
-) COMMENT = 'DEMO: Keyword lookup table for SQL-based classification (Expires: 2026-05-01)';
+) COMMENT = 'DEMO: Keyword lookup table for SQL-based classification (Expires: 2026-07-01)';
 
 -- Classification results: traditional SQL approach
 CREATE OR REPLACE TABLE STG_CLASSIFIED_TRADITIONAL (
@@ -50,7 +50,7 @@ CREATE OR REPLACE TABLE STG_CLASSIFIED_TRADITIONAL (
     predicted_subcategory VARCHAR(100),
     match_method        VARCHAR(50),
     classified_at       TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP()
-) COMMENT = 'DEMO: Traditional SQL classification results (Expires: 2026-05-01)';
+) COMMENT = 'DEMO: Traditional SQL classification results (Expires: 2026-07-01)';
 
 -- Classification results: simple Cortex COMPLETE
 CREATE OR REPLACE TABLE STG_CLASSIFIED_CORTEX_SIMPLE (
@@ -60,7 +60,7 @@ CREATE OR REPLACE TABLE STG_CLASSIFIED_CORTEX_SIMPLE (
     raw_response        VARCHAR(5000),
     model_used          VARCHAR(100),
     classified_at       TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP()
-) COMMENT = 'DEMO: Simple Cortex AI_COMPLETE classification results (Expires: 2026-05-01)';
+) COMMENT = 'DEMO: Simple Cortex AI_COMPLETE classification results (Expires: 2026-07-01)';
 
 -- Classification results: robust Cortex pipeline
 CREATE OR REPLACE TABLE STG_CLASSIFIED_CORTEX_ROBUST (
@@ -73,7 +73,7 @@ CREATE OR REPLACE TABLE STG_CLASSIFIED_CORTEX_ROBUST (
     raw_response        VARCHAR(5000),
     model_used          VARCHAR(100),
     classified_at       TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP()
-) COMMENT = 'DEMO: Robust Cortex pipeline classification results (Expires: 2026-05-01)';
+) COMMENT = 'DEMO: Robust Cortex pipeline classification results (Expires: 2026-07-01)';
 
 -- Classification results: SPCS vision model
 CREATE OR REPLACE TABLE STG_CLASSIFIED_VISION (
@@ -83,4 +83,4 @@ CREATE OR REPLACE TABLE STG_CLASSIFIED_VISION (
     confidence_score    NUMBER(5,4),
     raw_response        VARCHAR(5000),
     classified_at       TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP()
-) COMMENT = 'DEMO: SPCS vision model classification results (Expires: 2026-05-01)';
+) COMMENT = 'DEMO: SPCS vision model classification results (Expires: 2026-07-01)';

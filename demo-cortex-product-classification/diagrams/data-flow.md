@@ -18,7 +18,9 @@ flowchart TB
     end
 
     subgraph approach2 [Approach 2: Cortex Simple]
-        SingleCall["AI_COMPLETE(llama3.1-70b)<br/>Single prompt"]
+        Translate["AI_TRANSLATE<br/>to English"]
+        SingleCall["AI_COMPLETE(snowflake-llama-3.3-70b)<br/>Classify prompt"]
+        Translate --> SingleCall
         SingleCall --> SimpleResult[STG_CLASSIFIED_CORTEX_SIMPLE]
     end
 
@@ -42,7 +44,7 @@ flowchart TB
     Products --> KeywordJoin
     Products --> RawParse
     Keywords --> KeywordJoin
-    Products --> SingleCall
+    Products --> Translate
     Products --> LangDetect
     Taxonomy --> StructOutput
     Products --> ServiceFn

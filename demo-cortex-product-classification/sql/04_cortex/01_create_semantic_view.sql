@@ -125,13 +125,19 @@ CREATE OR REPLACE SEMANTIC VIEW SV_GLAZE_PRODUCTS
       COMMENT = 'Average confidence score from the robust Cortex pipeline'
   )
 
-  COMMENT = 'DEMO: Semantic view for bakery product classification comparison across 4 approaches (Expires: 2026-05-01)'
+  COMMENT = 'DEMO: Semantic view for bakery product classification comparison across 4 approaches (Expires: 2026-07-01)'
 
   AI_SQL_GENERATION
     'This semantic view covers an international bakery product catalog classified by four different approaches:
-     traditional SQL (CASE/LIKE/regex), simple Cortex AI_COMPLETE, robust multi-step Cortex pipeline, and
+     traditional SQL (CASE/LIKE/regex), simple Cortex AI_TRANSLATE + AI_COMPLETE, robust multi-step Cortex pipeline, and
      SPCS custom vision model. Products span 6 markets (US, JP, FR, MX, UK, BR) in 5 languages.
      The gold_category and gold_subcategory fields contain the verified correct answers.
      Accuracy is measured by comparing each approach''s prediction to the gold standard.
      When asked about accuracy, compute AVG of the _correct fields and multiply by 100 for percentages.
-     The robust pipeline also has confidence scores between 0 and 1.';
+     The robust pipeline also has confidence scores between 0 and 1.'
+
+  AI_QUESTION_CATEGORIZATION
+    'Questions about accuracy, performance, comparisons between approaches, or "which is best" should query the comparison table.
+     Questions about specific products, markets, languages, prices, or product details should query the products table.
+     Questions about categories, taxonomy, or the classification hierarchy should query the taxonomy table.
+     Questions about market-level summaries or aggregate accuracy should query the accuracy table.';

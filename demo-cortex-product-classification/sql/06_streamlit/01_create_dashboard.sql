@@ -11,5 +11,5 @@ CREATE OR REPLACE STREAMLIT GLAZE_CLASSIFY_DASHBOARD
   FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/streamlit'
   MAIN_FILE = 'streamlit_app.py'
   QUERY_WAREHOUSE = SFE_GLAZE_AND_CLASSIFY_WH
-  COMMENT = 'DEMO: Classification comparison dashboard (Expires: 2026-05-01)'
+  COMMENT = 'DEMO: Classification comparison dashboard (Expires: 2026-07-01)'
   TITLE = 'Glaze & Classify';

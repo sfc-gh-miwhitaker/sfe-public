@@ -1,17 +1,17 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--07--01-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Glaze & Classify
 
-> **Warning:** This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+> **Warning:** This demo expires on 2026-07-01. After expiration, validate against current Snowflake docs before use.
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
-Product classification showdown: four progressively sophisticated approaches to classifying an international bakery catalog — from brittle SQL to robust Cortex AI pipelines and custom SPCS vision models.
+Product classification showdown: four progressively sophisticated approaches to classifying an international bakery catalog — from brittle SQL to Cortex AI_TRANSLATE + AI_COMPLETE pipelines and custom SPCS vision models.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-24 | **Expires:** 2026-07-01 | **Status:** ACTIVE
 
 ## Quick Start
 
@@ -41,7 +41,7 @@ cd sfe-public/demo-cortex-product-classification && cortex
 | `RAW_CATEGORY_TAXONOMY` | Table | Gold-standard category hierarchy |
 | `RAW_KEYWORD_MAP` | Table | Traditional keyword-to-category lookup |
 | `STG_CLASSIFIED_TRADITIONAL` | Table | SQL-based classification results |
-| `STG_CLASSIFIED_CORTEX_SIMPLE` | Table | Simple Cortex COMPLETE results |
+| `STG_CLASSIFIED_CORTEX_SIMPLE` | Table | Translate + Classify results |
 | `STG_CLASSIFIED_CORTEX_ROBUST` | Table | Robust Cortex pipeline results |
 | `STG_CLASSIFIED_VISION` | Table | SPCS image classifier results |
 | `CLASSIFICATION_COMPARISON` | View | Side-by-side accuracy comparison |
@@ -60,7 +60,7 @@ journey
       Keyword lookup tables: 3: Dev
       Breaks on non-English: 2: Dev
     section Cortex Simple
-      Single AI_COMPLETE call: 5: Dev
+      AI_TRANSLATE then AI_COMPLETE: 5: Dev
       Works across languages: 5: Cortex
     section Cortex Robust
       Language detection: 5: Cortex
@@ -74,8 +74,8 @@ journey
 ### 1. Traditional SQL (Baseline)
 CASE/LIKE/regex with keyword lookup tables. Works for English, breaks on Japanese katakana, fails entirely on image-only products. Requires constant maintenance as the catalog grows.
 
-### 2. Cortex COMPLETE — Simple
-A single `AI_COMPLETE()` call with a classification prompt. ~10 lines of SQL. Handles multiple languages out of the box. Shows how fast you can get started with AI classification.
+### 2. Cortex Translate & Classify — Simple
+`AI_TRANSLATE()` + `AI_COMPLETE()` in a single query. Translates product names to English first, then classifies. ~15 lines of SQL. Mirrors the original customer use case: "translate then classify, using only SQL."
 
 ### 3. Cortex COMPLETE — Robust
 Multi-step pipeline: language detection, structured JSON output via type literals, hierarchical classification (Category > Subcategory > Attributes), confidence scoring, batch processing with error handling. Robust reference pattern.
@@ -97,6 +97,7 @@ flowchart LR
     end
 
     subgraph cortexSimple [Cortex Simple]
+        Translate[AI_TRANSLATE]
         Complete1[AI_COMPLETE]
     end
 
@@ -113,7 +114,7 @@ flowchart LR
 
     Products --> CaseLogic
     Keywords --> CaseLogic
-    Products --> Complete1
+    Products --> Translate --> Complete1
     Products --> LangDetect --> StructOut --> Hierarchy
     Products --> Container --> ServiceFn
 
@@ -131,10 +132,10 @@ flowchart LR
 | Component | Size | Est. Credits/Run | Notes |
 |-----------|------|-----------------|-------|
 | Warehouse | X-SMALL | ~0.5 | Sample data load + classification |
-| Cortex AI_COMPLETE | — | ~1.0 | ~200 products x 2 approaches |
+| Cortex AI (SwiftKV) | — | ~0.5 | ~200 products x 2 approaches (snowflake-llama-3.3-70b) |
 | SPCS Compute Pool | CPU_X64_XS | ~0.5 | Image classification service |
 | Storage | — | Minimal | <1 MB sample data |
-| **Total** | | **~2.0 credits** | Single deployment run |
+| **Total** | | **~1.5 credits** | Single deployment run |
 
 **Edition Required:** Enterprise (for SPCS + Cortex)
 
