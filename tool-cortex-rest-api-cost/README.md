@@ -3,6 +3,8 @@
 ![Expires](https://img.shields.io/badge/Expires-2026--04--22-orange)
 **TOOL PROJECT** | Pair-programmed by SE Community + Cortex Code
 
+> **FinOps Journey (2 of 4):** This tool tracks REST API token-based billing. For broader Cortex AI cost governance (12 services), see [tool-cortex-cost-intelligence](../tool-cortex-cost-intelligence/). For query-level warehouse optimization, see [guide-cost-drivers](../guide-cost-drivers/). To generate REST API usage to track, see [guide-cortex-anthropic-redirect](../guide-cortex-anthropic-redirect/).
+
 ## Why This Exists
 
 Snowflake Cortex REST API calls -- direct model inference via the `/api/v2/cortex/inference:complete` endpoint -- are billed in **dollars per million tokens**, not credits. This is a different billing model from SQL-invoked AI functions, Cortex Agents, and Snowflake Intelligence, which all bill in credits.

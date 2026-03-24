@@ -133,3 +133,8 @@ If the user seems confused, asks basic questions like "what is this" or "how do 
    - No Git integration or API integration needed for this path
 4. **Suggest what to try** -- after deployment, direct them to Snowflake Intelligence to open the DR Cost Estimator agent
 5. **If they want to customize** -- point them to the Customization Playbooks section above
+
+## Related Projects
+- [`guide-replication-workbook`](../guide-replication-workbook/) -- SQL runbooks for replication and failover setup
+- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Broader Cortex cost governance platform
+- [`tool-cortex-rest-api-cost`](../tool-cortex-rest-api-cost/) -- REST API-specific cost tracking

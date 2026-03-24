@@ -14,6 +14,8 @@ Keep your data within Snowflake's governance boundary without rewriting your Ant
 > [!CAUTION]
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
+> **FinOps Journey (1 of 4):** This guide is the starting point. After redirecting your Anthropic calls through Cortex, track their cost with [tool-cortex-rest-api-cost](../tool-cortex-rest-api-cost/), then monitor all Cortex AI spend with [tool-cortex-cost-intelligence](../tool-cortex-cost-intelligence/), and optimize query-level costs with [guide-cost-drivers](../guide-cost-drivers/).
+
 ## Who This Is For
 
 Anyone with existing Anthropic API code who wants to route it through Snowflake Cortex for data governance, unified billing, or multi-model access. You need a Snowflake account and an Anthropic API key.

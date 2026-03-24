@@ -33,3 +33,9 @@ Pull accounting data from QuickBooks Online into Snowflake using native features
 - All new objects need COMMENT = 'DEMO: ... (Expires: 2026-05-01)'
 - Two modes: sample data (no creds) and live API (OAuth required)
 - Bronze layer stores raw JSON in VARIANT columns
+
+## Related Projects
+- [`demo-dataquality-metrics`](../demo-dataquality-metrics/) -- Deeper data quality patterns with DMFs, tagging, and masking
+- [`tool-api-data-fetcher`](../tool-api-data-fetcher/) -- Simpler external access pattern (generic REST API)
+- [`tool-secrets-rotation-aws`](../tool-secrets-rotation-aws/) -- Credential rotation for API secrets
+- [`guide-csv-import`](../guide-csv-import/) -- Simpler data loading starting point

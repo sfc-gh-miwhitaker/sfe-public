@@ -4,6 +4,8 @@
 
 The semantic view is the product. Everything else is a presentation layer.
 
+> **FinOps Journey (3 of 4):** This is the comprehensive Cortex cost platform. For REST API-specific billing (tokens, not credits), see [tool-cortex-rest-api-cost](../tool-cortex-rest-api-cost/). For query-level warehouse optimization, see [guide-cost-drivers](../guide-cost-drivers/). For generating REST API usage, see [guide-cortex-anthropic-redirect](../guide-cortex-anthropic-redirect/).
+
 ## What This Is
 
 A complete cost intelligence platform for Snowflake Cortex AI services.
@@ -126,8 +128,9 @@ CALL PROC_MONITOR_AND_CANCEL_RUNAWAY_QUERIES(50);
 ## Cleanup
 
 ```sql
--- Remove everything
-@sql/99_cleanup/cleanup_all.sql
+-- Remove everything (run teardown_all.sql at the project root, or the nested version)
+@teardown_all.sql
+-- Alternate: @sql/99_cleanup/cleanup_all.sql
 ```
 
 ## Project Structure

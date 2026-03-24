@@ -20,3 +20,8 @@ Reference guide for extracting Cortex Agent specifications for configuration man
 - Agent spec is returned as YAML, not JSON
 - Profile is JSON inside a string column -- use `TRY_PARSE_JSON()`
 - `RESULT_SCAN` requires an interactive session; Python script is the programmatic alternative
+
+## Related Projects
+- [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Agent with CREATE AGENT DDL (extract its spec)
+- [`demo-campaign-engine`](../demo-campaign-engine/) -- Agent with semantic view (extract its spec)
+- [`demo-cortex-financial-agents`](../demo-cortex-financial-agents/) -- Dual-tool agent (extract its spec)

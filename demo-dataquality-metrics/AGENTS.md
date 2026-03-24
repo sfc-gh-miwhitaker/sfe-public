@@ -39,3 +39,7 @@ Reference implementation for automated data quality monitoring and reporting usi
 - Tags: DATA_DOMAIN, DATA_SENSITIVITY, DATA_QUALITY_TIER (with ALLOWED_VALUES)
 - Tag-based masking: CONFIDENTIAL_STRING_MASK assigned to DATA_SENSITIVITY tag
 - Teardown must UNSET MASKING POLICY from tag before dropping tags or policies
+
+## Related Projects
+- [`demo-api-quickbooks-medallion`](../demo-api-quickbooks-medallion/) -- Medallion architecture with DMFs and Cortex AI enrichment
+- [`guide-csv-import`](../guide-csv-import/) -- Data loading fundamentals (prerequisite for data quality)

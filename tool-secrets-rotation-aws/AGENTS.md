@@ -53,3 +53,9 @@ If the user seems confused or asks basic questions:
 3. **Guide to the notebook** -- Snowsight > Projects > Notebooks > SECRETS_ROTATION_WORKBOOK
 4. **Run cells in order** -- the notebook is designed to be run top-to-bottom
 5. **Remind about teardown** -- run `teardown_all.sql` when done to clean up all example objects
+
+## Related Projects
+- [`guide-cortex-anthropic-redirect`](../guide-cortex-anthropic-redirect/) -- PAT and key-pair JWT auth patterns
+- [`guide-api-agent-context`](../guide-api-agent-context/) -- Key-pair JWT auth for Agent Run API
+- [`tool-api-data-fetcher`](../tool-api-data-fetcher/) -- External access integration requiring secrets
+- [`demo-api-quickbooks-medallion`](../demo-api-quickbooks-medallion/) -- OAuth secrets in practice

@@ -56,3 +56,8 @@ Help them enable it on specific columns (cost-effective) rather than full table.
 - For real-time data, use `SNOWFLAKE.INFORMATION_SCHEMA` (but limited history)
 - Clustering changes take time to show improvement (automatic reclustering)
 - SOS has storage costs -- recommend targeted columns over full table
+
+## Related Projects
+- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Cortex AI cost governance (credit and token spend)
+- [`tool-cortex-rest-api-cost`](../tool-cortex-rest-api-cost/) -- REST API cost dashboard (token-based billing)
+- [`tool-dr-cost-agent`](../tool-dr-cost-agent/) -- DR replication cost estimation

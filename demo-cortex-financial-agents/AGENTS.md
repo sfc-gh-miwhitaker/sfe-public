@@ -54,3 +54,9 @@ If the user seems confused, asks basic questions like "what is this" or "how do 
 4. **Suggest what to try** -- after deployment, give 2-3 specific things they can do
 
 **Assume no technical background.** Define terms when you use them. "Snowsight is the Snowflake web interface where you run SQL" is better than just "run this in Snowsight."
+
+## Related Projects
+- [`guide-cortex-search`](../guide-cortex-search/) -- Cortex Search automation patterns (search service management and testing)
+- [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API patterns with three auth methods
+- [`demo-agent-multicontext`](../demo-agent-multicontext/) -- Per-request context injection for multi-tenant agents
+- [`tool-agent-config-diff`](../tool-agent-config-diff/) -- Extract agent specs for version control

@@ -18,3 +18,8 @@ Opinionated guide to managing AI agent extensibility as a resource allocation pr
 - Keep the resource management framing consistent: context window as currency, not "tips and tricks"
 - Mermaid diagrams follow the conventions in `~/.claude/skills/architecture-diagrams/SKILL.md`
 - Compatibility claims must be accurate to current client behavior (verify before stating)
+
+## Related Projects
+- [`guide-coco-setup`](../guide-coco-setup/) -- Cortex Code on-ramp (prerequisite -- guidance hierarchy details)
+- [`guide-coco-governance-general`](../guide-coco-governance-general/) -- Org-level AI coding governance
+- [`demo-coco-governance-github`](../demo-coco-governance-github/) -- GitHub-connected standards in practice

@@ -23,3 +23,6 @@ export/recreation, parameterized deployment, E2E testing, and CI/CD pipelines.
 - Parameterized templates use session variables for reusable deployment
 - Filter operators in SEARCH_PREVIEW: `@eq`, `@contains`, `@gte`, `@lte`
 - Some referenced files in README (Python SDK examples, agent integration) may not exist yet
+
+## Related Projects
+- [`demo-cortex-financial-agents`](../demo-cortex-financial-agents/) -- Cortex Search in the context of a full agent (RAG + Analyst)

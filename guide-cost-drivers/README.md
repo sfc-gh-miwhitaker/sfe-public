@@ -8,6 +8,8 @@
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-17 | **Expires:** 2027-03-17 | **Status:** ACTIVE
 
+> **FinOps Journey (4 of 4):** This guide addresses warehouse and query-level costs. For Cortex AI-specific cost governance, see [tool-cortex-cost-intelligence](../tool-cortex-cost-intelligence/). For REST API token billing, see [tool-cortex-rest-api-cost](../tool-cortex-rest-api-cost/).
+
 Before you resize your warehouse, run this notebook. Most "slow query" problems are actually **pruning problems** -- Snowflake is scanning partitions it doesn't need.
 
 ```mermaid

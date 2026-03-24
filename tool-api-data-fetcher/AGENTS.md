@@ -22,3 +22,8 @@ Python stored procedure that fetches data from a public REST API and stores it i
 - External Access Integration requires ACCOUNTADMIN to create
 - Network Rules define allowed egress destinations
 - All new objects need COMMENT = 'TOOL: ... (Expires: YYYY-MM-DD)'
+
+## Related Projects
+- [`demo-api-quickbooks-medallion`](../demo-api-quickbooks-medallion/) -- Full OAuth external access with medallion architecture
+- [`tool-secrets-rotation-aws`](../tool-secrets-rotation-aws/) -- Credential management for API secrets
+- [`demo-cortex-openai-enrichment`](../demo-cortex-openai-enrichment/) -- External API calls with Cortex AI enrichment

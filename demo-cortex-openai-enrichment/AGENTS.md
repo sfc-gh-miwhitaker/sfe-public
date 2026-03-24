@@ -34,3 +34,8 @@ Transform complex OpenAI API responses using Snowflake's native Cortex AI functi
 - All new objects need COMMENT = 'DEMO: ... (Expires: 2026-05-01)'
 - Cortex AI functions are the headline feature; external OpenAI calls are for comparison
 - Streamlit app is embedded in deploy_all.sql (not a separate file deployment)
+
+## Related Projects
+- [`demo-api-quickbooks-medallion`](../demo-api-quickbooks-medallion/) -- Another external access + Cortex AI demo with medallion architecture
+- [`tool-api-data-fetcher`](../tool-api-data-fetcher/) -- Generic external access pattern
+- [`guide-cortex-anthropic-redirect`](../guide-cortex-anthropic-redirect/) -- Redirect Anthropic SDK calls through Cortex

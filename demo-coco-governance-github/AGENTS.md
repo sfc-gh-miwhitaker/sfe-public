@@ -60,3 +60,9 @@ If the user seems confused or asks "what is this" or "how do I start":
 1. Explain: "This project shows how the same AGENTS.md file gives Cortex Code consistent standards whether you use the CLI or Snowsight."
 2. Point them to `docs/01-PROJECT-TOOLING.md` for the step-by-step walkthrough
 3. If they want to try it: clone this repo and run `cortex` in this directory, or create a Snowsight workspace from the Git repo
+
+## Related Projects
+- [`guide-coco-setup`](../guide-coco-setup/) -- Cortex Code CLI on-ramp (prerequisite)
+- [`guide-coco-governance-general`](../guide-coco-governance-general/) -- Full AI coding governance workshop
+- [`guide-agent-skills`](../guide-agent-skills/) -- Skills architecture and context budget management
+- [`demo-campaign-engine`](../demo-campaign-engine/) -- Hands-on agent-building workshop (GUIDED_BUILD)

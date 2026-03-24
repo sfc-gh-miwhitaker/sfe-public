@@ -37,3 +37,9 @@ and Microsoft 365 Copilot using a joke-generator demo with content safety guardr
 - Default user role must not be an admin role (ACCOUNTADMIN, SECURITYADMIN)
 - Each Microsoft user must map to exactly one Snowflake user (strict 1:1)
 - Custom branding available for Teams app (1.2.0+) via Teams Admin Center
+
+## Related Projects
+- [`demo-campaign-engine`](../demo-campaign-engine/) -- Build an agent from scratch with GUIDED_BUILD workshop
+- [`demo-agent-multicontext`](../demo-agent-multicontext/) -- Per-request context injection via Agent Run API
+- [`guide-api-agent-context`](../guide-api-agent-context/) -- API patterns (PAT, OAuth, Key-Pair JWT)
+- [`tool-agent-config-diff`](../tool-agent-config-diff/) -- Extract agent specs for comparison and version control

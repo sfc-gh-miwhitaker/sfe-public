@@ -23,3 +23,9 @@ Curated on-ramp for AI pair-programming with Cortex Code CLI. Links to official 
 - Keep the guidance hierarchy accurate to the extensibility docs: managed settings > user-level > project-level > session > bundled
 - Mermaid diagrams follow the conventions in `~/.claude/skills/architecture-diagrams/SKILL.md`
 - Keep React-focused examples; do not add Streamlit alternatives
+
+## Related Projects
+- [`demo-campaign-engine`](../demo-campaign-engine/) -- Hands-on agent-building workshop (GUIDED_BUILD -- best next step)
+- [`guide-agent-skills`](../guide-agent-skills/) -- Skills architecture after learning the basics
+- [`guide-coco-governance-general`](../guide-coco-governance-general/) -- AI coding governance for teams
+- [`demo-coco-governance-github`](../demo-coco-governance-github/) -- GitHub-connected project standards

@@ -22,3 +22,9 @@ Workshop teaching teams to govern AI coding tools. Replaces "AI is magic" fear w
 - managed-settings.json examples must match the official schema from Snowflake docs
 - MDM examples should be realistic but clearly marked as templates requiring customization
 - Cross-reference guide-coco-setup for install/connect basics -- don't duplicate
+
+## Related Projects
+- [`guide-coco-setup`](../guide-coco-setup/) -- Cortex Code CLI on-ramp (prerequisite)
+- [`demo-coco-governance-github`](../demo-coco-governance-github/) -- GitHub-connected standards implementation
+- [`guide-agent-skills`](../guide-agent-skills/) -- Skills resource management framework
+- [`demo-campaign-engine`](../demo-campaign-engine/) -- Hands-on workshop using GUIDED_BUILD

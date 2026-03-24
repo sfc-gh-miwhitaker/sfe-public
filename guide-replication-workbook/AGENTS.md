@@ -24,3 +24,6 @@ Business Critical (failover groups with promotion), and prerequisite account con
 - Client redirect uses `ALTER CONNECTION` for transparent failover
 - Error integration via notification integration for replication failure alerts
 - All scripts require ACCOUNTADMIN or ORGADMIN role
+
+## Related Projects
+- [`tool-dr-cost-agent`](../tool-dr-cost-agent/) -- Estimate DR replication costs before setting up failover groups

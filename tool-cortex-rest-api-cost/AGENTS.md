@@ -49,3 +49,8 @@ tool-cortex-rest-api-cost/
 - COMMENT placement: VIEW before AS, TABLE after columns, SCHEMA after name
 - No SELECT * -- explicit columns only
 - Sargable predicates only
+
+## Related Projects
+- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Broader Cortex cost governance platform (all 12 ACCOUNT_USAGE views)
+- [`guide-cortex-anthropic-redirect`](../guide-cortex-anthropic-redirect/) -- Generates REST API usage that this tool tracks
+- [`guide-cost-drivers`](../guide-cost-drivers/) -- Query-level cost diagnosis (warehouse optimization)
