@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-25-blue)
+![Projects](https://img.shields.io/badge/Projects-30-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -88,6 +88,54 @@ Documentation, patterns, and examples (no deploy/teardown).
 | [guide-agent-skills](guide-agent-skills/) | Agent skills as resource management: right tool, right budget, any client | Skills, Context Management, MCP |
 | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) | Redirect Anthropic SDK calls to Snowflake Cortex with 3 code changes | Cortex REST API, Messages API, PAT Auth |
 | [guide-coco-governance-general](guide-coco-governance-general/) | AI coding tool governance workshop (general, tool-agnostic) | managed-settings.json, CLAUDE.md, MDM |
+| [guide-agent-governance](guide-agent-governance/) | Agent governance playbook: monitoring, RBAC, guardrails, cost controls, audit | Cortex Guard, CORTEX_AGENT_USAGE_HISTORY, Row Access Policies |
+| [guide-data-quality-governance](guide-data-quality-governance/) | Data quality governance: DMFs, tagging, masking, anomaly detection | Data Metric Functions, Tags, Masking Policies |
+| [guide-external-access-playbook](guide-external-access-playbook/) | External access patterns: network rules, EAI, secrets, OAuth | External Access Integration, Network Rules, Secrets |
+
+## Learning Journeys
+
+Not sure where to start? Each journey connects 3-4 projects into a story: understand the use case, deploy an example, then learn the governance patterns.
+
+```mermaid
+flowchart LR
+  subgraph arc1 [Agent Journey]
+    cocoSetup[guide-coco-setup] --> campaignBuild[demo-campaign-engine]
+    campaignBuild --> teamsAgent[demo-cortex-teams-agent]
+    teamsAgent --> agentGov[guide-agent-governance]
+  end
+
+  subgraph arc2 [FinOps Journey]
+    anthropic[guide-cortex-anthropic-redirect] --> restCost[tool-cortex-rest-api-cost]
+    restCost --> costIntel[tool-cortex-cost-intelligence]
+    costIntel --> costDrivers[guide-cost-drivers]
+  end
+
+  subgraph arc3 [Data Quality Journey]
+    csvImport[guide-csv-import] --> medallion[demo-api-quickbooks-medallion]
+    medallion --> dqMetrics[demo-dataquality-metrics]
+    dqMetrics --> dqGov[guide-data-quality-governance]
+  end
+
+  subgraph arc4 [External Access Journey]
+    apiFetcher[tool-api-data-fetcher] --> qbMedallion[demo-api-quickbooks-medallion]
+    qbMedallion --> secretsRotation[tool-secrets-rotation-aws]
+    secretsRotation --> eaPlaybook[guide-external-access-playbook]
+  end
+
+  subgraph arc5 [Search Journey]
+    searchGuide[guide-cortex-search] --> finAgents[demo-cortex-financial-agents]
+  end
+```
+
+| Journey | Story | Start Here |
+|---|---|---|
+| **Agent** | Build an AI agent, deploy it to users, then govern it responsibly | [guide-coco-setup](guide-coco-setup/) |
+| **FinOps** | Understand Cortex billing, track costs, set budgets and alerts | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) |
+| **Data Quality** | Load data, build a medallion pipeline, add quality gates and governance | [guide-csv-import](guide-csv-import/) |
+| **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | [tool-api-data-fetcher](tool-api-data-fetcher/) |
+| **Search** | Automate Cortex Search, then integrate it into a full agent | [guide-cortex-search](guide-cortex-search/) |
+
+---
 
 ## Quick Start
 
