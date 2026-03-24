@@ -51,11 +51,9 @@ That's it. The script handles everything: schema creation, sample data, classifi
 | Agent + Streamlit | ~30 seconds |
 | **Total** | **~9 minutes** |
 
-## SPCS Note
+## SPCS Prerequisite
 
-If SPCS is not available in your account/region, the SPCS steps will fail but the rest of the demo works fine. The comparison view will show NULL for vision results, and the dashboard handles this gracefully.
-
-To skip SPCS entirely, comment out the SPCS `EXECUTE IMMEDIATE FROM` line in `deploy_all.sql`.
+SPCS is required for the vision classification approach. Ensure your account has Enterprise edition with SPCS enabled and the deploying role has `CREATE COMPUTE POOL` privilege before running `deploy_all.sql`.
 
 ## Troubleshooting
 

@@ -78,7 +78,7 @@ CASE/LIKE/regex with keyword lookup tables. Works for English, breaks on Japanes
 `AI_TRANSLATE()` + `AI_COMPLETE()` in a single query. Translates product names to English first, then classifies. ~15 lines of SQL. Mirrors the original customer use case: "translate then classify, using only SQL."
 
 ### 3. Cortex COMPLETE — Robust
-Multi-step pipeline: language detection, structured JSON output via type literals, hierarchical classification (Category > Subcategory > Attributes), confidence scoring, batch processing with error handling. Robust reference pattern.
+Multi-step pipeline: language detection, structured JSON output via JSON schema response_format, hierarchical classification (Category > Subcategory > Attributes), confidence scoring, batch processing with error handling. Robust reference pattern.
 
 ### 4. SPCS Custom Vision Model
 Snowpark Container Services running a lightweight image classification model. Exposed as a SQL-callable service function. Shows "bring your own model" for specialized domains where general LLMs fall short.

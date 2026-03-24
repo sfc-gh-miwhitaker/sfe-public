@@ -8,18 +8,9 @@ Side-by-side comparison of four product classification approaches:
 4. SPCS Custom Vision Model
 """
 
-from decimal import Decimal
 from snowflake.snowpark.context import get_active_session
 import pandas as pd
 import streamlit as st
-
-
-def _fix_decimals(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert Decimal columns to float so Arrow serialization works in SiS."""
-    for col in df.columns:
-        if df[col].dtype == object and df[col].apply(lambda x: isinstance(x, Decimal)).any():
-            df[col] = df[col].astype(float)
-    return df
 
 st.set_page_config(
     page_title="Glaze & Classify",
@@ -32,41 +23,41 @@ session = get_active_session()
 
 @st.cache_data(ttl=300)
 def load_accuracy_summary():
-    return _fix_decimals(session.sql("""
+    return session.sql("""
         SELECT
             market_code,
             language_code,
             total_products,
-            trad_accuracy_pct,
-            simple_accuracy_pct,
-            robust_accuracy_pct,
-            vision_accuracy_pct,
-            avg_robust_confidence
+            trad_accuracy_pct::FLOAT       AS trad_accuracy_pct,
+            simple_accuracy_pct::FLOAT     AS simple_accuracy_pct,
+            robust_accuracy_pct::FLOAT     AS robust_accuracy_pct,
+            vision_accuracy_pct::FLOAT     AS vision_accuracy_pct,
+            avg_robust_confidence::FLOAT   AS avg_robust_confidence
         FROM SNOWFLAKE_EXAMPLE.GLAZE_AND_CLASSIFY.ACCURACY_SUMMARY
         ORDER BY market_code
-    """).to_pandas())
+    """).to_pandas()
 
 
 @st.cache_data(ttl=300)
 def load_overall_accuracy():
-    return _fix_decimals(session.sql("""
+    return session.sql("""
         SELECT
             COUNT(*)                                                AS total_products,
-            ROUND(AVG(trad_category_correct) * 100, 1)             AS trad_pct,
-            ROUND(AVG(simple_category_correct) * 100, 1)           AS simple_pct,
-            ROUND(AVG(robust_category_correct) * 100, 1)           AS robust_pct,
-            ROUND(AVG(vision_category_correct) * 100, 1)           AS vision_pct,
-            ROUND(AVG(trad_full_correct) * 100, 1)                 AS trad_full_pct,
-            ROUND(AVG(simple_full_correct) * 100, 1)               AS simple_full_pct,
-            ROUND(AVG(robust_full_correct) * 100, 1)               AS robust_full_pct,
-            ROUND(AVG(vision_full_correct) * 100, 1)               AS vision_full_pct
+            ROUND(AVG(trad_category_correct) * 100, 1)::FLOAT      AS trad_pct,
+            ROUND(AVG(simple_category_correct) * 100, 1)::FLOAT    AS simple_pct,
+            ROUND(AVG(robust_category_correct) * 100, 1)::FLOAT    AS robust_pct,
+            ROUND(AVG(vision_category_correct) * 100, 1)::FLOAT    AS vision_pct,
+            ROUND(AVG(trad_full_correct) * 100, 1)::FLOAT          AS trad_full_pct,
+            ROUND(AVG(simple_full_correct) * 100, 1)::FLOAT        AS simple_full_pct,
+            ROUND(AVG(robust_full_correct) * 100, 1)::FLOAT        AS robust_full_pct,
+            ROUND(AVG(vision_full_correct) * 100, 1)::FLOAT        AS vision_full_pct
         FROM SNOWFLAKE_EXAMPLE.GLAZE_AND_CLASSIFY.CLASSIFICATION_COMPARISON
-    """).to_pandas())
+    """).to_pandas()
 
 
 @st.cache_data(ttl=300)
 def load_comparison_detail():
-    return _fix_decimals(session.sql("""
+    return session.sql("""
         SELECT
             product_id,
             product_name,
@@ -79,19 +70,19 @@ def load_comparison_detail():
             simple_category,
             simple_category_correct,
             robust_category,
-            robust_confidence,
+            robust_confidence::FLOAT       AS robust_confidence,
             robust_category_correct,
             vision_category,
             vision_category_correct,
             is_image_only
         FROM SNOWFLAKE_EXAMPLE.GLAZE_AND_CLASSIFY.CLASSIFICATION_COMPARISON
         ORDER BY product_id
-    """).to_pandas())
+    """).to_pandas()
 
 
 @st.cache_data(ttl=300)
 def load_misclassified():
-    return _fix_decimals(session.sql("""
+    return session.sql("""
         SELECT
             product_name,
             market_code,
@@ -99,11 +90,11 @@ def load_misclassified():
             trad_category,
             simple_category,
             robust_category,
-            robust_confidence
+            robust_confidence::FLOAT       AS robust_confidence
         FROM SNOWFLAKE_EXAMPLE.GLAZE_AND_CLASSIFY.CLASSIFICATION_COMPARISON
         WHERE trad_category_correct = 0
         ORDER BY market_code, product_name
-    """).to_pandas())
+    """).to_pandas()
 
 
 # -- Header --
@@ -122,7 +113,7 @@ if not overall.empty:
     cols[1].metric("Traditional SQL", f"{row['TRAD_PCT']}%")
     cols[2].metric("Cortex Simple", f"{row['SIMPLE_PCT']}%")
     cols[3].metric("Cortex Robust", f"{row['ROBUST_PCT']}%")
-    cols[4].metric("SPCS Vision", f"{row['VISION_PCT']}%" if row['VISION_PCT'] else "N/A")
+    cols[4].metric("SPCS Vision", f"{row['VISION_PCT']}%")
 
     st.caption("Full match (category + subcategory)")
     cols2 = st.columns(5)
@@ -130,7 +121,7 @@ if not overall.empty:
     cols2[1].metric("Trad Full", f"{row['TRAD_FULL_PCT']}%", label_visibility="visible")
     cols2[2].metric("Simple Full", f"{row['SIMPLE_FULL_PCT']}%", label_visibility="visible")
     cols2[3].metric("Robust Full", f"{row['ROBUST_FULL_PCT']}%", label_visibility="visible")
-    cols2[4].metric("Vision Full", f"{row['VISION_FULL_PCT']}%" if row['VISION_FULL_PCT'] else "N/A", label_visibility="visible")
+    cols2[4].metric("Vision Full", f"{row['VISION_FULL_PCT']}%", label_visibility="visible")
 
 st.divider()
 
@@ -139,12 +130,13 @@ st.subheader("Accuracy by Market & Language")
 
 accuracy_df = load_accuracy_summary()
 if not accuracy_df.empty:
-    chart_data = accuracy_df[["MARKET_CODE", "TRAD_ACCURACY_PCT", "SIMPLE_ACCURACY_PCT", "ROBUST_ACCURACY_PCT"]].copy()
+    chart_data = accuracy_df[["MARKET_CODE", "TRAD_ACCURACY_PCT", "SIMPLE_ACCURACY_PCT", "ROBUST_ACCURACY_PCT", "VISION_ACCURACY_PCT"]].copy()
     chart_data = chart_data.rename(columns={
         "MARKET_CODE": "Market",
         "TRAD_ACCURACY_PCT": "Traditional SQL",
         "SIMPLE_ACCURACY_PCT": "Cortex Simple",
-        "ROBUST_ACCURACY_PCT": "Cortex Robust"
+        "ROBUST_ACCURACY_PCT": "Cortex Robust",
+        "VISION_ACCURACY_PCT": "SPCS Vision"
     })
     chart_data = chart_data.set_index("Market")
     st.bar_chart(chart_data)

@@ -5,8 +5,7 @@ Creates the image repository, compute pool, service, and SQL function.
 The service takes ~30-90s to start after creation. Populate results with
 02_populate_vision.sql which waits for the service to become READY.
 
-NOTE: Requires SPCS enabled + CREATE COMPUTE POOL privilege. If unavailable,
-this step can be skipped — the comparison view shows NULL for vision results.
+Requires Enterprise edition with SPCS enabled and CREATE COMPUTE POOL privilege.
 
 To build and push the image:
   cd spcs/

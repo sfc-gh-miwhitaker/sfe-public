@@ -65,26 +65,16 @@ EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/03_classification/03_cortex_robust.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/03_classification/04_comparison_view.sql';
 
--- 5d. SPCS Vision — infrastructure (optional, requires CREATE COMPUTE POOL)
+-- 5d. SPCS Vision — infrastructure
 --     Service starts async; steps 5e-5f run while the container comes up.
-BEGIN
-  EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/05_spcs/01_create_image_service.sql';
-EXCEPTION
-  WHEN OTHER THEN
-    SYSTEM$LOG_INFO('Skipping SPCS vision service: ' || SQLERRM);
-END;
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/05_spcs/01_create_image_service.sql';
 
 -- 5e. Cortex Intelligence (runs while SPCS service starts in the background)
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/04_cortex/01_create_semantic_view.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/04_cortex/02_create_agent.sql';
 
 -- 5f. SPCS Vision — populate (waits for service READY, then classifies)
-BEGIN
-  EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/05_spcs/02_populate_vision.sql';
-EXCEPTION
-  WHEN OTHER THEN
-    SYSTEM$LOG_INFO('Skipping SPCS vision populate: ' || SQLERRM);
-END;
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/05_spcs/02_populate_vision.sql';
 
 -- 5g. Streamlit Dashboard
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO/branches/main/demo-cortex-product-classification/sql/06_streamlit/01_create_dashboard.sql';
@@ -92,7 +82,7 @@ EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_GLAZE_AND_CLASSIFY_REPO
 -- 6. Final summary (ONLY visible result in Run All)
 SELECT
     CASE
-        WHEN simple_ct = 0 OR robust_ct = 0
+        WHEN simple_ct = 0 OR robust_ct = 0 OR vision_ct = 0
         THEN '⚠️  DEPLOYED WITH WARNINGS — classification tables may be empty'
         ELSE '✅ Glaze & Classify deployed successfully!'
     END                            AS status,

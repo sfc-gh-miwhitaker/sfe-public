@@ -34,5 +34,5 @@ Product classification showdown: four progressively sophisticated approaches to 
 - Use QUALIFY instead of subqueries for window function filtering
 - Keep deploy_all.sql as the single entry point
 - All new objects need COMMENT = 'DEMO: ... (Expires: 2026-07-01)'
-- SPCS components are optional (require GPU compute pool)
+- SPCS components require Enterprise edition with CREATE COMPUTE POOL privilege
 - Classification accuracy comparison is the narrative arc
