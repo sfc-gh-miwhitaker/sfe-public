@@ -23,7 +23,7 @@ DirectQuery to Snowflake remains the most capable and most governed connection p
 
 | # | Section | What You Get |
 |---|---------|-------------|
-| 1 | [The Architecture](#the-architecture) | Bi-directional Snowflake-OneLake integration and where value is created |
+| 1 | [The Architecture](#the-architecture) | [Big picture](#the-big-picture) ecosystem overview, bi-directional integration, and where value is created |
 | 2 | [When to Use DirectQuery vs. Direct Lake](#when-to-use-directquery-vs-direct-lake) | Decision framework with clear default recommendation |
 | 3 | [Direction 1: Bringing OneLake Data into Snowflake](#direction-1-bringing-onelake-data-into-snowflake) | Catalog-linked databases -- zero-ETL ingestion from OneLake |
 | 4 | [Direction 2: Serving Curated Iceberg Tables to OneLake](#direction-2-serving-curated-iceberg-tables-to-onelake) | Snowflake-managed Iceberg tables synced to OneLake for Direct Lake |
@@ -36,6 +36,12 @@ DirectQuery to Snowflake remains the most capable and most governed connection p
 Data engineers and architects operating in a Snowflake + Microsoft Fabric environment. You should be comfortable with Snowflake SQL and have access to a Microsoft Fabric workspace. No prior experience with Iceberg tables or OneLake is required.
 
 **Already running DirectQuery?** Read the [decision section](#when-to-use-directquery-vs-direct-lake) to see if the OneLake path adds value for your workload. In many cases, DirectQuery with interactive warehouses already delivers sub-second performance with full governance -- and no Iceberg sync to manage.
+
+### The Big Picture
+
+The Snowflake + Microsoft integration spans the full enterprise data stack. Snowflake is the AI-ready engine (data engineering, analytics, AI, applications); Microsoft provides the consumption surfaces where users already work (Teams, Copilot Studio, Power BI, Azure AI Foundry). OneLake, Dataverse, and Azure OpenAI form the zero-copy bi-directional bridge between them.
+
+![Activate Your Data and Deliver AI to Every Enterprise User -- Complete & Integrated consumption surfaces, Secure & Governed bi-directional data via OneLake, AI-Ready fully-managed Snowflake platform](images/ecosystem-snowflake-microsoft.png)
 
 ---
 
@@ -299,6 +305,8 @@ These tables are the output of Snowflake's transformation and governance pipelin
 
 ### Step 4: View in Fabric
 
+![Fabric workspace showing a Snowflake OneLake Lakehouse with the database item and SQL analytics endpoint](images/fabric-workspace-ui.png)
+
 1. Open your Fabric workspace -- you should see a Snowflake database item named after your database
 2. Open the item to browse schemas and tables
 3. Select **SQL analytics endpoint** to query with SQL, or open in Power BI for Direct Lake reports
@@ -310,6 +318,10 @@ Power BI can read these tables via Direct Lake mode for simple dashboard queries
 ## The Iceberg Lakehouse Pattern
 
 When both directions work together, Snowflake sits at the center of the architecture -- ingesting from every source, transforming everything, governing everything, and optionally publishing curated outputs to OneLake.
+
+![Snowflake + Microsoft Fabric + OneLake workloads in action -- five-step journey from data integration through transformation, real-time intelligence, data science, and business intelligence, all governed and secured with Purview](images/workloads-in-action.png)
+
+The slide above shows the end-to-end journey. Iceberg tables write natively in OneLake providing bi-directional interoperability. Data enters through Fabric connectors, gets transformed and enriched in Snowflake, and surfaces as insights through Cortex AI, Power BI, and Microsoft 365 apps. Every step from integration through BI is governed and secured.
 
 ![Iceberg Lakehouse with Snowflake and Microsoft OneLake -- full medallion architecture from Bronze through Gold](images/iceberg-lakehouse-architecture.png)
 
@@ -325,6 +337,10 @@ When both directions work together, Snowflake sits at the center of the architec
 > Every step from 2 through 7 runs on Snowflake. The more data and workloads you bring into Snowflake, the more value each step creates.
 
 ### Where This Pattern Fits
+
+Not every customer needs the Iceberg lakehouse pattern. The slide below maps five common customer scenarios from "Not a fit" (Snowflake Happy -- already working well with DirectQuery) through high-fit opportunities where the lakehouse architecture creates the most value: multi-platform consolidation, competitive takeout, and AI acceleration.
+
+![Go Further with Microsoft + Snowflake -- five customer scenarios from Snowflake Happy (not a fit) through EDW Migrations, Multi-Platform Scale, Competitive Takeout, and AI Acceleration (good fit)](images/go-further-scenarios.png)
 
 | Scenario | Fit | Why |
 |----------|-----|-----|
