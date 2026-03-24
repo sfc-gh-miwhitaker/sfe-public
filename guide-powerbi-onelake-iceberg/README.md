@@ -4,6 +4,9 @@
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
 ![Expires](https://img.shields.io/badge/Expires-2026--04--23-orange)
+![Iceberg Tables](https://img.shields.io/badge/Iceberg_Tables-GA-29B5E8)
+![Catalog-Linked DBs](https://img.shields.io/badge/Catalog--Linked_DBs-GA_Jan_2026-29B5E8)
+![OneLake Integration](https://img.shields.io/badge/OneLake-Bi--Directional-29B5E8)
 
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-24 | **Expires:** 2026-04-23 | **Status:** ACTIVE
@@ -15,6 +18,18 @@ Snowflake is the data engine -- transformation, governance, AI enrichment, and d
 DirectQuery to Snowflake remains the most capable and most governed connection path. This guide covers when the OneLake/Iceberg path adds value alongside it -- and how to ensure Snowflake stays at the center of your data architecture when it does.
 
 **Time:** ~30 minutes to read | **Result:** Architecture decision for when the OneLake/Iceberg path complements DirectQuery
+
+## In This Guide
+
+| # | Section | What You Get |
+|---|---------|-------------|
+| 1 | [The Architecture](#the-architecture) | Bi-directional Snowflake-OneLake integration and where value is created |
+| 2 | [When to Use DirectQuery vs. Direct Lake](#when-to-use-directquery-vs-direct-lake) | Decision framework with clear default recommendation |
+| 3 | [Direction 1: Bringing OneLake Data into Snowflake](#direction-1-bringing-onelake-data-into-snowflake) | Catalog-linked databases -- zero-ETL ingestion from OneLake |
+| 4 | [Direction 2: Serving Curated Iceberg Tables to OneLake](#direction-2-serving-curated-iceberg-tables-to-onelake) | Snowflake-managed Iceberg tables synced to OneLake for Direct Lake |
+| 5 | [The Iceberg Lakehouse Pattern](#the-iceberg-lakehouse-pattern) | Full medallion architecture with Snowflake at the center |
+| 6 | [Cost Considerations](#cost-considerations) | Where value is created and who pays for what |
+| 7 | [Current Limitations](#current-limitations) | GA constraints for bi-directional access and Iceberg tables |
 
 ## Who This Is For
 
@@ -54,7 +69,8 @@ This is a delivery step, not a processing step. All intelligence stays in Snowfl
 
 ## When to Use DirectQuery vs. Direct Lake
 
-**DirectQuery to Snowflake is the recommended default.** It delivers full SQL capabilities, real-time data freshness, Horizon governance enforcement at query time, and sub-second latency with interactive warehouses. Direct Lake is a narrow complement for specific scenarios.
+> [!TIP]
+> **DirectQuery to Snowflake is the recommended default.** It delivers full SQL capabilities, real-time data freshness, Horizon governance enforcement at query time, and sub-second latency with interactive warehouses. Direct Lake is a narrow complement for specific scenarios.
 
 | Factor | DirectQuery to Snowflake | Direct Lake from OneLake |
 |--------|------------------------|----------------------|
@@ -96,6 +112,9 @@ This is the high-value direction. Every dataset you bring into Snowflake becomes
 
 ### Step 1: Create the Catalog Integration
 
+<details>
+<summary>SQL: Create Catalog Integration</summary>
+
 ```sql
 CREATE OR REPLACE CATALOG INTEGRATION onelake_catalog_int
     CATALOG_SOURCE = ICEBERG_REST
@@ -114,12 +133,17 @@ CREATE OR REPLACE CATALOG INTEGRATION onelake_catalog_int
     ENABLED = TRUE;
 ```
 
+</details>
+
 Replace the placeholder values:
 - `<workspace-id>/<data-item-id>` -- from the Fabric workspace URL and lakehouse URL
 - `<tenant-id>` -- your Entra tenant ID
 - `<entra-app-client-id>` and `<entra-app-client-secret>` -- from your Azure application registration
 
 ### Step 2: Create the External Volume
+
+<details>
+<summary>SQL: Create External Volume</summary>
 
 ```sql
 CREATE OR REPLACE EXTERNAL VOLUME onelake_extvol
@@ -133,6 +157,8 @@ CREATE OR REPLACE EXTERNAL VOLUME onelake_extvol
     )
     ALLOW_WRITES = FALSE;
 ```
+
+</details>
 
 After creating the volume, run `DESC EXTERNAL VOLUME onelake_extvol` and complete the consent flow using the `AZURE_CONSENT_URL`. Then grant the multi-tenant app Contributor access in your Fabric workspace.
 
@@ -173,7 +199,8 @@ This is just the start. The real value comes from what Snowflake does next:
 - **Govern** with Horizon policies (row access, masking, tags, lineage)
 - **Share** governed datasets across accounts and clouds with Snowflake data sharing
 
-Data that enters Snowflake becomes governed, enriched, and shareable. Data that stays in OneLake stays raw.
+> [!IMPORTANT]
+> Data that enters Snowflake becomes governed, enriched, and shareable. Data that stays in OneLake stays raw.
 
 ---
 
@@ -195,6 +222,9 @@ Remember: DirectQuery to Snowflake (especially with interactive warehouses) ofte
 - Fabric tenant admin must enable "Service principals can call Fabric public APIs"
 
 ### Step 1: Create a Role and User for Fabric
+
+<details>
+<summary>SQL: Create Role and User for Fabric</summary>
 
 ```sql
 USE ROLE ACCOUNTADMIN;
@@ -222,6 +252,8 @@ CREATE USER IF NOT EXISTS svc_fabric_iceberg
 GRANT ROLE r_iceberg_metadata TO USER svc_fabric_iceberg;
 ```
 
+</details>
+
 ### Step 2: Connect Snowflake Database to Fabric
 
 1. In Snowsight, navigate to **Ingestion > Add Data > Microsoft OneLake**
@@ -234,6 +266,9 @@ GRANT ROLE r_iceberg_metadata TO USER svc_fabric_iceberg;
 ### Step 3: Create Snowflake-Managed Iceberg Tables
 
 Publish the output of your Snowflake transformations as Iceberg tables:
+
+<details>
+<summary>SQL: Create Iceberg Table</summary>
 
 ```sql
 CREATE ICEBERG TABLE analytics_db.public.sales_summary (
@@ -257,6 +292,8 @@ INSERT INTO analytics_db.public.sales_summary
     FROM raw_sales
     GROUP BY sale_date, region, product_category;
 ```
+
+</details>
 
 These tables are the output of Snowflake's transformation and governance pipeline. They contain curated, governed, enriched data -- not raw source data.
 
@@ -284,7 +321,8 @@ When both directions work together, Snowflake sits at the center of the architec
 6. **Serve:** Gold-layer Iceberg tables optionally sync to OneLake for Direct Lake consumption. DirectQuery serves everything else.
 7. **Extend:** Cortex Agents, integrated into Copilot Studio and Teams, provide AI-powered access to the same governed data -- driving additional Snowflake compute for every interaction
 
-Every step from 2 through 7 runs on Snowflake. The more data and workloads you bring into Snowflake, the more value each step creates.
+> [!TIP]
+> Every step from 2 through 7 runs on Snowflake. The more data and workloads you bring into Snowflake, the more value each step creates.
 
 ### Where This Pattern Fits
 
@@ -317,11 +355,16 @@ DirectQuery with interactive warehouses is often the simpler path: no Iceberg sy
 
 ---
 
-## Current Limitations
+<details>
+<summary><strong>Current Limitations</strong></summary>
 
 **Bi-directional access (GA January 2026):**
 - Snowflake to Fabric direction requires the "Enable Snowflake database item" Fabric tenant setting
-- Catalog-linked databases support both read and write operations (`ALLOWED_WRITE_OPERATIONS` defaults to `ALL`). Set to `NONE` for read-only access. **Warning:** with write permissions enabled, dropping a table in Snowflake also drops it in the remote catalog.
+- Catalog-linked databases support both read and write operations (`ALLOWED_WRITE_OPERATIONS` defaults to `ALL`). Set to `NONE` for read-only access.
+
+> [!WARNING]
+> With write permissions enabled, dropping a table in Snowflake also drops it in the remote catalog.
+
 - Catalog-linked databases do not sync remote catalog access control -- govern in Snowflake separately (this is a reason to do governance in Snowflake, not a limitation of Snowflake)
 - By default, catalog-linked databases ignore nested namespaces (`NAMESPACE_MODE = IGNORE_NESTED_NAMESPACE`). To include nested namespaces, set `NAMESPACE_MODE = FLATTEN_NESTED_NAMESPACE` with a delimiter.
 - Only schemas, externally managed Iceberg tables, and database roles can be created in a catalog-linked database. Other Snowflake objects (views, shares, etc.) are not currently supported.
@@ -331,9 +374,12 @@ DirectQuery with interactive warehouses is often the simpler path: no Iceberg sy
 - Iceberg tables have a different storage footprint than standard Snowflake tables
 - Fail-safe is not available for Iceberg tables managed by Snowflake
 
+</details>
+
 ---
 
-## References
+<details>
+<summary><strong>References</strong></summary>
 
 | Resource | URL |
 |----------|-----|
@@ -347,3 +393,5 @@ DirectQuery with interactive warehouses is often the simpler path: no Iceberg sy
 | Direct Lake Mode (Microsoft) | https://learn.microsoft.com/power-bi/enterprise/directlake-overview |
 | Snowflake Horizon Catalog for Iceberg | https://docs.snowflake.com/en/user-guide/tables-iceberg-access-using-external-query-engine-snowflake-horizon |
 | Power BI Live Query Guide (companion) | ../guide-powerbi-live-query/ |
+
+</details>

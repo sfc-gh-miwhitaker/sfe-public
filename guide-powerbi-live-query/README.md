@@ -4,6 +4,9 @@
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
 ![Expires](https://img.shields.io/badge/Expires-2026--04--23-orange)
+![Interactive Tables](https://img.shields.io/badge/Interactive_Tables-GA_Dec_2025-29B5E8)
+![Hybrid Tables](https://img.shields.io/badge/Hybrid_Tables-GA-29B5E8)
+![Power BI SSO](https://img.shields.io/badge/Power_BI_SSO-External_OAuth-29B5E8)
 
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-24 | **Expires:** 2026-04-23 | **Status:** ACTIVE
@@ -45,6 +48,19 @@ flowchart LR
 
 **Time:** ~30 minutes to read | **Result:** Architecture decision for your Power BI + Snowflake workload
 
+## In This Guide
+
+| # | Section | What You Get |
+|---|---------|-------------|
+| 1 | [Cost Realities](#cost-realities) | Billing model for each table type |
+| 2 | [Decision Framework](#decision-framework) | Flowchart to pick the right architecture |
+| 3 | [What NOT to Do](#what-not-to-do) | Five anti-patterns that cause "Power BI is slow" complaints |
+| 4 | [Interactive Tables Deep Dive](#interactive-tables-deep-dive) | Create, refresh, size, and scale interactive tables and warehouses |
+| 5 | [Hybrid Tables for Operational Dashboards](#hybrid-tables-for-operational-dashboards) | Point-lookup pattern with enforced keys and indexes |
+| 6 | [Power BI Configuration](#power-bi-configuration) | SSO, DirectQuery setup, query folding patterns |
+| 7 | [Monitoring and Tuning](#monitoring-and-tuning) | Query history, partition efficiency, scaling triggers |
+| 8 | [Beyond Power BI: Cortex Analyst](#beyond-power-bi-cortex-analyst) | AI-assisted analytics as a complement to BI |
+
 ## Who This Is For
 
 Data engineers and architects connecting Power BI to Snowflake at scale. You should be comfortable with SQL and Snowflake warehouse management. No prior experience with interactive tables or hybrid tables is required.
@@ -66,7 +82,8 @@ Read this before choosing an architecture. The table type you pick determines yo
 | Standard table + standard warehouse | Standard warehouse billing | Standard columnar storage (smallest footprint) | None |
 | Standard table + result cache | Zero compute when cache hits (cache valid 24 hours) | Standard columnar storage | None |
 
-**Interactive warehouses are the highest-performance option but also the highest fixed cost.** They are designed for workloads that justify 24/7 compute -- hundreds of concurrent dashboard users generating thousands of queries per hour. If your workload is lighter, a standard warehouse with clustering and caching may be enough.
+> [!IMPORTANT]
+> **Interactive warehouses are the highest-performance option but also the highest fixed cost.** They are designed for workloads that justify 24/7 compute -- hundreds of concurrent dashboard users generating thousands of queries per hour. If your workload is lighter, a standard warehouse with clustering and caching may be enough.
 
 ---
 
@@ -97,13 +114,15 @@ flowchart TD
 | Mixed analytics with occasional BI | Standard table + clustering + search optimization | Columnar storage optimized for scan-heavy analytics; clustering and SOS cover the BI queries |
 | Infrequent or low-concurrency reports | Standard table + result cache | Result cache serves identical queries for free for 24 hours; warehouse only wakes on cache miss |
 
-**Most Power BI DirectQuery workloads at scale fall into the first row.** The rest of this guide spends the most time there.
+> [!TIP]
+> **Most Power BI DirectQuery workloads at scale fall into the first row.** The rest of this guide spends the most time there.
 
 ---
 
 ## What NOT to Do
 
-These anti-patterns cause the majority of "Power BI is slow on Snowflake" complaints.
+> [!WARNING]
+> These anti-patterns cause the majority of "Power BI is slow on Snowflake" complaints.
 
 ### 1. DirectQuery on unclustered standard tables
 
@@ -167,7 +186,8 @@ AS
     GROUP BY sale_date, region, product_category;
 ```
 
-The `CLUSTER BY` columns should match the columns Power BI filters on most. If your dashboards have a date slicer and a region dropdown, cluster on `(sale_date, region)`.
+> [!TIP]
+> The `CLUSTER BY` columns should match the columns Power BI filters on most. If your dashboards have a date slicer and a region dropdown, cluster on `(sale_date, region)`.
 
 ### Auto-Refresh with TARGET_LAG
 
@@ -258,7 +278,8 @@ ALTER WAREHOUSE sfe_powerbi_iw SET
 
 Each cluster serves queries independently. If queries are short and simple, increase `MAX_CONCURRENCY_LEVEL` per warehouse to allow more concurrent queries per cluster.
 
-### Current Limitations (Verified March 2026)
+<details>
+<summary><strong>Current Limitations (Verified March 2026)</strong></summary>
 
 These constraints are unchanged since GA. Plan your architecture around them.
 
@@ -269,6 +290,8 @@ These constraints are unchanged since GA. Plan your architecture around them.
 - **Cannot query standard tables** -- an interactive warehouse can only query interactive tables and interactive materialized views. Switch to a standard warehouse with `USE WAREHOUSE` to query standard tables.
 - **No fail-safe** -- Time Travel still works, but fail-safe recovery is not available.
 - **Join queries supported** -- added post-GA. You can join interactive tables within the same interactive warehouse.
+
+</details>
 
 ---
 
@@ -351,7 +374,8 @@ Both URL cases in `EXTERNAL_OAUTH_AUDIENCE_LIST` are required -- Microsoft may s
 
 ### Network Policy on the Integration (January 2026)
 
-As of January 2026, you can associate a network policy directly with the External OAuth integration instead of relying on an account-level policy:
+> [!NOTE]
+> As of January 2026, you can associate a network policy directly with the External OAuth integration instead of relying on an account-level policy.
 
 ```sql
 ALTER SECURITY INTEGRATION powerbi_sso
@@ -388,7 +412,8 @@ Power BI's Power Query engine translates M expressions into SQL before sending t
 - Pivot/unpivot operations (depends on complexity)
 - String manipulations beyond basic LIKE patterns
 
-When in doubt, right-click a step in Power Query Editor and check "View Native Query." If the option is grayed out, that step did not fold.
+> [!TIP]
+> When in doubt, right-click a step in Power Query Editor and check "View Native Query." If the option is grayed out, that step did not fold.
 
 For comprehensive query folding guidance, see [Microsoft's query folding documentation](https://learn.microsoft.com/en-us/power-bi/guidance/power-query-folding).
 
@@ -399,6 +424,9 @@ For comprehensive query folding guidance, see [Microsoft's query folding documen
 ### Query History for Power BI Traffic
 
 Identify Power BI queries by joining `QUERY_HISTORY` with the `SESSIONS` view, which contains the `CLIENT_APPLICATION_ID` column:
+
+<details>
+<summary>SQL: Query History for Power BI Traffic</summary>
 
 ```sql
 SELECT
@@ -419,9 +447,14 @@ ORDER BY qh.execution_time DESC
 LIMIT 50;
 ```
 
+</details>
+
 ### Partition Efficiency
 
 For standard and interactive tables, check how much data Snowflake is actually scanning versus skipping:
+
+<details>
+<summary>SQL: Partition Efficiency Check</summary>
 
 ```sql
 SELECT
@@ -438,6 +471,8 @@ WHERE s.client_application_id ILIKE '%power%bi%'
     AND qh.start_time >= DATEADD('hour', -24, CURRENT_TIMESTAMP())
 QUALIFY ROW_NUMBER() OVER (ORDER BY qh.partitions_scanned DESC) <= 20;
 ```
+
+</details>
 
 If `pct_scanned` is consistently above 50%, your clustering does not match your Power BI filter patterns. Revisit the `CLUSTER BY` columns.
 
@@ -469,7 +504,8 @@ This is not a replacement for Power BI. It is a parallel path for ad-hoc explora
 
 ---
 
-## References
+<details>
+<summary><strong>References</strong></summary>
 
 | Resource | URL |
 |----------|-----|
@@ -488,3 +524,5 @@ This is not a replacement for Power BI. It is a parallel path for ad-hoc explora
 | Cortex Analyst | https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst |
 | Semantic Views | https://docs.snowflake.com/en/user-guide/views-semantic/overview |
 | Companion: OneLake + Iceberg Path | ../guide-powerbi-onelake-iceberg/ |
+
+</details>
