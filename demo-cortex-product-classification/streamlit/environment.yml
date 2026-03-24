@@ -1,7 +1,0 @@
-name: sf_env
-channels:
-  - snowflake
-dependencies:
-  - python=3.11
-  - streamlit=1.52.*
-  - snowflake-snowpark-python
