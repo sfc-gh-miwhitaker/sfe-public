@@ -40,8 +40,9 @@ WITH classified AS (
                 '## Instructions:\n',
                 '1. Detect the language of the product name and description.\n',
                 '2. Classify the product into the BEST matching category and subcategory from the taxonomy above.\n',
+                '   Return ONLY the exact category and subcategory names from the taxonomy — no explanations, no parenthetical notes.\n',
                 '3. Assign a confidence score from 0.0 to 1.0.\n',
-                '4. Extract key attributes (flavor, topping, filling, coating) if identifiable.\n',
+                '4. Extract key attributes (flavor, topping, filling, coating) as short keywords only.\n',
                 '5. If the product name is just a filename (e.g., IMG_xxx.jpg) with no description, ',
                    'classify as best you can from the filename and set confidence low.\n\n',
 
@@ -57,9 +58,9 @@ WITH classified AS (
                 'schema': {
                     'type': 'object',
                     'properties': {
-                        'detected_language': {'type': 'string'},
-                        'category': {'type': 'string'},
-                        'subcategory': {'type': 'string'},
+                        'detected_language': {'type': 'string', 'description': 'ISO language code, e.g. en, ja, de'},
+                        'category': {'type': 'string', 'description': 'Exact category name from the taxonomy, no extra text'},
+                        'subcategory': {'type': 'string', 'description': 'Exact subcategory name from the taxonomy, no extra text'},
                         'confidence': {'type': 'number'},
                         'attributes': {
                             'type': 'object',
@@ -80,12 +81,12 @@ WITH classified AS (
 )
 SELECT
     product_id,
-    raw_json:detected_language::VARCHAR                      AS detected_language,
-    raw_json:category::VARCHAR                               AS predicted_category,
-    raw_json:subcategory::VARCHAR                            AS predicted_subcategory,
+    LEFT(raw_json:detected_language::VARCHAR, 50)            AS detected_language,
+    LEFT(raw_json:category::VARCHAR, 100)                    AS predicted_category,
+    LEFT(raw_json:subcategory::VARCHAR, 100)                 AS predicted_subcategory,
     raw_json:confidence::FLOAT                               AS confidence_score,
     raw_json:attributes                                      AS attributes,
-    raw_json::VARCHAR                                        AS raw_response,
+    LEFT(raw_json::VARCHAR, 5000)                            AS raw_response,
     'llama3.3-70b'                                          AS model_used
 FROM classified;
 
