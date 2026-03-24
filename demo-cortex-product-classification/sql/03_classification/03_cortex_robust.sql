@@ -1,7 +1,7 @@
 /*==============================================================================
 CLASSIFICATION APPROACH 3: Cortex AI_COMPLETE — Robust Pipeline
 Multi-step pipeline with:
-  - Structured JSON output via TYPE literal response_format
+  - Structured JSON output via JSON schema response_format
   - Hierarchical classification (Category > Subcategory > Attributes)
   - Confidence scoring
   - Multi-language handling built in (no explicit translate needed — the LLM
@@ -52,18 +52,28 @@ WITH classified AS (
                 'Language: ', p.language_code, '\n',
                 COALESCE(CONCAT('Raw category: ', p.raw_category_string, '\n'), '')
             ),
-            response_format => TYPE OBJECT(
-                detected_language STRING,
-                category STRING,
-                subcategory STRING,
-                confidence FLOAT,
-                attributes OBJECT(
-                    flavor STRING,
-                    topping STRING,
-                    filling STRING,
-                    coating STRING
-                )
-            )
+            response_format => {
+                'type': 'json',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'detected_language': {'type': 'string'},
+                        'category': {'type': 'string'},
+                        'subcategory': {'type': 'string'},
+                        'confidence': {'type': 'number'},
+                        'attributes': {
+                            'type': 'object',
+                            'properties': {
+                                'flavor': {'type': 'string'},
+                                'topping': {'type': 'string'},
+                                'filling': {'type': 'string'},
+                                'coating': {'type': 'string'}
+                            }
+                        }
+                    },
+                    'required': ['detected_language', 'category', 'subcategory', 'confidence']
+                }
+            }
         ) AS raw_json
     FROM RAW_PRODUCTS p
     CROSS JOIN TEMP_TAXONOMY_CONTEXT tx
