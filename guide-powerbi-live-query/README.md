@@ -51,6 +51,8 @@ Data engineers and architects connecting Power BI to Snowflake at scale. You sho
 
 **Already know your table type?** Jump to [Interactive Tables Deep Dive](#interactive-tables-deep-dive) or [Hybrid Tables for Operational Dashboards](#hybrid-tables-for-operational-dashboards).
 
+**Using Microsoft Fabric?** See the companion guide [Power BI + Snowflake via OneLake and Iceberg](../guide-powerbi-onelake-iceberg/) for the Direct Lake path where Power BI reads Iceberg files from OneLake without Snowflake compute.
+
 ---
 
 ## Cost Realities
@@ -485,3 +487,4 @@ This is not a replacement for Power BI. It is a parallel path for ad-hoc explora
 | Power BI Query Folding (Microsoft) | https://learn.microsoft.com/en-us/power-bi/guidance/power-query-folding |
 | Cortex Analyst | https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst |
 | Semantic Views | https://docs.snowflake.com/en/user-guide/views-semantic/overview |
+| Companion: OneLake + Iceberg Path | ../guide-powerbi-onelake-iceberg/ |
