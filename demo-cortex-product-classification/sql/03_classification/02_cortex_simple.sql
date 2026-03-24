@@ -20,7 +20,7 @@ SELECT
 FROM RAW_PRODUCTS p,
     LATERAL (
         SELECT AI_COMPLETE(
-            model => 'snowflake-llama-3.3-70b',
+            model => 'llama3.3-70b',
             prompt => CONCAT(
                 'You are a product classifier for a bakery/donut company. ',
                 'Classify the following product into exactly one category and subcategory. ',

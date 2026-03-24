@@ -18,7 +18,7 @@ Product classification showdown: four progressively sophisticated approaches to 
 ## Key Patterns
 - Four classification approaches: SQL keyword, simple Cortex (AI_TRANSLATE + AI_COMPLETE), robust Cortex pipeline, SPCS vision
 - AI_TRANSLATE for multilingual product name translation
-- AI_COMPLETE with snowflake-llama-3.3-70b (SwiftKV) for classification
+- AI_COMPLETE with llama3.3-70b for classification
 - Snowpark Container Services for custom vision model
 - Semantic view + Intelligence agent for analytics
 - Multi-language product catalog (6 markets, 5+ languages)

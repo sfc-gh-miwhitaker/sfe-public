@@ -19,7 +19,7 @@ flowchart TB
 
     subgraph approach2 [Approach 2: Cortex Simple]
         Translate["AI_TRANSLATE<br/>to English"]
-        SingleCall["AI_COMPLETE(snowflake-llama-3.3-70b)<br/>Classify prompt"]
+        SingleCall["AI_COMPLETE(llama3.3-70b)<br/>Classify prompt"]
         Translate --> SingleCall
         SingleCall --> SimpleResult[STG_CLASSIFIED_CORTEX_SIMPLE]
     end

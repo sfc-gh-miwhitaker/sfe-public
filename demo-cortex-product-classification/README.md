@@ -132,7 +132,7 @@ flowchart LR
 | Component | Size | Est. Credits/Run | Notes |
 |-----------|------|-----------------|-------|
 | Warehouse | X-SMALL | ~0.5 | Sample data load + classification |
-| Cortex AI (SwiftKV) | — | ~0.5 | ~200 products x 2 approaches (snowflake-llama-3.3-70b) |
+| Cortex AI (SwiftKV) | — | ~0.5 | ~200 products x 2 approaches (llama3.3-70b) |
 | SPCS Compute Pool | CPU_X64_XS | ~0.5 | Image classification service |
 | Storage | — | Minimal | <1 MB sample data |
 | **Total** | | **~1.5 credits** | Single deployment run |

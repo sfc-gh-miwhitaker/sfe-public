@@ -52,9 +52,11 @@ SELECT
     v.predicted_category        AS vision_category,
     v.predicted_subcategory     AS vision_subcategory,
     v.confidence_score          AS vision_confidence,
-    CASE WHEN v.predicted_category = p.gold_category THEN 1 ELSE 0 END
+    CASE WHEN v.product_id IS NULL THEN NULL
+         WHEN v.predicted_category = p.gold_category THEN 1 ELSE 0 END
                                 AS vision_category_correct,
-    CASE WHEN v.predicted_category = p.gold_category
+    CASE WHEN v.product_id IS NULL THEN NULL
+         WHEN v.predicted_category = p.gold_category
               AND COALESCE(v.predicted_subcategory, '') = COALESCE(p.gold_subcategory, '')
          THEN 1 ELSE 0 END     AS vision_full_correct,
 

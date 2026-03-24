@@ -29,7 +29,7 @@ WITH classified AS (
     SELECT
         p.product_id,
         AI_COMPLETE(
-            model => 'snowflake-llama-3.3-70b',
+            model => 'llama3.3-70b',
             prompt => CONCAT(
                 'You are an expert product classifier for an international bakery/donut company operating in 6 markets. ',
                 'You must classify products accurately regardless of the language they are written in.\n\n',
@@ -56,7 +56,7 @@ WITH classified AS (
                 detected_language STRING,
                 category STRING,
                 subcategory STRING,
-                confidence NUMBER,
+                confidence FLOAT,
                 attributes OBJECT(
                     flavor STRING,
                     topping STRING,
@@ -70,13 +70,13 @@ WITH classified AS (
 )
 SELECT
     product_id,
-    TRY_PARSE_JSON(raw_json):detected_language::VARCHAR     AS detected_language,
-    TRY_PARSE_JSON(raw_json):category::VARCHAR              AS predicted_category,
-    TRY_PARSE_JSON(raw_json):subcategory::VARCHAR           AS predicted_subcategory,
-    TRY_PARSE_JSON(raw_json):confidence::NUMBER(5,4)        AS confidence_score,
-    TRY_PARSE_JSON(raw_json):attributes                     AS attributes,
-    raw_json                                                AS raw_response,
-    'snowflake-llama-3.3-70b'                               AS model_used
+    raw_json:detected_language::VARCHAR                      AS detected_language,
+    raw_json:category::VARCHAR                               AS predicted_category,
+    raw_json:subcategory::VARCHAR                            AS predicted_subcategory,
+    raw_json:confidence::FLOAT                               AS confidence_score,
+    raw_json:attributes                                      AS attributes,
+    raw_json::VARCHAR                                        AS raw_response,
+    'llama3.3-70b'                                          AS model_used
 FROM classified;
 
 DROP TABLE IF EXISTS TEMP_TAXONOMY_CONTEXT;
