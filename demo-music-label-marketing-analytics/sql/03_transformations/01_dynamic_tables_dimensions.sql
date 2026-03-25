@@ -60,7 +60,6 @@ WITH date_spine AS (
         (SELECT MIN(spend_date) FROM RAW_MARKETING_SPEND)
     ) AS date_day
     FROM TABLE(GENERATOR(ROWCOUNT => 400))
-    QUALIFY date_day <= CURRENT_DATE()
 )
 SELECT
     date_day,
@@ -73,4 +72,5 @@ SELECT
     DAYOFWEEK(date_day)             AS day_of_week,
     TO_CHAR(date_day, 'YYYY-Q')    AS year_quarter,
     TO_CHAR(date_day, 'YYYY-MM')   AS year_month
-FROM date_spine;
+FROM date_spine
+WHERE date_day <= CURRENT_DATE();
