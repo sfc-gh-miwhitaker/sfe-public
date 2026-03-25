@@ -58,6 +58,23 @@ flowchart LR
 
 **Time:** ~30 minutes to read | **Result:** Working Snowflake MCP connection in your AI client + understanding of production auth patterns
 
+---
+
+### Quick Navigation
+
+| | |
+|---|---|
+| **[Part 1: The Authentication Landscape](#part-1-the-authentication-landscape)** | Decision matrix: PAT vs OAuth, when to use which |
+| **[Part 2: Connect Your AI Client](#part-2-connect-your-ai-client-to-snowflake)** | **Start here** -- exact configs for every major client |
+| &nbsp;&nbsp;&nbsp;&nbsp;[Cursor](#cursor) &#183; [Claude Desktop](#claude-desktop) &#183; [VS Code + Copilot](#vs-code--github-copilot) &#183; [Cortex Code](#cortex-code-claude-code) &#183; [Windsurf](#windsurf) &#183; [ChatGPT](#chatgpt-custom-gpts) &#183; [curl / Python](#custom-clients-curl--python) | [Troubleshooting](#troubleshooting-all-clients) |
+| **[Part 3: OAuth + PKCE for Production](#part-3-production-web-app-with-oauth--pkce)** | Security integration, PKCE flow, token exchange, Streamlit example |
+| **[Part 4: Multi-Tenant RBAC](#part-4-multi-tenant-rbac-with-role-scoped-tokens)** | Role-scoped tokens, per-role grants, Row Access Policies |
+| **[Part 5: Enterprise IdP](#part-5-enterprise-with-corporate-idp----the-gap-and-workarounds)** | Entra/Okta gap, three workarounds |
+| **[Part 6: Known Limitations](#part-6-known-limitations-and-gotchas)** | Protocol mismatches, streaming, billing, PrivateLink |
+| **[Production Readiness Checklist](#production-readiness-checklist)** | Pre-launch verification table |
+
+---
+
 ## Who This Is For
 
 Anyone who wants to connect an AI client to Snowflake data through MCP. **Part 2 is the fast path** -- it has exact configs for every major client. The rest of the guide covers production-grade auth patterns for teams shipping real applications.
@@ -179,8 +196,7 @@ CREATE MCP SERVER my_mcp_server
   $$;
 ```
 
-<details>
-<summary>Surface a Cortex Agent instead of individual tools</summary>
+### Surface a Cortex Agent instead of individual tools
 
 Instead of wiring up individual tools, you can expose an entire **Cortex Agent** as a single MCP tool. The agent orchestrates across its own Analyst, Search, and custom tools internally -- your AI client just talks to the agent.
 
@@ -225,10 +241,8 @@ CREATE MCP SERVER my_hybrid_server
   $$;
 ```
 
-</details>
-
 > [!TIP]
-> **Already have a Cortex Agent?** Use `type: "CORTEX_AGENT_RUN"` to expose it as a single MCP tool. Your AI client sends a message, the agent orchestrates across all its tools internally, and returns the result. See the expandable section above.
+> **Already have a Cortex Agent?** `CORTEX_AGENT_RUN` is the fastest path. Your AI client sends a message, the agent orchestrates across all its tools internally, and returns the result. One MCP tool, all the intelligence behind it.
 
 **Supported tool types:**
 
