@@ -13,12 +13,17 @@ How to connect AI clients to Snowflake's managed MCP server -- and how authentic
 ```mermaid
 flowchart LR
     subgraph clients [AI Clients]
-        Cursor[Cursor]
-        Claude[Claude Desktop]
-        VSCode[VS Code + Copilot]
-        CortexCode[Cortex Code]
-        Windsurf[Windsurf]
-        Custom[curl / Python]
+        direction TB
+        subgraph row1 [" "]
+            Cursor[Cursor]
+            Claude[Claude Desktop]
+            VSCode[VS Code + Copilot]
+        end
+        subgraph row2 [" "]
+            CortexCode[Cortex Code]
+            Windsurf[Windsurf]
+            Custom[curl / Python]
+        end
     end
 
     subgraph auth [Authentication]
@@ -106,7 +111,8 @@ Regardless of which method produces the token:
 - The MCP endpoint URL format is always: `https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/databases/<DB>/schemas/<SCHEMA>/mcp-servers/<NAME>`
 - The token is sent as `Authorization: Bearer <token>` on every request
 - Snowflake RBAC determines which tools are discoverable and invocable
-- Access to the MCP server does **not** grant access to tools -- both must be explicitly granted
+> [!IMPORTANT]
+> Access to the MCP server does **not** grant access to tools. Both must be explicitly granted -- the server grant enables connection, the tool grants enable invocation.
 
 ---
 
@@ -123,12 +129,17 @@ flowchart TD
     end
 
     subgraph clients [Pick Your Client]
-        Cursor[Cursor]
-        Claude[Claude Desktop]
-        VSCode[VS Code + Copilot]
-        CortexCode[Cortex Code]
-        Windsurf[Windsurf]
-        Custom[curl / Python]
+        direction TB
+        subgraph row1 [" "]
+            Cursor[Cursor]
+            Claude[Claude Desktop]
+            VSCode[VS Code + Copilot]
+        end
+        subgraph row2 [" "]
+            CortexCode[Cortex Code]
+            Windsurf[Windsurf]
+            Custom[curl / Python]
+        end
     end
 
     subgraph connect [Connection]
@@ -138,17 +149,12 @@ flowchart TD
     end
 
     prereqs --> URL --> Config --> Verify
-    Cursor --> Config
-    Claude --> Config
-    VSCode --> Config
-    CortexCode --> Config
-    Windsurf --> Config
-    Custom --> Config
+    clients --> Config
 ```
 
 ### Prerequisites (Snowflake Side)
 
-Before configuring any client, you need three things in Snowflake. If you already have an MCP server and a PAT, skip to your client below.
+Before configuring any client, you need three things in Snowflake. If you already have an MCP server and a PAT, [skip to your client](#cursor).
 
 **1. An MCP server object.** Create one in a Snowsight SQL worksheet:
 
@@ -173,7 +179,71 @@ CREATE MCP SERVER my_mcp_server
   $$;
 ```
 
-**2. A Programmatic Access Token (PAT).** In Snowsight: **Settings > Authentication > Programmatic Access Tokens > + Token**. Choose a least-privilege role -- if the MCP server only needs `ANALYST_ROLE`, don't use `ACCOUNTADMIN`. Copy the token immediately; it is only shown once.
+<details>
+<summary>Surface a Cortex Agent instead of individual tools</summary>
+
+Instead of wiring up individual tools, you can expose an entire **Cortex Agent** as a single MCP tool. The agent orchestrates across its own Analyst, Search, and custom tools internally -- your AI client just talks to the agent.
+
+```sql
+CREATE MCP SERVER my_agent_server
+  FROM SPECIFICATION $$
+    tools:
+      - name: "finance-agent"
+        identifier: "MY_DB.MY_SCHEMA.FINANCE_AGENT"
+        type: "CORTEX_AGENT_RUN"
+        description: "Financial services agent that can query revenue data, search support tickets, and run SQL analysis"
+        title: "Finance Agent"
+  $$;
+```
+
+This is the simplest path when you already have a working Cortex Agent -- one tool in MCP, all the intelligence behind it. The grant is:
+
+```sql
+GRANT USAGE ON AGENT MY_DB.MY_SCHEMA.FINANCE_AGENT TO ROLE ANALYST_ROLE;
+```
+
+You can also combine approaches -- expose an agent alongside standalone tools so your AI client can choose:
+
+```sql
+CREATE MCP SERVER my_hybrid_server
+  FROM SPECIFICATION $$
+    tools:
+      - name: "finance-agent"
+        identifier: "MY_DB.MY_SCHEMA.FINANCE_AGENT"
+        type: "CORTEX_AGENT_RUN"
+        description: "Full financial analysis agent with multi-step reasoning"
+        title: "Finance Agent"
+      - name: "sql-exec"
+        type: "SYSTEM_EXECUTE_SQL"
+        description: "Direct SQL execution for quick queries"
+        title: "SQL Execution"
+      - name: "doc-search"
+        identifier: "MY_DB.MY_SCHEMA.POLICY_DOCS"
+        type: "CORTEX_SEARCH_SERVICE_QUERY"
+        description: "Search internal policy documents"
+        title: "Policy Search"
+  $$;
+```
+
+</details>
+
+> [!TIP]
+> **Already have a Cortex Agent?** Use `type: "CORTEX_AGENT_RUN"` to expose it as a single MCP tool. Your AI client sends a message, the agent orchestrates across all its tools internally, and returns the result. See the expandable section above.
+
+**Supported tool types:**
+
+| Type | What It Exposes | Grant Required |
+|---|---|---|
+| `CORTEX_ANALYST_MESSAGE` | Natural language to SQL via a semantic view | `SELECT` on semantic view |
+| `CORTEX_SEARCH_SERVICE_QUERY` | Vector + keyword search over unstructured data | `USAGE` on Cortex Search service |
+| `SYSTEM_EXECUTE_SQL` | Direct SQL execution | `USAGE` on warehouse |
+| `CORTEX_AGENT_RUN` | A full Cortex Agent with its own tools | `USAGE` on agent |
+| `GENERIC` | Custom UDFs or stored procedures | `USAGE` on function/procedure |
+
+**2. A Programmatic Access Token (PAT).** In Snowsight: **Settings > Authentication > Programmatic Access Tokens > + Token**.
+
+> [!IMPORTANT]
+> Choose a **least-privilege role**. If the MCP server only needs `ANALYST_ROLE`, don't create a PAT for `ACCOUNTADMIN`. The PAT value is shown only once -- copy it immediately.
 
 Or via SQL:
 
@@ -194,7 +264,8 @@ GRANT USAGE ON CORTEX SEARCH SERVICE MY_DB.MY_SCHEMA.SUPPORT_TICKETS TO ROLE ANA
 GRANT USAGE ON WAREHOUSE MY_WH TO ROLE ANALYST_ROLE;
 ```
 
-Missing the tool grants is the #1 setup mistake -- you'll discover tools but get permission errors when calling them.
+> [!WARNING]
+> **The #1 setup mistake:** Missing the tool-level grants. You'll discover tools in `tools/list` but get permission errors when calling them. Always grant both the MCP server *and* each underlying object.
 
 ### Build Your Endpoint URL
 
@@ -213,7 +284,8 @@ Replace each placeholder with your values:
 | `<SCHEMA>` | Schema where MCP server was created | `MY_SCHEMA` |
 | `<NAME>` | Name from `CREATE MCP SERVER` | `MY_MCP_SERVER` |
 
-**Hostname rule:** Use hyphens, never underscores. If your account identifier contains underscores, replace them with hyphens in the URL. Underscores cause TLS connection failures.
+> [!CAUTION]
+> **Hostname rule:** Use hyphens, never underscores. If your account identifier contains underscores, replace them with hyphens in the URL. Underscores cause silent TLS connection failures.
 
 ---
 
@@ -271,7 +343,8 @@ You can also open it from Claude Desktop: **Settings > Developer > Edit Config**
 }
 ```
 
-**Restart required.** Claude Desktop must be fully restarted (not just the window) after editing the config.
+> [!IMPORTANT]
+> Claude Desktop must be **fully restarted** (quit and reopen, not just close the window) after editing the config.
 
 **Verify:** After restart, open a new conversation. You should see a hammer icon in the chat input area indicating MCP tools are available. Click it to see the tool list from your Snowflake MCP server.
 
@@ -305,11 +378,13 @@ VS Code uses a slightly different config format with a `servers` object (not `mc
 }
 ```
 
-The `inputs` block is a VS Code feature that prompts you for the PAT on first connection and stores it securely -- the token never appears in the config file. If you prefer to manage the token yourself, you can hardcode it directly (but add `mcp.json` to `.gitignore`).
+> [!TIP]
+> The `inputs` block is a VS Code feature that prompts for the PAT on first connection and stores it securely -- the token never appears in the config file. This is the most secure option for any client that supports it.
 
 **Verify:** Open the Command Palette and run **MCP: List Servers**. You should see "snowflake" with a running status. Copilot will automatically use the MCP tools when relevant to your questions in Agent mode.
 
-**Known issue:** Some versions of GitHub Copilot expect string `request.id` values in the MCP protocol, but Snowflake returns integers. If tools fail silently, check for client updates.
+> [!NOTE]
+> Some versions of GitHub Copilot expect string `request.id` values in the MCP protocol, but Snowflake returns integers. If tools fail silently, check for client updates.
 
 ---
 
@@ -378,7 +453,8 @@ Windsurf supports MCP servers through its config file, similar to Cursor.
 }
 ```
 
-Note: Windsurf uses `serverUrl` instead of `url` in some versions. If one doesn't work, try the other. Check Windsurf's current documentation for the exact field name.
+> [!NOTE]
+> Windsurf uses `serverUrl` instead of `url` in some versions. If one doesn't work, try the other. Check Windsurf's current documentation for the exact field name.
 
 **Verify:** Open **Settings > MCP Servers** in Windsurf. The Snowflake server should appear with available tools listed.
 
@@ -469,7 +545,8 @@ print(result)
 
 ### Troubleshooting (All Clients)
 
-If your client can't connect, **always test with `curl` first**. If `curl` works but your client doesn't, the issue is client-side configuration, not Snowflake auth.
+> [!TIP]
+> **Always test with `curl` first.** If `curl` works but your client doesn't, the issue is client-side configuration, not Snowflake auth. This one step eliminates 90% of debugging time.
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -612,7 +689,8 @@ def get_authorization_url(state, code_challenge, role='ANALYST_ROLE'):
     return f"https://{ACCOUNT_HOSTNAME}/oauth/authorize?{urlencode(params)}"
 ```
 
-The `scope=session:role:{ROLE}` parameter is critical -- it binds the resulting token to a specific Snowflake role. The user must have this role granted to them, or authorization will fail.
+> [!IMPORTANT]
+> The `scope=session:role:{ROLE}` parameter binds the resulting token to a specific Snowflake role. The user must have this role granted to them, or authorization will fail.
 
 ### Step 5: Exchange Code for Token
 
@@ -639,7 +717,8 @@ async def exchange_code_for_token(code, code_verifier):
         return tokens['access_token'], tokens.get('refresh_token')
 ```
 
-Authorization codes expire within seconds. If you get `invalid_grant`, the code has already expired -- redirect the user to authenticate again.
+> [!WARNING]
+> Authorization codes expire within seconds. If you get `invalid_grant`, the code has already expired -- redirect the user to authenticate again.
 
 ### Step 6: Call MCP Tools
 
@@ -855,7 +934,8 @@ External IdP OAuth tokens for the Snowflake-managed MCP server are **not yet ful
 1. **Snowflake's built-in OAuth** (CREATE SECURITY INTEGRATION with OAUTH_CLIENT = CUSTOM)
 2. **Programmatic Access Tokens** (PATs)
 
-There is no path to hand the MCP server a token issued by Entra ID or Okta and have it accepted directly. This is a known product gap -- customers who require uniform IdP-issued tokens across all access paths see MCP as a compliance gap until this is delivered.
+> [!CAUTION]
+> There is no path today to hand the MCP server a token issued by Entra ID or Okta and have it accepted directly. This is a known product gap. Customers requiring uniform IdP-issued tokens across all access paths see MCP as a compliance gap until this is delivered.
 
 ### Workaround 1: Snowflake External OAuth + Custom Token Exchange
 
@@ -873,7 +953,8 @@ CREATE SECURITY INTEGRATION ext_oauth_entra
     EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = 'login_name';
 ```
 
-The limitation: this integration works for SQL API connections and the Snowflake Python connector, but **may not be accepted by the managed MCP endpoint**. Test thoroughly in your environment before committing to this path.
+> [!WARNING]
+> This integration works for SQL API connections and the Snowflake Python connector, but **may not be accepted by the managed MCP endpoint**. Test thoroughly in your environment before committing to this path.
 
 ### Workaround 2: Service Account PAT with Automated Rotation
 
