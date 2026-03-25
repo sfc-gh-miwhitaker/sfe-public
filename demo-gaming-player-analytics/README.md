@@ -19,14 +19,14 @@ This demo answers that question by building a player intelligence layer on top o
 
 ## The Problem
 
-An indie gaming studio ("Pixel Forge Studios") runs a production data engineering pipeline on Snowflake. Dynamic Tables transform raw player events into analytics-ready tables, consuming ~500 credits/month. But nobody has built anything on top of it:
+Gaming studios collect massive volumes of player telemetry -- sessions, purchases, feedback, progression events -- and most have a solid pipeline moving that data into a warehouse. But the analytics layer on top often lags behind:
 
-- **No player segmentation** -- They can't answer "who are our whales?" or "who's about to churn?"
-- **No feedback analysis** -- Thousands of player reviews sit in a free-text column, unstructured
-- **No self-service** -- Every question requires an engineer to write SQL
-- **No AI** -- They explored ML models but never built them
+- **Player segmentation is manual** -- Product managers maintain spreadsheets of "whale" and "at-risk" lists instead of classifying players automatically from behavioral data
+- **Feedback is unstructured** -- App store reviews, support tickets, and survey responses pile up in free-text columns with no way to surface trends at scale
+- **Every question requires engineering** -- When the game team wants to know "which cohort is churning fastest?", someone has to write SQL and send back a screenshot
+- **AI stays on the roadmap** -- Teams want ML-powered insights but the overhead of standing up a separate platform keeps it in "next quarter" territory
 
-The pipeline works. The intelligence layer doesn't exist yet.
+The data is already flowing. This demo shows what happens when you add AI enrichment and self-service analytics directly inside the pipeline that's already running.
 
 ---
 

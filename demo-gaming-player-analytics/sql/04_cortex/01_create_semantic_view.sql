@@ -8,8 +8,6 @@ USE WAREHOUSE SFE_GAMING_PLAYER_ANALYTICS_WH;
 
 CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_GAMING_PLAYER_ANALYTICS
 
-  COMMENT = 'DEMO: Semantic model for gaming player analytics — engagement, revenue, cohorts, churn risk, feedback (Expires: 2026-04-24)'
-
   TABLES (
     player AS SNOWFLAKE_EXAMPLE.GAMING_PLAYER_ANALYTICS.DIM_PLAYERS
       PRIMARY KEY (player_id)
@@ -172,6 +170,8 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_GAMING_PLAY
       WITH SYNONYMS = ('total revenue', 'daily total')
       COMMENT = 'Total revenue across all cohorts for a given day'
   )
+
+  COMMENT = 'DEMO: Semantic model for gaming player analytics — engagement, revenue, cohorts, churn risk, feedback (Expires: 2026-04-24)'
 
   AI_SQL_GENERATION
     'This semantic model covers a mobile gaming studio player analytics system.
