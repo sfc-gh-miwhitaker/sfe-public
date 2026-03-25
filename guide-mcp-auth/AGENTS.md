@@ -1,17 +1,18 @@
 # MCP Server Authentication Guide
 
-Visual walkthrough of how authentication works with Snowflake's managed MCP server: PAT quick-start, OAuth + PKCE production flows, RBAC role-scoping, multi-tenant patterns, and known limitations with honest workarounds.
+How to connect AI clients (Cursor, Claude Desktop, VS Code, Cortex Code, Windsurf) to Snowflake's managed MCP server, plus production auth patterns: OAuth + PKCE, RBAC role-scoping, multi-tenant isolation, and known limitations with honest workarounds.
 
 ## Project Structure
 
-- `README.md` -- Complete guide (6 parts + production checklist)
+- `README.md` -- Complete guide (7 parts + production checklist). Part 2 is the centerpiece with exhaustive client-by-client connection configs.
 - `diagrams/` -- Mermaid diagrams for auth flows and decision frameworks
 
 ## Content Principles
 
-- Scenario-driven: each part opens with a persona and real-world use case
+- Part 2 (Connect Your AI Client) answers the #1 question: "how do I connect X to Snowflake MCP?"
+- Scenario-driven: later parts open with a persona and real-world use case
 - Honest about product gaps (external IdP tokens, per-tool OAuth scopes, streaming)
-- SQL and config examples are concrete and copy-pasteable
+- Config examples are exact and copy-pasteable for each client
 - Mermaid diagrams in every part for visual learners
 - Cross-links to sibling projects for deeper dives
 
