@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-32-blue)
+![Projects](https://img.shields.io/badge/Projects-33-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -90,6 +90,7 @@ Documentation, patterns, and examples (no deploy/teardown).
 | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) | Redirect Anthropic SDK calls to Snowflake Cortex with 3 code changes | Cortex REST API, Messages API, PAT Auth |
 | [guide-coco-governance-general](guide-coco-governance-general/) | AI coding tool governance workshop (general, tool-agnostic) | managed-settings.json, CLAUDE.md, MDM |
 | [guide-agent-governance](guide-agent-governance/) | Agent governance playbook: monitoring, RBAC, guardrails, cost controls, audit | Cortex Guard, CORTEX_AGENT_USAGE_HISTORY, Row Access Policies |
+| [guide-mcp-auth](guide-mcp-auth/) | MCP server authentication walkthrough: PAT, OAuth + PKCE, RBAC, multi-tenant, enterprise IdP | Snowflake MCP, OAuth, PAT, RBAC |
 | [guide-data-quality-governance](guide-data-quality-governance/) | Data quality governance: DMFs, tagging, masking, anomaly detection | Data Metric Functions, Tags, Masking Policies |
 | [guide-external-access-playbook](guide-external-access-playbook/) | External access patterns: network rules, EAI, secrets, OAuth | External Access Integration, Network Rules, Secrets |
 | [guide-powerbi-live-query](guide-powerbi-live-query/) | Power BI DirectQuery at scale: interactive tables, hybrid tables, and optimization patterns | Interactive Tables, Interactive Warehouses, Hybrid Tables, Power BI SSO |
@@ -105,6 +106,7 @@ flowchart LR
     cocoSetup[guide-coco-setup] --> campaignBuild[demo-campaign-engine]
     campaignBuild --> teamsAgent[demo-cortex-teams-agent]
     teamsAgent --> agentGov[guide-agent-governance]
+    agentGov --> mcpAuth[guide-mcp-auth]
   end
 
   subgraph arc2 [FinOps Journey]
@@ -132,7 +134,7 @@ flowchart LR
 
 | Journey | Story | Start Here |
 |---|---|---|
-| **Agent** | Build an AI agent, deploy it to users, then govern it responsibly | [guide-coco-setup](guide-coco-setup/) |
+| **Agent** | Build an AI agent, deploy it to users, govern it, then connect via MCP | [guide-coco-setup](guide-coco-setup/) |
 | **FinOps** | Understand Cortex billing, track costs, set budgets and alerts | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) |
 | **Data Quality** | Load data, build a medallion pipeline, add quality gates and governance | [guide-csv-import](guide-csv-import/) |
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | [tool-api-data-fetcher](tool-api-data-fetcher/) |
