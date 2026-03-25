@@ -8,8 +8,6 @@ USE WAREHOUSE SFE_MUSIC_MARKETING_WH;
 
 CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MUSIC_MARKETING
 
-  COMMENT = 'DEMO: Semantic model for music label marketing analytics — budget, spend, campaigns, streams, royalties (Expires: 2026-04-24)'
-
   TABLES (
     artist AS SNOWFLAKE_EXAMPLE.MUSIC_MARKETING.DIM_ARTIST
       PRIMARY KEY (artist_id)
@@ -197,6 +195,8 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MUSIC_MARKE
       WITH SYNONYMS = ('total earnings', 'total revenue', 'total royalty payments')
       COMMENT = 'Total royalty payments received'
   )
+
+  COMMENT = 'DEMO: Semantic model for music label marketing analytics — budget, spend, campaigns, streams, royalties (Expires: 2026-04-24)'
 
   AI_SQL_GENERATION
     'This semantic model covers a music label (Apex Records) marketing analytics system.

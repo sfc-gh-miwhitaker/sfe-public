@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-36-blue)
+![Projects](https://img.shields.io/badge/Projects-37-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -37,6 +37,7 @@ Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
 | [demo-cortex-financial-agents](demo-cortex-financial-agents/) | Specialty finance portfolio risk agent combining structured analytics with document RAG | Cortex Agents, Cortex Search, Semantic Views, Cortex Analyst |
 | [demo-coco-governance-github](demo-coco-governance-github/) | GitHub-powered AGENTS.md and skills governance across Cortex Code surfaces | Cortex Code, GitHub, AGENTS.md, Intune |
 | [demo-music-label-marketing-analytics](demo-music-label-marketing-analytics/) | Music label marketing analytics with AI enrichment, spreadsheet-style budget entry, and Intelligence agent | Dynamic Tables, AI_CLASSIFY, AI_EXTRACT, Semantic Views, Streamlit, Intelligence Agents |
+| [demo-gaming-player-analytics](demo-gaming-player-analytics/) | Player behavior analytics with AI cohort segmentation, churn risk scoring, feedback analysis, and Intelligence agent | Dynamic Tables, AI_CLASSIFY, AI_EXTRACT, Semantic Views, Streamlit, Intelligence Agents |
 | [demo-cortex-product-classification](demo-cortex-product-classification/) | Pointer to [glaze-and-classify](https://github.com/sfc-gh-miwhitaker/glaze-and-classify) (multi-method product classification) | AI_COMPLETE, SPCS, Semantic Views |
 
 ### Deployable Tools
