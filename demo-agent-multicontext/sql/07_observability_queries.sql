@@ -77,14 +77,21 @@ ORDER BY 1 DESC;
 --    used.  Scoped to this demo's semantic view only.
 -- ============================================================================
 
-SELECT *
+SELECT
+    timestamp,
+    latest_question,
+    generated_sql,
+    response_status_code,
+    request_id,
+    user_id,
+    warnings
 FROM TABLE(
     SNOWFLAKE.LOCAL.CORTEX_ANALYST_REQUESTS(
         'SEMANTIC_VIEW',
         'SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AGENT_MULTICONTEXT_VIEWERSHIP'
     )
 )
-ORDER BY 1 DESC
+ORDER BY timestamp DESC
 LIMIT 50;
 
 

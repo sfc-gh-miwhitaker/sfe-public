@@ -3,173 +3,173 @@
 ![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
-# QuickBooks API Medallion Architecture Demo
+# QuickBooks API Medallion Architecture
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
-> This demo uses Snowflake features current as of March 2026.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+Inspired by a real customer question: *"Can I pull data from QuickBooks into Snowflake without an external ETL tool -- and enrich it with AI along the way?"*
 
-Pull accounting data from QuickBooks Online directly into Snowflake using native features -- no external ETL tools needed. Walks through every layer of the medallion pattern with Cortex AI enrichment and Data Metric Functions for continuous quality monitoring.
+This demo answers that question with a full medallion pipeline -- Bronze raw JSON, Silver typed tables with Cortex AI enrichment, Gold analytics views -- plus Data Metric Functions for continuous quality monitoring. Runs with synthetic sample data (no QBO credentials required) or with a live QuickBooks Online connection.
 
 **Author:** SE Community
 **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
-## Quick Start
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
 
-**Deploy in Snowsight (no clone needed):**
-Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+---
 
-**Develop with Cortex Code:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-api-quickbooks-medallion
-cd sfe-public/demo-api-quickbooks-medallion && cortex
-```
+## The Problem
 
-## First Time Here?
+A growing business runs on QuickBooks Online for invoicing, payments, and vendor management. Their data team needs that accounting data in Snowflake for analytics -- AR aging, revenue trends, vendor spend -- but they don't want to pay for another ETL tool or maintain a custom connector.
 
-**No QBO credentials?** No problem. Run with synthetic sample data:
+They also want AI-powered enrichment: sentiment analysis on invoice notes, customer risk classification, and anomaly detection. And they need quality monitoring so they know when the data breaks.
+
+How do you build all of that with only Snowflake-native features?
+
+---
+
+## The Progression
+
+### 1. Bronze -- External Access Integration for API ingestion
+
+A Python stored procedure calls the QuickBooks Online API directly from Snowflake via an External Access Integration. Raw JSON responses land in VARIANT columns with metadata (fetch timestamp, pagination cursors, CDC markers).
 
 ```sql
--- 1. Create schema + warehouse
--- Run: sql/01_setup/01_create_schema.sql
-
--- 2. Create Bronze raw tables
--- Run: sql/02_bronze/02_raw_tables.sql
-
--- 3. Load sample data (includes intentional DQ issues)
--- Run: sql/02_bronze/04_sample_data.sql
-
--- 4. Create Silver + Gold + DQ
--- Run files in sql/03_silver/, sql/04_gold/, sql/05_data_quality/ in order
-
--- 5. Explore!
-SELECT * FROM AR_AGING;
-SELECT * FROM ENRICHED_INVOICE_NOTES;
-SELECT * FROM DQ_EXPECTATION_SUMMARY;
+CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION qbo_api_access
+    ALLOWED_NETWORK_RULES = (qbo_api_rule)
+    ALLOWED_AUTHENTICATION_SECRETS = (qbo_oauth_secret)
+    ENABLED = TRUE;
 ```
 
-**Have QBO credentials?** See [docs/02-API-SETUP.md](docs/02-API-SETUP.md) for OAuth 2.0 setup.
+> [!TIP]
+> **Pattern demonstrated:** External Access Integration + Python stored procedure for REST API ingestion -- the Snowflake-native alternative to external ETL tools.
+
+### 2. Silver -- Dynamic Tables with Cortex AI enrichment
+
+Dynamic Tables extract typed columns from raw JSON and add AI enrichment in a single declarative layer. `AI_SENTIMENT` scores invoice notes, `AI_COMPLETE` generates structured analysis, `AI_CLASSIFY` categorizes customers -- all refreshed automatically via `TARGET_LAG`.
+
+```sql
+CREATE DYNAMIC TABLE DT_ENRICHED_INVOICES
+    TARGET_LAG = '1 hour'
+    WAREHOUSE = SFE_QB_API_WH
+AS
+SELECT
+    raw:Id::STRING AS invoice_id,
+    AI_SENTIMENT(raw:CustomerMemo:value::STRING) AS memo_sentiment,
+    AI_CLASSIFY(raw:Line[0]:Description::STRING, ['Product', 'Service', 'Expense']) AS line_type
+FROM RAW_INVOICES;
+```
+
+> [!TIP]
+> **Pattern demonstrated:** Cortex AI functions inside Dynamic Tables -- enrichment that refreshes automatically with your data pipeline.
+
+### 3. Gold -- Analytics views with AI insights
+
+Pre-computed views for AR aging, revenue by month, vendor spend, customer lifetime value, and AI-powered customer classification and payment risk scoring.
+
+> [!TIP]
+> **Pattern demonstrated:** Medallion Gold layer combining traditional aggregations with Cortex AI classification for AI-enriched analytics.
+
+### 4. Data Quality -- DMFs with expectations and anomaly detection
+
+System and custom Data Metric Functions monitor every layer. Expectations define thresholds. Anomaly detection flags week-over-week spikes. Email and Slack notifications alert on failures.
+
+> [!TIP]
+> **Pattern demonstrated:** Data Metric Functions with `SYSTEM$DATA_METRIC_SCAN` for continuous, serverless quality monitoring across a medallion pipeline.
+
+---
 
 ## Architecture
 
 ```mermaid
-journey
-    title Medallion Layer Progression
-    section Bronze
-      OAuth 2.0 connection: 4: You
-      Python stored proc with CDC: 5: Snowflake
-      RAW tables as VARIANT: 5: Snowflake
-    section Silver
-      Dynamic Tables auto-refresh: 5: Snowflake
-      JSON path extraction: 5: Snowflake
-      Cortex AI enrichment: 5: Cortex
-    section Gold
-      AR Aging analytics: 5: Analyst
-      Revenue dashboards: 5: Analyst
-      Customer classification: 5: Cortex
-    section Data Quality
-      System DMFs serverless: 5: Snowflake
-      Custom expectations: 4: You
-      Anomaly notifications: 5: Snowflake
+flowchart LR
+    subgraph source [QuickBooks Online]
+        QBO[REST API]
+    end
+
+    subgraph bronze [Bronze Layer]
+        EAI[External Access Integration]
+        RawTables["RAW_ tables<br/>(VARIANT JSON)"]
+    end
+
+    subgraph silver [Silver Layer]
+        DT["Dynamic Tables<br/>(typed, incremental)"]
+        Cortex["Cortex AI<br/>SENTIMENT / CLASSIFY / COMPLETE"]
+    end
+
+    subgraph gold [Gold Layer]
+        AR[AR Aging]
+        Revenue[Revenue by Month]
+        Risk[Payment Risk]
+    end
+
+    subgraph dq [Data Quality]
+        DMF["System + Custom DMFs"]
+        Alerts[Email + Slack Alerts]
+    end
+
+    QBO --> EAI --> RawTables
+    RawTables --> DT
+    DT --> Cortex
+    Cortex --> AR
+    Cortex --> Revenue
+    Cortex --> Risk
+    RawTables --> DMF
+    DT --> DMF
+    DMF --> Alerts
 ```
 
-```
-QuickBooks Online API
-        │
-        ▼ OAuth 2.0 + External Access Integration
-┌─────────────────────────────────────────────────────┐
-│  Bronze: RAW_ tables (VARIANT JSON)                 │
-│    Python stored proc with pagination + CDC         │
-├─────────────────────────────────────────────────────┤
-│  Silver: Dynamic Tables (incremental refresh)       │
-│    STG_ tables (JSON path extraction)               │
-│    Cortex: AI_SENTIMENT, AI_CLASSIFY, AI_COMPLETE   │
-├─────────────────────────────────────────────────────┤
-│  Gold: Analytics Views + Cortex Dynamic Tables      │
-│    AR_AGING, REVENUE_BY_MONTH, VENDOR_SPEND         │
-│    CUSTOMER_CLASSIFICATION, PAYMENT_RISK            │
-├─────────────────────────────────────────────────────┤
-│  Data Quality: DMFs (serverless)                    │
-│    System + Custom DMFs with Expectations           │
-│    Anomaly Detection, Notifications, Remediation    │
-└─────────────────────────────────────────────────────┘
-```
+---
 
-See [diagrams/data-flow.md](diagrams/data-flow.md) for the full Mermaid architecture diagram.
+## Explore the Results
 
-## What You'll Learn
+After deployment, explore the pipeline at each layer:
 
-| Concept | Where |
-|---------|-------|
-| External Access Integration + OAuth 2.0 | `sql/02_bronze/01_network_and_auth.sql` |
-| Python stored procedures with API calls | `sql/02_bronze/03_fetch_procedures.sql` |
-| Dynamic tables with incremental refresh | `sql/03_silver/01_dynamic_tables.sql` |
-| Cortex AI in dynamic tables | `sql/03_silver/02_cortex_enrichment.sql` |
-| AI_COMPLETE structured outputs | `sql/03_silver/02_cortex_enrichment.sql` |
-| AI_CLASSIFY with few-shot examples | `sql/04_gold/02_cortex_insights.sql` |
-| System DMFs with expectations | `sql/05_data_quality/01_system_dmfs.sql` |
-| Custom DMFs (FK, business rules) | `sql/05_data_quality/02_custom_dmfs.sql` |
-| Anomaly detection (ML-powered) | `sql/05_data_quality/01_system_dmfs.sql` |
-| DQ notifications (email + Slack) | `sql/05_data_quality/03_notifications.sql` |
-| Remediation with SYSTEM$DATA_METRIC_SCAN | `sql/05_data_quality/04_quality_dashboard.sql` |
-| Cortex Data Quality (Snowsight UI) | [docs/03-ARCHITECTURE.md](docs/03-ARCHITECTURE.md) |
+- **Bronze** -- Query `RAW_INVOICES`, `RAW_CUSTOMERS`, `RAW_PAYMENTS` to see raw JSON
+- **Silver** -- Query `DT_COMPLETIONS`, enriched dynamic tables with AI columns
+- **Gold** -- Query `AR_AGING`, `REVENUE_BY_MONTH`, `ENRICHED_INVOICE_NOTES` for analytics
+- **Data Quality** -- Query `DQ_EXPECTATION_SUMMARY` or check the Snowsight Data Quality tab
+- **Streamlit** -- Upload the Streamlit app for interactive exploration
 
-## Project Structure
+---
 
-```
-qbapi/
-  README.md                              ← you are here
-  deploy_all.sql                         ← single entry point
-  teardown_all.sql                       ← complete cleanup
-  diagrams/
-    data-flow.md                         ← Mermaid architecture diagrams
-  sql/
-    01_setup/
-      01_create_schema.sql               ← schema, warehouse, roles
-    02_bronze/
-      01_network_and_auth.sql            ← network rule, security integration, secret, EAI
-      02_raw_tables.sql                  ← RAW_ tables (VARIANT + metadata)
-      03_fetch_procedures.sql            ← Python stored proc for QBO API
-      04_sample_data.sql                 ← synthetic JSON for offline demo
-    03_silver/
-      01_dynamic_tables.sql              ← JSON path extraction dynamic tables
-      02_cortex_enrichment.sql           ← AI_SENTIMENT + AI_COMPLETE + AI_CLASSIFY
-    04_gold/
-      01_analytics_views.sql             ← AR aging, revenue, vendor spend, CLV
-      02_cortex_insights.sql             ← AI customer classification, anomaly, risk
-    05_data_quality/
-      01_system_dmfs.sql                 ← system DMFs with expectations + anomaly detection
-      02_custom_dmfs.sql                 ← FK integrity, positive amounts, date sequence
-      03_notifications.sql               ← email + Slack webhook notifications
-      04_quality_dashboard.sql           ← monitoring queries + remediation
-    06_orchestration/
-      01_tasks.sql                       ← hourly fetch task (live API mode only)
-  docs/
-    01-GETTING-STARTED.md                ← quick start guide
-    02-API-SETUP.md                      ← QBO OAuth 2.0 setup
-    03-ARCHITECTURE.md                   ← detailed architecture guide
-```
+<details>
+<summary><strong>Deploy (2 paths, ~5 minutes)</strong></summary>
 
-## Sample Data Quality Issues
+> [!IMPORTANT]
+> Requires **Enterprise** edition, `SYSADMIN` + `ACCOUNTADMIN` role access, and Cortex AI enabled in your region.
 
-The sample data in `04_sample_data.sql` intentionally includes these issues so DMFs light up:
+**Path A -- Sample data (no credentials needed):**
+
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**. Includes synthetic data with intentional quality issues so DMFs light up immediately.
+
+**Path B -- Live QuickBooks API:**
+
+See [docs/02-API-SETUP.md](docs/02-API-SETUP.md) for OAuth 2.0 setup, then deploy.
+
+### What Gets Created
+
+| Object Type | Name | Purpose |
+|---|---|---|
+| Schema | `SNOWFLAKE_EXAMPLE.QB_API` | Demo schema |
+| Warehouse | `SFE_QB_API_WH` | Demo compute |
+| Bronze Tables | `RAW_INVOICES`, `RAW_CUSTOMERS`, `RAW_PAYMENTS` | Raw JSON from QBO |
+| Silver Dynamic Tables | `DT_*` | Typed + enriched |
+| Gold Views | `AR_AGING`, `REVENUE_BY_MONTH`, `VENDOR_SPEND` | Analytics |
+| DMFs | System + Custom | Quality monitoring |
+
+### Sample Data Quality Issues
+
+The sample data intentionally includes issues so DMFs fire:
 
 | Issue | Invoice | DMF That Catches It |
 |-------|---------|-------------------|
-| NULL customer_id | INV-007 | `NULL_COUNT` → `no_null_customers` |
-| Duplicate invoice ID | INV-003 (twice) | `DUPLICATE_COUNT` → `no_duplicate_invoices` |
-| Negative amount | INV-008 (-$500) | `DMF_POSITIVE_AMOUNT` → `all_positive_invoice_amounts` |
-| Due date before txn date | INV-009 | `DMF_DATE_SEQUENCE` → `valid_invoice_date_sequence` |
-| Orphan customer reference | INV-010 (customer 99) | `DMF_FK_CHECK` → `no_orphan_invoices` |
+| NULL customer_id | INV-007 | `NULL_COUNT` |
+| Duplicate invoice ID | INV-003 (twice) | `DUPLICATE_COUNT` |
+| Negative amount | INV-008 (-$500) | `DMF_POSITIVE_AMOUNT` |
+| Due date before txn date | INV-009 | `DMF_DATE_SEQUENCE` |
+| Orphan customer reference | INV-010 (customer 99) | `DMF_FK_CHECK` |
 
-## Cleanup
-
-```sql
--- Remove all demo objects
--- Run: teardown_all.sql
-```
-
-## Estimated Demo Costs
+### Estimated Costs
 
 | Component | Size | Est. Credits/Hour |
 |---|---|---|
@@ -177,10 +177,12 @@ The sample data in `04_sample_data.sql` intentionally includes these issues so D
 | Dynamic Table refresh | X-SMALL | <0.1 |
 | Cortex AI enrichment | Per-row | ~0.01/row |
 | DMFs (serverless) | Serverless | <0.1 |
+| **Total** | | **<2 credits** for full deployment + 1 hour of exploration |
 
-**Total estimated cost:** <2 credits for full deployment + 1 hour of exploration.
+</details>
 
-## Troubleshooting
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
 | Symptom | Fix |
 |---------|-----|
@@ -188,7 +190,14 @@ The sample data in `04_sample_data.sql` intentionally includes these issues so D
 | Dynamic tables stuck in FAILED | Check `SELECT * FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY())` for errors. |
 | Cortex functions unavailable | Verify your region supports Cortex AI. See [Cortex availability](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions#availability). |
 
-## Development Tools
+</details>
+
+## Cleanup
+
+Run [`teardown_all.sql`](teardown_all.sql) in Snowsight to remove all demo objects.
+
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
@@ -199,9 +208,10 @@ This project is designed for AI-pair development.
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
-## Prerequisites
+</details>
 
-- Snowflake account with SYSADMIN + ACCOUNTADMIN roles
-- Cortex AI functions enabled (most commercial regions)
-- Data Metric Functions (GA)
-- Optional: QuickBooks Online Developer account for live API mode
+## Documentation
+
+- [Getting Started](docs/01-GETTING-STARTED.md)
+- [API Setup (OAuth 2.0)](docs/02-API-SETUP.md)
+- [Architecture Guide](docs/03-ARCHITECTURE.md)

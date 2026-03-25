@@ -1,15 +1,18 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--04--16-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Cortex Anthropic API Redirect Guide
+
+Inspired by a real customer question: *"Can I route my existing Anthropic SDK calls through Snowflake so the data never leaves our governance boundary -- without rewriting my code?"*
+
+Change **3 lines** of SDK configuration and your existing `client.messages.create(...)` calls, streaming, and tool calling all route through Cortex instead -- same request body, same response format, same model names.
 
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-17 | **Expires:** 2026-04-16 | **Status:** ACTIVE
 
 **Time:** ~15 minutes | **Result:** Existing Anthropic code running through Snowflake Cortex
-
-Keep your data within Snowflake's governance boundary without rewriting your Anthropic code. Change **3 lines** of SDK configuration and your existing `client.messages.create(...)` calls, streaming, and tool calling all route through Cortex instead -- same request body, same response format, same model names.
 
 > [!CAUTION]
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.

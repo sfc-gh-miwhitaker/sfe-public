@@ -1,116 +1,135 @@
-# DR Cost Agent (Snowflake Intelligence)
-
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
-> **DEMONSTRATION PROJECT** | **Last Updated:** 2026-03-04 | **Expires:** 2026-05-01
-> This demo uses Snowflake features current as of March 2026.
-> After expiration, validate against [Snowflake docs](https://docs.snowflake.com) before deploying.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+# DR Cost Agent
+
+Inspired by a real customer question: *"We need to budget for cross-region replication, but some of our databases have hybrid tables that won't replicate -- how do we get an accurate estimate?"*
+
+This tool answers that question with a Snowflake Intelligence agent that estimates DR/replication costs with hybrid-table awareness, pre-loaded Business Critical pricing for 60 AWS/Azure/GCP regions, and a custom cost projection procedure. Ask in natural language, get cost estimates with charts.
 
 **Author:** SE Community
-**Purpose:** Snowflake Intelligence agent for estimating DR/replication costs with hybrid table awareness
-**Created:** 2025-12-08 | **Last Updated:** 2026-03-04 | **Expires:** 2026-05-01 (58 days) | **Status:** ACTIVE
+**Created:** 2025-12-08 | **Last Updated:** 2026-03-04 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
-## Quick Start
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This tool expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
 
-**Deploy in Snowsight (no clone needed):**
+---
 
-1. Copy [`deploy_standalone.sql`](deploy_standalone.sql) into a Snowsight worksheet and click **Run All**
-2. Open **Snowflake Intelligence** and find **DR Cost Estimator**
-3. Click a suggested prompt or ask your own question
+## The Operational Pain
 
-> **Two deploy options:** `deploy_standalone.sql` is self-contained (no Git integration needed -- just paste and run). `deploy.sql` uses Git integration for automatic updates when the repo changes.
+Cross-region replication pricing depends on database size, daily change rate, destination region, and cloud provider. But the estimate is wrong if you don't account for hybrid tables -- which are **silently skipped during replication refresh** (BCR-1560-1582). Most teams discover this gap only after deploying DR and wondering why certain tables don't appear in the secondary region.
 
-**Develop with Cortex Code:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-dr-cost-agent
-cd sfe-public/tool-dr-cost-agent && cortex
-```
+---
 
-## Brand New to GitHub or Cortex Code?
+## What It Does
 
-Start with the [Getting Started Guide](../guide-coco-setup/) -- it walks you through downloading the code and installing Cortex Code (the AI assistant that will help you with everything else).
+Open **Snowflake Intelligence** and find the **DR Cost Estimator** agent. Try these conversation starters:
 
-## First Time Here?
+- *"Estimate DR costs to replicate my databases to a second region"*
+- *"Which destination region is cheapest for DR?"*
+- *"Do any of my databases have hybrid tables that won't replicate?"*
+- *"What did replication actually cost last month?"*
+- *"Compare costs if our daily change rate is 2% vs 10%"*
 
-**This is a 100% Snowflake-native tool. No local setup required!**
+The agent combines live ACCOUNT_USAGE metadata (database sizes, hybrid table detection, historical replication costs) with a deterministic cost projection procedure and pre-loaded pricing rates.
 
-1. `deploy_standalone.sql` -- Deploy all objects in Snowsight (5 min, no Git integration)
-2. Open Snowflake Intelligence -- find **DR Cost Estimator** agent
-3. Click a suggested prompt to get started immediately
-4. `teardown.sql` -- Remove everything when done
+> [!TIP]
+> **Pattern demonstrated:** Cortex Agent with a custom `COST_PROJECTION` stored procedure as a tool -- the pattern for combining AI conversation with deterministic calculations.
 
-**Total setup time: ~5 minutes**
-
-## What This Delivers
-
-- **Snowflake Intelligence agent** for conversational DR cost estimation
-- Hybrid-table-aware database sizing (hybrid tables are skipped during replication)
-- Pre-loaded Business Critical pricing rates for AWS, Azure, and GCP regions (60 entries)
-- Custom cost projection tool for deterministic calculations
-- Pricing admin procedure (`UPDATE_PRICING`) for rate management without direct table access
-- Backward-looking actual replication cost analysis (if replication is configured)
-- Built-in charting for region comparisons and cost breakdowns
-- Semantic view powering accurate SQL generation from natural language
-
-## Conversation Starters
-
-The agent shows these as clickable prompts when you first open it:
-
-- **"Estimate DR costs to replicate my databases to a second region"**
-- **"Which destination region is cheapest for DR?"**
-- **"Do any of my databases have hybrid tables that won't replicate?"**
-- **"What did replication actually cost last month?"**
-- **"Compare costs if our daily change rate is 2% vs 10%"**
+---
 
 ## Architecture
 
-```
-ACCOUNT_USAGE views (TABLE_STORAGE_METRICS, HYBRID_TABLES, REPLICATION_GROUP_USAGE_HISTORY)
-       |
-       v
-Data Foundation (DB_METADATA_V2, HYBRID_TABLE_METADATA, REPLICATION_HISTORY)
-       |
-       v
-PRICING_CURRENT table (AWS/Azure/GCP baseline rates)
-       |
-       v
-Semantic View (SV_DR_COST) --> Cortex Analyst tool
-       |                              |
-       v                              v
-COST_PROJECTION SPROC -------> DR_COST_AGENT (Snowflake Intelligence)
-                                       |
-                                       v
-                                 Business User (natural language + charts)
+```mermaid
+flowchart LR
+    subgraph usage [ACCOUNT_USAGE]
+        TSM[TABLE_STORAGE_METRICS]
+        HT[HYBRID_TABLES]
+        RH[REPLICATION_GROUP_USAGE_HISTORY]
+    end
+
+    subgraph foundation [Data Foundation]
+        DBMeta["DB_METADATA_V2<br/>(sizes, hybrid exclusion)"]
+        HybridMeta[HYBRID_TABLE_METADATA]
+        ReplHistory[REPLICATION_HISTORY]
+        Pricing["PRICING_CURRENT<br/>(60 region entries)"]
+    end
+
+    subgraph intelligence [Intelligence Layer]
+        SV["SV_DR_COST<br/>(Semantic View)"]
+        Projection["COST_PROJECTION<br/>(Stored Procedure)"]
+        Agent["DR_COST_AGENT<br/>(Snowflake Intelligence)"]
+    end
+
+    TSM --> DBMeta
+    HT --> HybridMeta
+    RH --> ReplHistory
+    DBMeta --> SV
+    Pricing --> SV
+    SV --> Agent
+    Projection --> Agent
+    Agent --> User[Business User]
 ```
 
-## Important Notes
+---
+
+<details>
+<summary><strong>Deploy (1 step, ~5 minutes)</strong></summary>
+
+> [!IMPORTANT]
+> Requires `ACCOUNTADMIN` (for USAGE_VIEWER grant) and `SYSADMIN` for all other objects.
+
+Copy [`deploy_standalone.sql`](deploy_standalone.sql) into a Snowsight worksheet and click **Run All**. Self-contained -- no Git integration needed.
+
+Alternatively, use [`deploy.sql`](deploy.sql) for Git-integrated deployment with automatic updates.
+
+### What Gets Created
+
+| Object | Type | Purpose |
+|--------|------|---------|
+| `SNOWFLAKE_EXAMPLE.DR_COST_AGENT` | Schema | All tool objects |
+| `SFE_TOOLS_WH` | Warehouse | Shared, XSmall, auto-suspend |
+| `DB_METADATA_V2` | View | Database sizes with hybrid exclusion |
+| `HYBRID_TABLE_METADATA` | View | Hybrid table detection |
+| `PRICING_CURRENT` | Table | BC pricing for 60 regions |
+| `SV_DR_COST` | Semantic View | Natural language interface |
+| `COST_PROJECTION` | Procedure | Deterministic cost calculation |
+| `DR_COST_AGENT` | Agent | Snowflake Intelligence conversational agent |
 
 ### Cost Disclaimer
-**This tool provides estimates for budgeting purposes only.** Actual costs may vary based on data compression ratios, network conditions, change patterns, regional pricing, and contract terms. Pricing rates are baseline values. Always monitor actual consumption using Snowflake's ACCOUNT_USAGE views and consult with your account team for production planning.
 
-### Hybrid Table Awareness
-As of March 2026, hybrid table requests are cost-neutral (compute + storage only). However, **hybrid tables are silently skipped during replication refresh** (BCR-1560-1582). The agent proactively identifies databases with hybrid tables and adjusts cost projections to exclude them from replication transfer estimates.
+This tool provides **estimates for budgeting purposes only.** Actual costs vary based on compression ratios, network conditions, change patterns, and contract terms. Consult your account team for production planning.
 
-### Technical Details
-- **Objects**: All under `SNOWFLAKE_EXAMPLE.DR_COST_AGENT` schema
-- **Warehouse**: `SFE_TOOLS_WH` (shared, XSmall, auto-suspend)
-- **Agent**: `DR_COST_AGENT` in Snowflake Intelligence
-- **Semantic View**: `SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_DR_COST`
-- **Security**: SYSADMIN owns objects, PUBLIC granted read access
-- **Features**: Business Critical edition pricing, hybrid table awareness
-- **Expiration**: Enforced in `deploy.sql`
+</details>
 
-## Development Tools
+<details>
+<summary><strong>Troubleshooting</strong></summary>
+
+| Symptom | Fix |
+|---------|-----|
+| Agent not visible | Verify the semantic view `SV_DR_COST` exists in `SEMANTIC_MODELS` schema. |
+| No database metadata | ACCOUNT_USAGE views lag up to 3 hours. Wait and retry. |
+| Pricing seems wrong | Check `PRICING_CURRENT` rates against your contract terms. |
+| Hybrid tables not detected | Ensure `SNOWFLAKE.USAGE_VIEWER` database role is granted. |
+
+</details>
+
+## Cleanup
+
+Run [`teardown.sql`](teardown.sql) in Snowsight to remove all tool objects.
+
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
 - **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
-- **.claude/skills/** -- Project-specific AI skill teaching the AI this project's patterns
+- **.claude/skills/** -- Project-specific AI skill
 - **Cortex Code in Snowsight** -- Open in a Workspace for AI-assisted development
 - **Cursor** -- Open locally for AI-pair coding
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
+
+</details>

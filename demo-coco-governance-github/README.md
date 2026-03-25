@@ -1,22 +1,109 @@
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
+![Expires](https://img.shields.io/badge/Expires-2026--04--15-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 # GitHub-Powered Project Tooling for Cortex Code
 
-<!-- DEMO_STATUS: ACTIVE | Expires: 2026-04-15 -->
+Inspired by a real customer question: *"How do I get the same coding standards enforced in Cortex Code on CLI and in Snowsight -- without maintaining two sets of configs?"*
 
-![Expires](https://img.shields.io/badge/Expires-2026--04--15-yellow)
+This demo answers that question in three acts: store your `AGENTS.md` and skills in a GitHub repo, and Cortex Code reads them automatically on both surfaces. GitHub's collaboration features become your team management layer. Intune adds the enterprise enforcement wrapper.
 
-> [!CAUTION]
-> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
+**Pair-programmed by:** SE Community + Cortex Code
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-15 | **Status:** ACTIVE
 
-Same `AGENTS.md`, same skill, both surfaces. Store your project standards in a GitHub repo. Cortex Code reads them automatically in CLI (from your clone) and in Snowsight (from a Git-connected workspace). GitHub's collaboration features become your team management layer. Intune adds the enterprise wrapper.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This demo expires on 2026-04-15. After expiration, validate against current Snowflake docs before use.
 
-**Time:** ~30 minutes | **Result:** Working project tooling on CLI + Snowsight
+---
 
-## Quick Start
+## The Problem
 
-**Deploy in Snowsight (no clone needed):**
-Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+A data engineering team uses Cortex Code in two places: locally via the CLI (in their cloned repos) and in Snowsight (via Git-connected Workspaces). They want every developer -- and every AI assistant -- to follow the same SQL standards, naming conventions, and security rules regardless of which surface they use.
 
-**Develop with Cortex Code:**
+Without a shared source of truth, standards drift. CLI users customize their local configs. Snowsight users don't get any project context at all. New team members start from scratch.
+
+---
+
+## The Approach
+
+### 1. Project Tooling -- one `AGENTS.md`, both surfaces
+
+Store `AGENTS.md` and `.claude/skills/` in a GitHub repo. Cortex Code reads them automatically -- from your local clone on the CLI, and from a Git-connected Workspace in Snowsight. Same file, same standards, zero duplication.
+
+> [!TIP]
+> **Pattern demonstrated:** `AGENTS.md` as the single source of truth for AI coding standards across CLI and Snowsight.
+
+### 2. GitHub Team Management -- PRs, Issues, branch protection
+
+Use GitHub's collaboration features to manage standards evolution: propose changes via PR, review as a team, enforce via branch protection. The GitHub MCP server lets Cortex Code interact with Issues and PRs directly.
+
+> [!TIP]
+> **Pattern demonstrated:** GitHub MCP with 1Password or PAT for team-wide standards governance through familiar Git workflows.
+
+### 3. Intune Enterprise -- `managed-settings.json` via MDM
+
+For organizations that need enforcement (not just guidelines), deploy `managed-settings.json` via Microsoft Intune. This locks down MCP server configurations, model selection, and telemetry at the device level.
+
+> [!TIP]
+> **Pattern demonstrated:** `managed-settings.json` via MDM for organization-level Cortex Code configuration enforcement.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph project [Act 1 - Project Tooling]
+        AGENTS["AGENTS.md"]
+        Skills[".claude/skills/"]
+    end
+
+    subgraph team [Act 2 - GitHub Team Mgmt]
+        PRs[Pull Requests]
+        Issues[Issues]
+        Protection[Branch Protection]
+        GitHubMCP[GitHub MCP Server]
+    end
+
+    subgraph enterprise [Act 3 - Intune Enterprise]
+        ManagedSettings["managed-settings.json"]
+        Intune[Microsoft Intune MDM]
+    end
+
+    AGENTS --> CLI["Cortex Code CLI"]
+    AGENTS --> Snowsight["Cortex Code in Snowsight"]
+    Skills --> CLI
+    Skills --> Snowsight
+    PRs --> AGENTS
+    GitHubMCP --> CLI
+    Intune --> ManagedSettings --> CLI
+```
+
+---
+
+## Explore the Results
+
+After deployment, three paths let you experience the demo:
+
+- **Act 1** -- Clone this repo, run `cortex` in the directory, and ask it to write a query. Watch it follow the standards in `AGENTS.md`. Then open the same repo as a Snowsight Workspace and verify identical behavior. See [docs/01-PROJECT-TOOLING.md](docs/01-PROJECT-TOOLING.md).
+- **Act 2** -- Set up the GitHub MCP server and use Cortex Code to create Issues, review PRs, and manage standards as a team. See [docs/02-GITHUB-TEAM-MANAGEMENT.md](docs/02-GITHUB-TEAM-MANAGEMENT.md).
+- **Act 3** -- Deploy `managed-settings.json` via Intune for org-wide enforcement. See [docs/03-INTUNE-ENTERPRISE.md](docs/03-INTUNE-ENTERPRISE.md).
+
+---
+
+<details>
+<summary><strong>Deploy (~5 minutes)</strong></summary>
+
+> [!IMPORTANT]
+> Requires `ACCOUNTADMIN` role access for the sample Snowflake objects.
+
+**Step 1 -- Deploy sample objects:**
+
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**. Creates a schema with sample tables to test standards against.
+
+**Step 2 -- Try it locally:**
+
 ```bash
 bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-coco-governance-github
 cd sfe-public/demo-coco-governance-github && cortex
@@ -24,32 +111,15 @@ cd sfe-public/demo-coco-governance-github && cortex
 
 The standards in `AGENTS.md` are already active. Try: *"Write a query that finds the top 5 customers by total order amount"*
 
-## Three Acts
+### What Gets Created
 
-| Act | What | Doc |
-|-----|------|-----|
-| **1. Project Tooling** | `AGENTS.md` + custom skill work in both CLI and Snowsight | [docs/01-PROJECT-TOOLING.md](docs/01-PROJECT-TOOLING.md) |
-| **2. GitHub Team Management** | PRs, Issues, branch protection, and GitHub MCP for team-wide standards | [docs/02-GITHUB-TEAM-MANAGEMENT.md](docs/02-GITHUB-TEAM-MANAGEMENT.md) |
-| **3. Intune Enterprise** | `managed-settings.json` via MDM for org-level enforcement | [docs/03-INTUNE-ENTERPRISE.md](docs/03-INTUNE-ENTERPRISE.md) |
+| Object Type | Name | Purpose |
+|---|---|---|
+| Schema | `SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB` | Demo workspace |
+| Warehouse | `SFE_COCO_GOVERNANCE_GITHUB_WH` | Compute for sample queries |
+| Tables | `CUSTOMERS`, `ORDERS`, `PRODUCTS` | Sample data to test standards against |
 
-## What's in the Repo
-
-### Project tooling (the core deliverable)
-
-| File | Purpose |
-|------|---------|
-| `AGENTS.md` | Project standards -- loaded automatically by Cortex Code on both surfaces |
-| `.claude/skills/.../SKILL.md` | SQL review procedure -- invoked on demand |
-
-### Supporting SQL
-
-| Object | Purpose |
-|--------|---------|
-| Schema: `SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB` | Demo workspace |
-| Warehouse: `SFE_COCO_GOVERNANCE_GITHUB_WH` | Compute for sample queries |
-| Tables: `CUSTOMERS`, `ORDERS`, `PRODUCTS` | Sample data to test standards against |
-
-### Reference configs
+### Reference Configs
 
 | File | Purpose |
 |------|---------|
@@ -58,36 +128,39 @@ The standards in `AGENTS.md` are already active. Try: *"Write a query that finds
 | `reference/managed-settings-mcp-enabled.json` | Org-level managed settings template |
 | `reference/intune-config.json` | Intune deployment config for managed-settings |
 
-### Diagrams
+</details>
 
-| File | Shows |
-|------|-------|
-| `diagrams/dual-surface.md` | CLI and Snowsight reading the same AGENTS.md |
-| `diagrams/github-team-flow.md` | Team onboarding and standards evolution cycle |
-| `diagrams/governance-stack.md` | Three-layer stack: project, team, enterprise |
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
-## Prerequisites
+| Symptom | Fix |
+|---------|-----|
+| Cortex Code doesn't follow standards | Verify `AGENTS.md` is in the project root. Run `cortex` from the project directory. |
+| GitHub MCP not connecting | Check PAT permissions (repo, issues, pull_requests). Verify the MCP config path. |
+| Snowsight Workspace missing standards | Ensure the Git repo is connected and `AGENTS.md` is in the repo root. |
 
-- ACCOUNTADMIN role access (for `deploy_all.sql`)
-- Cortex Code CLI installed ([install guide](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli))
-- Cortex Code enabled in Snowsight ([docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-snowsight))
-- GitHub account (for Act 2 MCP setup)
-
-## Development Tools
-
-This project is pair-programmed with AI coding assistants. The following files configure their behavior:
-
-| File | Purpose |
-|------|---------|
-| `AGENTS.md` | Project context and standards -- loaded automatically by Cortex Code, Cursor, and Claude Code |
-| `.claude/skills/demo-coco-governance-github/SKILL.md` | SQL review procedure skill -- invoked on demand for structured code review |
-
-These files are the demo's primary deliverable. They demonstrate how project tooling in a Git repo serves both CLI and Snowsight surfaces.
+</details>
 
 ## Cleanup
 
-Run `teardown_all.sql` in Snowsight to remove all Snowflake objects.
+Run [`teardown_all.sql`](teardown_all.sql) in Snowsight to remove all Snowflake objects.
 
----
+<details>
+<summary><strong>Development Tools</strong></summary>
 
-*Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-15*
+This project is designed for AI-pair development.
+
+- **AGENTS.md** -- Project standards (the primary deliverable of this demo)
+- **.claude/skills/** -- SQL review procedure skill
+- **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
+- **Cursor** -- Open locally with Cursor for AI-pair coding
+
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
+
+</details>
+
+## Documentation
+
+- [Act 1: Project Tooling](docs/01-PROJECT-TOOLING.md)
+- [Act 2: GitHub Team Management](docs/02-GITHUB-TEAM-MANAGEMENT.md)
+- [Act 3: Intune Enterprise](docs/03-INTUNE-ENTERPRISE.md)

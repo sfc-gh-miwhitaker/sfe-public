@@ -1,21 +1,22 @@
-# Power BI + Snowflake via OneLake and Iceberg
-
-> [!CAUTION]
-> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
-
-![Expires](https://img.shields.io/badge/Expires-2026--04--23-orange)
+![Guide](https://img.shields.io/badge/Type-Guide-blue)
+![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
+![Status](https://img.shields.io/badge/Status-Active-success)
 ![Iceberg Tables](https://img.shields.io/badge/Iceberg_Tables-GA-29B5E8)
 ![Catalog-Linked DBs](https://img.shields.io/badge/Catalog--Linked_DBs-GA_Jan_2026-29B5E8)
 ![OneLake Integration](https://img.shields.io/badge/OneLake-Bi--Directional-29B5E8)
 
-**Pair-programmed by:** SE Community + Cortex Code
+# Power BI + Snowflake via OneLake and Iceberg
+
+Inspired by the architecture question that comes up in every Fabric shop: *"We already have Microsoft Fabric -- can Power BI read from OneLake instead of hitting Snowflake compute for every dashboard?"*
+
+Snowflake is the data engine -- transformation, governance, AI enrichment, and data sharing all happen here. For organizations that also run Microsoft Fabric, Apache Iceberg provides a bi-directional bridge (GA January 2026): Snowflake can ingest data from OneLake and serve curated Iceberg tables back to it. Power BI's **Direct Lake** mode can then read those Parquet files from OneLake for simple dashboard queries. DirectQuery to Snowflake remains the most capable and most governed connection path. This guide covers when the OneLake/Iceberg path adds value alongside it -- and how to ensure Snowflake stays at the center of your data architecture when it does.
+
+**Author:** SE Community + Cortex Code
 **Created:** 2026-03-24 | **Expires:** 2026-04-23 | **Status:** ACTIVE
 
+> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
+
 > **Companion guide.** This guide covers the OneLake/Iceberg path for Power BI + Snowflake. For the DirectQuery path using interactive tables, hybrid tables, and standard optimization techniques, see [guide-powerbi-live-query](../guide-powerbi-live-query/).
-
-Snowflake is the data engine -- transformation, governance, AI enrichment, and data sharing all happen here. For organizations that also run Microsoft Fabric, Apache Iceberg provides a bi-directional bridge (GA January 2026): Snowflake can ingest data from OneLake and serve curated Iceberg tables back to it. Power BI's **Direct Lake** mode can then read those Parquet files from OneLake for simple dashboard queries.
-
-DirectQuery to Snowflake remains the most capable and most governed connection path. This guide covers when the OneLake/Iceberg path adds value alongside it -- and how to ensure Snowflake stays at the center of your data architecture when it does.
 
 **Time:** ~30 minutes to read | **Result:** Architecture decision for when the OneLake/Iceberg path complements DirectQuery
 

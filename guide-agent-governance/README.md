@@ -1,14 +1,30 @@
+![Guide](https://img.shields.io/badge/Type-Guide-blue)
+![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
+![Expires](https://img.shields.io/badge/Expires-2027--03--23-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 # Agent Governance Playbook
 
-> [!CAUTION]
-> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
+Inspired by the question every team asks after building their first agent: *"How do we run this safely in production?"*
 
-![Expires](https://img.shields.io/badge/Expires-2027--03--23-orange)
+Operational patterns for running Cortex Agents responsibly: content safety with Cortex Guard, RBAC with dedicated roles and Row Access Policies, three authentication methods, network security, observability via CORTEX_AGENT_USAGE_HISTORY, and cost controls with per-user budgets and runaway detection. Everything comes from patterns proven in the demos and tools in this repository.
 
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-23 | **Expires:** 2027-03-23 | **Status:** ACTIVE
 
-Operational patterns for running Cortex Agents responsibly in production: monitoring, access control, guardrails, cost controls, and audit trails. Everything in this guide comes from patterns proven in the demos and tools in this repository.
+> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
+
+**Time:** ~30 minutes to read | **Result:** Production-ready governance checklist for Cortex Agents
+
+---
+
+## Who This Is For
+
+Teams that have built a Cortex Agent (or plan to) and need to answer: *"How do we run this safely in production?"* You should already be familiar with agent basics -- if not, start with the [Campaign Engine Workshop](../demo-campaign-engine/GUIDED_BUILD.md) to build one first.
+
+---
+
+## The Approach
 
 ```mermaid
 flowchart LR
@@ -35,11 +51,19 @@ flowchart LR
   build --> secure --> monitor
 ```
 
-**Time:** ~30 minutes to read | **Result:** Production-ready governance checklist for Cortex Agents
+Six parts, each with SQL you can copy into Snowsight:
 
-## Who This Is For
+| Part | What It Covers |
+|------|---------------|
+| [Part 1: Content Safety](#part-1-content-safety----cortex-guard) | Cortex Guard + orchestration budgets |
+| [Part 2: Access Control](#part-2-access-control----rbac-for-agents) | Dedicated roles, database roles, Row Access Policies |
+| [Part 3: Authentication](#part-3-authentication-for-agent-apis) | PAT vs Key-Pair JWT vs OAuth decision tree |
+| [Part 4: Network Security](#part-4-network-security) | Network policies for agent endpoints |
+| [Part 5: Monitoring](#part-5-monitoring-and-observability) | CORTEX_AGENT_USAGE_HISTORY, token breakdown, hourly rollups |
+| [Part 6: Cost Controls](#part-6-cost-controls) | Per-invocation budgets, per-user monthly budgets, runaway detection |
 
-Teams that have built a Cortex Agent (or plan to) and need to answer: "How do we run this safely in production?" You should already be familiar with agent basics -- if not, start with the [Campaign Engine Workshop](../demo-campaign-engine/GUIDED_BUILD.md) to build one first.
+> [!TIP]
+> **Pattern demonstrated:** Six-pillar agent governance framework -- the production checklist for any Cortex Agent deployment.
 
 ---
 
@@ -58,98 +82,47 @@ SELECT AI_COMPLETE(
 ):choices[0]:messages::STRING;
 ```
 
-### Key Points
-
-- Use the boolean `true` (not the old object syntax)
-- Cortex Guard evaluates both input and output for safety
-- Adds latency (~100-200ms) -- acceptable for production, may want to skip for batch processing
-- Works with `AI_COMPLETE` function calls; agent objects have their own guardrail configuration in the YAML spec
-
-### Agent YAML Guardrails
-
-For agents created with `CREATE AGENT`, configure guardrails in the YAML specification:
+For agents created with `CREATE AGENT`, set orchestration budgets in the YAML:
 
 ```yaml
-models:
-  orchestration: auto
-
 orchestration:
   budget:
     seconds: 60
     tokens: 16000
 ```
 
-The `budget` block caps each agent invocation -- preventing runaway token consumption or long-running orchestration loops.
-
 ---
 
 ## Part 2: Access Control -- RBAC for Agents
 
-### Grant Pattern
-
-Every agent needs explicit grants. Follow the principle of least privilege:
-
 ```sql
--- Create a dedicated role for agent consumers
 CREATE ROLE IF NOT EXISTS CORTEX_AGENT_USERS;
 
--- Grant access to the agent and its dependencies
 GRANT USAGE ON DATABASE SNOWFLAKE_EXAMPLE TO ROLE CORTEX_AGENT_USERS;
 GRANT USAGE ON SCHEMA SNOWFLAKE_EXAMPLE.<YOUR_SCHEMA> TO ROLE CORTEX_AGENT_USERS;
 GRANT USAGE ON WAREHOUSE <YOUR_WAREHOUSE> TO ROLE CORTEX_AGENT_USERS;
 GRANT USAGE ON AGENT SNOWFLAKE_EXAMPLE.<YOUR_SCHEMA>.<YOUR_AGENT> TO ROLE CORTEX_AGENT_USERS;
-
--- Grant the role to users who need access
-GRANT ROLE CORTEX_AGENT_USERS TO ROLE SYSADMIN;
-```
-
-### Database Roles
-
-For Cortex AI features, users need the `SNOWFLAKE.CORTEX_USER` database role:
-
-```sql
 GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE CORTEX_AGENT_USERS;
 ```
 
-For cost monitoring views, grant `SNOWFLAKE.USAGE_VIEWER` instead of blanket `IMPORTED PRIVILEGES`:
-
-```sql
-GRANT DATABASE ROLE SNOWFLAKE.USAGE_VIEWER TO ROLE <MONITORING_ROLE>;
-```
-
-### Row Access Policies for Data Isolation
-
-When agents serve multiple tenants, use Row Access Policies to enforce per-user data boundaries. The agent respects whatever RBAC context the calling user has:
+For multi-tenant agents, Row Access Policies enforce per-user data boundaries:
 
 ```sql
 CREATE OR REPLACE ROW ACCESS POLICY tenant_isolation_policy
   AS (row_tenant_id VARCHAR) RETURNS BOOLEAN ->
     row_tenant_id = CURRENT_USER()
     OR CURRENT_ROLE() IN ('ACCOUNTADMIN', 'SYSADMIN');
-
-ALTER TABLE <YOUR_TABLE>
-  ADD ROW ACCESS POLICY tenant_isolation_policy ON (tenant_id);
 ```
-
-The Agent Run API supports `X-Snowflake-Role` headers for per-request RBAC context -- see [demo-agent-multicontext](../demo-agent-multicontext/) for the full pattern.
 
 ---
 
 ## Part 3: Authentication for Agent APIs
 
-Three methods, each suited to a different use case:
-
 | Method | Best For | Header |
 |---|---|---|
 | PAT | Development and testing | `Authorization: Bearer <pat_token>` |
 | Key-Pair JWT | Service accounts in production | `Authorization: Bearer <jwt>` + `X-Snowflake-Authorization-Token-Type: KEYPAIR_JWT` |
-| OAuth | End-user SSO (e.g., Azure AD) | `Authorization: Bearer <oauth_token>` |
-
-### Decision Tree
-
-- **Quick testing?** Use a PAT. Rotate it regularly ([tool-secrets-rotation-aws](../tool-secrets-rotation-aws/)).
-- **Service account calling the API?** Use key-pair JWT. No secret to rotate, just the key pair.
-- **End users authenticating?** Use OAuth with your IdP (Azure AD, Okta, etc.).
+| OAuth | End-user SSO (Azure AD, Okta) | `Authorization: Bearer <oauth_token>` |
 
 See [guide-api-agent-context](../guide-api-agent-context/) for working code examples of all three methods.
 
@@ -157,47 +130,17 @@ See [guide-api-agent-context](../guide-api-agent-context/) for working code exam
 
 ## Part 4: Network Security
 
-Network policies control which IP addresses can access your Snowflake account. As of March 2026, network policies ARE supported for Cortex Agents with two caveats:
-
-- IP addresses from Entra ID can be stale -- users may need to re-authenticate
-- IPv6 addresses from Entra ID are not yet supported
-- Private Link is NOT supported for agent endpoints
+Network policies are supported for Cortex Agents as of March 2026, with caveats (stale Entra ID IPs, no IPv6, no Private Link for agent endpoints).
 
 ```sql
 CREATE NETWORK POLICY agent_access_policy
     ALLOWED_IP_LIST = ('203.0.113.0/24', '198.51.100.0/24')
     COMMENT = 'Restrict agent API access to corporate network';
-
-ALTER ACCOUNT SET NETWORK_POLICY = agent_access_policy;
 ```
 
 ---
 
 ## Part 5: Monitoring and Observability
-
-### CORTEX_AGENT_USAGE_HISTORY
-
-The primary view for agent monitoring. Available in `SNOWFLAKE.ACCOUNT_USAGE` with up to 3-hour latency:
-
-```sql
-SELECT
-    start_time,
-    end_time,
-    user_name,
-    agent_name,
-    request_id,
-    token_credits,
-    tokens,
-    DATEDIFF('ms', start_time, end_time) AS latency_ms
-FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY
-WHERE start_time >= DATEADD('day', -7, CURRENT_TIMESTAMP())
-ORDER BY start_time DESC
-LIMIT 50;
-```
-
-### Token Breakdown
-
-The `TOKENS_GRANULAR` column is an OBJECT (not an array). Access fields with colon notation:
 
 ```sql
 SELECT
@@ -208,69 +151,19 @@ SELECT
     tokens_granular:"output"::NUMBER AS output_tokens,
     token_credits
 FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY
-WHERE start_time >= DATEADD('day', -1, CURRENT_TIMESTAMP())
+WHERE start_time >= DATEADD('day', -7, CURRENT_TIMESTAMP())
 ORDER BY token_credits DESC;
 ```
-
-### Hourly Cost Rollup
-
-```sql
-SELECT
-    DATE_TRUNC('hour', start_time) AS hour,
-    COUNT(*) AS invocations,
-    SUM(token_credits) AS total_credits,
-    AVG(DATEDIFF('ms', start_time, end_time)) AS avg_latency_ms
-FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY
-WHERE start_time >= DATEADD('day', -7, CURRENT_TIMESTAMP())
-GROUP BY 1
-ORDER BY 1 DESC;
-```
-
-### QUERY_HISTORY for Audit Trails
-
-Every SQL query generated by an agent is logged in `QUERY_HISTORY`. Cross-reference with `CORTEX_AGENT_USAGE_HISTORY` via timestamps and user context for a complete audit trail.
 
 ---
 
 ## Part 6: Cost Controls
 
-### Orchestration Budget (Per-Invocation)
-
-Set in the agent YAML to cap each individual run:
-
-```yaml
-orchestration:
-  budget:
-    seconds: 60
-    tokens: 16000
-```
-
-### Per-User Monthly Budgets
-
-Use the governance module from [tool-cortex-cost-intelligence](../tool-cortex-cost-intelligence/) for organization-wide controls:
-
 ```sql
--- Grant a user a monthly AI budget (in credits)
 CALL PROC_GRANT_AI_ACCESS('ALICE', 500);
-CALL PROC_GRANT_AI_ACCESS('BOB', 1000);
-
--- Check current budget status
 CALL PROC_CHECK_USER_BUDGETS();
-```
-
-### Runaway Detection
-
-Automated detection and cancellation of queries exceeding a credit threshold:
-
-```sql
 CALL PROC_MONITOR_AND_CANCEL_RUNAWAY_QUERIES(50);
-```
 
-### Warehouse-Level Controls
-
-Always set timeouts on agent warehouses to prevent runaway queries:
-
-```sql
 ALTER WAREHOUSE SFE_MY_AGENT_WH SET
     STATEMENT_TIMEOUT_IN_SECONDS = 120
     AUTO_SUSPEND = 60

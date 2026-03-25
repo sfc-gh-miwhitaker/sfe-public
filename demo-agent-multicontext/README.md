@@ -5,52 +5,170 @@
 
 # Agent Multicontext Demo
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-04-02
-> This demo uses Snowflake features current as of March 2026.
-> After expiration, a warning banner will be added to this README and deploy_all.sql.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+![Agent Multicontext Demo](assets/demo-screenshot.png)
 
-Demonstrates the Snowflake Agent Run API **"without agent object"** approach for
-injecting per-request context -- user identity, station branding, and
-authorization-tier-specific tool sets -- via the `instructions.system` field
-instead of stuffing context into user messages.
+Inspired by a real customer question: *"How do I pass user identity and tenant context to a Cortex Agent without stuffing it into every message?"*
+
+This demo answers that question with a working React + Node.js app backed by the Snowflake Agent Run API's **"without agent object"** endpoint -- where every request carries its own system prompt, tool set, and RBAC role. A live API Inspector in the sidebar shows exactly what gets sent to Snowflake on every turn.
 
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-03 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
-![Agent Multicontext Demo](assets/demo-screenshot.png)
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This demo expires on 2026-04-02. After expiration, validate against current Snowflake docs before use.
 
-## Quick Start
+---
 
-**Deploy in Snowsight (no clone needed):**
-Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+## The Problem
 
-**Develop with Cortex Code:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-agent-multicontext
-cd sfe-public/demo-agent-multicontext && cortex
+A public-television network runs four local stations -- WETA, KQED, WGBH, WNET. Each station has its own brand, its own member base, and its own viewership data. They want a single support agent that:
+
+- Greets users as *"the WETA Support Agent"* or *"the KQED Support Agent"* depending on which station they came from
+- Shows anonymous visitors only the knowledge base
+- Lets logged-in members query their own viewership data
+- Gives station admins full analytics across members and metrics
+
+The obvious API choice -- `POST /api/v2/databases/{db}/schemas/{schema}/agents/{name}:run` -- creates a fixed agent object. Its `instructions` and `tools` are locked at creation time. You can't swap the system prompt or tool list per request.
+
+The common workaround -- prepending *"Do not repeat, but remember: my user id is xxxxx"* to every user message -- is fragile, pollutes conversation history, and mixes data with intent.
+
+---
+
+## The Approach
+
+### 1. The "without agent object" endpoint
+
+Instead of creating an agent object, call `POST /api/v2/cortex/agent:run` directly. This endpoint accepts the full agent specification inline -- system prompt, tools, response style -- so every request can be different.
+
+```json
+{
+  "instructions": {
+    "system": "You are the WETA Support Agent. The current user is Jane (member ID 42).",
+    "response": "Be friendly and reference WETA programming.",
+    "orchestration": "Use Cortex Analyst for viewership questions."
+  },
+  "tools": [ ... ],
+  "tool_resources": { ... }
+}
 ```
 
-## First Time Here?
+> [!TIP]
+> **Pattern demonstrated:** `instructions.system` for per-request identity injection -- the production alternative to stuffing context into user messages.
 
-1. **Deploy Snowflake objects** -- Copy `deploy_all.sql` into Snowsight, click "Run All"
+### 2. Three authorization tiers
 
-2. **Set environment variables** -- The backend needs your Snowflake account and a Personal Access Token:
+The Node.js backend builds a different payload for each tier. The frontend's user picker lets you switch instantly.
 
-   ```bash
-   export SNOWFLAKE_ACCOUNT="myorg-myaccount"
-   export SNOWFLAKE_PAT="your-personal-access-token"
-   ```
+| Tier | User Context | Tools | Snowflake Role |
+|------|-------------|-------|----------------|
+| **Anonymous** | No user ID | Cortex Search (KB) only | _(default)_ |
+| **Basic Member** | User ID + name in system prompt | Search + Analyst (viewership) | `TV_VIEWER_ROLE` |
+| **Station Admin** | User ID + admin flag in system prompt | Search + full Analyst (metrics, members) | `TV_ADMIN_ROLE` |
 
-   Get a PAT: Snowsight -> Settings -> Authentication -> Personal Access Tokens
+The `X-Snowflake-Role` header on every request activates the matching Row Access Policy in Snowflake -- data isolation enforced at the SQL layer, invisible to the agent.
 
-3. **Start services** -- `./tools/02_start.sh` (installs deps, starts backend on :3001 and frontend on :3000)
+> [!TIP]
+> **Pattern demonstrated:** `X-Snowflake-Role` header + Row Access Policies for per-request RBAC -- no separate agent objects per tenant.
 
-4. **Open** -- Navigate to `http://localhost:3000`
+### 3. Station branding without duplication
 
-5. **Cleanup** -- Run `teardown_all.sql` in Snowsight, then `./tools/04_stop.sh`
+The system prompt opens with *"You are the WETA Support Agent"* or *"You are the KQED Support Agent"* depending on which station the user arrives from. One codebase, one API call, four branded experiences.
 
-## What This Creates
+> [!TIP]
+> **Pattern demonstrated:** Dynamic `instructions.system` for white-label branding -- swap identity per request without creating separate agent objects per tenant.
+
+### 4. Live API Inspector
+
+A sidebar panel shows the exact JSON payload sent to Snowflake on every turn. Toggle between `instructions`, `tools`, and the full request body to see how the context changes as you switch users and stations.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph frontend [React Frontend]
+        UserPicker[UserPicker]
+        StationPicker[StationPicker]
+        AgentChat[AgentChat]
+        ApiInspector[ApiInspector]
+    end
+
+    subgraph backend [Node.js Backend]
+        ContextBuilder["Context Builder<br/>builds system prompt + tools<br/>per request"]
+    end
+
+    subgraph snowflake [Snowflake]
+        AgentAPI["agent:run API<br/>(without object)"]
+        CortexSearch[Cortex Search]
+        CortexAnalyst[Cortex Analyst]
+        RAP[Row Access Policies]
+    end
+
+    UserPicker --> ContextBuilder
+    StationPicker --> ContextBuilder
+    AgentChat --> ContextBuilder
+    ApiInspector --> ContextBuilder
+    ContextBuilder --> AgentAPI
+    AgentAPI --> CortexSearch
+    AgentAPI --> CortexAnalyst
+    AgentAPI --> RAP
+```
+
+---
+
+## Explore the Results
+
+After deployment, three interfaces let you explore the demo:
+
+- **React App** -- Switch users, switch stations, chat with the agent, and inspect the live API payload. Navigate to `http://localhost:3000` after starting services.
+- **API Inspector** -- Toggle between `instructions`, `tools`, and `full payload` tabs to see exactly what changes per request.
+- **Observability Queries** -- Paste queries from `sql/07_observability_queries.sql` into Snowsight to see agent credits, token usage, and Analyst request logs.
+
+| What | Source | Scope |
+|------|--------|-------|
+| Agent credits and token usage | `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY` | All `agent:run` calls (with and without object) |
+| Cortex Analyst request logs | `SNOWFLAKE.LOCAL.CORTEX_ANALYST_REQUESTS()` table function | Scoped to a semantic view |
+| Conversation history | Thread REST API (`GET /api/v2/cortex/threads/{id}/messages`) | Per thread |
+
+---
+
+<details>
+<summary><strong>Deploy (5 steps, ~10 minutes)</strong></summary>
+
+> [!IMPORTANT]
+> Requires **Enterprise** edition, `SYSADMIN` + `ACCOUNTADMIN` role access, and Cortex AI enabled in your region.
+
+**Step 1 -- Deploy Snowflake objects:**
+
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Step 2 -- Set environment variables:**
+
+```bash
+export SNOWFLAKE_ACCOUNT="myorg-myaccount"
+export SNOWFLAKE_PAT="your-personal-access-token"
+```
+
+Get a PAT: Snowsight > Settings > Authentication > Personal Access Tokens
+
+**Step 3 -- Start services:**
+
+```bash
+./tools/02_start.sh
+```
+
+Installs deps, starts backend on `:3001` and frontend on `:3000`.
+
+**Step 4 -- Open the app:**
+
+Navigate to `http://localhost:3000`
+
+**Step 5 -- Cleanup:**
+
+Run `teardown_all.sql` in Snowsight, then `./tools/04_stop.sh`
+
+### What Gets Created
 
 | Object Type | Name | Purpose |
 |---|---|---|
@@ -62,90 +180,17 @@ cd sfe-public/demo-agent-multicontext && cortex
 | Row Access Policies | `RAP_STATION_*` | Station-scoped data isolation |
 | Roles | `TV_VIEWER_ROLE`, `TV_ADMIN_ROLE` | Authorization tiers |
 
-## What This Demo Shows
+### Estimated Costs
 
-### The Problem
+| Component | Size | Est. Credits/Hour |
+|---|---|---|
+| Warehouse (SFE_AGENT_MULTICONTEXT_WH) | X-SMALL | 1 |
+| Cortex Search Service | Serverless | ~0.1 |
+| Cortex Agent calls | Per-query | ~0.01/query |
+| Cortex Analyst calls | Per-query | ~0.01/query |
+| **Total** | | **<2 credits** for full deployment + 1 hour of exploration |
 
-When building a customer-facing agent on Snowflake, you need to pass
-per-user context (user ID, station affiliation, authorization level) to
-the agent. The "with agent object" API endpoint
-(`POST /api/v2/databases/{db}/schemas/{schema}/agents/{name}:run`) does
-not allow overriding `instructions` per request.
-
-The common workaround -- prepending "Do not repeat, but remember: my user id
-is xxxxx" to every message -- is fragile, pollutes the conversation history,
-and mixes data with user intent.
-
-### The Solution
-
-Use the **"without agent object"** endpoint (`POST /api/v2/cortex/agent:run`).
-This endpoint accepts the full agent specification inline per request, including:
-
-- `instructions.system` -- User identity, station branding, authorization context
-- `instructions.response` -- Response style tailored to auth tier
-- `instructions.orchestration` -- Tool selection guidance per tier
-- `tools` + `tool_resources` -- Different tool sets per authorization level
-- `X-Snowflake-Role` header -- Snowflake role for RBAC enforcement
-
-### Three User Tiers
-
-| Tier | User Context | Tools | Snowflake Role |
-|------|-------------|-------|----------------|
-| **Anonymous** | No user ID | Cortex Search (KB) only | _(default)_ |
-| **Basic Member** | User ID + name in system prompt | Search + Analyst (viewership) | `TV_VIEWER_ROLE` |
-| **Station Admin** | User ID + admin flag in system prompt | Search + full Analyst (metrics, members) | `TV_ADMIN_ROLE` |
-
-### Station Branding
-
-The agent's identity changes based on which station the user arrives from.
-The system prompt begins with "You are the WETA Support Agent" or
-"You are the KQED Support Agent" depending on the referring domain.
-No separate agent objects needed per station.
-
-## Architecture
-
-```
-React Frontend          Node.js Backend            Snowflake
-┌─────────────┐        ┌──────────────────┐       ┌──────────────────┐
-│ UserPicker   │──┐     │ Context Builder  │       │ agent:run API    │
-│ StationPicker│  ├────▶│ builds system    │──────▶│ (without object) │
-│ AgentChat    │  │     │ prompt + tools   │       │                  │
-│ ApiInspector │──┘     │ per request      │       │ Cortex Search    │
-└─────────────┘        └──────────────────┘       │ Cortex Analyst   │
-                                                   │ Row Access Policy│
-                                                   └──────────────────┘
-```
-
-## API Inspector
-
-The sidebar includes a live JSON inspector that shows the exact payload
-being sent to the Snowflake Agent API. Toggle between tabs to see:
-
-- **instructions** -- How `system`, `response`, and `orchestration` change
-- **tools** -- Which tools are available at each auth tier
-- **full payload** -- The complete request body
-
-## Observability
-
-The "without agent object" approach trades the Snowsight Agents monitoring
-UI (AI & ML > Agents > Monitoring) for per-request flexibility. That UI
-requires selecting an agent object, so it is not available when you skip
-object creation. Three SQL-based observability paths still work:
-
-| What | Source | Scope |
-|------|--------|-------|
-| Agent credits and token usage | `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY` | All `agent:run` calls (with and without object) |
-| Cortex Analyst request logs | `SNOWFLAKE.LOCAL.CORTEX_ANALYST_REQUESTS()` table function | Scoped to a semantic view |
-| Conversation history | Thread REST API (`GET /api/v2/cortex/threads/{id}/messages`) | Per thread |
-
-Threads tie conversations together regardless of which endpoint is used --
-the same `thread_id` works with both `/api/v2/cortex/agent:run` and
-`/api/v2/databases/{db}/schemas/{schema}/agents/{name}:run`.
-
-See `sql/07_observability_queries.sql` for ready-to-run queries you can
-paste into Snowsight after using the demo.
-
-## Operations
+### Operations
 
 | Script | Purpose |
 |--------|---------|
@@ -158,7 +203,10 @@ paste into Snowsight after using the demo.
 - **Frontend:** http://localhost:3000 (Vite dev server, proxies `/api` to backend)
 - **Health check:** http://localhost:3001/health
 
-## Troubleshooting
+</details>
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
 | Symptom | Fix |
 |---------|-----|
@@ -168,7 +216,15 @@ paste into Snowsight after using the demo.
 | Agent returns empty responses | Cortex Search service needs time to index after deploy. Wait a few minutes and retry. |
 | Analyst tool errors | Verify `SFE_AGENT_MULTICONTEXT_WH` is running and the semantic view exists in `SEMANTIC_MODELS`. |
 
-## Development Tools
+</details>
+
+## Cleanup
+
+1. Run [`teardown_all.sql`](teardown_all.sql) in Snowsight
+2. Stop local services: `./tools/04_stop.sh`
+
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
@@ -179,21 +235,7 @@ This project is designed for AI-pair development.
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
-## Estimated Demo Costs
-
-| Component | Size | Est. Credits/Hour |
-|---|---|---|
-| Warehouse (SFE_AGENT_MULTICONTEXT_WH) | X-SMALL | 1 |
-| Cortex Search Service | Serverless | ~0.1 |
-| Cortex Agent calls | Per-query | ~0.01/query |
-| Cortex Analyst calls | Per-query | ~0.01/query |
-
-**Total estimated cost:** <2 credits for full deployment + 1 hour of exploration.
-
-## Cleanup
-
-1. Run `teardown_all.sql` in Snowsight
-2. Stop local services: `./tools/04_stop.sh`
+</details>
 
 ## References
 

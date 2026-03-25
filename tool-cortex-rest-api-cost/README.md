@@ -1,104 +1,133 @@
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
+![Expires](https://img.shields.io/badge/Expires-2026--04--22-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 # Cortex REST API Cost
 
-![Expires](https://img.shields.io/badge/Expires-2026--04--22-orange)
-**TOOL PROJECT** | Pair-programmed by SE Community + Cortex Code
-
-> **FinOps Journey (2 of 4):** This tool tracks REST API token-based billing. For broader Cortex AI cost governance (12 services), see [tool-cortex-cost-intelligence](../tool-cortex-cost-intelligence/). For query-level warehouse optimization, see [guide-cost-drivers](../guide-cost-drivers/). To generate REST API usage to track, see [guide-cortex-anthropic-redirect](../guide-cortex-anthropic-redirect/).
-
-## Why This Exists
-
-Snowflake Cortex REST API calls -- direct model inference via the `/api/v2/cortex/inference:complete` endpoint -- are billed in **dollars per million tokens**, not credits. This is a different billing model from SQL-invoked AI functions, Cortex Agents, and Snowflake Intelligence, which all bill in credits.
-
-This tool queries the usage history for those REST API calls, applies the published per-model token rates from the [Service Consumption Table](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf) (Tables 6b/6c), and shows the actual dollar cost in a Streamlit dashboard.
-
-## What You See
-
 ![Cortex REST API Cost Dashboard](images/dashboard.png)
+
+Inspired by a real customer question: *"Our REST API bill is in dollars per million tokens, not credits -- where do I see what we actually spent?"*
+
+This tool queries `CORTEX_REST_API_USAGE_HISTORY`, applies the published per-model token rates from the Service Consumption Table, and shows actual dollar cost in a Streamlit dashboard and a step-by-step notebook.
+
+**Pair-programmed by:** SE Community + Cortex Code
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-22 | **Status:** ACTIVE
+
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This tool expires on 2026-04-22. After expiration, validate against current Snowflake docs before use.
+
+> **FinOps Journey (2 of 4):** For broader Cortex AI cost governance (12 services), see [tool-cortex-cost-intelligence](../tool-cortex-cost-intelligence/). For query-level warehouse optimization, see [guide-cost-drivers](../guide-cost-drivers/). To generate REST API usage to track, see [guide-cortex-anthropic-redirect](../guide-cortex-anthropic-redirect/).
+
+---
+
+## The Operational Pain
+
+Cortex REST API calls -- direct model inference via `/api/v2/cortex/inference:complete` -- are billed in **dollars per million tokens**, not credits. This is a different billing model from SQL-invoked AI functions, Cortex Agents, and Snowflake Intelligence (all credits). The usage view has no cost column -- only token counts. You have to join with pricing tables manually to see actual spend.
+
+---
+
+## What It Does
 
 - **Total requests, tokens, and dollar cost** for a selectable lookback window (7 / 30 / 90 days)
 - **Daily cost trend** as a bar chart
 - **Cost by model** with request counts, token breakdown, and percentage of total spend
 
-## Prerequisites
+The pricing formula: `cost = (input_tokens x input_rate / 1,000,000) + (output_tokens x output_rate / 1,000,000)`
 
-| Requirement | Why |
-|-------------|-----|
-| **ACCOUNTADMIN** (one-time) | Creates the Git API integration used to fetch code from GitHub |
-| **SYSADMIN** | Creates schema, warehouse, views, and Streamlit app |
-| **Access to `SNOWFLAKE.ACCOUNT_USAGE`** | The underlying view (`CORTEX_REST_API_USAGE_HISTORY`) lives here |
+> [!TIP]
+> **Pattern demonstrated:** ACCOUNT_USAGE view + pricing table join for dollar-cost attribution -- the pattern for any token-billed Snowflake service.
 
-The `ACCOUNT_USAGE` views have up to **45 minutes of latency** -- recent API calls may not appear immediately.
+---
 
-## Quick Start
+## Architecture
 
-1. Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet
-2. Click **Run All**
-3. Open **Projects > Streamlit > CORTEX_REST_API_COST_APP** for the dashboard
-4. Open **Projects > Notebooks > CORTEX_REST_API_COST_NOTEBOOK** to walk through the queries yourself
+```mermaid
+flowchart LR
+    subgraph usage [ACCOUNT_USAGE]
+        Raw["CORTEX_REST_API_USAGE_HISTORY<br/>(tokens only, no cost)"]
+    end
 
-![Cortex REST API Cost Notebook](images/notebook.png)
+    subgraph tool [Cost Layer]
+        Pricing["CORTEX_API_PRICING<br/>($/M-token rates by model)"]
+        Detail["V_API_USAGE_DETAIL<br/>(flatten TOKENS_GRANULAR)"]
+        Costed["V_API_USAGE_COSTED<br/>(join usage + pricing)"]
+        Daily["V_DAILY_COST_SUMMARY"]
+        Model["V_MODEL_COST_SUMMARY"]
+    end
 
-No data? Make a Cortex REST API call (e.g. via the [Anthropic-redirect pattern](../guide-cortex-anthropic-redirect/) or the [inference:complete endpoint](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-llm-rest-api)) and check back after the `ACCOUNT_USAGE` latency window.
+    subgraph output [Consumers]
+        Streamlit["Streamlit Dashboard"]
+        Notebook["Query Notebook"]
+    end
 
-## What Gets Deployed
+    Raw --> Detail --> Costed
+    Pricing --> Costed
+    Costed --> Daily --> Streamlit
+    Costed --> Model --> Streamlit
+    Costed --> Notebook
+```
+
+---
+
+<details>
+<summary><strong>Deploy (1 step, ~2 minutes)</strong></summary>
+
+> [!IMPORTANT]
+> Requires `ACCOUNTADMIN` (one-time for Git API integration) and `SYSADMIN` for schema/views.
+
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+Then open **Projects > Streamlit > CORTEX_REST_API_COST_APP** for the dashboard, or **Projects > Notebooks > CORTEX_REST_API_COST_NOTEBOOK** for the query walkthrough.
+
+### What Gets Deployed
 
 | Object | Type | Purpose |
 |--------|------|---------|
-| `SNOWFLAKE_EXAMPLE.CORTEX_REST_API_COST` | Schema | All tool objects live here |
+| `SNOWFLAKE_EXAMPLE.CORTEX_REST_API_COST` | Schema | All tool objects |
 | `SFE_CORTEX_REST_API_COST_WH` | Warehouse | XS, auto-suspend 60s |
 | `CORTEX_API_PRICING` | Table | $/million-token rates per model and region |
 | `V_API_USAGE_DETAIL` | View | Flattens `TOKENS_GRANULAR` into input/output columns |
-| `V_API_USAGE_COSTED` | View | Joins usage with pricing to compute dollar cost per request |
+| `V_API_USAGE_COSTED` | View | Joins usage with pricing for dollar cost per request |
 | `V_DAILY_COST_SUMMARY` | View | Daily aggregation |
 | `V_MODEL_COST_SUMMARY` | View | Per-model aggregation with % of total |
 | `CORTEX_REST_API_COST_APP` | Streamlit | Single-page cost dashboard |
 | `CORTEX_REST_API_COST_NOTEBOOK` | Notebook | 10-step query walkthrough |
 
-## How Pricing Works
+No data? Make a Cortex REST API call and check back after the ACCOUNT_USAGE latency window (~45 minutes).
 
-The `CORTEX_API_PRICING` table contains rates from the Service Consumption Table (effective March 20, 2026):
+</details>
 
-- **Table 6(b)** models (prompt caching supported): input, output, cache_write, cache_read rates; varies by inference region (regional vs. global)
-- **Table 6(c)** models (no caching): input and output rates only; no regional split
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
-The `V_API_USAGE_COSTED` view joins each API request with the matching rate and computes:
+| Symptom | Fix |
+|---------|-----|
+| Views return no data | ACCOUNT_USAGE views have ~45 min latency. Recent API calls may not appear yet. |
+| Pricing mismatch | Check `CORTEX_API_PRICING` rates against the latest [Service Consumption Table](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf). |
+| `TOKENS_GRANULAR` errors | This column is an OBJECT. Access via `:"input"::NUMBER`, not array indexing. |
 
-```
-cost = (input_tokens x input_rate / 1,000,000) + (output_tokens x output_rate / 1,000,000)
-```
+</details>
 
-When a request's inference region indicates global routing, global rates are applied; otherwise regional (higher) rates are used as the default.
+## Cleanup
 
-### Updating Rates
+Run [`teardown_all.sql`](teardown_all.sql) in Snowsight to remove all tool objects.
 
-When Snowflake publishes updated rates, update or replace the rows in `CORTEX_API_PRICING`. The table is keyed on `(MODEL_NAME, REGION_CATEGORY)`. To add a new model:
+<details>
+<summary><strong>Development Tools</strong></summary>
 
-```sql
-INSERT INTO CORTEX_API_PRICING
-    (MODEL_NAME, REGION_CATEGORY, INPUT_USD_PER_MTOK, OUTPUT_USD_PER_MTOK, SOURCE_TABLE)
-VALUES
-    ('new-model-name', 'DEFAULT', 1.50, 7.50, '6b');
-```
+This project is designed for AI-pair development.
 
-No view changes are needed -- the join picks up new rows automatically.
+- **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
+- **.claude/skills/** -- Project-specific AI skills (Cursor + Claude Code)
+- **Cortex Code in Snowsight** -- Open this project in a Workspace for AI-assisted development
+- **Cursor** -- Open locally with Cursor for AI-pair coding
 
-## What This Does NOT Cover
+> New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
-This tool tracks **direct REST API model calls only**. Other Cortex billing surfaces have their own usage views:
+</details>
 
-| Billing Surface | Usage View | Billing Unit |
-|-----------------|-----------|--------------|
-| **REST API** (this tool) | `CORTEX_REST_API_USAGE_HISTORY` | $/million tokens |
-| Cortex Agents | `CORTEX_AGENT_USAGE_HISTORY` | Credits/million tokens |
-| SQL AI Functions | `CORTEX_AI_FUNCTIONS_USAGE_HISTORY` | Credits/million tokens |
-| Snowflake Intelligence | `SNOWFLAKE_INTELLIGENCE_USAGE_HISTORY` | Credits/million tokens |
-| Cortex Search | `CORTEX_SEARCH_DAILY_USAGE_HISTORY` | Credits/GB-month |
-
-## Teardown
-
-Copy [`teardown_all.sql`](teardown_all.sql) into Snowsight and click **Run All**. Removes the schema (CASCADE), warehouse, and Streamlit app. Does not touch shared infrastructure.
-
-## Reference
+## References
 
 - [CORTEX_REST_API_USAGE_HISTORY view](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_rest_api_usage_history)
 - [Service Consumption Table (PDF)](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf) -- Tables 6(b) and 6(c)

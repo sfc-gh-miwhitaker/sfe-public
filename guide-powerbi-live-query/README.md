@@ -1,19 +1,20 @@
-# Power BI Live Query at Scale on Snowflake
-
-> [!CAUTION]
-> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
-
-![Expires](https://img.shields.io/badge/Expires-2026--04--23-orange)
+![Guide](https://img.shields.io/badge/Type-Guide-blue)
+![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
+![Status](https://img.shields.io/badge/Status-Active-success)
 ![Interactive Tables](https://img.shields.io/badge/Interactive_Tables-GA_Dec_2025-29B5E8)
 ![Hybrid Tables](https://img.shields.io/badge/Hybrid_Tables-GA-29B5E8)
 ![Power BI SSO](https://img.shields.io/badge/Power_BI_SSO-External_OAuth-29B5E8)
 
-**Pair-programmed by:** SE Community + Cortex Code
+# Power BI Live Query at Scale on Snowflake
+
+Inspired by the complaint every data team hears: *"Power BI is slow on Snowflake -- our dashboards take 10 seconds to load."*
+
+Power BI DirectQuery sends live SQL to Snowflake on every slicer change, filter click, and page load. At low concurrency that works fine. At hundreds of concurrent users across dozens of dashboards, it becomes a high-concurrency, low-latency workload that standard warehouses were not designed for. This guide walks through the Snowflake table types, warehouse types, and optimization techniques that make live Power BI queries fast at scale.
+
+**Author:** SE Community + Cortex Code
 **Created:** 2026-03-24 | **Expires:** 2026-04-23 | **Status:** ACTIVE
 
-Power BI DirectQuery sends live SQL to Snowflake on every slicer change, filter click, and page load. At low concurrency that works fine. At hundreds of concurrent users across dozens of dashboards, it becomes a high-concurrency, low-latency workload that standard warehouses were not designed for.
-
-This guide walks through the Snowflake table types, warehouse types, and optimization techniques that make live Power BI queries fast at scale.
+> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
 ```mermaid
 flowchart LR

@@ -3,211 +3,162 @@
 ![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
-# Data Quality Metrics & Reporting Demo
+# Data Quality Metrics & Reporting
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
-> This demo uses Snowflake features current as of March 2026.
-> After expiration, this repository will be archived and made private.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+Inspired by a real customer question: *"How do I know when bad data lands in my tables -- and automatically filter it out of downstream analytics?"*
+
+This demo answers that question with Data Metric Functions that fire on every data change, golden dataset views that automatically exclude invalid records, object tagging for governance classification, and tag-based masking policies that enforce column-level security. Insert bad data, watch the metrics update, see the golden views stay clean.
 
 **Author:** SE Community
-**Purpose:** Reference implementation for automated data quality monitoring and reporting using Snowflake native features.
 **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
-![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
 
 ---
 
-## Reference Implementation Notice
+## The Problem
 
-This code demonstrates production-grade architectural patterns and best practices. Review and customize security, networking, and logic for your organization's specific requirements before deployment.
+A sports analytics platform ingests athlete performance metrics and fan engagement events from multiple sources. Raw data frequently arrives with NULLs in required fields, out-of-range values (negative percentages, impossible session durations), and sensitivity levels that vary by column.
+
+The data team needs three things:
+
+1. **Automatic detection** -- Know within minutes when bad data lands, without writing custom monitoring jobs
+2. **Clean analytics** -- Downstream views that only contain valid records, without manual filtering in every query
+3. **Governance** -- Classify every table and column by domain, sensitivity, and quality tier -- and enforce masking on confidential columns automatically
 
 ---
 
-## Quick Start
+## The Progression
 
-**Deploy in Snowsight (no clone needed):**
-Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+### 1. Data Metric Functions -- event-driven quality checks
 
-**Develop with Cortex Code:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-dataquality-metrics
-cd sfe-public/demo-dataquality-metrics && cortex
+Custom DMFs validate metric ranges and session durations. The `TRIGGER_ON_CHANGES` schedule means DMFs fire automatically when data changes -- no cron job, no polling.
+
+```sql
+CREATE DATA METRIC FUNCTION DMF_METRIC_VALUE_VALID_PCT(ref TABLE(metric_value FLOAT))
+    RETURNS NUMBER AS
+    'SELECT ROUND(100.0 * COUNT_IF(metric_value BETWEEN 0 AND 100) / NULLIF(COUNT(*), 0), 2)
+     FROM TABLE(ref)';
 ```
 
-## First Time Here?
+> [!TIP]
+> **Pattern demonstrated:** Custom DMFs with `TRIGGER_ON_CHANGES` -- serverless, event-driven data quality monitoring that fires on every INSERT.
 
-**Deploy:**
-1. Copy `deploy_all.sql` → Paste in Snowsight → Click Run All
-2. **Wait 10 minutes** for `TRIGGER_ON_CHANGES` schedule to activate
+### 2. Golden dataset views -- automatic quality filtering
 
-**Run the Demo:**
-3. Insert new data to trigger DMFs: `tools/insert_sample_data.sql`
-4. Run `tools/DEMO_SCRIPT.sql` section by section
-5. View results: Catalog → Table → **Data Quality** tab
+Views wrap raw tables with quality predicates. Downstream consumers query `V_ATHLETE_PERFORMANCE` instead of `RAW_ATHLETE_PERFORMANCE` and only see valid records.
 
-**Cleanup:**
-6. Run `sql/99_cleanup/teardown_all.sql` to remove all objects
+> [!TIP]
+> **Pattern demonstrated:** Golden dataset views over raw tables -- the pattern for separating data quality enforcement from data consumption.
 
-> **Why wait 10 minutes?** The `TRIGGER_ON_CHANGES` schedule (event-driven DMFs) takes ~10 min to activate. After that, any INSERT triggers DMFs immediately.
+### 3. Object tagging -- governance classification
 
-## The Demo Story
+Three tags with `ALLOWED_VALUES` classify every table and column: `DATA_DOMAIN` (Performance, Engagement, Quality Metrics), `DATA_SENSITIVITY` (Public, Internal, Confidential), `DATA_QUALITY_TIER` (Raw, Validated, Curated).
+
+> [!TIP]
+> **Pattern demonstrated:** Object tags with `ALLOWED_VALUES` for governance classification -- enforceable metadata across tables and columns.
+
+### 4. Tag-based masking -- automatic column protection
+
+A masking policy attached to the `DATA_SENSITIVITY` tag automatically masks any column tagged as `CONFIDENTIAL` for non-admin roles. Tag a column, and masking follows.
+
+> [!TIP]
+> **Pattern demonstrated:** Tag-based masking policy -- attach once to a tag, and every column with that tag gets masked automatically.
+
+---
+
+## Architecture
 
 ```mermaid
-journey
-    title Data Quality Journey
-    section The Problem
-      Raw data has NULLs: 2: Data
-      Out-of-range values: 2: Data
-    section The Solution
-      DMFs detect issues automatically: 5: Snowflake
-      Event-driven on data change: 5: Snowflake
-    section The Outcome
-      Golden views filter bad records: 5: Analyst
-      Quality scores visible: 5: Analyst
-    section Live Demo
-      Insert bad data: 4: You
-      Watch metrics update: 5: Snowflake
-    section Governance
-      Classify with tags: 5: You
-      Enforce masking policies: 5: Snowflake
+flowchart LR
+    subgraph raw [Raw Tables]
+        Athlete[RAW_ATHLETE_PERFORMANCE]
+        Fan[RAW_FAN_ENGAGEMENT]
+    end
+
+    subgraph quality [Data Quality]
+        DMF["Custom DMFs<br/>TRIGGER_ON_CHANGES"]
+        Metrics[STG_DATA_QUALITY_METRICS]
+    end
+
+    subgraph golden [Golden Views]
+        VAthlete[V_ATHLETE_PERFORMANCE]
+        VFan[V_FAN_ENGAGEMENT]
+    end
+
+    subgraph governance [Governance]
+        Tags["Tags<br/>DOMAIN / SENSITIVITY / TIER"]
+        Masking["Tag-Based Masking<br/>CONFIDENTIAL columns"]
+    end
+
+    subgraph viz [Visualization]
+        Snowsight["Snowsight Data Quality Tab"]
+        Streamlit[DATA_QUALITY_DASHBOARD]
+    end
+
+    Athlete --> DMF --> Metrics
+    Fan --> DMF
+    Athlete --> VAthlete
+    Fan --> VFan
+    raw --> Tags --> Masking
+    Metrics --> Snowsight
+    Metrics --> Streamlit
 ```
 
-> "Raw data has quality issues. Snowflake automatically detects bad records, filters them for analytics, provides a dashboard to monitor quality over time, and classifies data assets with governance tags that enforce masking policies."
+---
 
-| Part | What You Show | Key Query/Action |
-|------|---------------|------------------|
-| 1. The Problem | Raw data has NULLs and out-of-range values | `SELECT COUNT(*) FROM RAW... WHERE metric_value IS NULL` |
-| 2. The Solution | DMFs automatically detect issues on data change | `SHOW PARAMETERS LIKE 'DATA_METRIC_SCHEDULE'` |
-| 3. The Outcome | "Golden" views filter bad records | Compare `RAW` count vs `V_` view count |
-| 4. Monitoring | **Native Snowsight Data Quality UI** | Catalog → Table → Data Quality tab |
-| 5. Live Demo | Insert bad data, watch metrics update | `INSERT` → Refresh Data Quality tab |
-| 6. Governance Tags | Classify & protect data assets with tags | `TAG_REFERENCES` + masked query demo |
+## Explore the Results
 
-## Native Snowsight Visualization
+After deployment (and ~10 minutes for `TRIGGER_ON_CHANGES` to activate):
 
-**No Streamlit required!** Snowsight has built-in Data Quality monitoring:
+- **Snowsight Data Quality Tab** -- Navigate to Catalog > select any table > **Data Quality** tab to see DMF results, trends, and drill-down to failing records. No Streamlit required.
+- **Streamlit Dashboard** -- Alternative custom view via `DATA_QUALITY_DASHBOARD` in **Projects > Streamlit**.
+- **Live Demo** -- Insert bad data with `tools/insert_sample_data.sql`, refresh the Data Quality tab, and watch metrics update.
+- **Governance** -- Query `TAG_REFERENCES` to see all tag assignments. Query a CONFIDENTIAL column as a non-admin role to see masking in action.
 
-1. **Catalog → Database Explorer** → Select any table
-2. Click the **Data Quality** tab
-3. See: Data profiling, DMF results, trends, drill-down to failing records
+---
 
-The Streamlit dashboard (`DATA_QUALITY_DASHBOARD`) provides an alternative custom view.
+<details>
+<summary><strong>Deploy (2 steps, ~5 minutes + 10 min wait)</strong></summary>
 
-## Automation Helpers (Optional)
+> [!IMPORTANT]
+> Requires **Enterprise** edition (for Streams, Tasks, DMFs, Streamlit), `SYSADMIN` + `ACCOUNTADMIN` role access.
 
-```bash
-tools/00_master.sh deploy   # Print deployment steps
-tools/00_master.sh status   # Check object status
-tools/00_master.sh cleanup  # Print cleanup steps
-```
+**Step 1 -- Deploy:**
 
-## What This Demo Shows
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
 
-- **Data Metric Functions (DMFs)** - Native Snowflake quality rules with event-driven scheduling
-- **Streams and Tasks** - Incremental CDC pattern for quality metric computation
-- **Object Tagging** - Classify tables/columns by domain, sensitivity, and quality tier
-- **Tag-Based Masking** - CONFIDENTIAL columns automatically masked for non-admin roles
-- **Streamlit Dashboard** - Native visualization deployed from Git repository
-- **Golden Dataset Views** - Cleaned views filtering invalid records
-- **TRANSIENT Tables** - Cost-optimized storage for demo/regenerable data
-- Clean, project-scoped naming inside `SNOWFLAKE_EXAMPLE`
+**Step 2 -- Wait ~10 minutes:**
 
-## Key Patterns Demonstrated
+The `TRIGGER_ON_CHANGES` schedule takes ~10 minutes to activate after deployment. After that, any INSERT triggers DMFs immediately.
 
-| Pattern | Implementation |
-|---------|----------------|
-| Data Quality | Custom DMFs with `TRIGGER_ON_CHANGES` (event-driven) |
-| Incremental Processing | Streams + Tasks for CDC |
-| Object Tagging | `DATA_DOMAIN`, `DATA_SENSITIVITY`, `DATA_QUALITY_TIER` with `ALLOWED_VALUES` |
-| Tag-Based Masking | `CONFIDENTIAL_STRING_MASK` auto-applied via `DATA_SENSITIVITY` tag |
-| Streamlit Deployment | Modern `FROM` syntax with Git integration |
-| Cost Optimization | TRANSIENT tables (no Fail-safe overhead) |
-| Golden Dataset | Views with data quality filtering |
+### What Gets Created
 
-## What Gets Created
+| Object Type | Name | Purpose |
+|---|---|---|
+| Schema | `SNOWFLAKE_EXAMPLE.DATA_QUALITY` | Demo schema |
+| Warehouse | `SFE_DATA_QUALITY_WH` | XSMALL, auto-suspend 60s |
+| Tables (TRANSIENT) | `RAW_ATHLETE_PERFORMANCE`, `RAW_FAN_ENGAGEMENT`, `STG_DATA_QUALITY_METRICS` | Source + metrics |
+| DMFs | `DMF_METRIC_VALUE_VALID_PCT`, `DMF_SESSION_DURATION_VALID_PCT` | Quality rules |
+| Views | `V_ATHLETE_PERFORMANCE`, `V_FAN_ENGAGEMENT`, `V_DATA_QUALITY_METRICS`, `V_QUALITY_SCORE_TREND` | Golden + reporting |
+| Tags | `DATA_DOMAIN`, `DATA_SENSITIVITY`, `DATA_QUALITY_TIER` | Governance classification |
+| Masking Policy | `CONFIDENTIAL_STRING_MASK` | Tag-based column masking |
+| Streamlit App | `DATA_QUALITY_DASHBOARD` | Interactive monitoring |
 
-**Database & Schema:**
-- Database: `SNOWFLAKE_EXAMPLE`
-- Project schema: `SNOWFLAKE_EXAMPLE.DATA_QUALITY`
+### Estimated Costs
 
-**Tables (TRANSIENT):**
-- `RAW_ATHLETE_PERFORMANCE` - Raw performance metrics
-- `RAW_FAN_ENGAGEMENT` - Raw engagement events
-- `STG_DATA_QUALITY_METRICS` - Quality metric results
+| Component | Size | Notes |
+|---|---|---|
+| Warehouse | XSMALL (1 credit/hour) | ~1 hour demo usage |
+| DMFs | Serverless | Minimal for demo volume |
+| Storage | Negligible | TRANSIENT tables, <1 GB |
+| **Total** | | **~1 credit** for deployment + 1 hour of exploration |
 
-**Data Metric Functions:**
-- `DMF_METRIC_VALUE_VALID_PCT` - Validates metric values (0-100 range)
-- `DMF_SESSION_DURATION_VALID_PCT` - Validates session duration (0-14400 range)
+</details>
 
-**Streams:**
-- `RAW_ATHLETE_PERFORMANCE_STREAM`
-- `RAW_FAN_ENGAGEMENT_STREAM`
-
-**Views (with data quality filtering):**
-- `V_ATHLETE_PERFORMANCE` - Cleaned athlete data (valid metrics only)
-- `V_FAN_ENGAGEMENT` - Cleaned engagement data (valid sessions only)
-- `V_DATA_QUALITY_METRICS` - Quality metrics reporting
-- `V_QUALITY_SCORE_TREND` - Aggregated quality trends
-- `V_TAG_GOVERNANCE_SUMMARY` - All tag assignments via TAG_REFERENCES
-
-**Tags (with ALLOWED_VALUES):**
-- `DATA_DOMAIN` - Business domain (PERFORMANCE, ENGAGEMENT, QUALITY_METRICS)
-- `DATA_SENSITIVITY` - Column sensitivity (PUBLIC, INTERNAL, CONFIDENTIAL)
-- `DATA_QUALITY_TIER` - Quality tier (RAW, VALIDATED, CURATED)
-
-**Masking Policy:**
-- `CONFIDENTIAL_STRING_MASK` - Tag-based policy masking CONFIDENTIAL columns for non-admin roles
-
-**Task:**
-- `refresh_data_quality_metrics_task` - 5-minute incremental refresh
-
-**Streamlit App:**
-- `DATA_QUALITY_DASHBOARD` - Interactive quality monitoring
-
-**Infrastructure:**
-- Warehouse: `SFE_DATA_QUALITY_WH` (XSMALL, auto-suspend 60s)
-- Git repository: `SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DATA_QUALITY_REPO`
-
-## Architecture Diagrams
-
-- `diagrams/data-model.md` - Entity relationships
-- `diagrams/data-flow.md` - Data pipeline flow
-- `diagrams/network-flow.md` - Network boundaries
-- `diagrams/auth-flow.md` - Authentication sequence
-
-## Estimated Demo Costs
-
-**Edition Tier:** Enterprise (Streams, Tasks, Streamlit, DMFs)
-
-**Assumptions:**
-- Warehouse: XSMALL (1 credit/hour)
-- Demo usage: 1 hour/day
-- Data volume: under 1 GB
-
-**Estimated Costs:**
-- Compute: ~30 credits/month
-- Storage: negligible (TRANSIENT tables reduce overhead)
-- Serverless: none required
-
-## Repository Structure
-
-```
-├── deploy_all.sql              # Single-copy Snowsight deployment
-├── sql/
-│   ├── 01_setup/               # Database and schema creation
-│   ├── 02_data/                # Tables and sample data (TRANSIENT)
-│   ├── 03_transformations/     # Streams, DMFs, views, tasks
-│   ├── 04_streamlit/           # Dashboard deployment
-│   └── 99_cleanup/             # Teardown script
-├── streamlit/                  # Streamlit application code
-├── docs/                       # Step-by-step guides
-├── diagrams/                   # Architecture diagrams (Mermaid)
-├── tools/                      # Master script and helpers
-└── .github/workflows/          # Demo expiration automation
-```
-
-## Troubleshooting
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
 | Symptom | Fix |
 |---------|-----|
@@ -216,11 +167,14 @@ tools/00_master.sh cleanup  # Print cleanup steps
 | Streamlit app not visible | Navigate to Snowsight > Streamlit. Verify the Git repository stage is accessible. |
 | Data Quality tab empty in Catalog | DMFs must have run at least once. Insert sample data and wait for the schedule. |
 
+</details>
+
 ## Cleanup
 
-Run `sql/99_cleanup/teardown_all.sql` in Snowsight to remove all demo objects.
+Run [`sql/99_cleanup/teardown_all.sql`](sql/99_cleanup/teardown_all.sql) in Snowsight to remove all demo objects.
 
-## Development Tools
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
@@ -231,6 +185,4 @@ This project is designed for AI-pair development.
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
-## Support
-
-For questions or updates after expiration, contact your Snowflake Solutions Engineer for the latest version of this demo.
+</details>

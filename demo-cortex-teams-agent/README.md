@@ -1,46 +1,189 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--04--01-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Cortex Agents for Microsoft Teams & M365 Copilot
 
-> **DEMONSTRATION PROJECT - EXPIRES: 2026-05-01**
-> This demo uses Snowflake features current as of March 2026.
-> After expiration, a warning banner will be added to this README and deploy_all.sql.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+Inspired by a real customer question: *"Our sales team lives in Teams -- can they ask Snowflake questions without leaving the chat?"*
+
+This demo answers that question with a Cortex Agent deployed to Microsoft Teams and M365 Copilot -- zero custom bot code, zero hosting infrastructure. A joke-generator proves the architecture; the same pattern powers enterprise analytics, customer support, and financial reporting.
 
 **Pair-programmed by:** SE Community + Cortex Code
 **Last Updated:** 2026-03-10 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+
 ---
 
-**Chat with AI-powered agents directly in Microsoft Teams and M365 Copilot -- zero custom code required.**
+## The Problem
+
+Knowledge workers live in Microsoft Teams. When they need data from Snowflake, they switch to Snowsight, write a query (or ask someone who can), copy the result, and paste it back into Teams. Context-switching kills productivity and creates stale snapshots of live data.
+
+The team wants their Snowflake data accessible directly in Teams conversations -- with enterprise security (SSO, MFA, RBAC), content safety guardrails, and a complete audit trail.
 
 ---
 
-## Quick Start
+## The Approach
 
-**Deploy in Snowsight (no clone needed):**
-Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+### 1. CREATE AGENT -- one DDL statement
 
-**Develop with Cortex Code:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) demo-cortex-teams-agent
-cd sfe-public/demo-cortex-teams-agent && cortex
+A single `CREATE AGENT` statement with a YAML specification defines the agent, its tools, and its personality. No custom bot framework, no hosting infrastructure.
+
+```sql
+CREATE AGENT JOKE_ASSISTANT
+  FROM SPECIFICATION $$
+    models:
+      orchestration: auto
+    tools:
+      - tool_type: custom_tool
+        tool_spec:
+          function: GENERATE_SAFE_JOKE
+  $$;
 ```
 
-## First Time Here?
+> [!TIP]
+> **Pattern demonstrated:** `CREATE AGENT` with YAML spec -- the simplest path from SQL to a conversational agent.
 
-1. **Deploy** -- Copy `deploy_all.sql` into Snowsight, click "Run All"
-2. **Configure Entra ID** -- Grant consent for both apps (docs/02-ENTRA-ID-SETUP.md)
-3. **Set Tenant ID** -- Update `YOUR_TENANT_ID` in the security integration section
-4. **Install Teams App** -- Search "Snowflake Cortex Agents" in Teams store
-5. **Test** -- Ask for a joke!
+### 2. Microsoft Entra ID integration -- enterprise auth
 
-**Total setup time: ~15 minutes**
+OAuth with Microsoft Entra ID provides SSO, MFA, and Conditional Access. The user authenticates through their normal Microsoft login; Snowflake validates the token and executes queries under the user's Snowflake role.
 
-## Development Tools
+> [!TIP]
+> **Pattern demonstrated:** Security integration with Entra ID for enterprise auth -- SSO, MFA, and RBAC enforcement on every agent interaction.
+
+### 3. Cortex Guard -- content safety
+
+The `GENERATE_SAFE_JOKE` function wraps `AI_COMPLETE` with `guardrails: true`, filtering harmful content before it reaches users. The agent YAML also sets orchestration budgets to prevent runaway token consumption.
+
+> [!TIP]
+> **Pattern demonstrated:** `AI_COMPLETE` with `guardrails: true` + orchestration budget in agent YAML -- the production pattern for content safety.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph teams [Microsoft Teams / M365 Copilot]
+        User[User in Teams]
+    end
+
+    subgraph entra [Microsoft Entra ID]
+        SSO[SSO + MFA]
+        JWT[Short-lived JWT]
+    end
+
+    subgraph snowflake [Snowflake]
+        Agent[JOKE_ASSISTANT Agent]
+        Guard[Cortex Guard]
+        Function[GENERATE_SAFE_JOKE]
+        RBAC[User Role + RBAC]
+        Audit[QUERY_HISTORY + CORTEX_AGENT_USAGE_HISTORY]
+    end
+
+    User --> SSO --> JWT --> Agent
+    Agent --> Guard --> Function
+    Agent --> RBAC
+    Agent --> Audit
+```
+
+---
+
+## Explore the Results
+
+After deployment and Entra ID setup:
+
+- **Teams** -- Search "Snowflake Cortex Agents" in the Teams app store, install, and start chatting
+- **M365 Copilot** -- The same agent surfaces in Copilot conversations (requires Copilot license)
+- **Snowsight** -- Test the agent in **AI & ML > Snowflake Intelligence** before deploying to Teams
+
+**Try it:** *"Tell me a joke about data engineers"*
+
+### Beyond Jokes: Real Use Cases
+
+This demo proves the architecture. The same pattern powers enterprise analytics:
+
+| Use Case | Agent Tool | Example Question |
+|---|---|---|
+| Sales Analytics | Cortex Analyst + Semantic View | "What were Q4 revenues by region?" |
+| Customer Support | Cortex Search + Knowledge Base | "How do I reset a customer password?" |
+| Financial Reporting | Cortex Analyst + Semantic View | "Show budget vs actual for January" |
+| Data Quality | Custom Tool (UDF) | "Any data quality issues today?" |
+
+See [docs/04-CUSTOMIZATION.md](docs/04-CUSTOMIZATION.md) for production agent patterns.
+
+---
+
+<details>
+<summary><strong>Deploy (5 steps, ~15 minutes)</strong></summary>
+
+> [!IMPORTANT]
+> Requires **Enterprise** edition, `SYSADMIN` + `ACCOUNTADMIN` role access, Cortex AI enabled, and Microsoft Teams admin access for Entra ID setup.
+
+**Step 1 -- Deploy Snowflake objects:**
+
+Copy [`deploy_all.sql`](deploy_all.sql) into a Snowsight worksheet and click **Run All**.
+
+**Step 2 -- Configure Entra ID:**
+
+Grant consent for both apps. See [docs/02-ENTRA-ID-SETUP.md](docs/02-ENTRA-ID-SETUP.md).
+
+**Step 3 -- Set Tenant ID:**
+
+Update `YOUR_TENANT_ID` in the security integration section.
+
+**Step 4 -- Install Teams App:**
+
+Search "Snowflake Cortex Agents" in the Teams app store.
+
+**Step 5 -- Test:**
+
+Ask for a joke.
+
+### What Gets Created
+
+| Object Type | Name | Purpose |
+|---|---|---|
+| Schema | `SNOWFLAKE_EXAMPLE.TEAMS_AGENT_UNI` | Demo schema |
+| Warehouse | `SFE_TEAMS_AGENT_UNI_WH` | Demo compute |
+| Agent | `JOKE_ASSISTANT` | Cortex Agent for Teams/M365 |
+| Function | `GENERATE_SAFE_JOKE` | AI_COMPLETE joke generator |
+| Security Integration | OAuth with Microsoft Entra ID | Teams authentication |
+
+### Estimated Costs
+
+**Snowflake:**
+
+| Component | Estimate |
+|---|---|
+| Warehouse (XSMALL, 60s auto-suspend) | ~0.0001-0.0003 credits per joke |
+| AI_COMPLETE tokens (~300 in + 100 out) | ~$0.0005 per joke |
+| **1,000 jokes total** | **< $1.00** |
+
+**Microsoft:** Teams included with M365 license. AppSource app is free. Entra ID OAuth has no additional charges.
+
+</details>
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
+
+| Symptom | Fix |
+|---------|-----|
+| Bot not responding in Teams | Verify Entra ID consent for both apps. Check security integration status. |
+| Authentication loop | Ensure user's default role is not an admin role (ACCOUNTADMIN, SECURITYADMIN). |
+| Agent visible in Snowsight but not Teams | Install the Teams app from AppSource. Verify Tenant ID in security integration. |
+| Content filtered | Cortex Guard is working as intended. Rephrase the request. |
+
+</details>
+
+## Cleanup
+
+Run [`teardown_all.sql`](teardown_all.sql) in Snowsight. Then uninstall the Teams app and optionally revoke Entra ID consent in Azure Portal.
+
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
@@ -51,183 +194,19 @@ This project is designed for AI-pair development.
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
----
+</details>
 
-## What This Creates
+## References
 
-| Object Type | Name | Purpose |
-|---|---|---|
-| Schema | `SNOWFLAKE_EXAMPLE.TEAMS_AGENT_UNI` | Demo schema |
-| Warehouse | `SFE_TEAMS_AGENT_UNI_WH` | Demo compute |
-| Agent | `JOKE_ASSISTANT` | Cortex Agent for Teams/M365 |
-| Function | `GENERATE_SAFE_JOKE` | AI_COMPLETE joke generator |
-| Security Integration | OAuth with Microsoft Entra ID | Teams authentication |
-
-## What You Get
-
-**Zero Development:**
-- No custom bot code to write or maintain
-- No hosting infrastructure needed
-- Install from AppSource in minutes
-- `CREATE AGENT` DDL for one-command deployment
-
-**Enterprise Security:**
-- OAuth with Microsoft Entra ID (SSO, MFA)
-- Snowflake RBAC automatically enforced
-- Content safety via Cortex Guard
-- Complete audit trail in QUERY_HISTORY
-
-**AI-Powered:**
-- Snowflake Cortex AI (`AI_COMPLETE` function)
-- Cortex Guard filters unsafe content
-- Natural language understanding
-- Works in Teams AND Microsoft 365 Copilot
-- Custom branding available for Teams (app 1.2.0+)
-
----
-
-## Example Conversation
-
-**You:** Tell me a joke about data engineers
-
-**Bot:** Why do data engineers prefer dark mode? Because light attracts bugs, and they've already got enough of those in their pipelines!
-
-**You:** Give me one about SQL
-
-**Bot:** Why did the SQL query go to therapy? It had too many relationships but still felt empty!
-
----
-
-## Project Structure
-
-```
-teams-agent-uni/
-|-- AGENTS.md                              # AI-pair instructions
-|-- README.md                              # You are here
-|-- deploy_all.sql                         # One-click deployment (Run All)
-|-- teardown_all.sql                       # Complete removal
-|-- .claude/skills/demo-cortex-teams-agent/SKILL.md  # Project-specific AI skill
-|-- diagrams/
-|   |-- data-model.md                      # Object model
-|   |-- data-flow.md                       # Data flow diagram
-|   |-- auth-flow.md                       # Authentication sequence
-|   `-- network-flow.md                    # Network architecture
-|-- sql/
-|   |-- 01_setup/
-|   |   |-- 01_create_demo_objects.sql     # Database, schema, warehouse
-|   |   |-- 02_create_joke_function.sql    # AI_COMPLETE joke generator
-|   |   |-- 03_create_agent.sql            # CREATE AGENT DDL
-|   |   |-- 04_create_security_integration.sql  # OAuth with Entra ID
-|   |   `-- 05_grant_permissions.sql       # RBAC grants
-|   `-- 99_cleanup/
-|       `-- teardown_all.sql               # (See root teardown_all.sql)
-|-- docs/
-|   |-- 01-PREREQUISITES.md               # Requirements checklist
-|   |-- 02-ENTRA-ID-SETUP.md              # Entra ID consent + security integration
-|   |-- 03-INSTALL-TEAMS-APP.md           # Teams & M365 Copilot install
-|   `-- 04-CUSTOMIZATION.md              # Production use cases & handoff
-`-- .github/workflows/
-    |-- expire-demo.yml                    # Auto-archive on expiration
-    `-- pre-commit.yml                     # Pre-commit checks
-```
-
----
-
-## Beyond Jokes: Real Use Cases
-
-This demo proves the architecture. The **same pattern** powers enterprise analytics:
-
-| Use Case | Agent Tool | Example Question |
-|---|---|---|
-| Sales Analytics | Cortex Analyst + Semantic View | "What were Q4 revenues by region?" |
-| Customer Support | Cortex Search + Knowledge Base | "How do I reset a customer password?" |
-| Financial Reporting | Cortex Analyst + Semantic View | "Show budget vs actual for January" |
-| Data Quality | Custom Tool (UDF) | "Any data quality issues today?" |
-
-See `docs/04-CUSTOMIZATION.md` for production agent patterns.
-
----
-
-## Security & Governance
-
-### Authentication Flow
-
-1. User opens Teams bot (or M365 Copilot)
-2. Bot redirects to Microsoft Entra ID login
-3. User authenticates (SSO, MFA, Conditional Access)
-4. Entra ID issues short-lived JWT token
-5. Token sent to Snowflake Cortex Agents API
-6. Snowflake validates token and executes as user's role
-
-### What's Protected
-
-- **Snowflake data** never leaves Snowflake's environment
-- **RBAC enforced** on all queries (users see only permitted data)
-- **Row-level security** and **data masking** policies respected
-- **Network policies** supported (March 2026); Private Link not yet supported
-- **Audit logs** in QUERY_HISTORY and CORTEX_AGENT_USAGE_HISTORY
-
----
-
-## Estimated Demo Costs
-
-### Snowflake
-
-| Component | Estimate |
-|---|---|
-| Warehouse (XSMALL, 60s auto-suspend) | ~0.0001-0.0003 credits per joke |
-| AI_COMPLETE tokens (~300 in + 100 out) | ~$0.0005 per joke |
-| **1,000 jokes total** | **< $1.00** |
-
-### Microsoft
-
-- **Teams:** Included with Microsoft 365 license
-- **AppSource app:** Free
-- **Entra ID OAuth:** No additional charges
-- **M365 Copilot:** Requires Copilot license (if using Copilot integration)
-
----
-
-## Complete Cleanup
-
-```sql
--- Run in Snowsight:
--- teardown_all.sql
-```
-
-Removes: Agent, function, schema, warehouse, grants.
-Preserves: SNOWFLAKE_EXAMPLE database, security integration.
-
-**Manual steps:**
-- Uninstall Teams app
-- (Optional) Revoke Entra ID consent in Azure Portal
-
----
-
-## Reference
-
-**Snowflake Documentation:**
 - [Cortex Agents for Teams and M365 Copilot](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-teams-integration)
 - [CREATE AGENT](https://docs.snowflake.com/en/sql-reference/sql/create-agent)
 - [AI_COMPLETE](https://docs.snowflake.com/en/sql-reference/functions/ai_complete)
-- [Build Agents (Snowflake Intelligence)](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-intelligence/build-agents)
-- [Best Practices for Building Cortex Agents](https://www.snowflake.com/en/developers/guides/best-practices-to-building-cortex-agents/)
 - [Monitoring Cortex Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-monitor)
-- [Feedback API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-feedback-rest-api)
-- [Threads API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-threads-rest-api)
+- [Getting Started Quickstart](https://quickstarts.snowflake.com/guide/getting_started_with_the_microsoft_teams_and_365_copilot_cortex_app)
 
-**Quickstart:**
-- [Getting Started with Cortex Agents for Microsoft Teams and M365 Copilot](https://quickstarts.snowflake.com/guide/getting_started_with_the_microsoft_teams_and_365_copilot_cortex_app)
+## Documentation
 
-**Microsoft Documentation:**
-- [Microsoft Teams App Management](https://learn.microsoft.com/microsoftteams/manage-apps)
-- [Microsoft Entra ID](https://learn.microsoft.com/entra/)
-
----
-
-## License
-
-This demo project is provided as-is for educational purposes.
-
-**Snowflake Terms:** [snowflake.com/legal](https://www.snowflake.com/legal/)
-**Microsoft Terms:** [microsoft.com/servicesagreement](https://www.microsoft.com/servicesagreement/)
+- [Prerequisites](docs/01-PREREQUISITES.md)
+- [Entra ID Setup](docs/02-ENTRA-ID-SETUP.md)
+- [Install Teams App](docs/03-INSTALL-TEAMS-APP.md)
+- [Customization](docs/04-CUSTOMIZATION.md)

@@ -1,14 +1,18 @@
+![Guide](https://img.shields.io/badge/Type-Guide-blue)
+![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
+![Expires](https://img.shields.io/badge/Expires-2027--03--25-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 # MCP Server Authentication Guide
 
-> [!CAUTION]
-> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
+Inspired by the question everyone asks first: *"How do I connect Cursor / Claude Desktop / VS Code to Snowflake's MCP server?"*
 
-![Expires](https://img.shields.io/badge/Expires-2027--03--25-orange)
+This guide answers that question with exact configs for every major AI client, then goes deep on OAuth + PKCE for production apps, multi-tenant RBAC with role-scoped tokens, enterprise IdP integration (with honest assessment of current gaps), and a complete production readiness checklist.
 
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-25 | **Expires:** 2027-03-25 | **Status:** ACTIVE
 
-How to connect AI clients to Snowflake's managed MCP server -- and how authentication works under the hood. Starts with the question everyone asks first (*"how do I connect Cursor / Claude Desktop / VS Code?"*), then goes deep on OAuth, RBAC, multi-tenant patterns, and known limitations.
+> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
 ```mermaid
 flowchart LR

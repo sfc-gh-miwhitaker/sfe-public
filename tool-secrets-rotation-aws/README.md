@@ -1,59 +1,142 @@
+![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
+![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
+![Expires](https://img.shields.io/badge/Expires-2026--04--05-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
 # Secrets Rotation Workbook
 
-![Expires](https://img.shields.io/badge/Expires-2026--04--05-orange)
+Inspired by a real operational question: *"How do I rotate key-pair credentials and PATs for Snowflake service accounts without downtime -- and automate it with AWS Secrets Manager?"*
 
-> TOOL PROJECT - EXPIRES: 2026-04-05
-> This tool uses Snowflake features current as of March 2026.
-
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+This tool answers that question with a Snowflake Native Notebook that walks through both rotation patterns step by step. Creates a purpose-built example service user so you can see every step live, then adapt it for your own accounts.
 
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-03-06 | **Expires:** 2026-04-05 | **Status:** ACTIVE
 
-A Snowflake Native Notebook that walks through rotating key-pair credentials and Programmatic Access Tokens (PATs) for service accounts using AWS Secrets Manager. Creates a purpose-built example service user (`SFE_SVC_ROTATION_EXAMPLE`) so you can see every step live, then adapt it for your own accounts.
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This tool expires on 2026-04-05. After expiration, validate against current Snowflake docs before use.
 
-## Quick Start
+---
 
-**Get just this tool:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-secrets-rotation-aws
-cd sfe-public/tool-secrets-rotation-aws
+## The Operational Pain
+
+Service accounts connecting to Snowflake via key-pair auth or PATs need regular credential rotation. Manual rotation means downtime risk, missed rotations, and credentials that live forever. AWS Secrets Manager can automate rotation -- but wiring it to Snowflake's specific rotation SQL (`ALTER USER ... ROTATE PAT`, RSA key swap) requires understanding constraints that aren't obvious from the docs alone.
+
+---
+
+## What It Does
+
+### Pattern 1: Key-Pair Rotation
+
+Assigns RSA public key to a service user, verifies fingerprints, and explains how AWS Secrets Manager native rotation handles the dual-key swap.
+
+### Pattern 2: PAT Rotation
+
+Creates a PAT, rotates it live, shows before/after token state, and walks through the Lambda-based rotation flow.
+
+### Monitoring
+
+10 SQL queries covering PAT inventory, expiration alerts, stale tokens, login audit, and fingerprint verification.
+
+> [!TIP]
+> **Pattern demonstrated:** AWS Secrets Manager + Snowflake rotation SQL for automated, zero-downtime credential rotation.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph snowflake [Snowflake]
+        ServiceUser["SFE_SVC_ROTATION_EXAMPLE"]
+        KeyPair["RSA Key-Pair"]
+        PAT["Programmatic Access Token"]
+        AuthPolicy[Auth Policy]
+        NetworkPolicy[Network Policy]
+    end
+
+    subgraph aws [AWS]
+        SecretsManager[Secrets Manager]
+        Lambda[Rotation Lambda]
+    end
+
+    subgraph notebook [Notebook Walkthrough]
+        Setup["1. Service Account Setup"]
+        Pattern1["2. Key-Pair Rotation"]
+        Pattern2["3. PAT Rotation"]
+        Monitor["4. Monitoring Queries"]
+    end
+
+    Setup --> ServiceUser
+    ServiceUser --> KeyPair
+    ServiceUser --> PAT
+    SecretsManager --> Lambda --> KeyPair
+    SecretsManager --> Lambda --> PAT
+    notebook --> snowflake
 ```
 
-## First Time Here?
+---
 
-1. **Deploy** -- Copy `deploy_all.sql` into Snowsight, click "Run All"
-2. **Open the notebook** -- Snowsight > Projects > Notebooks > `SECRETS_ROTATION_WORKBOOK`
-3. **Run cells step by step** -- the notebook creates an example service user and walks through both rotation patterns
-4. **Cleanup** -- Run `teardown_all.sql` when done
+<details>
+<summary><strong>Deploy (2 steps, ~5 minutes)</strong></summary>
 
-## What's Inside the Notebook
+> [!IMPORTANT]
+> Requires `ACCOUNTADMIN` (or USERADMIN + SECURITYADMIN + SYSADMIN) for creating the example objects.
 
-| Section | What Happens |
-|---------|-------------|
-| Service Account Setup | Creates `SFE_SVC_ROTATION_EXAMPLE` with network policy, auth policy, and rotator role |
-| Pattern 1: Key-Pair | Assigns RSA public key, verifies fingerprint, explains AWS Secrets Manager native rotation |
-| Pattern 2: PAT | Creates a PAT, rotates it live, shows before/after token state |
-| Monitoring | 10 SQL queries: PAT inventory, expiration alerts, stale tokens, login audit, fingerprint verification |
-| Security Checklist | Production readiness checklist and gotchas table |
+**Step 1 -- Deploy:**
 
-Architecture diagrams (Mermaid) are in [`diagrams.md`](diagrams.md) -- they render on GitHub but not inside Snowflake Notebooks.
+Copy [`deploy_all.sql`](deploy_all.sql) into Snowsight and click **Run All**. Creates the schema and imports the notebook.
 
-## Prerequisites
+**Step 2 -- Open the notebook:**
 
-- ACCOUNTADMIN (or USERADMIN + SECURITYADMIN + SYSADMIN) to create the example objects
-- A warehouse (uses shared `SFE_TOOLS_WH`)
+Navigate to **Projects > Notebooks > SECRETS_ROTATION_WORKBOOK** and run cells step by step.
 
-## Development Tools
+### What Gets Created (by deploy)
+
+| Object | Purpose |
+|--------|---------|
+| Schema `SNOWFLAKE_EXAMPLE.SECRETS_ROTATION` | Tool namespace |
+| Notebook `SECRETS_ROTATION_WORKBOOK` | Interactive walkthrough |
+
+### What Gets Created (by notebook cells)
+
+| Object | Purpose |
+|--------|---------|
+| User `SFE_SVC_ROTATION_EXAMPLE` | Example service account (TYPE=SERVICE) |
+| Role `SFE_SVC_ROTATION_ROLE` | Service role |
+| Role `SFE_SVC_ROTATION_ROTATOR_ROLE` | Rotation privileges |
+| Network Policy | Service account network restriction |
+| Auth Policy | Authentication method restriction |
+
+</details>
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
+
+| Symptom | Fix |
+|---------|-----|
+| PAT creation fails | Service users require a network policy to generate PATs. The notebook creates one. |
+| PAT rotation returns empty token | `token_secret` only appears once in the ALTER USER ROTATE PAT output. Copy it immediately. |
+| Cannot rotate from PAT session | PAT rotation cannot be performed from a PAT-authenticated session. Use key-pair or password auth. |
+
+</details>
+
+## Cleanup
+
+Run [`teardown_all.sql`](teardown_all.sql) in Snowsight to remove all objects (including those created by notebook cells).
+
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
 - **AGENTS.md** -- Project instructions for Cortex Code and compatible AI tools
-- **.claude/skills/** -- Project-specific AI skill teaching the AI this project's patterns
+- **.claude/skills/** -- Project-specific AI skill
 - **Cortex Code in Snowsight** -- Open in a Workspace for AI-assisted development
 - **Cursor** -- Open locally for AI-pair coding
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
+
+</details>
 
 ## References
 
@@ -62,4 +145,3 @@ This project is designed for AI-pair development.
 - [ALTER USER ... ROTATE PAT](https://docs.snowflake.com/en/sql-reference/sql/alter-user-rotate-programmatic-access-token)
 - [CREDENTIALS View](https://docs.snowflake.com/en/sql-reference/account-usage/credentials)
 - [Snowflake Key Pair (AWS Secrets Manager)](https://docs.aws.amazon.com/secretsmanager/latest/userguide/mes-partner-Snowflake.html)
-- [Snowflake Notebooks](https://docs.snowflake.com/en/user-guide/ui-snowsight/notebooks)

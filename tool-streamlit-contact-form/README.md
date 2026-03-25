@@ -5,13 +5,23 @@
 
 # Contact Form (Streamlit in Snowflake)
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
-> This tool uses Snowflake features current as of March 2026.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
-
-A simple contact form built with Streamlit in Snowflake that collects user information and writes directly to a Snowflake table.
-
 ![Contact Form Screenshot](assets/contact-form-screenshot.png)
+
+Inspired by a real customer question: *"What's the simplest Streamlit in Snowflake app I can build to collect user input and write it to a table?"*
+
+This tool answers that question with a minimal contact form -- name, email, address -- that validates input and writes submissions directly to a Snowflake table. The simplest possible starting point for any Streamlit-in-Snowflake data collection app.
+
+**Author:** SE Community
+**Last Updated:** 2026-03-04 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This tool expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+
+---
+
+## The Operational Pain
+
+Teams want to collect structured input from users (feedback forms, intake requests, survey responses) and store it directly in Snowflake -- without standing up an external web app, API, or database. Streamlit in Snowflake can do this, but getting from zero to a working form with validation and table writes takes a few patterns that aren't obvious from the docs alone.
 
 ---
 
@@ -19,42 +29,44 @@ A simple contact form built with Streamlit in Snowflake that collects user infor
 
 - Displays a contact form with name, email, and address fields
 - Validates user input (required fields, email format)
-- Writes submissions directly to a Snowflake table
+- Writes submissions directly to a Snowflake table via Snowpark
 - Shows recent submissions in a data table
 - Tracks submission count
 
----
-
-## Snowflake Features Demonstrated
-
-- **Streamlit in Snowflake** - Native Python UI framework
-- **Snowpark** - DataFrame operations and SQL execution
-- **Session Context** - Using `get_active_session()` for database access
+> [!TIP]
+> **Pattern demonstrated:** `get_active_session()` + Snowpark DataFrame writes for Streamlit-to-table data collection -- the minimal Streamlit in Snowflake write pattern.
 
 ---
 
-## Quick Start
+## Architecture
 
-**Deploy in Snowsight (no clone needed):**
-Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
+```mermaid
+flowchart LR
+    subgraph streamlit [Streamlit in Snowflake]
+        Form["Contact Form<br/>(name, email, address)"]
+        Validate[Input Validation]
+    end
 
-**Develop with Cortex Code:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-streamlit-contact-form
-cd sfe-public/tool-streamlit-contact-form && cortex
+    subgraph snowflake [Snowflake]
+        Session["get_active_session()"]
+        Snowpark["Snowpark DataFrame Write"]
+        Table["SFE_SUBMISSIONS Table"]
+    end
+
+    Form --> Validate --> Session --> Snowpark --> Table
+    Table -->|Recent submissions| Form
 ```
 
-### Use the Tool
-
-1. Navigate to **Projects → Streamlit** in Snowsight
-2. Find **SFE_CONTACT_FORM** in the list
-3. Click to open the app
-4. Fill out the form and click **Submit**
-5. See your submission appear in the "Recent Submissions" table
-
 ---
 
-## Objects Created
+<details>
+<summary><strong>Deploy (1 step, ~2 minutes)</strong></summary>
+
+Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
+
+Then navigate to **Projects > Streamlit > SFE_CONTACT_FORM** in Snowsight.
+
+### What Gets Created
 
 | Object Type | Name | Purpose |
 |-------------|------|---------|
@@ -64,51 +76,10 @@ cd sfe-public/tool-streamlit-contact-form && cortex
 | Streamlit | `SFE_CONTACT_FORM` | The contact form app |
 | Procedure | `SFE_SETUP_APP` | Uploads Streamlit code |
 
----
+</details>
 
-## Sample Data
-
-After submitting the form, your data appears in:
-
-```sql
-SELECT submission_id, full_name, email, address, submitted_at
-FROM SNOWFLAKE_EXAMPLE.SFE_CONTACT_FORM.SFE_SUBMISSIONS
-ORDER BY submitted_at DESC;
-```
-
-| submission_id | full_name | email | address | submitted_at |
-|---------------|-----------|-------|---------|--------------|
-| 1 | Jane Smith | jane@example.com | 123 Main St | 2025-12-10 10:30:00 |
-
----
-
-## Cleanup
-
-```sql
--- Copy teardown.sql into Snowsight, Run All
-```
-
-This removes:
-- Schema `SFE_CONTACT_FORM` and all contained objects
-- Does NOT remove shared infrastructure (database, warehouse)
-
----
-
-## Architecture
-
-See `diagrams/` for:
-- `data-flow.md` - How form data flows from UI to table
-
----
-
-## Customization Ideas
-
-1. **Add more fields** - Phone number, company name, etc.
-2. **Add validation** - More sophisticated email/phone validation
-3. **Add export** - Download submissions as CSV
-4. **Add charts** - Submission trends over time
-
-## Troubleshooting
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
 | Symptom | Fix |
 |---------|-----|
@@ -116,7 +87,14 @@ See `diagrams/` for:
 | Submit button does nothing | Check browser console for errors. Verify the `SFE_SUBMISSIONS` table exists. |
 | Permission denied | Ensure the Streamlit app's warehouse and schema grants are correct. |
 
-## Development Tools
+</details>
+
+## Cleanup
+
+Run [`teardown.sql`](teardown.sql) in Snowsight to remove all tool objects.
+
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
@@ -127,6 +105,4 @@ This project is designed for AI-pair development.
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
----
-
-*SE Community • Contact Form Tool • Last Updated: 2026-03-04*
+</details>

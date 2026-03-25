@@ -1,110 +1,101 @@
-![Guide](https://img.shields.io/badge/Type-Guide-blue)
+![Guide](https://img.shields.io/badge/Type-Tool-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
 ![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Agent Config Diff
 
-> REFERENCE GUIDE - EXPIRES: 2026-05-01
-> This guide uses Snowflake features current as of March 2026.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+Inspired by a real operational question: *"We have six Cortex Agents across three environments -- how do we track what changed between versions?"*
 
-Extract Cortex Agent specifications for configuration management, comparison, and version control. No persistent objects are created -- run the queries ad-hoc in Snowsight or programmatically via Python.
+This tool extracts Cortex Agent specifications via `DESC AGENT` and formats them for diff tools, version control commits, and configuration management. No persistent objects are created -- run the queries ad-hoc in Snowsight or programmatically via Python.
 
 **Author:** SE Community
 **Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
-## Quick Start
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This tool expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
 
-**Use in Snowsight (no clone needed):**
-Copy [`extract_agent_spec.sql`](extract_agent_spec.sql) into a Snowsight worksheet and update the `agent_fqn` variable.
+---
 
-**Develop with Cortex Code:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-agent-config-diff
-cd sfe-public/tool-agent-config-diff && cortex
-```
+## The Operational Pain
 
-## What This Creates
+As teams build more Cortex Agents, configuration drift becomes invisible. An agent's YAML spec, profile, and tool list can change without anyone tracking what was different between yesterday's version and today's. There's no built-in diff, no change log, and no export format that plays well with Git.
 
-This guide runs ad-hoc SQL queries -- no persistent objects are created. It reads agent metadata via `DESCRIBE AGENT` and formats output for diff workflows.
+---
 
-## Usage
-
-1. Open `extract_agent_spec.sql` in Snowsight
-2. Update the `agent_fqn` variable to your agent's fully qualified name:
-   ```sql
-   SET agent_fqn = 'YOUR_DATABASE.YOUR_SCHEMA.YOUR_AGENT';
-   ```
-3. Run the desired option (see below)
-
-## Output Options
+## What It Does
 
 ### Option 1: Full Agent Metadata
-Returns all agent properties with parsed profile JSON. Best for comprehensive config management.
 
-**Output columns:**
-- `agent_name` - Agent identifier
-- `agent_fqn` - Fully qualified name (DB.SCHEMA.NAME)
-- `owner` - Owning role
-- `comment` - Agent description
-- `profile_json` - Parsed profile (display_name, avatar, color)
-- `spec_yaml` - Complete YAML specification
-- `created_on` - Creation timestamp
+Returns all agent properties with parsed profile JSON -- best for comprehensive config management.
 
 ### Option 2: Spec YAML Only
-Returns just the agent specification. Best for diff tools and line-by-line comparison.
 
-### Option 3: Export-Ready Format
-Single JSON document with all configuration data. Best for version control commits.
+Returns just the agent specification -- best for diff tools and line-by-line comparison.
 
-**JSON structure:**
-```json
-{
-  "extracted_at": "2025-01-09T...",
-  "agent_fqn": "DB.SCHEMA.AGENT",
-  "metadata": {
-    "name": "...",
-    "database": "...",
-    "schema": "...",
-    "owner": "...",
-    "comment": "...",
-    "created_on": "..."
-  },
-  "profile": { "display_name": "...", "avatar": "...", "color": "..." },
-  "spec_yaml": "..."
-}
+```bash
+diff agent_a_spec.yaml agent_b_spec.yaml
+# or
+code --diff agent_a_spec.yaml agent_b_spec.yaml
 ```
 
-## Comparison Workflow
+### Option 3: Export-Ready JSON
 
-To compare two agent configurations:
+Single JSON document with all configuration data -- best for version control commits.
 
-1. Extract spec from Agent A → save to `agent_a_spec.yaml`
-2. Extract spec from Agent B → save to `agent_b_spec.yaml`
-3. Use your preferred diff tool:
-   ```bash
-   diff agent_a_spec.yaml agent_b_spec.yaml
-   # or
-   code --diff agent_a_spec.yaml agent_b_spec.yaml
-   ```
+> [!TIP]
+> **Pattern demonstrated:** `DESC AGENT` + `RESULT_SCAN(LAST_QUERY_ID())` for extracting agent specs -- the ad-hoc pattern for agent configuration management.
 
-## DESCRIBE AGENT Output Reference
+---
 
-Per [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/desc-agent), `DESCRIBE AGENT` returns:
+## Architecture
 
-| Column | Description |
-|--------|-------------|
-| name | Agent identifier |
-| database_name | Containing database |
-| schema_name | Containing schema |
-| owner | Owner role |
-| comment | Agent description |
-| profile | JSON: display_name, avatar, color |
-| agent_spec | Complete YAML specification |
-| created_on | Creation timestamp |
+```mermaid
+flowchart LR
+    subgraph snowflake [Snowflake]
+        Agent["Cortex Agent"]
+        Desc["DESC AGENT"]
+        ResultScan["RESULT_SCAN"]
+    end
 
-## Troubleshooting
+    subgraph output [Output Formats]
+        Full["Full Metadata<br/>JSON + YAML"]
+        Spec["Spec YAML Only"]
+        Export["Export-Ready JSON"]
+    end
+
+    subgraph tools [Diff Workflow]
+        Git[Git Commits]
+        Diff[Diff Tools]
+        CI[CI/CD Pipeline]
+    end
+
+    Agent --> Desc --> ResultScan
+    ResultScan --> Full
+    ResultScan --> Spec
+    ResultScan --> Export
+    Full --> Git
+    Spec --> Diff
+    Export --> CI
+```
+
+---
+
+<details>
+<summary><strong>Deploy (no persistent objects)</strong></summary>
+
+This tool creates no persistent objects. Open [`extract_agent_spec.sql`](extract_agent_spec.sql) in Snowsight, update the `agent_fqn` variable, and run the desired option.
+
+```sql
+SET agent_fqn = 'YOUR_DATABASE.YOUR_SCHEMA.YOUR_AGENT';
+```
+
+For programmatic extraction, use `extract_agent_spec.py` (no interactive session state needed).
+
+</details>
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
 | Symptom | Fix |
 |---------|-----|
@@ -112,11 +103,14 @@ Per [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/desc-agent)
 | Empty `agent_spec` | Agent may have been created without a spec. Check with `DESC AGENT`. |
 | `TRY_PARSE_JSON` returns NULL | Profile field may be empty. This is normal for agents without custom profiles. |
 
+</details>
+
 ## Cleanup
 
-No cleanup required -- this guide creates no persistent objects.
+No cleanup required -- this tool creates no persistent objects.
 
-## Development Tools
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
@@ -127,8 +121,4 @@ This project is designed for AI-pair development.
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
-## Notes
-
-- The `agent_spec` is returned as **YAML text**, not JSON
-- Each option runs `DESC AGENT` separately to ensure `RESULT_SCAN(LAST_QUERY_ID())` captures the correct result
-- Profile is stored as JSON string and parsed with `TRY_PARSE_JSON()`
+</details>

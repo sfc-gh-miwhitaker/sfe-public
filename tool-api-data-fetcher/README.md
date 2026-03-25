@@ -5,90 +5,31 @@
 
 # API Data Fetcher
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-05-01
-> This tool uses Snowflake features current as of March 2026.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+Inspired by a real customer question: *"What's the simplest way to call a REST API from inside Snowflake and store the results in a table?"*
 
-A Python stored procedure that fetches data from a public REST API and stores it in a Snowflake table, demonstrating External Access Integration.
+This tool answers that question with a Python stored procedure that fetches data from a public REST API and stores it in a Snowflake table via External Access Integration. One procedure call, no external ETL tools.
+
+**Author:** SE Community
+**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This tool expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+
+---
+
+## The Operational Pain
+
+Teams need to pull reference data from external REST APIs into Snowflake -- user directories, product catalogs, exchange rates -- but setting up a full ETL pipeline feels like overkill for a simple API call. They want something they can run from a SQL worksheet.
 
 ---
 
 ## What It Does
 
-- Fetches user data from JSONPlaceholder public API
-- Parses JSON response and extracts relevant fields
-- Stores data in a Snowflake table
-- Returns the fetched data as a result set
-
----
-
-## Snowflake Features Demonstrated
-
-- **External Access Integration** - Secure outbound network access
-- **Network Rules** - Define allowed egress destinations
-- **Python Stored Procedures** - Server-side Python execution
-- **Snowpark** - DataFrame operations for data manipulation
-
----
-
-## Quick Start
-
-**Deploy in Snowsight (no clone needed):**
-Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
-
-**Develop with Cortex Code:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-api-data-fetcher
-cd sfe-public/tool-api-data-fetcher && cortex
-```
-
-### Use the Tool
+A single stored procedure call fetches JSON from a REST API, parses the response, and writes rows to a Snowflake table:
 
 ```sql
--- Fetch data from API
 CALL SNOWFLAKE_EXAMPLE.SFE_API_FETCHER.SFE_FETCH_USERS();
 
--- View the fetched data
-SELECT * FROM SNOWFLAKE_EXAMPLE.SFE_API_FETCHER.SFE_USERS;
-```
-
----
-
-## Objects Created
-
-| Object Type | Name | Purpose |
-|-------------|------|---------|
-| Schema | `SNOWFLAKE_EXAMPLE.SFE_API_FETCHER` | Tool namespace |
-| Table | `SFE_USERS` | Stores fetched user data |
-| Network Rule | `SFE_API_NETWORK_RULE` | Allows egress to API |
-| Integration | `SFE_API_ACCESS` | External access integration |
-| Procedure | `SFE_FETCH_USERS` | Fetches and stores data |
-
----
-
-## API Details
-
-**Endpoint:** `https://jsonplaceholder.typicode.com/users`
-
-This is a free, public fake REST API for testing and prototyping. No authentication required.
-
-**Response Fields Used:**
-- `id` → `user_id`
-- `name` → `name`
-- `username` → `username`
-- `email` → `email`
-- `phone` → `phone`
-- `website` → `website`
-- `company.name` → `company_name`
-- `address.city` → `city`
-
----
-
-## Sample Data
-
-After calling the procedure:
-
-```sql
 SELECT user_id, name, email, company_name
 FROM SNOWFLAKE_EXAMPLE.SFE_API_FETCHER.SFE_USERS
 LIMIT 3;
@@ -100,65 +41,54 @@ LIMIT 3;
 | 2 | Ervin Howell | Shanna@melissa.tv | Deckow-Crist |
 | 3 | Clementine Bauch | Nathan@yesenia.net | Romaguera-Jacobson |
 
----
-
-## Cleanup
-
-```sql
--- Copy teardown.sql into Snowsight, Run All
-```
-
-This removes:
-- Schema `SFE_API_FETCHER` and all contained objects
-- External Access Integration `SFE_API_ACCESS`
-- Network Rule
-- Does NOT remove shared infrastructure (database, warehouse)
+> [!TIP]
+> **Pattern demonstrated:** External Access Integration + Network Rule + Python stored procedure -- the minimal Snowflake-native pattern for REST API ingestion.
 
 ---
 
 ## Architecture
 
-See `diagrams/` for:
-- `data-flow.md` - How API data flows into Snowflake
-- `network-flow.md` - Network architecture for external access
+```mermaid
+flowchart LR
+    subgraph snowflake [Snowflake Account]
+        Proc["Python Stored Procedure<br/>(SFE_FETCH_USERS)"]
+        EAI["External Access Integration<br/>(SFE_API_ACCESS)"]
+        Rule["Network Rule<br/>(typicode.com:443)"]
+        Table["SFE_USERS Table"]
+    end
+
+    subgraph external [External]
+        API["JSONPlaceholder API<br/>jsonplaceholder.typicode.com"]
+    end
+
+    Proc --> EAI --> Rule -->|HTTPS| API
+    API -->|JSON| Proc --> Table
+```
 
 ---
 
-## Customization Ideas
+<details>
+<summary><strong>Deploy (1 step, ~2 minutes)</strong></summary>
 
-1. **Different API** - Modify for any public REST API
-2. **Add scheduling** - Create a Task to fetch data periodically
-3. **Add authentication** - Use Snowflake Secrets for API keys
-4. **Add error handling** - Retry logic, dead-letter table
+> [!IMPORTANT]
+> Requires `ACCOUNTADMIN` role access (for External Access Integration creation).
 
----
+Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
 
-## How External Access Works
+### What Gets Created
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Snowflake Account                                           │
-│                                                             │
-│  ┌──────────────────┐    ┌─────────────────────────────┐   │
-│  │ Stored Procedure │───>│ External Access Integration │   │
-│  │ (Python)         │    │ (SFE_API_ACCESS)            │   │
-│  └──────────────────┘    └──────────────┬──────────────┘   │
-│                                         │                   │
-│                          ┌──────────────▼──────────────┐   │
-│                          │ Network Rule                │   │
-│                          │ (SFE_API_NETWORK_RULE)      │   │
-│                          │ EGRESS: typicode.com:443    │   │
-│                          └──────────────┬──────────────┘   │
-└─────────────────────────────────────────┼───────────────────┘
-                                          │
-                                          ▼ HTTPS
-                          ┌───────────────────────────────┐
-                          │ JSONPlaceholder API           │
-                          │ jsonplaceholder.typicode.com  │
-                          └───────────────────────────────┘
-```
+| Object Type | Name | Purpose |
+|-------------|------|---------|
+| Schema | `SNOWFLAKE_EXAMPLE.SFE_API_FETCHER` | Tool namespace |
+| Table | `SFE_USERS` | Stores fetched user data |
+| Network Rule | `SFE_API_NETWORK_RULE` | Allows egress to API |
+| Integration | `SFE_API_ACCESS` | External access integration |
+| Procedure | `SFE_FETCH_USERS` | Fetches and stores data |
 
-## Troubleshooting
+</details>
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
 | Symptom | Fix |
 |---------|-----|
@@ -166,7 +96,14 @@ See `diagrams/` for:
 | Empty table after CALL | Check network rule allows egress to `jsonplaceholder.typicode.com`. |
 | Permission denied on integration | External Access Integrations require ACCOUNTADMIN to create. |
 
-## Development Tools
+</details>
+
+## Cleanup
+
+Run [`teardown.sql`](teardown.sql) in Snowsight to remove all tool objects.
+
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
@@ -177,6 +114,4 @@ This project is designed for AI-pair development.
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
----
-
-*SE Community • API Data Fetcher Tool • Last Updated: 2026-03-02*
+</details>

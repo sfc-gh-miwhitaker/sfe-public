@@ -2,119 +2,76 @@
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
 ![Expires](https://img.shields.io/badge/Expires-2026--05--03-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
-![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)
 
 # Semantic View Enhancer
 
-> DEMONSTRATION PROJECT - EXPIRES: 2026-05-03
-> This tool uses Snowflake features current as of March 2026.
-> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+Inspired by a real customer question: *"I have an existing semantic view with generic descriptions like 'Order status code' -- how do I enrich them with our actual business definitions without rebuilding the view from scratch?"*
+
+This tool answers that question with a single stored procedure that reads your existing semantic view, enhances every dimension and fact description with Cortex AI using your business context, and creates an enhanced copy. Your original view is never modified.
 
 **Author:** SE Community
-**Purpose:** Enhance *existing* Snowflake semantic views with AI-improved descriptions using custom business context
-**Last Updated:** 2026-03-04 | **Expires:** 2026-05-03 (60 days)
-**Status:** ACTIVE
+**Last Updated:** 2026-03-04 | **Expires:** 2026-05-03 | **Status:** ACTIVE
+
+> **No support provided.** This code is for reference only. Review, test, and modify before any production use.
+> This tool expires on 2026-05-03. After expiration, validate against current Snowflake docs before use.
 
 ---
 
-## Quick Start
+## The Operational Pain
 
-**Deploy in Snowsight (no clone needed):**
-Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
+Semantic views power Cortex Analyst -- but their accuracy depends on description quality. Auto-generated descriptions say *"Order status code"* when the business needs *"Order fulfillment stage: F=Fulfilled (shipped), O=Open (awaiting payment), P=Processing (warehouse)."* Better descriptions mean better natural language query accuracy.
 
-**Develop with Cortex Code:**
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) tool-cortex-semantic-enhancer
-cd sfe-public/tool-cortex-semantic-enhancer && cortex
-```
+Rebuilding the view from scratch loses the existing structure. Editing YAML by hand for 50+ columns is tedious and error-prone.
 
 ---
 
-## What This Tool Does
-
-Creates **enhanced copies** of your *existing* Snowflake semantic views with AI-generated, business-aware descriptions for all dimensions and facts using Cortex AI.
-
-> **When to use this tool vs native features:**
-> | Scenario | Recommendation |
-> |----------|----------------|
-> | Creating a **new** semantic view | Use [Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot) with "AI-Generated Descriptions" enabled |
-> | Enhancing an **existing** semantic view | Use this tool |
-> | Need **custom business context** in descriptions | Use this tool |
-> | Programmatic/CLI enhancement (not UI) | Use this tool |
+## What It Does
 
 ```sql
--- You have a semantic view with basic descriptions
-ORDERS_VIEW
-  - O_ORDERSTATUS: "Order status code"
-  - O_ORDERPRIORITY: "Order priority level"
-
--- Run the enhancement
 CALL SFE_ENHANCE_SEMANTIC_VIEW(
     P_SOURCE_VIEW_NAME => 'ORDERS_VIEW',
-    P_BUSINESS_CONTEXT_PROMPT => 'Order fulfillment system. Status: F=Fulfilled (shipped), O=Open (awaiting payment), P=Processing (warehouse). Priority: 1-URGENT (VIP, 24hr SLA), 2-HIGH (48hr), 3-MEDIUM (5 day).'
+    P_BUSINESS_CONTEXT_PROMPT => 'Order fulfillment system. Status: F=Fulfilled, O=Open, P=Processing. Priority: 1-URGENT (24hr SLA), 2-HIGH (48hr), 3-MEDIUM (5 day).'
 );
 
--- Get an enhanced copy with business-aware descriptions
-ORDERS_VIEW_ENHANCED
-  - O_ORDERSTATUS: "Order fulfillment stage: F=Fulfilled (shipped), O=Open (awaiting payment), P=Processing (warehouse)."
-  - O_ORDERPRIORITY: "Priority level determining SLA: 1-URGENT (VIP, 24hr), 2-HIGH (48hr), 3-MEDIUM (5 day)."
+-- Before: "Order status code"
+-- After:  "Order fulfillment stage: F=Fulfilled (shipped), O=Open (awaiting payment), P=Processing (warehouse)."
 ```
 
-**Your original view remains unchanged.** A new enhanced copy is created with the `_ENHANCED` suffix.
+> [!TIP]
+> **Pattern demonstrated:** `GET_DDL('SEMANTIC_VIEW')` + `DESCRIBE SEMANTIC VIEW` + `AI_COMPLETE` for automated description enhancement -- the pattern for enriching existing metadata with AI.
 
 ---
 
-## How It Works
+## Architecture
 
-1. **Extracts** the source semantic view's DDL using `GET_DDL('SEMANTIC_VIEW', ...)`
-2. **Analyzes** all dimensions and facts using `DESCRIBE SEMANTIC VIEW`
-3. **Enhances** each description by calling Cortex AI (llama3.3-70b) with your business context
-4. **Creates** a new semantic view with enhanced descriptions
+```mermaid
+flowchart LR
+    subgraph input [Input]
+        Source["Source Semantic View<br/>Generic descriptions"]
+        Context["Your Business Context<br/>(prompt string)"]
+    end
 
-```
-┌─────────────────┐
-│  Source View    │  ORDERS_VIEW
-│  Generic desc.  │  "Order status code"
-└────────┬────────┘
-         │
-         │ GET_DDL + DESCRIBE
-         ↓
-┌─────────────────┐
-│  Cortex AI      │  + Your Business Context
-│  Enhancement    │  → "F=Fulfilled, O=Open, P=Processing"
-└────────┬────────┘
-         │
-         │ CREATE with enhanced DDL
-         ↓
-┌─────────────────┐
-│  Enhanced Copy  │  ORDERS_VIEW_ENHANCED
-│  Business desc. │  "Order fulfillment stage: F=Fulfilled..."
-└─────────────────┘
+    subgraph process [Enhancement]
+        GetDDL["GET_DDL<br/>Extract structure"]
+        Describe["DESCRIBE SEMANTIC VIEW<br/>List dimensions + facts"]
+        Cortex["AI_COMPLETE<br/>Enhance each description"]
+    end
+
+    subgraph output [Output]
+        Enhanced["Enhanced Copy<br/>_ENHANCED suffix<br/>Business-aware descriptions"]
+    end
+
+    Source --> GetDDL --> Cortex
+    Source --> Describe --> Cortex
+    Context --> Cortex
+    Cortex --> Enhanced
 ```
 
 ---
 
-## Quick Start
+## Explore the Results
 
-### 1. Deploy the Tool
-
-Copy/paste `deploy.sql` into Snowsight and click "Run All" (~2 minutes)
-
-### 2. Enhance Your Semantic Views
-
-```sql
-USE SCHEMA SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS;
-USE WAREHOUSE SFE_ENHANCEMENT_WH;
-
-CALL SFE_ENHANCE_SEMANTIC_VIEW(
-    P_SOURCE_VIEW_NAME => 'YOUR_SEMANTIC_VIEW',
-    P_BUSINESS_CONTEXT_PROMPT => 'Your comprehensive business context here...'
-    -- Optional: P_OUTPUT_VIEW_NAME => 'CUSTOM_NAME'
-    -- Optional: P_MODEL => 'snowflake-llama-3.3-70b' (default)
-);
-```
-
-### 3. Compare and Use
+After deployment:
 
 ```sql
 -- Compare original vs enhanced
@@ -122,209 +79,61 @@ DESCRIBE SEMANTIC VIEW YOUR_SEMANTIC_VIEW;
 DESCRIBE SEMANTIC VIEW YOUR_SEMANTIC_VIEW_ENHANCED;
 ```
 
----
+### When to Use This vs Native Features
 
-## Procedure Parameters
-
-```sql
-SFE_ENHANCE_SEMANTIC_VIEW(
-    P_SOURCE_VIEW_NAME STRING,          -- Required: Source semantic view name
-    P_BUSINESS_CONTEXT_PROMPT STRING,   -- Required: Business context for enhancement
-    P_OUTPUT_VIEW_NAME STRING,          -- Optional: Output name (default: SOURCE_NAME_ENHANCED)
-    P_SCHEMA_NAME STRING,               -- Optional: Schema (default: current schema)
-    P_DATABASE_NAME STRING,             -- Optional: Database (default: current database)
-    P_DRY_RUN BOOLEAN,                  -- Optional: Preview mode (default: FALSE)
-    P_MODEL STRING,                     -- Optional: AI model (default: 'snowflake-llama-3.3-70b')
-    P_MAX_COMMENT_LENGTH INTEGER,       -- Optional: Max length (default: 200, range: 50-1000)
-    P_MAX_RETRIES INTEGER               -- Optional: Retry attempts (default: 3)
-)
-```
+| Scenario | Recommendation |
+|----------|----------------|
+| Creating a **new** semantic view | Use [Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot) with "AI-Generated Descriptions" |
+| Enhancing an **existing** semantic view | Use this tool |
+| Need **custom business context** in descriptions | Use this tool |
+| Programmatic/CLI enhancement (not UI) | Use this tool |
 
 ---
 
-## Writing Effective Business Context
+<details>
+<summary><strong>Deploy (1 step, ~2 minutes)</strong></summary>
 
-Your business context is applied to **ALL** dimensions and facts. Cortex AI intelligently extracts relevant information for each field.
+Copy [`deploy.sql`](deploy.sql) into a Snowsight worksheet and click **Run All**.
 
-### ✅ Good Prompt Structure
-
-```sql
-P_BUSINESS_CONTEXT_PROMPT => '
-E-commerce order fulfillment system for retail operations.
-
-ORDER STATUS CODES:
-- F=Fulfilled: Shipped to customer, counts toward revenue
-- O=Open: Awaiting payment, can be cancelled
-- P=Processing: In warehouse, being packed
-
-PRIORITY LEVELS:
-- 1-URGENT: VIP customers, 24-hour SLA, VP approval if >$50K
-- 2-HIGH: Premium customers, 48-hour SLA
-- 3-MEDIUM: Standard customers, 5-day SLA
-
-BUSINESS RULES:
-- Only fulfilled orders count toward revenue
-- Orders >$100K trigger fraud screening
-- Shipping costs vary by priority level
-'
-```
-
-### What to Include
-
-1. **Code Definitions**: Explain abbreviations (F=Fulfilled, O=Open)
-2. **Business Rules**: Important constraints and logic
-3. **Domain Context**: Industry-specific terminology
-4. **Relationships**: How fields relate to business processes
-5. **Thresholds**: Important numeric boundaries ($50K, $100K)
-
----
-
-## Use Cases
-
-1. **Improve Cortex Analyst Accuracy** - Better descriptions = better AI query understanding
-2. **Onboard New Team Members** - Enhanced descriptions document business logic
-3. **Standardize Terminology** - Apply consistent definitions across views
-4. **Document Domain Knowledge** - Capture tribal knowledge about codes and business rules
-5. **Regulatory Compliance** - Document compliance requirements and data governance
-
----
-
-## Objects Created
+### What Gets Created
 
 | Object Type | Name | Purpose |
 |------------|------|---------|
 | Warehouse | `SFE_ENHANCEMENT_WH` | X-SMALL, 60s auto-suspend |
-| Schema | `SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS` | Container for enhancement objects |
+| Schema | `SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS` | Tool namespace |
 | Procedure | `SFE_ENHANCE_SEMANTIC_VIEW` | Main enhancement procedure (Python 3.11) |
-| Function | `SFE_ESTIMATE_ENHANCEMENT_COST` | Cost estimation for views |
+| Function | `SFE_ESTIMATE_ENHANCEMENT_COST` | Cost estimation |
 | Procedure | `SFE_DIAGNOSE_ENVIRONMENT` | Environment diagnostics |
-
----
-
-## Cost & Performance
-
-### Cortex AI Model: snowflake-llama-3.3-70b
-
-- **Snowflake-optimized** Llama 3.3 model with SwiftKV optimizations
-- **75% cost reduction** vs standard llama3.3-70b
-- **~20x cheaper** than mistral-large2
-- **Higher throughput** with minimal accuracy loss
-- **High-quality** business descriptions
 
 ### Estimated Costs
 
-| Component | Details | Estimated Cost |
-|-----------|---------|----------------|
-| Setup | X-SMALL, ~2 min | < $0.01 |
-| Per enhancement (10 dimensions) | snowflake-llama-3.3-70b | ~$0.005 |
-| Per enhancement (50 dimensions) | snowflake-llama-3.3-70b | ~$0.025 |
-| Per enhancement (100 dimensions) | snowflake-llama-3.3-70b | ~$0.05 |
-| Monthly ongoing | Storage + idle warehouse | $0 |
+| Component | Estimated Cost |
+|-----------|----------------|
+| Setup (X-SMALL, ~2 min) | < $0.01 |
+| Per enhancement (10 dimensions) | ~$0.005 |
+| Per enhancement (50 dimensions) | ~$0.025 |
+| Per enhancement (100 dimensions) | ~$0.05 |
 
-**Edition Requirement:** Standard ($2/credit) or higher
+</details>
 
----
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
-## Advanced Features
+| Symptom | Fix |
+|---------|-----|
+| "Semantic view not found" | Verify with `SHOW SEMANTIC VIEWS` and check spelling. |
+| "Could not get DDL" | Ensure you have SELECT privilege on the view. |
+| "Cortex function not available" | Contact Snowflake support to enable Cortex features. |
+| Enhancement doesn't make sense | Refine business context with more specific definitions. |
 
-### Dry Run Mode (Preview Enhancements)
-
-```sql
-CALL SFE_ENHANCE_SEMANTIC_VIEW(
-    P_SOURCE_VIEW_NAME => 'ORDERS_VIEW',
-    P_BUSINESS_CONTEXT_PROMPT => 'Context...',
-    P_DRY_RUN => TRUE
-);
-```
-
-### Custom AI Model
-
-```sql
--- Use alternative model (snowflake-llama-3.3-70b is default and recommended)
-CALL SFE_ENHANCE_SEMANTIC_VIEW(
-    P_SOURCE_VIEW_NAME => 'ORDERS_VIEW',
-    P_BUSINESS_CONTEXT_PROMPT => 'Context...',
-    P_MODEL => 'llama3.1-8b',  -- Smaller, even cheaper option
-    P_MAX_COMMENT_LENGTH => 300
-);
-```
-
-### Cost Estimation
-
-```sql
-SELECT SFE_ESTIMATE_ENHANCEMENT_COST(
-    P_VIEW_NAME => 'YOUR_VIEW',
-    P_MODEL => 'snowflake-llama-3.3-70b'  -- Default model
-);
-```
-
-### Environment Diagnostics
-
-```sql
-CALL SFE_DIAGNOSE_ENVIRONMENT();
-```
-
----
-
-## Troubleshooting
-
-| Error | Solution |
-|-------|----------|
-| "Semantic view not found" | Verify with `SHOW SEMANTIC VIEWS` and check spelling |
-| "Could not get DDL" | Ensure you have SELECT privilege on the view |
-| "Cortex function not available" | Contact Snowflake support to enable Cortex features |
-| Enhancement doesn't make sense | Refine business context with more specific definitions |
-
----
+</details>
 
 ## Cleanup
 
-To remove all objects created by this tool:
+Run [`teardown.sql`](teardown.sql) in Snowsight to remove all tool objects.
 
-```sql
--- Copy/paste teardown.sql into Snowsight and click "Run All"
-@teardown.sql
-```
-
-This drops:
-- Schema `SNOWFLAKE_EXAMPLE.SEMANTIC_ENHANCEMENTS` (CASCADE)
-- Warehouse `SFE_ENHANCEMENT_WH`
-- All procedures, functions, and views in the schema
-
-**Preserved:**
-- `SNOWFLAKE_EXAMPLE` database (may contain other tools)
-
----
-
-## Architecture Diagrams
-
-See `diagrams/` folder for detailed architecture diagrams:
-- `data-model.md` - Semantic view metadata structure
-- `data-flow.md` - How data flows through enhancement
-- `network-flow.md` - Network architecture
-- `auth-flow.md` - Authentication & authorization
-
----
-
-## Key Takeaways
-
-1. ✅ **Creates enhanced copies** - Original views stay safe
-2. ✅ **One procedure, one call** - Simple API
-3. ✅ **Cortex-powered** - AI understands your business context
-4. ✅ **Robust** - Handles errors, escaping, edge cases
-5. ✅ **Cost-effective** - Pennies per semantic view
-6. ✅ **Flexible** - Iterative refinement supported
-
----
-
-## Resources
-
-- [Snowflake Semantic Views Documentation](https://docs.snowflake.com/en/user-guide/views-semantic)
-- [Cortex COMPLETE Function](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions)
-- [GET_DDL Function](https://docs.snowflake.com/en/sql-reference/functions/get_ddl)
-- [DESCRIBE SEMANTIC VIEW](https://docs.snowflake.com/en/sql-reference/sql/desc-semantic-view)
-
-## Development Tools
+<details>
+<summary><strong>Development Tools</strong></summary>
 
 This project is designed for AI-pair development.
 
@@ -335,6 +144,11 @@ This project is designed for AI-pair development.
 
 > New to AI-pair development? See [Cortex Code docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code)
 
----
+</details>
 
-*SE Community • Tools Collection • Last Updated: 2026-03-04*
+## References
+
+- [Snowflake Semantic Views Documentation](https://docs.snowflake.com/en/user-guide/views-semantic)
+- [Cortex COMPLETE Function](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions)
+- [GET_DDL Function](https://docs.snowflake.com/en/sql-reference/functions/get_ddl)
+- [DESCRIBE SEMANTIC VIEW](https://docs.snowflake.com/en/sql-reference/sql/desc-semantic-view)
