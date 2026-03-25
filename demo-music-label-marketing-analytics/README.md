@@ -5,6 +5,8 @@
 
 # Music Label Marketing Analytics
 
+![Streamlit Dashboard -- Spreadsheet-style budget entry writing directly to Snowflake](assets/streamlit-dashboard.png)
+
 Inspired by a real customer challenge: *"How do I get my marketing team to stop emailing spreadsheets without taking away their spreadsheets?"*
 
 This project answers that question by building a Snowflake-powered marketing analytics platform for a fictional music label — while keeping the spreadsheet workflow the marketing team already knows.
