@@ -5,6 +5,8 @@
 
 # Gaming Player Analytics
 
+![Streamlit Dashboard -- AI-classified player cohorts, LTV metrics, and platform breakdown](assets/streamlit-dashboard.png)
+
 Inspired by a real customer question: *"We're already running our data pipeline on Snowflake -- how do we get player analytics and AI on top of it without adding another platform?"*
 
 This demo answers that question by building a player intelligence layer on top of an existing Dynamic Table pipeline: AI-powered player segmentation, feedback analysis, churn risk scoring, and self-service analytics -- all inside Snowflake, using data that's already flowing through the pipeline.
