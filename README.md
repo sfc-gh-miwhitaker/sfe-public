@@ -7,54 +7,6 @@ Snowflake demos, tools, and guides -- each self-contained with deployment script
 
 > **No support is provided.** All code is shared for reference and learning. Review, test, and modify thoroughly before any production use.
 
-```mermaid
-quadrantChart
-    title Find Your Starting Point
-    x-axis Simpler --> More Complex
-    y-axis Traditional --> AI-Native
-    quadrant-1 AI Frontier
-    quadrant-2 Deep Dive
-    quadrant-3 Foundations
-    quadrant-4 Quick Wins
-
-    guide-csv-import: [0.10, 0.10]
-    guide-cost-drivers: [0.18, 0.15]
-    guide-replication-workbook: [0.25, 0.12]
-    guide-powerbi-live-query: [0.55, 0.18]
-    guide-powerbi-onelake-iceberg: [0.65, 0.22]
-    guide-semi-structured-pipeline: [0.35, 0.20]
-    guide-external-access-playbook: [0.48, 0.28]
-    tool-streamlit-contact-form: [0.20, 0.30]
-    tool-api-data-fetcher: [0.30, 0.25]
-    tool-agent-config-diff: [0.40, 0.45]
-    demo-dataquality-metrics: [0.50, 0.35]
-    demo-api-quickbooks-medallion: [0.60, 0.38]
-    demo-cortex-openai-enrichment: [0.58, 0.52]
-    tool-secrets-rotation-aws: [0.42, 0.32]
-    guide-data-quality-governance: [0.45, 0.40]
-    guide-cortex-anthropic-redirect: [0.22, 0.55]
-    guide-coco-setup: [0.15, 0.62]
-    guide-coco-governance-general: [0.28, 0.68]
-    demo-coco-governance-github: [0.38, 0.72]
-    guide-cortex-search: [0.32, 0.58]
-    tool-cortex-semantic-enhancer: [0.40, 0.60]
-    tool-cortex-cost-intelligence: [0.35, 0.55]
-    tool-cortex-rest-api-cost: [0.28, 0.48]
-    tool-dr-cost-agent: [0.48, 0.65]
-    guide-agent-skills: [0.52, 0.75]
-    guide-api-agent-context: [0.58, 0.70]
-    guide-agent-governance: [0.62, 0.78]
-    guide-agent-multi-tenant: [0.68, 0.72]
-    guide-mcp-auth: [0.72, 0.68]
-    demo-cortex-teams-agent: [0.65, 0.85]
-    demo-cortex-financial-agents: [0.78, 0.82]
-    demo-campaign-engine: [0.72, 0.88]
-    demo-agent-multicontext: [0.88, 0.92]
-    glaze-and-classify: [0.92, 0.80]
-```
-
----
-
 ## Brand New to All of This?
 
 Never used GitHub, Cortex Code, or any of these tools before? Start here:
@@ -127,67 +79,16 @@ Documentation, patterns, and examples (no deploy/teardown).
 
 ## Learning Journeys
 
-Not sure where to start? Each journey connects 3-4 projects into a story: understand the use case, deploy an example, then learn the governance patterns.
+Not sure where to start? Each journey connects 3-5 projects into a story: understand the use case, deploy an example, then learn the governance patterns.
 
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'lineColor': '#4a90d9'}}}%%
-flowchart TB
-
-  subgraph agents ["Agents — Build, deploy, and govern AI agents"]
-    direction LR
-    A1(["guide-coco-setup"]):::guide --> A2(["demo-campaign-engine"]):::demo
-    A2 --> A3(["demo-cortex-teams-agent"]):::demo
-    A3 --> A4(["guide-agent-governance"]):::guide
-    A4 --> A5(["guide-mcp-auth"]):::guide
-  end
-
-  subgraph finops ["FinOps — Understand billing, track costs, set budgets"]
-    direction LR
-    F1(["guide-cortex-anthropic-redirect"]):::guide --> F2(["tool-cortex-rest-api-cost"]):::tool
-    F2 --> F3(["tool-cortex-cost-intelligence"]):::tool
-    F3 --> F4(["guide-cost-drivers"]):::guide
-  end
-
-  subgraph dq ["Data Quality — Load data, add quality gates, govern"]
-    direction LR
-    D1(["guide-csv-import"]):::guide --> D2(["guide-semi-structured-pipeline"]):::guide
-    D2 --> D3(["demo-api-quickbooks-medallion"]):::demo
-    D3 --> D4(["demo-dataquality-metrics"]):::demo
-    D4 --> D5(["guide-data-quality-governance"]):::guide
-  end
-
-  subgraph ext ["External Access — Call APIs, manage secrets, harden"]
-    direction LR
-    E1(["tool-api-data-fetcher"]):::tool --> E2(["demo-api-quickbooks-medallion"]):::demo
-    E2 --> E3(["tool-secrets-rotation-aws"]):::tool
-    E3 --> E4(["guide-external-access-playbook"]):::guide
-  end
-
-  subgraph search ["Search & RAG — Build search, integrate into agents"]
-    direction LR
-    S1(["guide-cortex-search"]):::guide --> S2(["demo-cortex-financial-agents"]):::demo
-  end
-
-  subgraph bi ["BI Integration — Connect Power BI to Snowflake"]
-    direction LR
-    B1(["guide-powerbi-live-query"]):::guide --> B2(["guide-powerbi-onelake-iceberg"]):::guide
-  end
-
-  classDef demo fill:#e8364f,color:#fff,stroke:#c12a3f,font-weight:bold
-  classDef tool fill:#4a90d9,color:#fff,stroke:#3a7bc8,font-weight:bold
-  classDef guide fill:#2ecc71,color:#fff,stroke:#27ae60,font-weight:bold
-```
-
-> Legend: 🔴 Demo &nbsp; 🔵 Tool &nbsp; 🟢 Guide
-
-| Journey | Story | Start Here |
-|---|---|---|
-| **Agents** | Build an AI agent, deploy it to users, govern it, then connect via MCP | [guide-coco-setup](guide-coco-setup/) |
-| **FinOps** | Understand Cortex billing, track costs, set budgets and alerts | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) |
-| **Data Quality** | Load data, build a pipeline, add quality gates and governance | [guide-csv-import](guide-csv-import/) |
-| **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | [tool-api-data-fetcher](tool-api-data-fetcher/) |
-| **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | [guide-cortex-search](guide-cortex-search/) |
-| **BI Integration** | Connect Power BI via DirectQuery and OneLake/Iceberg | [guide-powerbi-live-query](guide-powerbi-live-query/) |
+| Journey | Story | Path | Start Here |
+|---|---|---|---|
+| **Agents** | Build an AI agent, deploy it to users, govern it, then connect via MCP | guide-coco-setup → demo-campaign-engine → demo-cortex-teams-agent → guide-agent-governance → guide-mcp-auth | [guide-coco-setup](guide-coco-setup/) |
+| **FinOps** | Understand Cortex billing, track costs, set budgets and alerts | guide-cortex-anthropic-redirect → tool-cortex-rest-api-cost → tool-cortex-cost-intelligence → guide-cost-drivers | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) |
+| **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-csv-import → guide-semi-structured-pipeline → demo-api-quickbooks-medallion → demo-dataquality-metrics → guide-data-quality-governance | [guide-csv-import](guide-csv-import/) |
+| **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | tool-api-data-fetcher → demo-api-quickbooks-medallion → tool-secrets-rotation-aws → guide-external-access-playbook | [tool-api-data-fetcher](tool-api-data-fetcher/) |
+| **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | guide-cortex-search → demo-cortex-financial-agents | [guide-cortex-search](guide-cortex-search/) |
+| **BI Integration** | Connect Power BI via DirectQuery and OneLake/Iceberg | guide-powerbi-live-query → guide-powerbi-onelake-iceberg | [guide-powerbi-live-query](guide-powerbi-live-query/) |
 
 ---
 
