@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-33-blue)
+![Projects](https://img.shields.io/badge/Projects-34-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -37,6 +37,7 @@ Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
 | [demo-cortex-financial-agents](demo-cortex-financial-agents/) | Specialty finance portfolio risk agent combining structured analytics with document RAG | Cortex Agents, Cortex Search, Semantic Views, Cortex Analyst |
 | [demo-music-label-marketing-analytics](demo-music-label-marketing-analytics/) | Music label marketing analytics with AI enrichment, spreadsheet-style budget entry, and Intelligence agent | Dynamic Tables, AI_CLASSIFY, AI_EXTRACT, Semantic Views, Streamlit, Intelligence Agents |
 | [demo-gaming-player-analytics](demo-gaming-player-analytics/) | Player behavior analytics with AI cohort segmentation, churn risk scoring, feedback analysis, and Intelligence agent | Dynamic Tables, AI_CLASSIFY, AI_EXTRACT, Semantic Views, Streamlit, Intelligence Agents |
+| [demo-test-expiration](demo-test-expiration/) | Throwaway project to validate the auto-archive GitHub Action | Testing |
 
 ### Deployable Tools
 
@@ -87,6 +88,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | tool-api-data-fetcher → demo-api-quickbooks-medallion → tool-secrets-rotation-aws → guide-external-access-playbook | [tool-api-data-fetcher](tool-api-data-fetcher/) |
 | **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | guide-cortex-search → demo-cortex-financial-agents | [guide-cortex-search](guide-cortex-search/) |
 | **BI Integration** | Connect Power BI via DirectQuery and OneLake/Iceberg | guide-powerbi-live-query → guide-powerbi-onelake-iceberg | [guide-powerbi-live-query](guide-powerbi-live-query/) |
+| **Test Journey** | Validate expiration workflow removes journey entries | demo-test-expiration → demo-cortex-teams-agent | [demo-test-expiration](demo-test-expiration/) |
 
 ---
 
