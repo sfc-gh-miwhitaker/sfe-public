@@ -1,6 +1,6 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--04--22-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Cortex REST API Cost
@@ -12,10 +12,10 @@ Inspired by a real customer question: *"Our REST API bill is in dollars per mill
 This tool queries `CORTEX_REST_API_USAGE_HISTORY`, applies the published per-model token rates from the Service Consumption Table, and shows actual dollar cost in a Streamlit dashboard and a step-by-step notebook.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Last Updated:** 2026-03-02 | **Expires:** 2026-04-22 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
-> This tool expires on 2026-04-22. After expiration, validate against current Snowflake docs before use.
+> This tool expires on 2026-04-02. After expiration, validate against current Snowflake docs before use.
 
 > **FinOps Journey (2 of 4):** For broader Cortex AI cost governance (12 services), see [tool-cortex-cost-intelligence](../tool-cortex-cost-intelligence/). For query-level warehouse optimization, see [guide-cost-drivers](../guide-cost-drivers/). To generate REST API usage to track, see [guide-cortex-anthropic-redirect](../guide-cortex-anthropic-redirect/).
 

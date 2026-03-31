@@ -42,7 +42,7 @@ Campaign recommendation engine for casino operators with ML audience targeting a
 - Streamlit uses FROM with Git repo stage, not ROOT_LOCATION
 
 ## Related Projects
-- [`guide-coco-setup`](../guide-coco-setup/) -- Cortex Code on-ramp (prerequisite for GUIDED_BUILD workshop)
+- [Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli) -- Install and connect (prerequisite for GUIDED_BUILD workshop)
 - [`guide-agent-skills`](../guide-agent-skills/) -- Skills architecture and context budget management
 - [`guide-coco-governance-general`](../guide-coco-governance-general/) -- AI coding tool governance workshop
 - [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Deploy a Cortex Agent to Microsoft Teams

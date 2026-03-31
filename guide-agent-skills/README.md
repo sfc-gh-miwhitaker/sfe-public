@@ -6,10 +6,8 @@
 
 Inspired by the question every AI-pair user hits after week two: *"I installed a bunch of skills and now the agent feels slower and less focused -- what did I do wrong?"*
 
-An opinionated guide to managing AI agent extensibility -- skills, rules, MCP servers, subagents -- as a resource allocation problem. The core insight: every always-on file is a permanent line item in your context budget. This guide teaches you what to load, where to put it, and when to let go.
-
 **Author:** SE Community
-**Read time:** ~12 minutes | **Result:** A mental model for context budget management
+**Read time:** ~5 minutes | **Result:** A mental model for context budget management
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -23,55 +21,33 @@ Anyone using AI pair-programming tools who has hit one of these walls:
 - Standards drift between sessions because the AI "forgets" your rules
 - Unsure whether something belongs in CLAUDE.md, AGENTS.md, a skill, or an MCP server
 
-**New to AI pair-programming?** Start with the [setup guide](../guide-coco-setup/) to install Cortex Code and understand the guidance hierarchy.
+**New to AI pair-programming?** Install [Cortex Code](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli), [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview), or [Cursor](https://www.cursor.com/) first.
 
 ---
 
-## The Approach
+## Read the Source First
 
-### Part 1: Context Is the Currency
+Anthropic's documentation covers the core concepts this guide used to explain in detail:
+
+- **[Claude Code Memory (CLAUDE.md)](https://docs.anthropic.com/en/docs/claude-code/memory)** -- How CLAUDE.md files work, where to put them, how to write effective instructions, and how context loading works
+- **[Claude Code Skills](https://docs.anthropic.com/en/docs/claude-code/skills)** -- Skill format, creation, sharing, invocation control, progressive disclosure with `references/`, and bundled skills
+- **[Claude Code Settings](https://docs.anthropic.com/en/docs/claude-code/settings)** -- Configuration scopes (managed, user, project, local) and how they interact
+
+These apply directly to Cortex Code, Cursor, and Claude Code. The rest of this guide covers what those docs don't: the **resource allocation mental model** and **common misplacements**.
+
+---
+
+## The Resource Mental Model
 
 Every AI coding agent has a fixed token budget. Your conversation, the files it reads, the rules it loads, the skills it activates -- all draw from the same pool.
 
-| Source | When It Loads | Budget Impact |
-|--------|--------------|---------------|
-| `~/.claude/CLAUDE.md` | Every session, every project | Permanent -- survives compaction |
-| `AGENTS.md` | Every session in that project | Permanent per-project |
-| Skill (`SKILL.md`) | On-demand when triggered | Temporary -- but large skills are large withdrawals |
-| MCP server | On tool call | Minimal (schema loads once) |
-| Conversation history | Accumulates | Largest consumer -- compacted automatically |
+**Always-on files** (`CLAUDE.md`, `AGENTS.md`) survive context compaction and permanently consume budget. Put non-negotiable rules here -- but keep them lean.
 
-> [!TIP]
-> **Core insight:** Put non-negotiable rules in CLAUDE.md (they survive compaction). Put procedures in skills (they reload on demand). Don't put procedures in CLAUDE.md -- they'll survive but permanently consume budget.
+**On-demand extensions** (skills, MCP tools) load when triggered and release after use. Put multi-step procedures here, not in CLAUDE.md.
 
-### Part 2: Right Tool for the Job
+**Subagents** get a separate context window entirely. Use for parallel, isolated work.
 
-Five extensibility mechanisms, each with a different cost model:
-
-| Need | Use | Cost Model |
-|------|-----|------------|
-| Every session, every project | `~/.claude/CLAUDE.md` | Permanent budget, survives compaction |
-| Every session, one project | `AGENTS.md` | Permanent while in project |
-| Multi-step procedure sometimes | Skill (`.claude/skills/`) | Loads on demand |
-| Live data from external system | MCP server | Schema once, data per call |
-| Parallel isolated work | Subagent | Separate context window |
-
-### Part 3: Pulling Skills Into Any Client
-
-The `.claude/skills/` directory is the universal skill format. Same file works across Cortex Code, Cursor, and Claude Code.
-
-```
-.claude/skills/<name>/SKILL.md      # Project-level (travels with repo)
-~/.claude/skills/<name>/SKILL.md    # User-level (available everywhere)
-```
-
-**Scope escalation ladder:** Session (test) -> Project (useful) -> User (proven across 3+ projects).
-
-### Part 4: Keeping Your Toolkit Lean
-
-- **One skill, one job.** Over 200 lines? Split it or use progressive disclosure with a `references/` subdirectory.
-- **The pruning signal.** If you can't remember the last time a skill fired and helped, remove it.
-- **The description is the gatekeeper.** Precise trigger conditions ("Use when reviewing SQL for quality violations") beat vague descriptions ("Helps with coding").
+See [diagrams/right-tool.md](diagrams/right-tool.md) for the visual decision tree.
 
 ---
 
@@ -90,8 +66,10 @@ The `.claude/skills/` directory is the universal skill format. Same file works a
 
 | Resource | URL |
 |----------|-----|
+| Claude Code Memory (CLAUDE.md) | https://docs.anthropic.com/en/docs/claude-code/memory |
+| Claude Code Skills | https://docs.anthropic.com/en/docs/claude-code/skills |
+| Claude Code Settings | https://docs.anthropic.com/en/docs/claude-code/settings |
 | Cortex Code Extensibility | https://docs.snowflake.com/en/user-guide/cortex-code/extensibility |
-| Skill Specification | https://agentskills.io/specification |
-| Anthropic Official Skills | https://github.com/anthropics/skills |
-| Setup Guide (prerequisite) | [guide-coco-setup](../guide-coco-setup/) |
+| Agent Skills Specification | https://agentskills.io/specification |
+| Cortex Code CLI | https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli |
 | Governance Workshop | [guide-coco-governance-general](../guide-coco-governance-general/) |

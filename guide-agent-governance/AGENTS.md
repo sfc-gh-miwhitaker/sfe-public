@@ -4,7 +4,9 @@ Operational patterns for running Cortex Agents in production: monitoring, access
 
 ## Project Structure
 
-- `README.md` -- Complete guide (6 parts + production checklist)
+- `README.md` -- Complete guide (6 parts + production checklist + agent config diff appendix)
+- `scripts/extract_agent_spec.sql` -- Interactive SQL for agent spec extraction (Snowsight/SnowSQL)
+- `scripts/extract_agent_spec.py` -- Programmatic Python alternative (no session state needed)
 
 ## Content Principles
 
@@ -29,6 +31,5 @@ Operational patterns for running Cortex Agents in production: monitoring, access
 - [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Agent with Cortex Guard and security integration
 - [`demo-agent-multicontext`](../demo-agent-multicontext/) -- Row Access Policies and observability patterns
 - [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Cost governance with budgets, alerts, runaway detection
-- [`tool-agent-config-diff`](../tool-agent-config-diff/) -- Agent spec extraction for version control
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods
 - [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant architecture with Azure AD OAuth + RAPs

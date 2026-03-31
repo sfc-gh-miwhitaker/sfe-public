@@ -1,6 +1,6 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # API Data Fetcher
@@ -10,10 +10,10 @@ Inspired by a real customer question: *"What's the simplest way to call a REST A
 This tool answers that question with a Python stored procedure that fetches data from a public REST API and stores it in a Snowflake table via External Access Integration. One procedure call, no external ETL tools.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
-> This tool expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+> This tool expires on 2026-04-02. After expiration, validate against current Snowflake docs before use.
 
 ---
 

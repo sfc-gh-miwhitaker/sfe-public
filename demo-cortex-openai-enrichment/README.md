@@ -1,6 +1,6 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # AI-First Data Engineering: OpenAI + Snowflake Cortex
@@ -10,10 +10,10 @@ Inspired by a real customer question: *"We have thousands of OpenAI API response
 This demo answers that question three ways -- schema-on-read views, a declarative Dynamic Table pipeline, and Cortex AI enrichment that classifies, scores, and scans OpenAI outputs -- and compares the trade-offs side by side.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
-> This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+> This demo expires on 2026-04-02. After expiration, validate against current Snowflake docs before use.
 
 ---
 

@@ -1,6 +1,6 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--04--01-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Casino Campaign Recommendation Engine
@@ -12,10 +12,10 @@ Inspired by a real customer question: *"Can we use Snowflake to find players who
 This demo answers that question with a production-grade campaign recommendation engine: ML classification for audience targeting, vector similarity for player lookalike matching, and LLM-powered campaign copy generation -- built entirely in Snowflake through AI-pair programming in ~2 hours.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
-> This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+> This demo expires on 2026-04-02. After expiration, validate against current Snowflake docs before use.
 
 ---
 

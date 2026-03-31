@@ -1,6 +1,7 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
 ![Status](https://img.shields.io/badge/Status-Active-success)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 
 # Agent:Run API with Context
 
@@ -9,7 +10,7 @@ Inspired by the question behind every agent integration: *"How do I call the Cor
 Working examples of calling `agent:run` with execution context using three authentication methods -- PAT, OAuth, and Key-Pair JWT -- in curl, Python, Node.js, and React. Copy-paste the pattern that matches your stack.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 

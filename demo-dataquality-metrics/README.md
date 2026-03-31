@@ -1,6 +1,6 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Data Quality Metrics & Reporting
@@ -10,10 +10,10 @@ Inspired by a real customer question: *"How do I know when bad data lands in my 
 This demo answers that question with Data Metric Functions that fire on every data change, golden dataset views that automatically exclude invalid records, object tagging for governance classification, and tag-based masking policies that enforce column-level security. Insert bad data, watch the metrics update, see the golden views stay clean.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
-> This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+> This demo expires on 2026-04-02. After expiration, validate against current Snowflake docs before use.
 
 ---
 

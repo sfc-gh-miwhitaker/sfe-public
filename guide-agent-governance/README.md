@@ -192,12 +192,52 @@ ALTER WAREHOUSE SFE_MY_AGENT_WH SET
 
 ---
 
+## Appendix: Agent Config Diff
+
+As teams build more Cortex Agents, configuration drift becomes invisible. An agent's YAML spec, profile, and tool list can change without anyone tracking what was different.
+
+The scripts in `scripts/` extract agent specifications for diff tools and version control using `DESC AGENT` + `RESULT_SCAN`.
+
+### Interactive SQL (Snowsight / SnowSQL)
+
+See [`scripts/extract_agent_spec.sql`](scripts/extract_agent_spec.sql). Set the agent FQN and output format, then run:
+
+```sql
+SET agent_fqn = 'YOUR_DATABASE.YOUR_SCHEMA.YOUR_AGENT';
+SET output_format = 'export';  -- Options: 'full', 'spec_only', 'export'
+DESC AGENT IDENTIFIER($agent_fqn);
+```
+
+Three output formats:
+- **full** -- All agent properties with parsed profile JSON (config management)
+- **spec_only** -- Just the YAML spec (line-by-line diff)
+- **export** -- Single JSON document with config hash (version control commits)
+
+### Programmatic Python
+
+See [`scripts/extract_agent_spec.py`](scripts/extract_agent_spec.py). No interactive session needed:
+
+```bash
+python scripts/extract_agent_spec.py DB.SCHEMA.AGENT --format export
+python scripts/extract_agent_spec.py DB.SCHEMA.AGENT --format spec_only > agent_spec.yaml
+diff agent_spec_v1.yaml agent_spec_v2.yaml
+```
+
+### Tips
+
+- `DESC AGENT` is the correct syntax (not `DESC CORTEX AGENT`)
+- Agent spec is returned as YAML, not JSON
+- Profile is JSON inside a string column -- use `TRY_PARSE_JSON()` in SQL
+- `RESULT_SCAN` requires an interactive session; the Python script is the programmatic alternative
+- Use `SHOW AGENTS IN SCHEMA <db>.<schema>` to list all agents
+
+---
+
 ## Related Projects
 
 - [`demo-campaign-engine`](../demo-campaign-engine/) -- Build an agent from scratch with GUIDED_BUILD workshop
 - [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Agent deployed to Teams with Cortex Guard and security integration
 - [`demo-agent-multicontext`](../demo-agent-multicontext/) -- Per-request context injection with Row Access Policies and observability
 - [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Cost governance platform with budgets, alerts, and runaway detection
-- [`tool-agent-config-diff`](../tool-agent-config-diff/) -- Extract agent specs for version control
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods
 - [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant architecture with Azure AD OAuth + RAPs

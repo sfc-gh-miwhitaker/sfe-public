@@ -1,6 +1,7 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
 ![Status](https://img.shields.io/badge/Status-Active-success)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 
 # Cortex Search Automation Guide
 
@@ -9,7 +10,7 @@ Inspired by a real operational question: *"I built a Cortex Search service in my
 This guide provides automation patterns not found in the official docs: spec export/recreation, parameterized deployment templates, CI/CD pipeline examples, runnable E2E tests, Python SDK production patterns, and agent integration. The official docs cover syntax; this guide covers operations.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 

@@ -1,6 +1,7 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
 ![Status](https://img.shields.io/badge/Status-Active-success)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 
 # Multi-Tenant Cortex Agent with Azure AD
 
@@ -9,7 +10,7 @@ Inspired by the question every ISV asks: *"How do I build a customer-facing AI a
 This guide provides the reference architecture for a production multi-tenant agent: React frontend, Azure AD OAuth for customer identity, Node.js backend with JWT claim extraction, and Snowflake Row Access Policies for per-tenant data isolation enforced at the SQL layer. Every request carries the customer's identity from Azure AD all the way down to the Row Access Policy -- no simulated users, no hardcoded roles.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review, test, and modify before any production use.
 

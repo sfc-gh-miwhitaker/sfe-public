@@ -1,6 +1,7 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
 ![Status](https://img.shields.io/badge/Status-Active-success)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 
 # Replication Workbook
 
@@ -9,7 +10,7 @@ Inspired by a real operational question: *"How do I set up cross-region replicat
 Step-by-step SQL workbooks for setting up Snowflake replication. Copy the right SQL file into a Snowsight worksheet, follow the comments, run statements one at a time. Enterprise gets you read-only replicas. Business Critical gets you promotion, client redirect, and a full failover runbook.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 

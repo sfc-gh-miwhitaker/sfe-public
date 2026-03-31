@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "permissions": {
+    "dangerouslyAllowAll": false,
+    "defaultMode": "allow"
+  },
+  "settings": {
+    "forceSandboxEnabled": true
+  },
+  "required": {
+    "minimumVersion": "1.0.0"
+  },
+  "ui": {
+    "showManagedBanner": true,
+    "bannerText": "[Governed] GitHub MCP Enabled — Managed by IT",
+    "hideDangerousOptions": true
+  }
+}

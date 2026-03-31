@@ -1,6 +1,6 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Cortex Cost Intelligence v4.0
@@ -10,10 +10,10 @@ Inspired by a real customer question: *"I have 12 different Cortex services runn
 This tool answers that question with a semantic view over 12 ACCOUNT_USAGE views, a Cortex Agent for natural language cost queries, a single denormalized BI view for Tableau/PowerBI/Sigma, and an optional governance module with per-user budgets and runaway detection. The semantic view is the product -- everything else is a presentation layer.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
-> This tool expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+> This tool expires on 2026-04-02. After expiration, validate against current Snowflake docs before use.
 
 > **FinOps Journey (3 of 4):** For REST API-specific billing (tokens, not credits), see [tool-cortex-rest-api-cost](../tool-cortex-rest-api-cost/). For query-level warehouse optimization, see [guide-cost-drivers](../guide-cost-drivers/). For generating REST API usage, see [guide-cortex-anthropic-redirect](../guide-cortex-anthropic-redirect/).
 

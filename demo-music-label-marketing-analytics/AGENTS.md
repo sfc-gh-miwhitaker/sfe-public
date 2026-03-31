@@ -59,6 +59,6 @@ If the user seems confused, asks basic questions like "what is this" or "how do 
 **Assume no technical background.** Define terms when you use them. "Snowsight is the Snowflake web interface where you run SQL" is better than just "run this in Snowsight."
 
 ## Related Projects
-- [`guide-coco-setup`](../guide-coco-setup/) -- Cortex Code on-ramp
+- [Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli) -- Install and connect
 - [`demo-campaign-engine`](../demo-campaign-engine/) -- Casino campaign engine (similar ML/vector patterns)
 - [`guide-agent-governance`](../guide-agent-governance/) -- Agent governance patterns

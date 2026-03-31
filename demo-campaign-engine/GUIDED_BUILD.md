@@ -38,7 +38,7 @@ Each step teaches one AI-pair programming technique. By the end you'll have a to
 ### New to AI Pair-Programming?
 
 > [!TIP]
-> If this is your first time using an AI coding tool, complete the [Cortex Code Setup Guide](../guide-coco-setup/README.md) first (~45 minutes). It teaches the context management concepts this workshop assumes:
+> If this is your first time using an AI coding tool, [install the Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli) and read the [extensibility guide](https://docs.snowflake.com/en/user-guide/cortex-code/extensibility) first. Key concepts this workshop assumes:
 >
 > - **How your AI tool finds its instructions** -- the guidance hierarchy, always-on context (AGENTS.md) vs on-demand skills, and why this matters
 > - **What to do when the AI forgets your conventions** -- context compaction happens in long sessions and silently drops your AGENTS.md content. The setup guide teaches you to recognize and recover from it.

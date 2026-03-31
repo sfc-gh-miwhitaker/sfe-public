@@ -1,6 +1,6 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--05--01-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # QuickBooks API Medallion Architecture
@@ -10,10 +10,10 @@ Inspired by a real customer question: *"Can I pull data from QuickBooks into Sno
 This demo answers that question with a full medallion pipeline -- Bronze raw JSON, Silver typed tables with Cortex AI enrichment, Gold analytics views -- plus Data Metric Functions for continuous quality monitoring. Runs with synthetic sample data (no QBO credentials required) or with a live QuickBooks Online connection.
 
 **Author:** SE Community
-**Last Updated:** 2026-03-02 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+**Last Updated:** 2026-03-02 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
-> This demo expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.
+> This demo expires on 2026-04-02. After expiration, validate against current Snowflake docs before use.
 
 ---
 
