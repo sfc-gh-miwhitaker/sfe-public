@@ -90,6 +90,9 @@ package-lock.json
 *.swo
 *~
 
+# ---- Archive (override global Emacs *_archive pattern; this directory is tracked) ----
+!_archive/
+
 # ---- Audit Output (applyrules --monorepo) ----
 audit_reports/
 AUDIT_REPORT.md
