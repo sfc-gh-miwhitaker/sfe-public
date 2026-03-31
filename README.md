@@ -87,8 +87,6 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | tool-api-data-fetcher → demo-api-quickbooks-medallion → tool-secrets-rotation-aws → guide-external-access-playbook | [tool-api-data-fetcher](tool-api-data-fetcher/) |
 | **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | guide-cortex-search → demo-cortex-financial-agents | [guide-cortex-search](guide-cortex-search/) |
 | **BI Integration** | Connect Power BI via DirectQuery and OneLake/Iceberg | guide-powerbi-live-query → guide-powerbi-onelake-iceberg | [guide-powerbi-live-query](guide-powerbi-live-query/) |
-| **Test Journey** | Validate expiration workflow removes journey entries | demo-cortex-teams-agent | [demo-cortex-teams-agent](demo-cortex-teams-agent/) |
-
 ---
 
 ## Quick Start
