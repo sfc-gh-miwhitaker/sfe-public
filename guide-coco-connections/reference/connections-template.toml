@@ -1,0 +1,73 @@
+# ~/.snowflake/config.toml — Partner SE Template
+#
+# Copy this into ~/.snowflake/config.toml and replace placeholder values.
+# Section naming: [connections.<customer-alias>-<environment>]
+# Examples: [connections.acme-prod], [connections.globex-dev], [connections.internal-sfcogsops]
+#
+# Security: This file contains account IDs and usernames — not passwords.
+# Do NOT commit to git. Do NOT share via Slack or email.
+
+# ─── DEFAULT ───────────────────────────────────────────────────────────────────
+# Used when no -c flag is passed and SNOWFLAKE_CONNECTION is not set.
+# Point this at your primary / internal account.
+
+default_connection_name = "internal"
+
+# ─── INTERNAL ──────────────────────────────────────────────────────────────────
+
+[connections.internal]
+account       = "myorg-internal"
+user          = "your.email@snowflake.com"
+authenticator = "externalbrowser"
+
+[connections.internal-sandbox]
+account       = "myorg-sandbox"
+user          = "your.email@snowflake.com"
+authenticator = "externalbrowser"
+warehouse     = "DEV_WH"
+role          = "DEVELOPER"
+
+# ─── CUSTOMER ACCOUNTS ─────────────────────────────────────────────────────────
+# Add one section per customer engagement. Use consistent alias patterns.
+
+[connections.acme-prod]
+account       = "acme-us-west-2"
+user          = "your.email@acme-partner.com"
+authenticator = "externalbrowser"
+warehouse     = "PARTNER_WH"
+role          = "PARTNER_SE_ROLE"
+database      = "ANALYTICS"
+schema        = "PUBLIC"
+
+[connections.acme-dev]
+account       = "acme-dev-us-west-2"
+user          = "your.email@acme-partner.com"
+authenticator = "externalbrowser"
+warehouse     = "DEV_WH"
+role          = "DEVELOPER"
+
+[connections.globex-prod]
+account       = "globex-us-east-1"
+user          = "your.email@globex-partner.com"
+authenticator = "externalbrowser"
+role          = "ANALYST"
+warehouse     = "GLOBEX_PARTNER_WH"
+
+# ─── PROGRAMMATIC ACCESS TOKEN (PAT) ───────────────────────────────────────────
+# For accounts where SSO is unavailable or inconvenient.
+# Prefer setting the SNOWFLAKE_TOKEN env var over hardcoding the token here.
+
+# [connections.acme-scripted]
+# account       = "acme-us-west-2"
+# user          = "your.email@acme-partner.com"
+# authenticator = "PROGRAMMATIC_ACCESS_TOKEN"
+# token         = ""   ← leave blank; set SNOWFLAKE_TOKEN in your shell
+
+# ─── KEY-PAIR AUTH ─────────────────────────────────────────────────────────────
+# For CI/CD pipelines or accounts requiring key-pair authentication.
+
+# [connections.acme-keypair]
+# account          = "acme-us-west-2"
+# user             = "SERVICE_USER"
+# authenticator    = "snowflake_jwt"
+# private_key_path = "~/.snowflake/acme_rsa_key.p8"
