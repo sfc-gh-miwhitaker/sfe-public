@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-21-blue)
+![Projects](https://img.shields.io/badge/Projects-20-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -41,7 +41,6 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 |---|---|---|
 | [tool-dr-cost-agent](tool-dr-cost-agent/) | DR replication cost estimation agent with hybrid table awareness | Snowflake Intelligence, Semantic Views, ACCOUNT_USAGE |
 | [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |
-| [tool-secrets-rotation-aws](tool-secrets-rotation-aws/) | Snowflake Notebook: rotate key-pair and PAT credentials for service accounts with AWS Secrets Manager | Key-Pair Auth, PATs, AWS Secrets Manager, Notebooks |
 
 ### Guides and References
 
@@ -73,7 +72,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 | **AI Governance** | Govern AI coding tools across your organization | guide-agent-skills → guide-coco-governance-general | [guide-agent-skills](guide-agent-skills/) |
 | **FinOps** | Understand Cortex billing, track costs, set budgets and alerts | guide-cortex-anthropic-redirect → guide-cost-drivers | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) |
 | **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-csv-import → guide-semi-structured-pipeline → guide-data-quality-governance | [guide-csv-import](guide-csv-import/) |
-| **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | tool-secrets-rotation-aws → guide-external-access-playbook | [tool-secrets-rotation-aws](tool-secrets-rotation-aws/) |
+| **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | guide-external-access-playbook | [guide-external-access-playbook](guide-external-access-playbook/) |
 | **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | demo-cortex-financial-agents | [demo-cortex-financial-agents](demo-cortex-financial-agents/) |
 | **BI Integration** | Connect Power BI via DirectQuery and OneLake/Iceberg | guide-powerbi-live-query → guide-powerbi-onelake-iceberg | [guide-powerbi-live-query](guide-powerbi-live-query/) |
 ---
