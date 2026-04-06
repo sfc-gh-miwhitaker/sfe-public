@@ -4,9 +4,16 @@
 
 ## Architecture
 
-- `notebook.ipynb` — Snowflake Notebook with 8 SQL cells querying `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY`
-- `streamlit_app.py` — Streamlit in Snowflake app; uses `get_active_session()`, no warehouse setup required
-- No Snowflake objects to deploy — reads from ACCOUNT_USAGE directly
+- `notebook.ipynb` — Snowflake Notebook with 9 Python cells; `source` variable selects CLI / Snowsight / both (default: both)
+- `streamlit_app.py` — Streamlit in Snowflake app; sidebar "Data Source" radio picks CLI / Snowsight / Combined
+- `deploy_all.sql` — one-shot Snowsight deploy script (Git-based); creates schema, notebook, and Streamlit app
+- No Snowflake objects beyond the schema/notebook/Streamlit — reads ACCOUNT_USAGE directly
+
+## Data Sources
+
+- `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY` — terminal / `snow` CLI usage
+- `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY` — browser IDE (Snowsight) usage
+- Schemas are identical: USER_ID, REQUEST_ID, USAGE_TIME, TOKEN_CREDITS, TOKENS, CREDITS_GRANULAR (OBJECT), TOKENS_GRANULAR (OBJECT)
 
 ## Conventions
 
@@ -19,8 +26,9 @@
 ## Key Commands
 
 ```bash
-# Deploy notebook to Snowflake (run from Snowsight UI — import notebook.ipynb)
-# Deploy Streamlit (run from Snowsight UI — create Streamlit in Snowflake, paste streamlit_app.py)
+# One-shot deploy (Snowsight): paste deploy_all.sql → Run All
+# Manual notebook deploy: Snowsight > Projects > Notebooks > + > Import .ipynb
+# Manual Streamlit deploy: Snowsight > Projects > Streamlit > + > paste streamlit_app.py
 ```
 
 ## Required Privilege

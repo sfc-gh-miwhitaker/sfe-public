@@ -1,6 +1,6 @@
 /*==============================================================================
 06 - Roles and Grants
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-02
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-07-06
 
 Two roles demonstrate tiered access:
   TV_VIEWER_ROLE  - Low auth: read schedules, search KB, limited viewership
@@ -11,7 +11,7 @@ USE ROLE ACCOUNTADMIN;
 
 -- Viewer role (low-auth tier)
 CREATE ROLE IF NOT EXISTS TV_VIEWER_ROLE
-  COMMENT = 'DEMO: TV network viewer access (Expires: 2026-04-02)';
+  COMMENT = 'DEMO: TV network viewer access (Expires: 2026-07-06)';
 
 GRANT USAGE ON DATABASE SNOWFLAKE_EXAMPLE TO ROLE TV_VIEWER_ROLE;
 GRANT USAGE ON SCHEMA SNOWFLAKE_EXAMPLE.AGENT_MULTICONTEXT TO ROLE TV_VIEWER_ROLE;
@@ -29,7 +29,7 @@ GRANT SELECT ON SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AGENT_MULTICO
 
 -- Admin role (full-auth tier) inherits viewer and adds member data
 CREATE ROLE IF NOT EXISTS TV_ADMIN_ROLE
-  COMMENT = 'DEMO: TV network admin access (Expires: 2026-04-02)';
+  COMMENT = 'DEMO: TV network admin access (Expires: 2026-07-06)';
 
 GRANT ROLE TV_VIEWER_ROLE TO ROLE TV_ADMIN_ROLE;
 

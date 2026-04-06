@@ -105,7 +105,7 @@ export function buildPayloadPreview(ctx: AgentContext, message: string) {
         { role: 'user', content: [{ type: 'text', text: message || '(your message here)' }] },
       ],
       models: { orchestration: 'auto' },
-      orchestration_budget: { seconds: 30, tokens: 4096 },
+      orchestration: { budget: { seconds: 30, tokens: 16000 } },
       instructions: {
         system,
         response: ctx.userType === 'anonymous'

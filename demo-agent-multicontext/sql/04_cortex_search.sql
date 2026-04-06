@@ -1,6 +1,6 @@
 /*==============================================================================
 04 - Cortex Search Service for Support Knowledge Base
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-02
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-07-06
 ==============================================================================*/
 
 USE DATABASE SNOWFLAKE_EXAMPLE;
@@ -13,7 +13,7 @@ CREATE OR REPLACE CORTEX SEARCH SERVICE SUPPORT_KB_SEARCH
   ATTRIBUTES category, station_id, title
   WAREHOUSE = SFE_AGENT_MULTICONTEXT_WH
   TARGET_LAG = '1 hour'
-  COMMENT = 'DEMO: Support article search for TV network agent (Expires: 2026-04-02)'
+  COMMENT = 'DEMO: Support article search for TV network agent (Expires: 2026-07-06)'
 AS (
   SELECT
     article_id,

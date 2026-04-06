@@ -1,6 +1,6 @@
 /*==============================================================================
 03 - Semantic View for Cortex Analyst
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-02
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-07-06
 ==============================================================================*/
 
 USE DATABASE SNOWFLAKE_EXAMPLE;
@@ -105,7 +105,7 @@ CREATE OR REPLACE SEMANTIC VIEW SV_AGENT_MULTICONTEXT_VIEWERSHIP
       COMMENT = 'Sum of digital streaming sessions across airings'
   )
 
-  COMMENT = 'DEMO: TV network viewership semantic view (Expires: 2026-04-02)';
+  COMMENT = 'DEMO: TV network viewership semantic view (Expires: 2026-07-06)';
 
 GRANT SELECT ON SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AGENT_MULTICONTEXT_VIEWERSHIP
   TO ROLE PUBLIC;

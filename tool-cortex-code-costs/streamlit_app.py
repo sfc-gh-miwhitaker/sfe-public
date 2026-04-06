@@ -5,11 +5,17 @@ st.set_page_config(page_title="Cortex Code Costs", layout="wide")
 
 session = get_active_session()
 
-st.title("Cortex Code CLI — Usage & Cost Dashboard")
-st.caption("Source: `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY` · ~1-2h latency")
+CLI_TABLE       = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY"
+SNOWSIGHT_TABLE = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY"
 
 with st.sidebar:
     st.header("Settings")
+    data_source = st.radio(
+        "Data Source",
+        ["Combined (CLI + Snowsight)", "CLI only", "Snowsight only"],
+        index=0,
+        help="CLI = Cortex Code CLI (`snow` / terminal). Snowsight = Cortex Code inside the browser IDE.",
+    )
     ai_credit_price = st.number_input(
         "AI Credit price ($/credit)",
         min_value=1.80,
@@ -22,6 +28,28 @@ with st.sidebar:
     lookback_days = st.selectbox("Lookback window", [30, 60, 90, 180], index=0)
     st.caption(f"Estimated cost = credits × ${ai_credit_price:.2f}")
 
+if data_source == "CLI only":
+    source_from = CLI_TABLE
+    source_label = "CLI"
+elif data_source == "Snowsight only":
+    source_from = SNOWSIGHT_TABLE
+    source_label = "Snowsight"
+else:
+    source_from = f"""(
+        SELECT 'cli'       AS source, * FROM {CLI_TABLE}
+        UNION ALL
+        SELECT 'snowsight' AS source, * FROM {SNOWSIGHT_TABLE}
+    ) t"""
+    source_label = "CLI + Snowsight"
+
+st.title("Cortex Code — Usage & Cost Dashboard")
+st.caption(
+    f"Source: `{source_label}` · ~1-2h latency"
+    + (" · `CORTEX_CODE_CLI_USAGE_HISTORY` + `CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY`"
+       if data_source == "Combined (CLI + Snowsight)"
+       else f" · `CORTEX_CODE_{source_label.upper()}_USAGE_HISTORY`")
+)
+
 tab_overview, tab_users, tab_models, tab_projections = st.tabs(
     ["Overview", "Users", "Models", "Projections"]
 )
@@ -32,6 +60,29 @@ def fetch(sql):
 
 
 with tab_overview:
+    if data_source == "Combined (CLI + Snowsight)":
+        st.subheader("Source Comparison")
+        split = fetch(f"""
+            SELECT
+                source,
+                COUNT(*)                                      AS requests,
+                SUM(TOKENS)                                   AS tokens,
+                ROUND(SUM(TOKEN_CREDITS), 4)                  AS credits,
+                ROUND(SUM(TOKEN_CREDITS) * {ai_credit_price}, 2) AS cost_usd
+            FROM {source_from}
+            WHERE USAGE_TIME >= DATEADD('day', -{lookback_days}, CURRENT_TIMESTAMP)
+            GROUP BY 1
+            ORDER BY 1
+        """)
+        if not split.empty:
+            cols = st.columns(len(split))
+            for i, row in split.iterrows():
+                cols[i].metric(
+                    f"{row['SOURCE'].capitalize()} Cost",
+                    f"${row['COST_USD']:,.2f}",
+                    help=f"{row['REQUESTS']:,.0f} requests · {row['CREDITS']:,.2f} credits",
+                )
+
     st.subheader("Daily Usage")
     daily = fetch(f"""
         SELECT
@@ -40,14 +91,14 @@ with tab_overview:
             SUM(TOKENS)                               AS tokens,
             ROUND(SUM(TOKEN_CREDITS), 4)              AS credits,
             ROUND(SUM(TOKEN_CREDITS) * {ai_credit_price}, 2) AS cost_usd
-        FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
+        FROM {source_from}
         WHERE USAGE_TIME >= DATEADD('day', -{lookback_days}, CURRENT_TIMESTAMP)
         GROUP BY 1
         ORDER BY 1
     """)
 
     if daily.empty:
-        st.info("No Cortex Code CLI usage found in this window.")
+        st.info("No Cortex Code usage found in this window.")
     else:
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Total Requests", f"{daily['REQUESTS'].sum():,.0f}")
@@ -59,13 +110,13 @@ with tab_overview:
         st.dataframe(daily.sort_values("USAGE_DATE", ascending=False), use_container_width=True)
 
     st.subheader("Hourly Pattern (all time)")
-    hourly = fetch("""
+    hourly = fetch(f"""
         SELECT
             HOUR(USAGE_TIME)             AS hour_of_day,
             COUNT(*)                     AS requests,
             SUM(TOKENS)                  AS tokens,
             ROUND(SUM(TOKEN_CREDITS), 4) AS credits
-        FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
+        FROM {source_from}
         GROUP BY 1
         ORDER BY 1
     """)
@@ -84,7 +135,7 @@ with tab_users:
             ROUND(SUM(TOKEN_CREDITS) * {ai_credit_price}, 2) AS cost_usd,
             MIN(USAGE_TIME)                               AS first_seen,
             MAX(USAGE_TIME)                               AS last_seen
-        FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
+        FROM {source_from}
         WHERE USAGE_TIME >= DATEADD('day', -{lookback_days}, CURRENT_TIMESTAMP)
         GROUP BY 1
         ORDER BY credits DESC
@@ -95,6 +146,24 @@ with tab_users:
     else:
         st.bar_chart(users.set_index("USER_ID")["COST_USD"])
         st.dataframe(users, use_container_width=True)
+
+    if data_source == "Combined (CLI + Snowsight)":
+        st.subheader("Users — CLI vs Snowsight breakdown")
+        users_split = fetch(f"""
+            SELECT
+                source,
+                USER_ID,
+                COUNT(*)                                      AS requests,
+                ROUND(SUM(TOKEN_CREDITS), 4)                  AS credits,
+                ROUND(SUM(TOKEN_CREDITS) * {ai_credit_price}, 2) AS cost_usd
+            FROM {source_from}
+            WHERE USAGE_TIME >= DATEADD('day', -{lookback_days}, CURRENT_TIMESTAMP)
+            GROUP BY 1, 2
+            ORDER BY credits DESC
+            LIMIT 50
+        """)
+        if not users_split.empty:
+            st.dataframe(users_split, use_container_width=True)
 
 
 with tab_models:
@@ -115,7 +184,7 @@ with tab_models:
                 + NVL(f.value:cache_write_input::FLOAT, 0)
                 + NVL(f.value:input::FLOAT, 0)
                 + NVL(f.value:output::FLOAT, 0)) * {ai_credit_price}, 2) AS cost_usd
-        FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY,
+        FROM {source_from},
             LATERAL FLATTEN(input => CREDITS_GRANULAR) f
         WHERE USAGE_TIME >= DATEADD('day', -{lookback_days}, CURRENT_TIMESTAMP)
         GROUP BY 1
@@ -126,6 +195,29 @@ with tab_models:
     else:
         st.bar_chart(models_df.set_index("MODEL")["COST_USD"])
         st.dataframe(models_df, use_container_width=True)
+
+    if data_source == "Combined (CLI + Snowsight)":
+        st.subheader("Models — CLI vs Snowsight breakdown")
+        models_split = fetch(f"""
+            SELECT
+                source,
+                f.key                                                     AS model,
+                ROUND(SUM(NVL(f.value:cache_read_input::FLOAT, 0)
+                    + NVL(f.value:cache_write_input::FLOAT, 0)
+                    + NVL(f.value:input::FLOAT, 0)
+                    + NVL(f.value:output::FLOAT, 0)), 4)                 AS total_credits,
+                ROUND(SUM(NVL(f.value:cache_read_input::FLOAT, 0)
+                    + NVL(f.value:cache_write_input::FLOAT, 0)
+                    + NVL(f.value:input::FLOAT, 0)
+                    + NVL(f.value:output::FLOAT, 0)) * {ai_credit_price}, 2) AS cost_usd
+            FROM {source_from},
+                LATERAL FLATTEN(input => CREDITS_GRANULAR) f
+            WHERE USAGE_TIME >= DATEADD('day', -{lookback_days}, CURRENT_TIMESTAMP)
+            GROUP BY 1, 2
+            ORDER BY total_credits DESC
+        """)
+        if not models_split.empty:
+            st.dataframe(models_split, use_container_width=True)
 
     st.subheader("Cortex Code Model Pricing Reference")
     st.caption("Source: Snowflake Service Consumption Table, Table 6(e) — Cortex Code (April 1, 2026)")
@@ -157,7 +249,7 @@ with tab_projections:
             SELECT
                 USAGE_TIME::DATE        AS usage_date,
                 SUM(TOKEN_CREDITS)      AS daily_credits
-            FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
+            FROM {source_from}
             GROUP BY 1
             ORDER BY daily_credits DESC
             LIMIT 22

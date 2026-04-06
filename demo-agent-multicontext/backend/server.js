@@ -142,7 +142,7 @@ function buildAgentPayload({ userType, userId, userName, memberTier, stationId, 
         },
       ],
       models: { orchestration: 'auto' },
-      orchestration_budget: { seconds: 30, tokens: 4096 },
+      orchestration: { budget: { seconds: 30, tokens: 16000 } },
       instructions: {
         system: buildSystemInstructions({ userType, userId, userName, memberTier, station }),
         response: buildResponseInstructions(userType),

@@ -1,6 +1,6 @@
 /*==============================================================================
 07 - Observability Queries (Ad-Hoc)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-02
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-07-06
 
 Run these queries individually in Snowsight after using the demo.
 This file is NOT part of deploy_all.sql -- it is a read-only reference.

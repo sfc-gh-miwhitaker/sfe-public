@@ -1,6 +1,6 @@
 /*==============================================================================
 02 - Tables and Sample Data (TV Network Theme)
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-02
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-07-06
 ==============================================================================*/
 
 USE DATABASE SNOWFLAKE_EXAMPLE;
@@ -17,7 +17,7 @@ CREATE OR REPLACE TABLE STATION_INFO (
   region        VARCHAR(50),
   timezone      VARCHAR(30),
   website       VARCHAR(200)
-) COMMENT = 'DEMO: Station directory (Expires: 2026-04-02)';
+) COMMENT = 'DEMO: Station directory (Expires: 2026-07-06)';
 
 INSERT INTO STATION_INFO VALUES
   ('STN001', 'WETA Washington',    'WETA',  'Washington DC',    'Mid-Atlantic', 'America/New_York',    'weta.org'),
@@ -40,7 +40,7 @@ CREATE OR REPLACE TABLE PROGRAMMING_SCHEDULE (
   is_premiere   BOOLEAN,
   season        INTEGER,
   episode       INTEGER
-) COMMENT = 'DEMO: Programming schedule (Expires: 2026-04-02)';
+) COMMENT = 'DEMO: Programming schedule (Expires: 2026-07-06)';
 
 INSERT INTO PROGRAMMING_SCHEDULE VALUES
   ('SCH001', 'STN001', 'Nature: Ocean Giants',          'Nature',      '2026-03-03', '20:00', 60,  TRUE,  1, 1),
@@ -73,7 +73,7 @@ CREATE OR REPLACE TABLE VIEWERSHIP_METRICS (
   share           DECIMAL(4,2),
   stream_starts   INTEGER,
   avg_watch_min   DECIMAL(6,2)
-) COMMENT = 'DEMO: Viewership metrics (Expires: 2026-04-02)';
+) COMMENT = 'DEMO: Viewership metrics (Expires: 2026-07-06)';
 
 INSERT INTO VIEWERSHIP_METRICS VALUES
   ('VM001', 'STN001', 'Nature: Ocean Giants',          '2026-03-03', 285000, 72000,  2.10, 5.40, 45000,  48.20),
@@ -106,7 +106,7 @@ CREATE OR REPLACE TABLE MEMBER_ACCOUNTS (
   annual_pledge   DECIMAL(10,2),
   lifetime_giving DECIMAL(12,2),
   is_active       BOOLEAN
-) COMMENT = 'DEMO: Member accounts (Expires: 2026-04-02)';
+) COMMENT = 'DEMO: Member accounts (Expires: 2026-07-06)';
 
 INSERT INTO MEMBER_ACCOUNTS VALUES
   ('MBR001', 'STN001', 'Alice Johnson',   'alice@example.com',   'Sustainer',  '2019-05-10', '2026-05-10', 240.00, 1680.00,  TRUE),
@@ -130,7 +130,7 @@ CREATE OR REPLACE TABLE SUPPORT_ARTICLES (
   title         VARCHAR(200),
   content       VARCHAR(5000),
   last_updated  DATE
-) COMMENT = 'DEMO: Support knowledge base for Cortex Search (Expires: 2026-04-02)';
+) COMMENT = 'DEMO: Support knowledge base for Cortex Search (Expires: 2026-07-06)';
 
 INSERT INTO SUPPORT_ARTICLES VALUES
   ('ART001', NULL, 'Streaming', 'How to watch on the PBS App',
