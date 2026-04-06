@@ -63,6 +63,7 @@ Documentation, patterns, and examples (no deploy/teardown).
 | [guide-powerbi-onelake-iceberg](guide-powerbi-onelake-iceberg/) | Power BI + Snowflake via OneLake and Iceberg: bi-directional access and Direct Lake mode | Iceberg Tables, OneLake, Catalog-Linked Databases, External Volumes |
 | [guide-cost-drivers](guide-cost-drivers/) | Find your top 3 cost drivers: pruning, clustering, and search optimization before resizing | Warehouse Optimization, Clustering, Search Optimization, Pruning |
 | [guide-coco-connections](guide-coco-connections/) | Multi-connection setup for Cortex Code CLI: config.toml, launch patterns, per-project AGENTS.md, environment isolation | Cortex Code CLI, connections.toml, AGENTS.md, Partner SE |
+| [guide-cortex-code-budget](guide-cortex-code-budget/) | 7-part guide to budgeting and controlling Cortex Code costs: billing basics, model selection, account budgets, custom budgets, automated actions, RBAC, monitoring | Cortex Code, Budgets, RBAC, Cost Controls, Account Usage |
 
 ## Learning Journeys
 

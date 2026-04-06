@@ -81,6 +81,7 @@ GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE <your_role>;
 | Usage by Model | Per-model credit breakdown (cache read/write split) |
 | Cost Projections | Min/mean/max day → week → month → year extrapolations |
 | Model Pricing | Official Table 6(e) rates (April 1, 2026) |
+| Governance | Budget setup SQL, notification options, threshold actions, model selection guide, RBAC |
 
 ---
 

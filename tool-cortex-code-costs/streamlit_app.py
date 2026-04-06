@@ -50,8 +50,8 @@ st.caption(
        else f" · `CORTEX_CODE_{source_label.upper()}_USAGE_HISTORY`")
 )
 
-tab_overview, tab_users, tab_models, tab_projections = st.tabs(
-    ["Overview", "Users", "Models", "Projections"]
+tab_overview, tab_users, tab_models, tab_projections, tab_governance = st.tabs(
+    ["Overview", "Users", "Models", "Projections", "Governance"]
 )
 
 @st.cache_data(ttl=3600)
@@ -288,3 +288,227 @@ with tab_projections:
             "Mean Cost (USD)": proj_display["MEAN_USD"],
         }).set_index("Period")
         st.bar_chart(chart_data)
+
+
+with tab_governance:
+    import pandas as pd
+
+    st.subheader("Spend Controls & Best Practices")
+    st.caption(
+        "Snowflake-native levers for monitoring, alerting on, and restricting Cortex Code spend. "
+        "All SQL below is copy-paste ready — no objects are created by this app."
+    )
+
+    st.subheader("Current Budget Status")
+    try:
+        budgets_df = session.sql("SHOW SNOWFLAKE.CORE.BUDGET INSTANCES IN ACCOUNT").to_pandas()
+        if budgets_df.empty:
+            st.info("No custom budgets configured. See setup guidance below.")
+        else:
+            st.dataframe(budgets_df, use_container_width=True)
+    except Exception as e:
+        st.warning(f"Could not query budgets (ACCOUNTADMIN or BUDGET_VIEWER required): {e}")
+
+    st.divider()
+
+    with st.expander("Option A — Account Budget (monitors all account credits)"):
+        st.markdown(
+            "The **account budget** tracks total credit consumption across your entire Snowflake account. "
+            "It sends email alerts when projected spend is on track to exceed the monthly limit. "
+            "There is exactly one account budget per account; it cannot be scoped to specific objects."
+        )
+        st.code("""
+-- Run as ACCOUNTADMIN
+USE ROLE ACCOUNTADMIN;
+
+-- 1. Activate
+CALL SNOWFLAKE.LOCAL.ACCOUNT_ROOT_BUDGET!ACTIVATE();
+
+-- 2. Set monthly credit limit (alert-only; does not block usage)
+CALL SNOWFLAKE.LOCAL.ACCOUNT_ROOT_BUDGET!SET_SPENDING_LIMIT(1000);
+
+-- 3. Add email recipients (addresses must be verified in Snowsight first)
+CALL SNOWFLAKE.LOCAL.ACCOUNT_ROOT_BUDGET!SET_EMAIL_NOTIFICATIONS(
+    'finops@company.com, admin@company.com'
+);
+
+-- 4. Check projected spend
+CALL SNOWFLAKE.LOCAL.ACCOUNT_ROOT_BUDGET!GET_SPENDING_HISTORY(
+    TIME_LOWER_BOUND => DATEADD('day', -30, CURRENT_TIMESTAMP),
+    TIME_UPPER_BOUND => CURRENT_TIMESTAMP
+);
+
+-- To deactivate (clears history):
+-- CALL SNOWFLAKE.LOCAL.ACCOUNT_ROOT_BUDGET!DEACTIVATE();
+        """, language="sql")
+        st.info(
+            "The account budget does NOT support ADD_RESOURCE or tag methods. "
+            "Use a custom budget (Option B) to track specific objects."
+        )
+
+    with st.expander("Option B — Custom Budget scoped to Cortex Code"):
+        st.markdown(
+            "A **custom budget** monitors credits for a specific set of objects or tags you define. "
+            "Up to 100 custom budgets per account. Tag-based attribution is recommended — it "
+            "automatically includes new objects tagged later and backfills data to the 1st of the month."
+        )
+        st.code("""
+-- Run as ACCOUNTADMIN once to set up the schema and privileges
+USE ROLE ACCOUNTADMIN;
+CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.BUDGETS
+    COMMENT = 'Custom budget objects';
+GRANT DATABASE ROLE SNOWFLAKE.BUDGET_CREATOR TO ROLE SYSADMIN;
+GRANT USAGE ON DATABASE SNOWFLAKE_EXAMPLE TO ROLE SYSADMIN;
+GRANT USAGE ON SCHEMA SNOWFLAKE_EXAMPLE.BUDGETS TO ROLE SYSADMIN;
+GRANT CREATE SNOWFLAKE.CORE.BUDGET ON SCHEMA SNOWFLAKE_EXAMPLE.BUDGETS TO ROLE SYSADMIN;
+
+-- Run as SYSADMIN to create and configure the budget
+USE ROLE SYSADMIN;
+USE SCHEMA SNOWFLAKE_EXAMPLE.BUDGETS;
+
+CREATE SNOWFLAKE.CORE.BUDGET cortex_code_budget()
+    COMMENT = 'Monthly AI credit limit for Cortex Code usage';
+
+-- Set monthly spending limit (credits; alert-only)
+CALL SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_budget!SET_SPENDING_LIMIT(500);
+
+-- Add email notifications
+CALL SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_budget!SET_EMAIL_NOTIFICATIONS(
+    'finops@company.com'
+);
+
+-- (Optional) Low-latency refresh: check spend every ~1 hour instead of 6
+CALL SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_budget!SET_REFRESH_TIER('TIER_1H');
+
+-- Verify
+CALL SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_budget!GET_SPENDING_LIMIT();
+        """, language="sql")
+        st.caption(
+            "Spending limits are for alerting only. They do not block usage on their own. "
+            "Add a custom action (see below) to automate a response at a threshold."
+        )
+
+    with st.expander("Automated Actions — respond at spend thresholds"):
+        st.markdown(
+            "**Custom actions** call a stored procedure when spending actually reaches or is projected "
+            "to reach a percentage of the monthly limit. Two common patterns:"
+        )
+        st.markdown("**Pattern A — Email alert at 70% projected spend**")
+        st.code("""
+USE ROLE SYSADMIN;
+
+CREATE OR REPLACE PROCEDURE SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_alert_70pct()
+RETURNS STRING
+LANGUAGE SQL
+EXECUTE AS OWNER
+AS
+$$
+BEGIN
+    CALL SYSTEM$SEND_EMAIL(
+        'my_email_integration',           -- replace with your email integration name
+        'finops@company.com',
+        'Cortex Code spend at 70% of monthly budget',
+        'Cortex Code AI credit spend is projected to exceed the monthly limit. Review usage in Snowsight.'
+    );
+    RETURN 'Alert sent';
+END;
+$$;
+
+-- Grant APPLICATION SNOWFLAKE access to execute the procedure
+USE ROLE ACCOUNTADMIN;
+GRANT USAGE ON DATABASE SNOWFLAKE_EXAMPLE TO APPLICATION SNOWFLAKE;
+GRANT USAGE ON SCHEMA SNOWFLAKE_EXAMPLE.BUDGETS TO APPLICATION SNOWFLAKE;
+GRANT USAGE ON PROCEDURE SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_alert_70pct() TO APPLICATION SNOWFLAKE;
+
+-- Attach to budget
+USE ROLE SYSADMIN;
+CALL SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_budget!ADD_CUSTOM_ACTION(
+    SYSTEM$REFERENCE('PROCEDURE', 'SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_alert_70pct()', 'SESSION', 'USAGE'),
+    ARRAY_CONSTRUCT(),
+    'PROJECTED',   -- fires when forecast crosses threshold
+    70             -- % of spending limit
+);
+        """, language="sql")
+        st.markdown("**Pattern B — Suspend warehouse at 95% actual spend**")
+        st.code("""
+USE ROLE SYSADMIN;
+
+CREATE OR REPLACE PROCEDURE SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_suspend_95pct()
+RETURNS STRING
+LANGUAGE SQL
+EXECUTE AS OWNER
+AS
+$$
+BEGIN
+    ALTER WAREHOUSE SFE_TOOLS_WH SUSPEND;  -- replace with your warehouse name
+    RETURN 'Warehouse suspended — Cortex Code spend reached 95% of monthly budget';
+END;
+$$;
+
+USE ROLE ACCOUNTADMIN;
+GRANT USAGE ON PROCEDURE SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_suspend_95pct() TO APPLICATION SNOWFLAKE;
+
+USE ROLE SYSADMIN;
+CALL SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_budget!ADD_CUSTOM_ACTION(
+    SYSTEM$REFERENCE('PROCEDURE', 'SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_suspend_95pct()', 'SESSION', 'USAGE'),
+    ARRAY_CONSTRUCT(),
+    'ACTUAL',      -- fires when actual spend crosses threshold
+    95
+);
+
+-- View all configured actions:
+-- CALL SNOWFLAKE_EXAMPLE.BUDGETS.cortex_code_budget!GET_CUSTOM_ACTIONS();
+        """, language="sql")
+
+    with st.expander("Model Selection — cost vs capability guide"):
+        st.markdown(
+            "Steering your team toward the lowest-cost model that meets the quality bar is the "
+            "highest-leverage cost control available. Use the **Models** tab to see your current "
+            "per-model credit breakdown."
+        )
+        guide = pd.DataFrame([
+            {"Model": "claude-4-sonnet",   "Cost Tier": "Low",    "Input (credits/1M)": 1.50,  "Best For": "Everyday coding, completions, chat"},
+            {"Model": "openai-gpt-5.2",    "Cost Tier": "Low",    "Input (credits/1M)": 0.97,  "Best For": "Fast completions, low-token tasks"},
+            {"Model": "openai-gpt-5.4",    "Cost Tier": "Medium", "Input (credits/1M)": 1.38,  "Best For": "GPT-native integrations"},
+            {"Model": "claude-sonnet-4-5", "Cost Tier": "Medium", "Input (credits/1M)": 1.65,  "Best For": "Balanced quality / cost"},
+            {"Model": "claude-sonnet-4-6", "Cost Tier": "Medium", "Input (credits/1M)": 1.65,  "Best For": "Balanced quality / cost"},
+            {"Model": "claude-opus-4-5",   "Cost Tier": "High",   "Input (credits/1M)": 2.75,  "Best For": "Complex architecture, large refactors"},
+            {"Model": "claude-opus-4-6",   "Cost Tier": "High",   "Input (credits/1M)": 2.75,  "Best For": "Complex architecture, large refactors"},
+        ])
+        st.dataframe(guide, use_container_width=True, hide_index=True)
+        st.markdown(
+            "**Tips:**\n"
+            "- Default model in `config.toml` (`model = \"claude-4-sonnet\"`) keeps casual sessions on the lowest-cost tier.\n"
+            "- Opus-class models cost 1.8× more than Sonnet — reserve for tasks that genuinely need it.\n"
+            "- Cache read tokens (returned context) are billed at ~10% of input rates; long sessions with stable context benefit most from caching."
+        )
+
+    with st.expander("RBAC — control who can use Cortex Code"):
+        st.markdown(
+            "Cortex Code access is controlled via the `SNOWFLAKE.CORTEX_USER` database role. "
+            "Revoking this role from a Snowflake role is the fastest way to block a user or group."
+        )
+        st.code("""
+-- Grant Cortex Code access to a role
+USE ROLE ACCOUNTADMIN;
+GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE <developer_role>;
+
+-- Revoke access
+REVOKE DATABASE ROLE SNOWFLAKE.CORTEX_USER FROM ROLE <developer_role>;
+
+-- Inspect current grants
+SHOW GRANTS OF DATABASE ROLE SNOWFLAKE.CORTEX_USER;
+
+-- Network policy: restrict Cortex API calls to approved IP ranges
+-- (useful for limiting contractor / offshore access)
+CREATE NETWORK POLICY cortex_access_policy
+    ALLOWED_IP_LIST = ('203.0.113.0/24', '198.51.100.0/24')  -- replace with your CIDRs
+    COMMENT = 'Restrict Cortex Code API to approved networks';
+
+-- Attach to a specific user
+ALTER USER <username> SET NETWORK_POLICY = cortex_access_policy;
+        """, language="sql")
+        st.caption(
+            "Network policies restrict all Snowflake API traffic for the user, not just Cortex Code. "
+            "Test in a non-production environment before applying broadly."
+        )
