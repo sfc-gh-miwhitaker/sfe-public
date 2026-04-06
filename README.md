@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-21-blue)
+![Projects](https://img.shields.io/badge/Projects-22-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -39,6 +39,7 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 
 | Directory | Description | Features |
 |---|---|---|
+| [tool-cortex-code-costs](tool-cortex-code-costs/) | Cortex Code CLI usage & cost visibility — notebook + Streamlit dashboard | Notebooks, Streamlit, ACCOUNT_USAGE |
 | [tool-dr-cost-agent](tool-dr-cost-agent/) | DR replication cost estimation agent with hybrid table awareness | Snowflake Intelligence, Semantic Views, ACCOUNT_USAGE |
 | [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |
 | [tool-secrets-rotation-aws](tool-secrets-rotation-aws/) | Snowflake Notebook: rotate key-pair and PAT credentials for service accounts with AWS Secrets Manager | Key-Pair Auth, PATs, AWS Secrets Manager, Notebooks |
