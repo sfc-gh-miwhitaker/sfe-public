@@ -21,6 +21,18 @@ No Snowflake objects are created. Both artifacts read directly from `SNOWFLAKE.A
 
 ---
 
+## Screenshots
+
+**Notebook** — runs directly in Snowflake, no install required:
+
+![Notebook](assets/notebook.png)
+
+**Streamlit Dashboard** — interactive source picker, 4 tabs, live cost metrics:
+
+![Streamlit Dashboard](assets/streamlit.png)
+
+---
+
 ## Quick Start
 
 ### Option A — One-Shot Deploy (recommended)
