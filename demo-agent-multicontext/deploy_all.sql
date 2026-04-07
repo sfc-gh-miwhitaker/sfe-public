@@ -1,6 +1,6 @@
 /*==============================================================================
 DEPLOY ALL - Agent Multicontext Demo
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-07-06
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-02
 
 TV network agent demo showing per-request context injection via the
 Snowflake Agent Run API "without agent object" endpoint.
@@ -15,7 +15,7 @@ INSTRUCTIONS: Open in Snowsight -> Click "Run All"
 ==============================================================================*/
 
 -- 1. SSOT: Expiration date -- change ONLY here
-SET DEMO_EXPIRES = '2026-07-06';
+SET DEMO_EXPIRES = '2026-04-02';
 
 -- 2. Expiration check (informational — warns but does not block)
 SELECT
@@ -46,7 +46,7 @@ CREATE WAREHOUSE IF NOT EXISTS SFE_AGENT_MULTICONTEXT_WH
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
   STATEMENT_TIMEOUT_IN_SECONDS = 120
-  COMMENT = 'DEMO: Agent multicontext compute (Expires: 2026-07-06)';
+  COMMENT = 'DEMO: Agent multicontext compute (Expires: 2026-04-02)';
 USE WAREHOUSE SFE_AGENT_MULTICONTEXT_WH;
 
 -- 5. Fetch latest from Git
@@ -56,7 +56,7 @@ CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS
 CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_AGENT_MULTICONTEXT_REPO
   API_INTEGRATION = SFE_GIT_API_INTEGRATION
   ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git'
-  COMMENT = 'DEMO: Agent multicontext Git repo (Expires: 2026-07-06)';
+  COMMENT = 'DEMO: Agent multicontext Git repo (Expires: 2026-04-02)';
 
 ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_AGENT_MULTICONTEXT_REPO FETCH;
 

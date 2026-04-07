@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2027--03--06-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--05-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Load CSV Files into Snowflake
@@ -10,7 +10,7 @@ Inspired by the question every new Snowflake user asks: *"I have a CSV file -- h
 A step-by-step guide to loading CSV files using Snowsight. Covers one-time setup (database, schema, stage, file format), a repeatable import process (upload, COPY INTO, verify), and optional automation (Snowpipe, scheduled tasks). No prior Snowflake experience required.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-06 | **Expires:** 2027-03-06 | **Status:** ACTIVE
+**Created:** 2026-03-06 | **Expires:** 2026-05-05 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -78,11 +78,25 @@ CREATE TABLE SALES_TRANSACTIONS (
 );
 ```
 
-Not sure what columns your CSV has? Upload it first, then inspect:
+Not sure what columns your CSV has? Upload it first, then inspect with a header-aware format:
 
 ```sql
-SELECT * FROM TABLE(INFER_SCHEMA(LOCATION => '@CSV_UPLOADS', FILE_FORMAT => 'CSV_FORMAT'));
+CREATE FILE FORMAT CSV_WITH_HEADERS
+    TYPE = 'CSV'
+    PARSE_HEADER = TRUE
+    FIELD_OPTIONALLY_ENCLOSED_BY = '"';
+
+SELECT * FROM TABLE(INFER_SCHEMA(LOCATION => '@CSV_UPLOADS', FILE_FORMAT => 'CSV_WITH_HEADERS'));
 ```
+
+> [!NOTE]
+> `PARSE_HEADER = TRUE` reads column names from the first row but is mutually exclusive with `SKIP_HEADER`. Use `CSV_WITH_HEADERS` for schema discovery, then `CSV_FORMAT` (with `SKIP_HEADER = 1`) for loading. You can also create the table directly from inferred schema:
+> ```sql
+> CREATE TABLE MY_TABLE USING TEMPLATE (
+>     SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
+>     FROM TABLE(INFER_SCHEMA(LOCATION => '@CSV_UPLOADS', FILE_FORMAT => 'CSV_WITH_HEADERS'))
+> );
+> ```
 
 ---
 
@@ -91,7 +105,8 @@ SELECT * FROM TABLE(INFER_SCHEMA(LOCATION => '@CSV_UPLOADS', FILE_FORMAT => 'CSV
 1. **Upload** -- Navigate to **Data > Databases > MY_DATABASE > MY_SCHEMA > Stages > CSV_UPLOADS**, click **+ Files**, drag and drop your CSV
 2. **Load** -- `COPY INTO SALES_TRANSACTIONS FROM @CSV_UPLOADS FILE_FORMAT = CSV_FORMAT ON_ERROR = 'CONTINUE';`
 3. **Verify** -- `SELECT COUNT(*) FROM SALES_TRANSACTIONS;`
-4. **Clean stage** -- `REMOVE @CSV_UPLOADS;`
+4. **Check errors** -- If `ON_ERROR = 'CONTINUE'` skipped rows, inspect them: `SELECT * FROM TABLE(VALIDATE(SALES_TRANSACTIONS, LAST_QUERY_ID()));`
+5. **Clean stage** -- `REMOVE @CSV_UPLOADS;`
 
 ---
 
@@ -121,6 +136,8 @@ SELECT * FROM TABLE(INFER_SCHEMA(LOCATION => '@CSV_UPLOADS', FILE_FORMAT => 'CSV
 | Resource | URL |
 |---|---|
 | COPY INTO (table) | https://docs.snowflake.com/en/sql-reference/sql/copy-into-table |
+| CREATE FILE FORMAT | https://docs.snowflake.com/en/sql-reference/sql/create-file-format |
 | CREATE STAGE | https://docs.snowflake.com/en/sql-reference/sql/create-stage |
 | INFER_SCHEMA | https://docs.snowflake.com/en/sql-reference/functions/infer_schema |
+| VALIDATE | https://docs.snowflake.com/en/sql-reference/functions/validate |
 | Snowpipe | https://docs.snowflake.com/en/user-guide/data-load-snowpipe-intro |

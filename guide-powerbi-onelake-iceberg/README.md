@@ -1,5 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
+![Expires](https://img.shields.io/badge/Expires-2026--04--23-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 ![Iceberg Tables](https://img.shields.io/badge/Iceberg_Tables-GA-29B5E8)
 ![Catalog-Linked DBs](https://img.shields.io/badge/Catalog--Linked_DBs-GA_Jan_2026-29B5E8)
@@ -377,10 +378,10 @@ DirectQuery with interactive warehouses is often the simpler path: no Iceberg sy
 
 **Bi-directional access (GA January 2026):**
 - Snowflake to Fabric direction requires the "Enable Snowflake database item" Fabric tenant setting
-- Catalog-linked databases support both read and write operations (`ALLOWED_WRITE_OPERATIONS` defaults to `ALL`). Set to `NONE` for read-only access.
+- Catalog-linked databases support read and write operations for many REST catalogs (`ALLOWED_WRITE_OPERATIONS` defaults to `ALL`). **For OneLake specifically, Snowflake documents read-only support.** Set `ALLOWED_WRITE_OPERATIONS = 'NONE'` when using an OneLake catalog integration.
 
 > [!WARNING]
-> With write permissions enabled, dropping a table in Snowflake also drops it in the remote catalog.
+> For non-OneLake catalog-linked databases where writes are supported, dropping a table in Snowflake also drops it in the remote catalog.
 
 - Catalog-linked databases do not sync remote catalog access control -- govern in Snowflake separately (this is a reason to do governance in Snowflake, not a limitation of Snowflake)
 - By default, catalog-linked databases ignore nested namespaces (`NAMESPACE_MODE = IGNORE_NESTED_NAMESPACE`). To include nested namespaces, set `NAMESPACE_MODE = FLATTEN_NESTED_NAMESPACE` with a delimiter.

@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2027--03--23-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--22-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Data Quality Governance Guide
@@ -10,7 +10,7 @@ Inspired by the question every data platform team asks: *"How do I know when bad
 Reusable patterns for data quality governance using Snowflake-native features: Data Metric Functions (system + custom), object tagging with allowed values, tag-based masking, ML-powered anomaly detection, and notification integrations. Every pattern is extracted from working demos in this repository and ready to apply to any table in your account.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-23 | **Expires:** 2027-03-23 | **Status:** ACTIVE
+**Created:** 2026-03-23 | **Expires:** 2026-05-22 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -80,6 +80,17 @@ CREATE DATA METRIC FUNCTION DMF_METRIC_VALUE_VALID_PCT(ref TABLE(metric_value FL
     RETURNS NUMBER AS
     'SELECT ROUND(100.0 * COUNT_IF(metric_value BETWEEN 0 AND 100) / NULLIF(COUNT(*), 0), 2)
      FROM TABLE(ref)';
+
+CREATE DATA METRIC FUNCTION DMF_FK_CHECK(
+    ref TABLE(parent_id NUMBER),
+    parent_ref TABLE(id NUMBER)
+)
+    RETURNS NUMBER AS $$
+    SELECT COUNT(*)
+    FROM TABLE(ref) r
+    LEFT JOIN TABLE(parent_ref) p ON r.parent_id = p.id
+    WHERE p.id IS NULL
+    $$;
 ```
 
 ## Part 2: Scheduling DMFs
@@ -108,6 +119,9 @@ ALTER TAG DATA_SENSITIVITY SET MASKING POLICY CONFIDENTIAL_STRING_MASK;
 
 ## Part 5: Anomaly Detection
 
+> [!NOTE]
+> Anomaly detection is supported on `SNOWFLAKE.CORE.ROW_COUNT` and `SNOWFLAKE.CORE.FRESHNESS` only. Enabling it on custom DMFs or other system DMFs will fail.
+
 ```sql
 ALTER TABLE MY_TABLE ADD DATA METRIC FUNCTION
     SNOWFLAKE.CORE.FRESHNESS ON (updated_at) ANOMALY_DETECTION = TRUE;
@@ -115,9 +129,15 @@ ALTER TABLE MY_TABLE ADD DATA METRIC FUNCTION
 
 ## Part 6: Notifications
 
+Prerequisites: the database owner role needs `MANAGE DATA QUALITY` on the account and `USAGE` on the notification integration. Email recipients must be verified Snowflake account users.
+
 ```sql
+GRANT MANAGE DATA QUALITY ON ACCOUNT TO ROLE MY_DB_OWNER_ROLE;
+
 CREATE NOTIFICATION INTEGRATION SFE_DQ_EMAIL_INT TYPE = EMAIL ENABLED = TRUE
     ALLOWED_RECIPIENTS = ('team@example.com');
+
+GRANT USAGE ON INTEGRATION SFE_DQ_EMAIL_INT TO ROLE MY_DB_OWNER_ROLE;
 
 ALTER DATABASE MY_DATABASE SET DATA_QUALITY_MONITORING_SETTINGS = $$
 notification:
@@ -138,7 +158,7 @@ $$;
 | "When should DMFs run?" | `TRIGGER_ON_CHANGES` unless known load cadence |
 | "Classify sensitive data?" | Object tags with `ALLOWED_VALUES` |
 | "Mask sensitive columns?" | Tag-based masking (Part 4) |
-| "Detect unexpected changes?" | `ANOMALY_DETECTION = TRUE` |
+| "Detect unexpected changes?" | `ANOMALY_DETECTION = TRUE` (ROW_COUNT and FRESHNESS only) |
 | "Get alerted?" | Notification integration (Part 6) |
 
 ---

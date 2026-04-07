@@ -93,6 +93,9 @@ package-lock.json
 # ---- Archive (override global Emacs *_archive pattern; this directory is tracked) ----
 !_archive/
 
+# ---- Lifecycle (local analysis, not tracked) ----
+lifecycle.md
+
 # ---- Audit Output (applyrules --monorepo) ----
 audit_reports/
 AUDIT_REPORT.md

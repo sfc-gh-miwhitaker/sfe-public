@@ -70,7 +70,7 @@ If a customer project needs different defaults (e.g., a specific model, differen
 # ~/projects/acme/.coco-settings.json
 {
   "env": {
-    "CORTEX_AGENT_MODEL": "claude-sonnet-4-5",
+    "CORTEX_AGENT_MODEL": "auto",
     "SNOVA_MEMORY_LOCATION": "/Users/you/projects/acme/.coco-memory"
   },
   "bashDefaultTimeoutMs": 300000

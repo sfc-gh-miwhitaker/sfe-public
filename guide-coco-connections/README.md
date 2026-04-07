@@ -44,7 +44,7 @@ This guide does not re-explain these. It focuses on the multi-project patterns t
 
 | Part | What You Build | Time |
 |------|----------------|------|
-| [1. Anatomy](prompts/01_anatomy.md) | Understand `connections.toml` and how CoCo reads it | 5 min |
+| [1. Anatomy](prompts/01_anatomy.md) | Understand `config.toml` and how CoCo reads it | 5 min |
 | [2. Multi-customer Setup](prompts/02_connections_setup.md) | Add one connection per project/customer | 10 min |
 | [3. Launch Patterns](prompts/03_cli_launch.md) | `cortex -c`, env var, and one-liner patterns | 10 min |
 | [4. Project Lock with AGENTS.md](prompts/04_project_agents.md) | Pin a project directory to a specific connection | 10 min |

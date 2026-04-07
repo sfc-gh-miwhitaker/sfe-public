@@ -139,7 +139,7 @@ This guide shows _how_ to redirect -- but _should_ you? Here's a fair comparison
 | Scenario | Why |
 |----------|-----|
 | **High-volume batch processing** | 50% discount via [Batch API](https://docs.anthropic.com/en/docs/build-with-claude/batch-processing) (async, 24h turnaround) |
-| **Aggressive caching** | 90% discount on prompt cache hits (vs 5-min TTL on Cortex) |
+| **Aggressive caching** | 90% discount on prompt cache hits (vs 5-min or 1-hour TTL on Cortex) |
 | **Cost-only optimization** | Lower per-token rates when governance isn't a constraint |
 
 ### Cortex Wins
@@ -149,7 +149,7 @@ This guide shows _how_ to redirect -- but _should_ you? Here's a fair comparison
 | **Data governance required** | Inference runs within Snowflake -- data never leaves your perimeter |
 | **Agent workloads** | Built-in [Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations) for systematic testing |
 | **Unified billing** | LLM costs appear on your Snowflake bill (REST API billed in USD/token; SQL functions in credits) |
-| **Multi-model access** | Claude, GPT, Llama, Mistral, DeepSeek from one endpoint |
+| **Multi-model access** | Claude via Messages API (this guide); GPT, Llama, Mistral, DeepSeek via [Chat Completions API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-rest-api) with OpenAI SDK |
 | **No model API keys** | Just Snowflake auth (PAT or key-pair JWT) in production |
 | **Cost controls** | Native per-user spend limits and budget alerts via [ACCOUNT_USAGE](https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management) |
 
@@ -252,7 +252,7 @@ All features below work identically through Cortex (Claude models only):
 | Streaming | Yes | SSE with `client.messages.stream()` |
 | Tool calling | Yes | Identical tool definitions and responses |
 | Structured output | Yes | Via `tool_use` pattern |
-| Prompt caching | Yes | `cache_control` with 5-min TTL |
+| Prompt caching | Yes | `cache_control` with 5-minute or 1-hour TTL (ephemeral type only) |
 | Image input | Yes | Base64 source blocks |
 | Extended thinking | Yes | `thinking` parameter with `type: "adaptive"` |
 | Beta features | Yes | Via `anthropic-beta` header |
@@ -530,4 +530,4 @@ This project is designed for AI-pair development.
 - [Programmatic Access Tokens](https://docs.snowflake.com/en/user-guide/programmatic-access-tokens)
 - [Key-Pair Authentication](https://docs.snowflake.com/en/user-guide/key-pair-auth)
 - [Anthropic Messages API reference](https://docs.anthropic.com/en/api/messages)
-- [PAT to Key-Pair JWT Migration](../guide-api-agent-context/migrate_pat_to_keypair_jwt.md) -- detailed recipes for Node.js, Python, and curl
+- [PAT to Key-Pair JWT Migration](../_archive/guide-api-agent-context/migrate_pat_to_keypair_jwt.md) -- detailed recipes for Node.js, Python, and curl

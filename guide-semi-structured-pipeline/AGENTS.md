@@ -5,7 +5,7 @@ Validated architecture patterns for building bronze-to-gold pipelines with Dynam
 ## Project Structure
 
 - `README.md` -- Main guide: Problem -> Progression (4 steps) -> Architecture -> Deep Dives -> Quick Reference
-- `01_bronze_setup.sql` -- Stage, file formats, bronze table with all 5 metadata columns, Snowpipe, sample data
+- `01_bronze_setup.sql` -- Stage, file formats, bronze table with 4 METADATA$ columns, Snowpipe, sample data
 - `02_silver_dynamic_table.sql` -- Silver DT with TRY_CAST + _raw columns, LATERAL FLATTEN, dedup with QUALIFY
 - `03_gold_dynamic_table.sql` -- Three gold DTs (daily sales, customer 360, product performance) with TARGET_LAG
 - `04_schema_evolution.sql` -- Key detection (INFER_SCHEMA + FLATTEN/TYPEOF), audit log, DT chain rebuild
@@ -25,7 +25,7 @@ Validated architecture patterns for building bronze-to-gold pipelines with Dynam
 - SQL workbooks are numbered and sequential: 01 must run before 02, etc.
 - TRY_CAST and VARIANT `::` both return NULL on conversion failure from VARIANT data. The value is the _raw column pattern that makes failures detectable, not different NULL behavior.
 - `TARGET_LAG = DOWNSTREAM` means refresh is driven by downstream consumers. If no downstream DT defines a concrete lag, a DOWNSTREAM DT will NOT refresh at all.
-- Bronze uses all 5 METADATA$ columns (FILENAME, FILE_ROW_NUMBER, FILE_CONTENT_KEY, FILE_LAST_MODIFIED, START_SCAN_TIME)
+- Bronze uses 4 METADATA$ columns (FILENAME, FILE_ROW_NUMBER, FILE_CONTENT_KEY, FILE_LAST_MODIFIED); START_SCAN_TIME is documented in 01 but not stored
 - Schema evolution detection works from stage (INFER_SCHEMA) or from VARIANT data (FLATTEN + TYPEOF)
 - DMFs require Enterprise Edition
 - OpenFlow can do ETL (transform before load), not just ELT -- NiFi processors can collapse pipeline layers

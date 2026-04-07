@@ -1,6 +1,6 @@
 /*==============================================================================
 DEPLOY ALL - Cortex Code FinOps Governance Toolkit
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-07-06
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-06-05
 
 Deploys:
   - notebook.ipynb  — 3-section governance notebook (analysis, per-user limits, notifications)
@@ -24,15 +24,15 @@ SET governance_schema     = 'SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS';
 -- 1. EXPIRATION CHECK (informational — warns but does not block)
 -- ============================================================================
 SELECT
-    '2026-07-06'::DATE                                           AS expiration_date,
+    '2026-06-05'::DATE                                           AS expiration_date,
     CURRENT_DATE()                                               AS current_date,
-    DATEDIFF('day', CURRENT_DATE(), '2026-07-06'::DATE)          AS days_remaining,
+    DATEDIFF('day', CURRENT_DATE(), '2026-06-05'::DATE)          AS days_remaining,
     CASE
-        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-07-06'::DATE) < 0
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-06-05'::DATE) < 0
         THEN 'EXPIRED - Code may use outdated syntax. Validate against docs before use.'
-        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-07-06'::DATE) <= 7
-        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-07-06'::DATE) || ' days remaining'
-        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-07-06'::DATE) || ' days remaining'
+        WHEN DATEDIFF('day', CURRENT_DATE(), '2026-06-05'::DATE) <= 7
+        THEN 'EXPIRING SOON - ' || DATEDIFF('day', CURRENT_DATE(), '2026-06-05'::DATE) || ' days remaining'
+        ELSE 'ACTIVE - ' || DATEDIFF('day', CURRENT_DATE(), '2026-06-05'::DATE) || ' days remaining'
     END AS tool_status;
 
 -- ============================================================================
@@ -92,7 +92,7 @@ ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO FETCH;
 USE ROLE ACCOUNTADMIN;
 
 CREATE SCHEMA IF NOT EXISTS IDENTIFIER($governance_schema)
-    COMMENT = 'TOOL: Cortex Code FinOps governance objects (Expires: 2026-07-06)';
+    COMMENT = 'TOOL: Cortex Code FinOps governance objects (Expires: 2026-06-05)';
 
 GRANT USAGE ON DATABASE SNOWFLAKE_EXAMPLE TO APPLICATION SNOWFLAKE;
 GRANT USAGE ON SCHEMA IDENTIFIER($governance_schema) TO APPLICATION SNOWFLAKE;
@@ -106,7 +106,7 @@ CREATE OR REPLACE NOTEBOOK IDENTIFIER($governance_schema || '.CODE_SPEND_CONTROL
     FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-code-spend-controls/'
     MAIN_FILE = 'notebook.ipynb'
     QUERY_WAREHOUSE = SFE_TOOLS_WH
-    COMMENT = 'TOOL: Cortex Code FinOps governance notebook (Expires: 2026-07-06)';
+    COMMENT = 'TOOL: Cortex Code FinOps governance notebook (Expires: 2026-06-05)';
 
 ALTER NOTEBOOK IDENTIFIER($governance_schema || '.CODE_SPEND_CONTROLS_NOTEBOOK')
     ADD LIVE VERSION FROM LAST;

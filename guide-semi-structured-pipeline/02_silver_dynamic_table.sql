@@ -78,7 +78,8 @@ CREATE OR REPLACE DYNAMIC TABLE silver_order_items
     WAREHOUSE = SFE_PIPELINE_WH
 AS
 SELECT
-    raw_data:event_id::NUMBER                  AS event_id,
+    raw_data:event_id::VARCHAR                 AS event_id_raw,
+    TRY_CAST(raw_data:event_id AS NUMBER)      AS event_id,
     raw_data:customer_id::VARCHAR              AS customer_id_raw,
     TRY_CAST(raw_data:customer_id AS NUMBER)   AS customer_id,
     raw_data:store_code::VARCHAR               AS store_code,

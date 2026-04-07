@@ -1,5 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
+![Expires](https://img.shields.io/badge/Expires-2026--04--23-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 ![Interactive Tables](https://img.shields.io/badge/Interactive_Tables-GA_Dec_2025-29B5E8)
 ![Hybrid Tables](https://img.shields.io/badge/Hybrid_Tables-GA-29B5E8)
@@ -274,14 +275,17 @@ Size the warehouse based on your **working set** -- the data your queries actual
 
 | Working Set | Warehouse Size |
 |------------|---------------|
-| Less than 500 GB | XSMALL |
-| 500 GB - 1 TB | SMALL |
-| 1 TB - 2 TB | MEDIUM |
-| 2 TB - 4 TB | LARGE |
-| 4 TB - 8 TB | XLARGE |
-| 8 TB - 16 TB | 2XLARGE |
-| 16 TB - 32 TB | 3XLARGE |
-| Greater than 32 TB | 4XLARGE |
+| Less than ~350 GB | XSMALL |
+| ~350 GB - ~600 GB | SMALL |
+| ~600 GB - ~1.4 TB | MEDIUM |
+| ~1.4 TB - ~2.7 TB | LARGE |
+| ~2.7 TB - ~5.5 TB | XLARGE |
+| ~5.5 TB - ~11 TB | 2XLARGE |
+| ~11 TB - ~22 TB | 3XLARGE |
+| ~22 TB - ~44 TB | 4XLARGE |
+
+> [!NOTE]
+> These ranges are from the [official Snowflake documentation](https://docs.snowflake.com/en/user-guide/interactive). Actual performance depends on your data distribution and query patterns -- always benchmark.
 
 If your queries filter on the last 7 days and your table holds 2 years, the working set is roughly `(7/730) * total_table_size`. Start with the size that covers your working set and benchmark.
 
@@ -370,9 +374,12 @@ For Power BI, this means you can mix hybrid tables and standard tables in the sa
 
 ### Hybrid Table Cost Considerations
 
-- **Storage is larger** than standard tables due to row-oriented primary format. The row store does not compress as efficiently as columnar micro-partitions.
-- **Compute uses standard warehouses** with standard billing (60-second auto-suspend, per-second billing after the first minute).
-- **Indexes add storage overhead** but are critical for point-lookup performance.
+As of March 2026, hybrid table billing has been simplified to two categories:
+
+- **Hybrid storage** -- row-oriented format is larger than columnar micro-partitions; indexes add overhead but are critical for point-lookup performance.
+- **Warehouse compute** -- standard billing (60-second auto-suspend, per-second billing). Hybrid table requests are no longer a separate billing category.
+
+See [Evaluate cost for hybrid tables](https://docs.snowflake.com/en/user-guide/tables-hybrid-cost) for current pricing details.
 
 ---
 

@@ -1,7 +1,7 @@
 # Part 2: Setting Up Multiple Connections
 
 **Time:** ~10 minutes
-**Goal:** Add one named connection per customer/project to `connections.toml`.
+**Goal:** Add one named connection per customer/project to `config.toml`.
 
 ---
 
@@ -15,7 +15,9 @@ code ~/.snowflake/config.toml   # VS Code
 nano ~/.snowflake/config.toml   # Terminal editor
 ```
 
-> **Security note:** `connections.toml` contains account identifiers and usernames but NOT passwords or tokens (those use separate credential stores). It is still sensitive — do not commit it to git.
+> **Security note:** `config.toml` contains account identifiers and usernames but NOT passwords or tokens (those use separate credential stores). It is still sensitive — do not commit it to git.
+>
+> **Two-file precedence:** Snowflake CLI also supports `~/.snowflake/connections.toml` (with `[name]` sections, no `connections.` prefix). If both files exist, `connections.toml` overrides `config.toml` for connection definitions. This guide uses `config.toml` exclusively -- if you've run the Cortex Code setup wizard and it created a `connections.toml`, either consolidate into one file or be aware of the override.
 
 ---
 
@@ -99,7 +101,7 @@ token         = "<your-pat-here>"
 
 ## Step 2.4 — Verify All Connections
 
-After saving `connections.toml`, verify Cortex Code can see all your connections:
+After saving `config.toml`, verify Cortex Code can see all your connections:
 
 ```bash
 cortex connections list
@@ -128,7 +130,7 @@ cortex -c acme-prod -p "SELECT CURRENT_ACCOUNT(), CURRENT_USER(), CURRENT_ROLE()
 
 ## Checkpoint
 
-- [ ] Every active customer engagement has an entry in `connections.toml`
+- [ ] Every active customer engagement has an entry in `config.toml`
 - [ ] `cortex connections list` shows all of them
 - [ ] At least one connection has been tested with `-p "SELECT CURRENT_ACCOUNT()..."`
 

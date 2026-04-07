@@ -1,6 +1,6 @@
 ![Reference Implementation](https://img.shields.io/badge/Reference-Implementation-blue)
 ![Ready to Run](https://img.shields.io/badge/Ready%20to%20Run-Yes-green)
-![Expires](https://img.shields.io/badge/Expires-2026--07--06-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--04--02-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Agent Multicontext Demo
@@ -12,10 +12,10 @@ Inspired by a real customer question: *"How do I pass user identity and tenant c
 This demo answers that question with a working React + Node.js app backed by the Snowflake Agent Run API's **"without agent object"** endpoint -- where every request carries its own system prompt, tool set, and RBAC role. A live API Inspector in the sidebar shows exactly what gets sent to Snowflake on every turn.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-03 | **Expires:** 2026-07-06 | **Status:** ACTIVE
+**Created:** 2026-03-03 | **Expires:** 2026-04-02 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
-> This demo expires on 2026-07-06. After expiration, validate against current Snowflake docs before use.
+> This demo expires on 2026-04-02. After expiration, validate against current Snowflake docs before use.
 
 ---
 

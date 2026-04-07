@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2027--03--25-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--24-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # MCP Server Authentication Guide
@@ -10,7 +10,7 @@ Inspired by the question everyone asks first: *"How do I connect Cursor / Claude
 This guide answers that question with exact configs for every major AI client, then goes deep on OAuth + PKCE for production apps, multi-tenant RBAC with role-scoped tokens, enterprise IdP integration (with honest assessment of current gaps), and a complete production readiness checklist.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-25 | **Expires:** 2027-03-25 | **Status:** ACTIVE
+**Created:** 2026-03-25 | **Expires:** 2026-05-24 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -252,7 +252,7 @@ CREATE MCP SERVER my_hybrid_server
 
 | Type | What It Exposes | Grant Required |
 |---|---|---|
-| `CORTEX_ANALYST_MESSAGE` | Natural language to SQL via a semantic view | `SELECT` on semantic view |
+| `CORTEX_ANALYST_MESSAGE` | Natural language to SQL via a **semantic view** (semantic models not supported) | `SELECT` on semantic view |
 | `CORTEX_SEARCH_SERVICE_QUERY` | Vector + keyword search over unstructured data | `USAGE` on Cortex Search service |
 | `SYSTEM_EXECUTE_SQL` | Direct SQL execution | `USAGE` on warehouse |
 | `CORTEX_AGENT_RUN` | A full Cortex Agent with its own tools | `USAGE` on agent |
@@ -266,9 +266,8 @@ CREATE MCP SERVER my_hybrid_server
 Or via SQL:
 
 ```sql
-CREATE PROGRAMMATIC ACCESS TOKEN my_mcp_pat
-  FOR USER = CURRENT_USER()
-  WITH ROLE = ANALYST_ROLE
+ALTER USER CURRENT_USER() ADD PROGRAMMATIC ACCESS TOKEN my_mcp_pat
+  ROLE_RESTRICTION = 'ANALYST_ROLE'
   COMMENT = 'PAT for MCP server access from Cursor';
 ```
 
@@ -632,6 +631,7 @@ CREATE OR REPLACE SECURITY INTEGRATION mcp_app_oauth
     OAUTH_REDIRECT_URI = 'https://your-app.example.com/callback'
     OAUTH_ISSUE_REFRESH_TOKENS = TRUE
     OAUTH_REFRESH_TOKEN_VALIDITY = 86400
+    OAUTH_ENFORCE_PKCE = TRUE
     PRE_AUTHORIZED_ROLES_LIST = ('ANALYST_ROLE', 'ENGINEER_ROLE');
 ```
 
@@ -1014,6 +1014,10 @@ For network-level security patterns that complement any auth approach, see [guid
 ## Part 6: Known Limitations and Gotchas
 
 Collected from production deployments, support cases, and internal documentation. These are real constraints -- not theoretical concerns.
+
+### Unsupported MCP Constructs
+
+The Snowflake managed MCP server supports **tool capabilities only**. The following standard MCP constructs are not supported: resources, prompts, roots, notifications, version negotiation, lifecycle phases, sampling, and dynamic client registration.
 
 ### Authentication and Identity
 

@@ -43,7 +43,7 @@ Add to your `~/.zshrc` or `~/.bashrc`:
 ```bash
 alias coco-acme='cortex -c acme-prod --workdir ~/projects/acme'
 alias coco-globex='cortex -c globex-dev --workdir ~/projects/globex'
-alias coco-internal='cortex -c default --workdir ~/projects/internal'
+alias coco-internal='cortex -c internal --workdir ~/projects/internal'
 ```
 
 Reload and use:
@@ -88,7 +88,7 @@ Then: `make coco`
 You can combine connection, workdir, and model in one command:
 
 ```bash
-cortex -c acme-prod --workdir ~/projects/acme --model claude-sonnet-4-5
+cortex -c acme-prod --workdir ~/projects/acme --model auto
 ```
 
 Non-interactive (print) mode with a specific connection:
@@ -110,7 +110,7 @@ When multiple sources set the connection, Cortex Code resolves in this order:
 | 1 (highest) | CLI flag | `cortex -c acme-prod` |
 | 2 | `SNOWFLAKE_CONNECTION` env var | `export SNOWFLAKE_CONNECTION=acme-prod` |
 | 3 | `settings.json` `env.SNOWFLAKE_CONNECTION` | Persistent default |
-| 4 (lowest) | `[default]` in connections.toml | Fallback |
+| 4 (lowest) | `default_connection_name` in `config.toml` | Fallback when no `-c` or env var is set |
 
 ---
 

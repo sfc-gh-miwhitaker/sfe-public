@@ -27,7 +27,7 @@ Demonstrates per-request context injection using the Snowflake Agent Run API "wi
 - SQL: Explicit columns, sargable predicates, QUALIFY for window functions
 - Objects: COMMENT with expiration date on all objects
 - Deploy: One-command deployment via deploy_all.sql
-- All new objects need COMMENT = 'DEMO: ... (Expires: 2026-07-06)'
+- All new objects need COMMENT = 'DEMO: ... (Expires: 2026-04-02)'
 
 ## When Helping with This Project
 - Follow SFE naming conventions (SFE_ prefix for account-level objects)

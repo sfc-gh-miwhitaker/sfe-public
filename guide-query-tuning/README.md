@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2027--03--17-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--16-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Find Your Top 3 Cost Drivers
@@ -10,7 +10,7 @@ Inspired by the question every Snowflake admin asks: *"My warehouse costs spiked
 Before you resize your warehouse, run this notebook. Most "slow query" problems are actually **pruning problems** -- Snowflake is scanning partitions it doesn't need. This guide walks through diagnosing each symptom and applying the right fix: clustering keys, search optimization, or query rewrites -- not bigger compute.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-17 | **Expires:** 2027-03-17 | **Status:** ACTIVE
+**Created:** 2026-03-17 | **Expires:** 2026-05-16 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -80,6 +80,20 @@ Then ask: *"Help me find why my queries are slow"*
 
 ---
 
+## Additional Diagnostic Views
+
+For table-level pruning analysis, Snowflake provides dedicated views that go beyond `QUERY_HISTORY`:
+
+| View | Purpose |
+|------|---------|
+| `SNOWFLAKE.ACCOUNT_USAGE.TABLE_QUERY_PRUNING_HISTORY` | Per-table partition scan ratios -- identifies which tables drive poor pruning |
+| `SNOWFLAKE.ACCOUNT_USAGE.COLUMN_QUERY_PRUNING_HISTORY` | Per-column access patterns -- helps choose the right clustering key |
+
+> [!NOTE]
+> `BYTES_SCANNED` in `QUERY_HISTORY` may not reflect all steps of a multi-step query. For operator-level spill analysis, use `GET_QUERY_OPERATOR_STATS()`. To find recurring expensive query patterns, group by `query_hash` or `query_parameterized_hash`.
+
+---
+
 ## References
 
 | Resource | URL |
@@ -88,3 +102,6 @@ Then ask: *"Help me find why my queries are slow"*
 | Search Optimization Service | https://docs.snowflake.com/en/user-guide/search-optimization-service |
 | Query Profile | https://docs.snowflake.com/en/user-guide/ui-query-profile |
 | QUERY_HISTORY View | https://docs.snowflake.com/en/sql-reference/account-usage/query_history |
+| TABLE_QUERY_PRUNING_HISTORY | https://docs.snowflake.com/en/sql-reference/account-usage/table_query_pruning_history |
+| COLUMN_QUERY_PRUNING_HISTORY | https://docs.snowflake.com/en/sql-reference/account-usage/column_query_pruning_history |
+| GET_QUERY_OPERATOR_STATS | https://docs.snowflake.com/en/sql-reference/functions/get_query_operator_stats |

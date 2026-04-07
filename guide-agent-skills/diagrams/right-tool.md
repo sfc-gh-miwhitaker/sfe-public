@@ -15,7 +15,7 @@ flowchart TD
     Q2 -->|"Just one project"| AgentsMd["AGENTS.md
     Project always-on context"]
 
-    Q3 -->|"Multi-step procedure"| Skill[".claude/skills/
+    Q3 -->|"Multi-step procedure"| Skill[".cortex/skills/ or .claude/skills/
     On-demand skill"]
     Q3 -->|"External data"| MCP["MCP Server
     Live tool connection"]

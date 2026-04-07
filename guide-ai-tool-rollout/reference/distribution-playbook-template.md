@@ -169,13 +169,13 @@ For projects needing specialized review workflows:
 
 ## Appendix A: File Locations
 
-| File | macOS | Linux |
-|------|-------|-------|
-| managed-settings.json | `/Library/Application Support/Cortex/` | `/etc/cortex/` |
-| CLAUDE.md | `~/.claude/CLAUDE.md` | `~/.claude/CLAUDE.md` |
-| User skills | `~/.claude/skills/` | `~/.claude/skills/` |
-| CoCo settings | `~/.snowflake/cortex/settings.json` | `~/.snowflake/cortex/settings.json` |
-| Project AGENTS.md | `<project root>/AGENTS.md` | `<project root>/AGENTS.md` |
+| File | macOS | Linux | Windows |
+|------|-------|-------|---------|
+| managed-settings.json | `/Library/Application Support/Cortex/` | `/etc/cortex/` | `%ProgramData%\Cortex\` |
+| CLAUDE.md | `~/.claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | `%USERPROFILE%\.claude\CLAUDE.md` |
+| User skills | `~/.snowflake/cortex/skills/` or `~/.claude/skills/` | `~/.snowflake/cortex/skills/` or `~/.claude/skills/` | `%USERPROFILE%\.snowflake\cortex\skills\` |
+| CoCo settings | `~/.snowflake/cortex/settings.json` | `~/.snowflake/cortex/settings.json` | `%USERPROFILE%\.snowflake\cortex\settings.json` |
+| Project AGENTS.md | `<project root>/AGENTS.md` | `<project root>/AGENTS.md` | `<project root>\AGENTS.md` |
 
 ## Appendix B: Distribution URLs
 

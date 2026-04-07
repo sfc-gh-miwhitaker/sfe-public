@@ -1,12 +1,12 @@
 ![Tool](https://img.shields.io/badge/Type-Tool-blue)
 ![Deploy](https://img.shields.io/badge/Deploy-deploy__all.sql-green)
-![Expires](https://img.shields.io/badge/Expires-2026--07--06-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--06--05-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Cortex Code — FinOps Governance Toolkit
 
 **Pair-programmed by SE Community + Cortex Code**
-**Created:** 2026-04-06 | **Expires:** 2026-07-06 | **Status:** ACTIVE
+**Created:** 2026-04-06 | **Expires:** 2026-06-05 | **Status:** ACTIVE
 
 A notebook-first toolkit for understanding, controlling, and monitoring Cortex Code spend — covering **both the CLI and Snowsight surfaces**. Includes scenario-based runbooks, Snowsight-ready SQL worksheets, and a proactive threshold notification system.
 

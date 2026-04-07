@@ -1,6 +1,6 @@
 /*==============================================================================
 05 - Row Access Policies for Station-Scoped Data
-Pair-programmed by SE Community + Cortex Code | Expires: 2026-07-06
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-04-02
 
 These RAPs demonstrate how station-scoped data can be filtered at the
 database level. In this demo, the actual filtering is done via the
@@ -18,7 +18,7 @@ CREATE OR REPLACE TABLE USER_STATION_MAPPING (
   station_id      VARCHAR(10),
   auth_tier       VARCHAR(20),
   display_name    VARCHAR(100)
-) COMMENT = 'DEMO: Maps users to stations and auth tiers (Expires: 2026-07-06)';
+) COMMENT = 'DEMO: Maps users to stations and auth tiers (Expires: 2026-04-02)';
 
 INSERT INTO USER_STATION_MAPPING VALUES
   ('DEMO_VIEWER_WETA',  'STN001', 'low',  'WETA Viewer'),

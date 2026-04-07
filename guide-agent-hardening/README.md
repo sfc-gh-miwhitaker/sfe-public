@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2027--03--23-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--22-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Agent Governance Playbook
@@ -10,7 +10,7 @@ Inspired by the question every team asks after building their first agent: *"How
 Operational patterns for running Cortex Agents responsibly: content safety with Cortex Guard, RBAC with dedicated roles and Row Access Policies, three authentication methods, network security, observability via CORTEX_AGENT_USAGE_HISTORY, and cost controls with per-user budgets and runaway detection. Everything comes from patterns proven in the demos and tools in this repository.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-23 | **Expires:** 2027-03-23 | **Status:** ACTIVE
+**Created:** 2026-03-23 | **Expires:** 2026-05-22 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -74,12 +74,9 @@ Cortex Guard filters harmful content before it reaches users. Enable it by setti
 ```sql
 SELECT AI_COMPLETE(
     'mistral-large2',
-    [
-        {'role': 'system', 'content': 'You are a helpful assistant.'},
-        {'role': 'user', 'content': :user_input}
-    ],
+    PROMPT('You are a helpful assistant.', :user_input),
     {'guardrails': true, 'temperature': 0.7, 'max_tokens': 500}
-):choices[0]:messages::STRING;
+)::STRING;
 ```
 
 For agents created with `CREATE AGENT`, set orchestration budgets in the YAML:
@@ -102,7 +99,11 @@ GRANT USAGE ON DATABASE SNOWFLAKE_EXAMPLE TO ROLE CORTEX_AGENT_USERS;
 GRANT USAGE ON SCHEMA SNOWFLAKE_EXAMPLE.<YOUR_SCHEMA> TO ROLE CORTEX_AGENT_USERS;
 GRANT USAGE ON WAREHOUSE <YOUR_WAREHOUSE> TO ROLE CORTEX_AGENT_USERS;
 GRANT USAGE ON AGENT SNOWFLAKE_EXAMPLE.<YOUR_SCHEMA>.<YOUR_AGENT> TO ROLE CORTEX_AGENT_USERS;
-GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE CORTEX_AGENT_USERS;
+
+-- CORTEX_AGENT_USER is scoped to Agents API only (preferred for least privilege).
+-- CORTEX_USER is broader and granted to PUBLIC by default; revoke it from
+-- consumer roles if you standardize on the agent-specific role.
+GRANT DATABASE ROLE SNOWFLAKE.CORTEX_AGENT_USER TO ROLE CORTEX_AGENT_USERS;
 ```
 
 For multi-tenant agents, Row Access Policies enforce per-user data boundaries:
@@ -142,22 +143,45 @@ CREATE NETWORK POLICY agent_access_policy
 
 ## Part 5: Monitoring and Observability
 
+`TOKENS_GRANULAR` is an `ARRAY` -- each element represents one service call within the agent invocation. Flatten it to extract per-call token counts:
+
 ```sql
 SELECT
-    start_time,
-    user_name,
-    agent_name,
-    tokens_granular:"input"::NUMBER AS input_tokens,
-    tokens_granular:"output"::NUMBER AS output_tokens,
-    token_credits
-FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY
-WHERE start_time >= DATEADD('day', -7, CURRENT_TIMESTAMP())
-ORDER BY token_credits DESC;
+    h.start_time,
+    h.user_name,
+    h.agent_name,
+    t.value:"service_type"::STRING  AS service_type,
+    t.value:"model"::STRING         AS model,
+    t.value:"input"::NUMBER         AS input_tokens,
+    t.value:"output"::NUMBER        AS output_tokens,
+    h.token_credits
+FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY h,
+     LATERAL FLATTEN(input => h.tokens_granular) t
+WHERE h.start_time >= DATEADD('day', -7, CURRENT_TIMESTAMP())
+ORDER BY h.token_credits DESC;
 ```
+
+> [!IMPORTANT]
+> This view covers requests made through the Cortex Agents Run API only. Requests originating from **Snowflake Intelligence** are tracked separately in `SNOWFLAKE.ACCOUNT_USAGE.SNOWFLAKE_INTELLIGENCE_USAGE_HISTORY`.
 
 ---
 
 ## Part 6: Cost Controls
+
+### Native resource budgets
+
+Snowflake's built-in budget system provides tag-scoped credit monitoring with threshold alerts:
+
+```sql
+CALL SNOWFLAKE.LOCAL.ACCOUNT_ROOT_BUDGET!SET_SPENDING_LIMIT(500);
+CALL SNOWFLAKE.LOCAL.ACCOUNT_ROOT_BUDGET!SET_EMAIL_NOTIFICATIONS('agent-ops@example.com');
+```
+
+For finer control, create custom budgets scoped to specific warehouses or tags using `SNOWFLAKE.CORE.BUDGET`.
+
+### Custom governance procedures
+
+For per-user limits and runaway detection beyond native budgets, see [tool-ai-spend-controls](../tool-ai-spend-controls/):
 
 ```sql
 CALL PROC_GRANT_AI_ACCESS('ALICE', 500);
@@ -180,7 +204,7 @@ ALTER WAREHOUSE SFE_MY_AGENT_WH SET
 | **Content Safety** | Orchestration budget set in agent YAML | Part 1 |
 | **Access Control** | Dedicated role for agent consumers (not PUBLIC) | Part 2 |
 | **Access Control** | Row Access Policies for multi-tenant data | Part 2 |
-| **Access Control** | CORTEX_USER database role granted | Part 2 |
+| **Access Control** | CORTEX_AGENT_USER database role granted (least-privilege) | Part 2 |
 | **Authentication** | Key-pair JWT or OAuth for production (not PAT) | Part 3 |
 | **Authentication** | PAT rotation automated if PATs are used | Part 3 |
 | **Network** | Network policy restricts agent API access | Part 4 |
@@ -241,3 +265,14 @@ diff agent_spec_v1.yaml agent_spec_v2.yaml
 - [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Cost governance platform with budgets, alerts, and runaway detection
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods
 - [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant architecture with Azure AD OAuth + RAPs
+
+## References
+
+- [Cortex Agents Overview](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents)
+- [CREATE AGENT](https://docs.snowflake.com/en/sql-reference/sql/create-agent)
+- [CORTEX_AGENT_USAGE_HISTORY](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_agent_usage_history)
+- [AI_COMPLETE (Prompt object)](https://docs.snowflake.com/en/sql-reference/functions/ai_complete-prompt-object)
+- [CREATE ROW ACCESS POLICY](https://docs.snowflake.com/en/sql-reference/sql/create-row-access-policy)
+- [Resource Budgets for Cortex Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-resource-budgets)
+- [REST API Authentication](https://docs.snowflake.com/en/developer-guide/snowflake-rest-api/authentication)
+- [Network Policies](https://docs.snowflake.com/en/user-guide/network-policies)

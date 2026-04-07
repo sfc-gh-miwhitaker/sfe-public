@@ -2,7 +2,7 @@
 
 *How do I get the same coding standards enforced in Cortex Code on CLI and in Snowsight -- without maintaining two sets of configs?*
 
-Store `AGENTS.md` and `.claude/skills/` in a GitHub repo. Cortex Code reads them automatically on both surfaces. GitHub's collaboration features become the standards management layer.
+Store `AGENTS.md` and skills (`.cortex/skills/` or `.claude/skills/`) in a GitHub repo. Cortex Code reads them automatically on both surfaces. GitHub's collaboration features become the standards management layer.
 
 > This content was previously in `demo-coco-governance-github`. The optional lab SQL is available at the bottom of this page.
 
@@ -44,7 +44,7 @@ Because the workspace is connected to the Git repo containing `AGENTS.md`, Corte
 | Aspect | CLI | Snowsight |
 |--------|-----|-----------|
 | How AGENTS.md is loaded | From working directory | From Git-connected workspace |
-| How skills are loaded | From `.claude/skills/` in repo | Personal skills in workspace |
+| How skills are loaded | From `.cortex/skills/` or `.claude/skills/` in repo + user `~/.snowflake/cortex/skills/` | Personal skills in `.snowflake/cortex/skills` within the workspace (Agent Skills integration coming soon) |
 | How you update | `git pull` | Sync button in workspace |
 
 ---

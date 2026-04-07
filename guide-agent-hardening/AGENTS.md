@@ -22,7 +22,7 @@ Operational patterns for running Cortex Agents in production: monitoring, access
 - Cortex Guard uses boolean `true` (not the old object syntax)
 - Network policies for agents are supported as of March 2026, with caveats
 - CORTEX_AGENT_USAGE_HISTORY has up to 3-hour latency
-- TOKENS_GRANULAR is an OBJECT, not an array -- access via `:"input"::NUMBER`
+- TOKENS_GRANULAR is an ARRAY -- flatten with `LATERAL FLATTEN` to extract per-call token counts
 - Per-user budgets come from tool-ai-spend-controls governance module
 
 ## Related Projects

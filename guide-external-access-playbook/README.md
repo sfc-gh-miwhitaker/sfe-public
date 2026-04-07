@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2027--03--23-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--05--22-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # External Access Playbook
@@ -10,7 +10,7 @@ Inspired by a real customer question: *"How do I call an external REST API from 
 Unified patterns for secure API egress from Snowflake: network rules, External Access Integrations, secrets management, OAuth flows, and production hardening (credential rotation, scheduling, monitoring). All patterns are extracted from working demos and tools in this repository.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-23 | **Expires:** 2027-03-23 | **Status:** ACTIVE
+**Created:** 2026-03-23 | **Expires:** 2026-05-22 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -70,16 +70,38 @@ CREATE NETWORK RULE SFE_API_NETWORK_RULE
 
 ## Part 2: Secrets
 
+**Client credentials flow** (server-to-server, no user interaction):
+
 ```sql
 CREATE SECRET SFE_QBO_OAUTH_SECRET TYPE = OAUTH2
     API_AUTHENTICATION = SFE_QBO_OAUTH_INTEGRATION;
 ```
 
+**Authorization code flow** (user-interactive, requires refresh token):
+
+```sql
+CREATE SECRET SFE_QBO_AUTH_CODE_SECRET TYPE = OAUTH2
+    API_AUTHENTICATION = SFE_QBO_OAUTH_INTEGRATION
+    OAUTH_REFRESH_TOKEN = '<refresh_token>'
+    OAUTH_REFRESH_TOKEN_EXPIRY_TIME = '2026-12-31 00:00:00';
+```
+
 ## Part 3: External Access Integrations
+
+For public APIs (no auth), network rules are sufficient:
 
 ```sql
 CREATE EXTERNAL ACCESS INTEGRATION SFE_API_ACCESS
     ALLOWED_NETWORK_RULES = (SFE_API_NETWORK_RULE) ENABLED = TRUE;
+```
+
+For OAuth APIs, the EAI must also allowlist the secret:
+
+```sql
+CREATE EXTERNAL ACCESS INTEGRATION SFE_QBO_ACCESS
+    ALLOWED_NETWORK_RULES = (SFE_QBO_NETWORK_RULE)
+    ALLOWED_AUTHENTICATION_SECRETS = (SFE_QBO_OAUTH_SECRET)
+    ENABLED = TRUE;
 ```
 
 ## Part 4: Python Stored Procedures with External Access
@@ -87,7 +109,7 @@ CREATE EXTERNAL ACCESS INTEGRATION SFE_API_ACCESS
 ```sql
 CREATE PROCEDURE SFE_FETCH_USERS()
     RETURNS TABLE(id NUMBER, name VARCHAR, email VARCHAR)
-    LANGUAGE PYTHON RUNTIME_VERSION = '3.11'
+    LANGUAGE PYTHON RUNTIME_VERSION = '3.12'
     PACKAGES = ('snowflake-snowpark-python', 'requests')
     HANDLER = 'fetch_users'
     EXTERNAL_ACCESS_INTEGRATIONS = (SFE_API_ACCESS)
@@ -100,7 +122,7 @@ For OAuth: add `SECRETS = ('qbo_cred' = SFE_QBO_OAUTH_SECRET)` and use `_snowfla
 
 - **Credential rotation** -- See [tool-secrets-rotation-aws](../tool-secrets-rotation-aws/) for automated rotation with AWS Secrets Manager
 - **Scheduling** -- Wrap procedures in tasks with `USING CRON`
-- **Monitoring** -- Query `QUERY_HISTORY` for procedure execution status
+- **Monitoring** -- Query `SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY` for procedure execution status
 
 ---
 
