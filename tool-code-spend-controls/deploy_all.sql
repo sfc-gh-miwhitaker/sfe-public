@@ -18,7 +18,7 @@ SET alert_cooldown_hours  = 4;
 SET task_schedule_minutes = 15;
 SET monthly_budget_limit  = 1000;
 SET budget_alert_pct      = 0.80;
-SET governance_schema     = 'SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE';
+SET governance_schema     = 'SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS';
 
 -- ============================================================================
 -- 1. EXPIRATION CHECK (informational — warns but does not block)
@@ -102,13 +102,13 @@ USE SCHEMA IDENTIFIER($governance_schema);
 -- ============================================================================
 -- 7. DEPLOY NOTEBOOK
 -- ============================================================================
-CREATE OR REPLACE NOTEBOOK IDENTIFIER($governance_schema || '.CORTEX_CODE_GOVERNANCE_NOTEBOOK')
-    FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-cortex-code-governance/'
+CREATE OR REPLACE NOTEBOOK IDENTIFIER($governance_schema || '.CODE_SPEND_CONTROLS_NOTEBOOK')
+    FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/tool-code-spend-controls/'
     MAIN_FILE = 'notebook.ipynb'
     QUERY_WAREHOUSE = SFE_TOOLS_WH
     COMMENT = 'TOOL: Cortex Code FinOps governance notebook (Expires: 2026-07-06)';
 
-ALTER NOTEBOOK IDENTIFIER($governance_schema || '.CORTEX_CODE_GOVERNANCE_NOTEBOOK')
+ALTER NOTEBOOK IDENTIFIER($governance_schema || '.CODE_SPEND_CONTROLS_NOTEBOOK')
     ADD LIVE VERSION FROM LAST;
 
 -- ============================================================================
@@ -223,13 +223,13 @@ BEGIN
     FOR rec IN c_users DO
         LET recent_count INT := (
             SELECT COUNT(*)
-            FROM SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE.CORTEX_CODE_LIMIT_ALERTS
+            FROM SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS.CORTEX_CODE_LIMIT_ALERTS
             WHERE user_name = rec.user_name
               AND surface   = rec.surface
               AND alerted_at >= DATEADD('hour', -1 * :cooldown_hours, CURRENT_TIMESTAMP)
         );
         IF (recent_count = 0) THEN
-            INSERT INTO SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE.CORTEX_CODE_LIMIT_ALERTS
+            INSERT INTO SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS.CORTEX_CODE_LIMIT_ALERTS
                 (user_name, surface, usage_credits, limit_credits, pct_used)
             VALUES (rec.user_name, rec.surface, rec.usage_credits,
                     rec.limit_credits, rec.pct_used);
@@ -271,7 +271,7 @@ ALTER TASK IDENTIFIER($governance_schema || '.CORTEX_CODE_LIMIT_ALERT_TASK') RES
 -- ============================================================================
 SELECT
     'Deployment complete!' AS status,
-    'Snowsight > Projects > Notebooks > CORTEX_CODE_GOVERNANCE_NOTEBOOK' AS notebook,
+    'Snowsight > Projects > Notebooks > CODE_SPEND_CONTROLS_NOTEBOOK' AS notebook,
     $notification_email AS alert_email,
     $alert_threshold_pct || '% of daily limit' AS alert_threshold,
     $monthly_budget_limit || ' credits/month' AS budget_limit,
@@ -287,6 +287,6 @@ SELECT
 -- DROP TASK IF EXISTS IDENTIFIER($governance_schema || '.CORTEX_CODE_LIMIT_ALERT_TASK');
 -- DROP PROCEDURE IF EXISTS IDENTIFIER($governance_schema || '.CORTEX_CODE_LIMIT_ALERT_CHECK') ();
 -- DROP TABLE IF EXISTS IDENTIFIER($governance_schema || '.CORTEX_CODE_LIMIT_ALERTS');
--- DROP NOTEBOOK IF EXISTS IDENTIFIER($governance_schema || '.CORTEX_CODE_GOVERNANCE_NOTEBOOK');
+-- DROP NOTEBOOK IF EXISTS IDENTIFIER($governance_schema || '.CODE_SPEND_CONTROLS_NOTEBOOK');
 -- DROP NOTIFICATION INTEGRATION IF EXISTS cortex_code_budget_email_int;
 -- DROP SCHEMA IF EXISTS IDENTIFIER($governance_schema);

@@ -17,7 +17,7 @@ Change **3 lines** of SDK configuration and your existing `client.messages.creat
 > [!CAUTION]
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 
-> **FinOps Journey (1 of 4):** This guide is the starting point. After redirecting your Anthropic calls through Cortex, track their cost with [tool-cortex-rest-api-cost](../tool-cortex-rest-api-cost/), then monitor all Cortex AI spend with [tool-cortex-cost-intelligence](../tool-cortex-cost-intelligence/), and optimize query-level costs with [guide-cost-drivers](../guide-cost-drivers/).
+> **FinOps Journey (1 of 4):** This guide is the starting point. After redirecting your Anthropic calls through Cortex, monitor AI function spend with [tool-ai-spend-controls](../tool-ai-spend-controls/), control Cortex Code costs with [tool-code-spend-controls](../tool-code-spend-controls/), and optimize query-level costs with [guide-query-tuning](../guide-query-tuning/).
 
 ## Who This Is For
 

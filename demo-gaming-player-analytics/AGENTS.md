@@ -63,4 +63,4 @@ If the user seems confused, asks basic questions like "what is this" or "how do 
 - [Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli) -- Install and connect
 - [`demo-campaign-engine`](../demo-campaign-engine/) -- Casino campaign engine (ML + vector patterns)
 - [`demo-music-label-marketing-analytics`](../demo-music-label-marketing-analytics/) -- Music label marketing (AI enrichment + spreadsheet patterns)
-- [`guide-agent-governance`](../guide-agent-governance/) -- Agent governance patterns
+- [`guide-agent-hardening`](../guide-agent-hardening/) -- Agent governance patterns

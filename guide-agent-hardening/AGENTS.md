@@ -11,7 +11,7 @@ Operational patterns for running Cortex Agents in production: monitoring, access
 ## Content Principles
 
 - Extract patterns already proven in demos (not theoretical)
-- SQL examples sourced from demo-agent-multicontext, demo-cortex-teams-agent, tool-cortex-cost-intelligence
+- SQL examples sourced from demo-agent-multicontext, demo-cortex-teams-agent, tool-ai-spend-controls
 - Six-part progression: content safety, access control, authentication, network security, monitoring, cost controls
 - Every recommendation maps to a working example in a related project
 
@@ -23,13 +23,13 @@ Operational patterns for running Cortex Agents in production: monitoring, access
 - Network policies for agents are supported as of March 2026, with caveats
 - CORTEX_AGENT_USAGE_HISTORY has up to 3-hour latency
 - TOKENS_GRANULAR is an OBJECT, not an array -- access via `:"input"::NUMBER`
-- Per-user budgets come from tool-cortex-cost-intelligence governance module
+- Per-user budgets come from tool-ai-spend-controls governance module
 
 ## Related Projects
 
 - [`demo-campaign-engine`](../demo-campaign-engine/) -- Build an agent from scratch with GUIDED_BUILD workshop
 - [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Agent with Cortex Guard and security integration
 - [`demo-agent-multicontext`](../demo-agent-multicontext/) -- Row Access Policies and observability patterns
-- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Cost governance with budgets, alerts, runaway detection
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Cost governance with budgets, alerts, runaway detection
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods
 - [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant architecture with Azure AD OAuth + RAPs

@@ -136,5 +136,5 @@ If the user seems confused, asks basic questions like "what is this" or "how do 
 
 ## Related Projects
 - [`guide-replication-workbook`](../guide-replication-workbook/) -- SQL runbooks for replication and failover setup
-- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Broader Cortex cost governance platform
-- [`tool-cortex-rest-api-cost`](../tool-cortex-rest-api-cost/) -- REST API-specific cost tracking
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Broader Cortex cost governance platform
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- REST API-specific cost tracking

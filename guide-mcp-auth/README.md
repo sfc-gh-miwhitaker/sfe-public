@@ -1080,12 +1080,12 @@ Collected from production deployments, support cases, and internal documentation
 
 ## Related Projects
 
-- [`guide-agent-governance`](../guide-agent-governance/) -- Agent governance playbook: RBAC, monitoring, cost controls, audit trails
+- [`guide-agent-hardening`](../guide-agent-hardening/) -- Agent governance playbook: RBAC, monitoring, cost controls, audit trails
 - [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant agent pattern with Azure AD OAuth + Row Access Policies
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with PAT, key-pair JWT, and OAuth auth methods
 - [`guide-external-access-playbook`](../guide-external-access-playbook/) -- External access patterns: network rules, secrets, OAuth integrations
 - [`tool-secrets-rotation-aws`](../tool-secrets-rotation-aws/) -- Automated PAT and key-pair rotation with AWS Secrets Manager
-- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Cortex cost governance with MCP integration documentation
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Cortex cost governance with MCP integration documentation
 - [`demo-coco-governance-github`](../demo-coco-governance-github/) -- GitHub MCP setup with PAT and 1Password patterns
 
 ## External References

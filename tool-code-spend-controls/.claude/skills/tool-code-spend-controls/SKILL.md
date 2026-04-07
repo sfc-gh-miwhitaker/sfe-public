@@ -1,5 +1,5 @@
 ---
-name: tool-cortex-code-governance
+name: tool-code-spend-controls
 execution_mode: inline
 ---
 

@@ -8,7 +8,7 @@
   Run in:     Snowsight — paste entire worksheet or run sections individually
 
   Objects created (Tier 2 only):
-    - Schema:    SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE
+    - Schema:    SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS
     - Table:     CORTEX_CODE_LIMIT_ALERTS (audit log)
     - Procedure: CORTEX_CODE_LIMIT_ALERT_CHECK
     - Task:      CORTEX_CODE_LIMIT_ALERT_TASK (serverless, every 15 min)
@@ -105,7 +105,7 @@ SET alert_threshold_pct   = 80;     -- notify at this % of daily limit
 SET alert_cooldown_hours  = 4;      -- suppress repeat alerts for N hours
 SET task_schedule_minutes = 15;     -- task run interval
 SET notification_email    = 'finops@example.com';
-SET governance_schema     = 'SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE';
+SET governance_schema     = 'SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS';
 
 
 /* ── 2b: Create schema and audit table ─────────────────────────────────── */
@@ -203,13 +203,13 @@ BEGIN
     FOR rec IN c_users DO
         LET recent_count INT := (
             SELECT COUNT(*)
-            FROM SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE.CORTEX_CODE_LIMIT_ALERTS
+            FROM SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS.CORTEX_CODE_LIMIT_ALERTS
             WHERE user_name = rec.user_name
               AND surface   = rec.surface
               AND alerted_at >= DATEADD('hour', -1 * :cooldown_hours, CURRENT_TIMESTAMP)
         );
         IF (recent_count = 0) THEN
-            INSERT INTO SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE.CORTEX_CODE_LIMIT_ALERTS
+            INSERT INTO SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS.CORTEX_CODE_LIMIT_ALERTS
                 (user_name, surface, usage_credits, limit_credits, pct_used)
             VALUES (rec.user_name, rec.surface, rec.usage_credits,
                     rec.limit_credits, rec.pct_used);

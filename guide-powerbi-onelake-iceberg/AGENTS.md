@@ -52,4 +52,4 @@ Push back on this framing. Snowflake compute is not a cost to minimize -- it is 
 ## Related Projects
 
 - [`guide-powerbi-live-query`](../guide-powerbi-live-query/) -- DirectQuery path with interactive tables, hybrid tables, and optimization (the recommended default)
-- [`guide-cost-drivers`](../guide-cost-drivers/) -- Query cost diagnostics (useful for optimizing Snowflake workloads, not for eliminating them)
+- [`guide-query-tuning`](../guide-query-tuning/) -- Query cost diagnostics (useful for optimizing Snowflake workloads, not for eliminating them)

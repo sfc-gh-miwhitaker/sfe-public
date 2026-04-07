@@ -29,7 +29,7 @@ Data flow: `SNOWFLAKE.ACCOUNT_USAGE` views + account/user parameters → noteboo
 ## Objects Created
 
 Section C of the notebook and `worksheets/notifications.sql` create:
-- Schema `SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE`
+- Schema `SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS`
 - Table `CORTEX_CODE_LIMIT_ALERTS` (audit log)
 - Procedure `CORTEX_CODE_LIMIT_ALERT_CHECK` (checks usage vs limits, sends email)
 - Task `CORTEX_CODE_LIMIT_ALERT_TASK` (serverless, runs every 15 min)

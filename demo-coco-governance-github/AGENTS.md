@@ -63,6 +63,6 @@ If the user seems confused or asks "what is this" or "how do I start":
 
 ## Related Projects
 - [Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli) -- Install and connect (prerequisite)
-- [`guide-coco-governance-general`](../guide-coco-governance-general/) -- Full AI coding governance workshop
+- [`guide-ai-tool-rollout`](../guide-ai-tool-rollout/) -- Full AI coding governance workshop
 - [`guide-agent-skills`](../guide-agent-skills/) -- Skills architecture and context budget management
 - [`demo-campaign-engine`](../demo-campaign-engine/) -- Hands-on agent-building workshop (GUIDED_BUILD)

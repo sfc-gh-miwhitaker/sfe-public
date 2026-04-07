@@ -185,7 +185,7 @@ ALTER WAREHOUSE SFE_MY_AGENT_WH SET
 | **Authentication** | PAT rotation automated if PATs are used | Part 3 |
 | **Network** | Network policy restricts agent API access | Part 4 |
 | **Monitoring** | CORTEX_AGENT_USAGE_HISTORY queries scheduled | Part 5 |
-| **Monitoring** | Cost views deployed from tool-cortex-cost-intelligence | Part 5 |
+| **Monitoring** | Cost views deployed from tool-ai-spend-controls | Part 5 |
 | **Cost Controls** | Per-user budgets configured | Part 6 |
 | **Cost Controls** | Warehouse timeout set | Part 6 |
 | **Audit** | QUERY_HISTORY retention policy reviewed | Part 5 |
@@ -238,6 +238,6 @@ diff agent_spec_v1.yaml agent_spec_v2.yaml
 - [`demo-campaign-engine`](../demo-campaign-engine/) -- Build an agent from scratch with GUIDED_BUILD workshop
 - [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Agent deployed to Teams with Cortex Guard and security integration
 - [`demo-agent-multicontext`](../demo-agent-multicontext/) -- Per-request context injection with Row Access Policies and observability
-- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Cost governance platform with budgets, alerts, and runaway detection
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Cost governance platform with budgets, alerts, and runaway detection
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods
 - [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant architecture with Azure AD OAuth + RAPs

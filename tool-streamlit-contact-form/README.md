@@ -12,4 +12,4 @@ The `deploy.sql` and `teardown.sql` scripts remain in this directory for anyone 
 For Streamlit examples with more depth, see:
 - [`demo-dataquality-metrics`](../demo-dataquality-metrics/) -- Multi-page Streamlit with DMF dashboard
 - [`demo-campaign-engine`](../demo-campaign-engine/) -- Streamlit with ML scoring and vector search
-- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Multi-page Streamlit with semantic views and agents
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Multi-page Streamlit with semantic views and agents

@@ -1,4 +1,4 @@
-# Cortex Code Instructions for guide-cost-drivers
+# Cortex Code Instructions for guide-query-tuning
 
 ## Project Context
 
@@ -58,6 +58,6 @@ Help them enable it on specific columns (cost-effective) rather than full table.
 - SOS has storage costs -- recommend targeted columns over full table
 
 ## Related Projects
-- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Cortex AI cost governance (credit and token spend)
-- [`tool-cortex-rest-api-cost`](../tool-cortex-rest-api-cost/) -- REST API cost dashboard (token-based billing)
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Cortex AI Function spend controls (monitoring, alerts, per-user limits)
+- [`tool-code-spend-controls`](../tool-code-spend-controls/) -- Cortex Code spend controls (budgets, daily limits, RBAC)
 - [`tool-dr-cost-agent`](../tool-dr-cost-agent/) -- DR replication cost estimation

@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-22-blue)
+![Projects](https://img.shields.io/badge/Projects-21-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -40,7 +40,8 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 
 | Directory | Description | Features |
 |---|---|---|
-| [tool-cortex-code-costs](tool-cortex-code-costs/) | Cortex Code CLI usage & cost visibility — notebook + Streamlit dashboard | Notebooks, Streamlit, ACCOUNT_USAGE |
+| [tool-ai-spend-controls](tool-ai-spend-controls/) | Control Cortex AI Function spend — monitoring, alerts, per-user limits, runaway detection | Notebooks, Streamlit, ACCOUNT_USAGE, Alerts, Tasks |
+| [tool-code-spend-controls](tool-code-spend-controls/) | Control Cortex Code spend — budgets, per-user limits, RBAC, scenario runbooks | Notebooks, Worksheets, ACCOUNT_USAGE, Budgets |
 | [tool-dr-cost-agent](tool-dr-cost-agent/) | DR replication cost estimation agent with hybrid table awareness | Snowflake Intelligence, Semantic Views, ACCOUNT_USAGE |
 | [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |
 
@@ -53,17 +54,17 @@ Documentation, patterns, and examples (no deploy/teardown).
 | [guide-csv-import](guide-csv-import/) | Load CSV files into Snowflake: one-time setup, repeatable imports, and automation | Stages, COPY INTO, File Formats |
 | [guide-agent-skills](guide-agent-skills/) | Agent skills as resource management: context budget mental model | Skills, Context Management |
 | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) | Redirect Anthropic SDK calls to Snowflake Cortex with 3 code changes | Cortex REST API, Messages API, PAT Auth |
-| [guide-coco-governance-general](guide-coco-governance-general/) | AI coding tool governance: enterprise MDM, Snowflake standards, red-team, distribution | managed-settings.json, MDM, Dual-Surface |
-| [guide-agent-governance](guide-agent-governance/) | Agent governance playbook: monitoring, RBAC, guardrails, cost controls, config diff | Cortex Guard, CORTEX_AGENT_USAGE_HISTORY, Row Access Policies, DESC AGENT |
+| [guide-ai-tool-rollout](guide-ai-tool-rollout/) | Roll out AI coding tools enterprise-wide: MDM, Snowflake standards, red-team, distribution | managed-settings.json, MDM, Dual-Surface |
+| [guide-agent-hardening](guide-agent-hardening/) | Harden Cortex Agents for production: monitoring, RBAC, guardrails, cost controls, config diff | Cortex Guard, CORTEX_AGENT_USAGE_HISTORY, Row Access Policies, DESC AGENT |
 | [guide-mcp-auth](guide-mcp-auth/) | MCP server authentication walkthrough: PAT, OAuth + PKCE, RBAC, multi-tenant, enterprise IdP | Snowflake MCP, OAuth, PAT, RBAC |
 | [guide-data-quality-governance](guide-data-quality-governance/) | Data quality governance: DMFs, tagging, masking, anomaly detection | Data Metric Functions, Tags, Masking Policies |
 | [guide-semi-structured-pipeline](guide-semi-structured-pipeline/) | Bronze-to-gold pipeline architecture for semi-structured data with Dynamic Tables | Dynamic Tables, TRY_CAST, FLATTEN, INFER_SCHEMA, OpenFlow, DMFs |
 | [guide-external-access-playbook](guide-external-access-playbook/) | External access patterns: network rules, EAI, secrets, OAuth | External Access Integration, Network Rules, Secrets |
 | [guide-powerbi-live-query](guide-powerbi-live-query/) | Power BI DirectQuery at scale: interactive tables, hybrid tables, and optimization patterns | Interactive Tables, Interactive Warehouses, Hybrid Tables, Power BI SSO |
 | [guide-powerbi-onelake-iceberg](guide-powerbi-onelake-iceberg/) | Power BI + Snowflake via OneLake and Iceberg: bi-directional access and Direct Lake mode | Iceberg Tables, OneLake, Catalog-Linked Databases, External Volumes |
-| [guide-cost-drivers](guide-cost-drivers/) | Find your top 3 cost drivers: pruning, clustering, and search optimization before resizing | Warehouse Optimization, Clustering, Search Optimization, Pruning |
+| [guide-query-tuning](guide-query-tuning/) | Tune queries to reduce warehouse cost: pruning, clustering, and search optimization before resizing | Warehouse Optimization, Clustering, Search Optimization, Pruning |
 | [guide-coco-connections](guide-coco-connections/) | Multi-connection setup for Cortex Code CLI: config.toml, launch patterns, per-project AGENTS.md, environment isolation | Cortex Code CLI, connections.toml, AGENTS.md, Partner SE |
-| [guide-cortex-code-budget](guide-cortex-code-budget/) | 7-part guide to budgeting and controlling Cortex Code costs: billing basics, model selection, account budgets, custom budgets, automated actions, RBAC, monitoring | Cortex Code, Budgets, RBAC, Cost Controls, Account Usage |
+
 
 ## Learning Journeys
 
@@ -71,9 +72,9 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 
 | Journey | Story | Path | Start Here |
 |---|---|---|---|
-| **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, govern it, and connect via MCP | demo-agent-multicontext → demo-cortex-teams-agent → guide-agent-governance → guide-mcp-auth | [demo-agent-multicontext](demo-agent-multicontext/) |
-| **AI Governance** | Govern AI coding tools across your organization | guide-agent-skills → guide-coco-governance-general | [guide-agent-skills](guide-agent-skills/) |
-| **FinOps** | Understand Cortex billing, track costs, set budgets and alerts | guide-cortex-anthropic-redirect → guide-cost-drivers | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) |
+| **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, harden for production, and connect via MCP | demo-agent-multicontext → demo-cortex-teams-agent → guide-agent-hardening → guide-mcp-auth | [demo-agent-multicontext](demo-agent-multicontext/) |
+| **AI Governance** | Roll out AI coding tools across your organization | guide-agent-skills → guide-ai-tool-rollout | [guide-agent-skills](guide-agent-skills/) |
+| **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | guide-cortex-anthropic-redirect → tool-ai-spend-controls → tool-code-spend-controls → guide-query-tuning | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) |
 | **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-csv-import → guide-semi-structured-pipeline → guide-data-quality-governance | [guide-csv-import](guide-csv-import/) |
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | guide-external-access-playbook | [guide-external-access-playbook](guide-external-access-playbook/) |
 | **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | demo-cortex-financial-agents | [demo-cortex-financial-agents](demo-cortex-financial-agents/) |

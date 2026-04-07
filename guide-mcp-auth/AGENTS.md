@@ -30,9 +30,9 @@ How to connect AI clients (Cursor, Claude Desktop, VS Code, Cortex Code, Windsur
 
 ## Related Projects
 
-- [`guide-agent-governance`](../guide-agent-governance/) -- Agent governance playbook (RBAC, monitoring, cost)
+- [`guide-agent-hardening`](../guide-agent-hardening/) -- Agent governance playbook (RBAC, monitoring, cost)
 - [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant agent pattern with OAuth + RAPs
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods
 - [`guide-external-access-playbook`](../guide-external-access-playbook/) -- External access patterns and secrets
 - [`tool-secrets-rotation-aws`](../tool-secrets-rotation-aws/) -- PAT and key-pair rotation automation
-- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- MCP integration docs
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- MCP integration docs

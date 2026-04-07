@@ -54,5 +54,5 @@ Be direct about the cost model:
 ## Related Projects
 
 - [`guide-powerbi-onelake-iceberg`](../guide-powerbi-onelake-iceberg/) -- Companion guide: OneLake/Iceberg path with Direct Lake mode (no Snowflake compute for reads)
-- [`guide-cost-drivers`](../guide-cost-drivers/) -- Diagnose slow queries and high warehouse costs (complementary)
-- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Cortex cost governance with BI-ready views
+- [`guide-query-tuning`](../guide-query-tuning/) -- Diagnose slow queries and high warehouse costs (complementary)
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Cortex cost governance with BI-ready views

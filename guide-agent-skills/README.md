@@ -72,4 +72,4 @@ See [diagrams/right-tool.md](diagrams/right-tool.md) for the visual decision tre
 | Cortex Code Extensibility | https://docs.snowflake.com/en/user-guide/cortex-code/extensibility |
 | Agent Skills Specification | https://agentskills.io/specification |
 | Cortex Code CLI | https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli |
-| Governance Workshop | [guide-coco-governance-general](../guide-coco-governance-general/) |
+| Governance Workshop | [guide-ai-tool-rollout](../guide-ai-tool-rollout/) |

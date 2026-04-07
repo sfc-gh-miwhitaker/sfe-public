@@ -59,7 +59,7 @@ This workshop does not re-explain these concepts. It focuses on what the officia
 ## Quick Start
 
 ```bash
-cd guide-coco-governance-general
+cd guide-ai-tool-rollout
 cortex
 ```
 

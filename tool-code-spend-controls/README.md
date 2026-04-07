@@ -56,9 +56,9 @@ flowchart TD
 3. Click **Run All**
 
 This creates:
-- Notebook `CORTEX_CODE_GOVERNANCE_NOTEBOOK` (fetched from GitHub)
+- Notebook `CODE_SPEND_CONTROLS_NOTEBOOK` (fetched from GitHub)
 - Notification objects: integration, stored procedure, task, audit table
-- Schema `SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE`
+- Schema `SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS`
 
 ### Option B — Manual Deploy
 
@@ -178,8 +178,8 @@ _All rates are AI Credits per 1M tokens. On-demand global AI Credit price: **$2.
 If deployed via `deploy_all.sql`:
 ```sql
 -- Suspend and drop notification objects
-ALTER TASK SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE.CORTEX_CODE_LIMIT_ALERT_TASK SUSPEND;
-DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.CORTEX_CODE_GOVERNANCE CASCADE;
+ALTER TASK SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS.CORTEX_CODE_LIMIT_ALERT_TASK SUSPEND;
+DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.CODE_SPEND_CONTROLS CASCADE;
 DROP NOTIFICATION INTEGRATION IF EXISTS cortex_code_budget_email_int;
 ```
 
@@ -187,6 +187,7 @@ DROP NOTIFICATION INTEGRATION IF EXISTS cortex_code_budget_email_int;
 
 ## Related
 
+- **[tool-ai-spend-controls](../tool-ai-spend-controls/)** — Companion tool: control Cortex AI Function spend (AI_COMPLETE, AI_SUMMARIZE, etc.)
 - **[Snowflake Budgets docs](https://docs.snowflake.com/en/user-guide/budgets)** — Official reference
 - **[Cost controls for Cortex Code](https://docs.snowflake.com/en/user-guide/cortex-code/credit-usage-limit)** — Per-user daily credit limits
 - **[Service Consumption Table, Table 6(e)](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf)** — Official Cortex Code pricing (effective April 1, 2026)

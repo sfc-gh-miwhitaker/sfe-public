@@ -14,7 +14,7 @@ Before you resize your warehouse, run this notebook. Most "slow query" problems 
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
-> **FinOps Journey (4 of 4):** For Cortex AI cost governance, see [tool-cortex-cost-intelligence](../tool-cortex-cost-intelligence/). For REST API token billing, see [tool-cortex-rest-api-cost](../tool-cortex-rest-api-cost/).
+> **FinOps Journey (4 of 4):** For Cortex AI Function spend controls, see [tool-ai-spend-controls](../tool-ai-spend-controls/). For Cortex Code spend controls, see [tool-code-spend-controls](../tool-code-spend-controls/).
 
 **Time:** ~30 minutes | **Result:** Faster queries, lower costs, no warehouse resize
 
@@ -72,8 +72,8 @@ journey
 3. Apply fixes from Section 3
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) guide-cost-drivers
-cd sfe-public/guide-cost-drivers && cortex
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) guide-query-tuning
+cd sfe-public/guide-query-tuning && cortex
 ```
 
 Then ask: *"Help me find why my queries are slow"*

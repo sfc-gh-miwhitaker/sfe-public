@@ -63,7 +63,7 @@ The README includes a balanced "When to Use Which" comparison. Key points to kno
 **Be honest:** Don't oversell Cortex. If someone is doing batch text processing with no governance needs, Anthropic direct is likely cheaper. If they're building agents or need compliance, Cortex adds significant value beyond token pricing.
 
 ## Related Projects
-- [`tool-cortex-rest-api-cost`](../tool-cortex-rest-api-cost/) -- Track the dollar cost of REST API calls this guide generates
-- [`tool-cortex-cost-intelligence`](../tool-cortex-cost-intelligence/) -- Broader Cortex cost governance platform
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Track the dollar cost of REST API calls this guide generates
+- [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Broader Cortex cost governance platform
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent:Run REST API examples with three auth methods
 - [`tool-secrets-rotation-aws`](../tool-secrets-rotation-aws/) -- PAT credential rotation patterns
