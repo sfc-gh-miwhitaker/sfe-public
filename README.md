@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-21-blue)
+![Projects](https://img.shields.io/badge/Projects-20-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -27,7 +27,6 @@ Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
 
 | Directory | Description | Features |
 |---|---|---|
-| [demo-agent-multicontext](demo-agent-multicontext/) | TV network agent demo: per-request context injection with auth tiers, station branding, and live API inspector | Cortex Agents, Cortex Search, Semantic Views, Row Access Policies |
 | [demo-cortex-teams-agent](demo-cortex-teams-agent/) | Snowflake Cortex Agents for Microsoft Teams & M365 Copilot | Cortex Agents, AI_COMPLETE, Cortex Guard |
 | [glaze-and-classify](https://github.com/sfc-gh-miwhitaker/glaze-and-classify) | Multi-method product classification showdown (SQL, Cortex AI, SPCS Vision) | AI_COMPLETE, SPCS, Semantic Views, Intelligence Agents |
 | [demo-cortex-financial-agents](demo-cortex-financial-agents/) | Specialty finance portfolio risk agent combining structured analytics with document RAG | Cortex Agents, Cortex Search, Semantic Views, Cortex Analyst |
@@ -72,7 +71,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 
 | Journey | Story | Path | Start Here |
 |---|---|---|---|
-| **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, harden for production, and connect via MCP | demo-agent-multicontext → demo-cortex-teams-agent → guide-agent-hardening → guide-mcp-auth | [demo-agent-multicontext](demo-agent-multicontext/) |
+| **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, harden for production, and connect via MCP | demo-cortex-teams-agent → guide-agent-hardening → guide-mcp-auth | [demo-cortex-teams-agent](demo-cortex-teams-agent/) |
 | **AI Governance** | Roll out AI coding tools across your organization | guide-agent-skills → guide-ai-tool-rollout | [guide-agent-skills](guide-agent-skills/) |
 | **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | guide-cortex-anthropic-redirect → tool-ai-spend-controls → tool-code-spend-controls → guide-query-tuning | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) |
 | **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-csv-import → guide-semi-structured-pipeline → guide-data-quality-governance | [guide-csv-import](guide-csv-import/) |
