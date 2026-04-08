@@ -238,9 +238,9 @@ elif panel == "Review Queue":
                     session.sql(f"""
                         INSERT INTO {SCHEMA}.AUDIT_LOG
                             (INVOICE_ID, ACTION, FIELD_NAME, OLD_VALUE, NEW_VALUE, ACTOR, ACTOR_TYPE)
-                        VALUES
-                            ({row['INVOICE_ID']}, 'HUMAN_APPROVED', 'STATUS', 'REVIEW', 'PROCESSED',
-                             CURRENT_USER(), 'HUMAN')
+                        SELECT
+                            {row['INVOICE_ID']}, 'HUMAN_APPROVED', 'STATUS', 'REVIEW', 'PROCESSED',
+                            CURRENT_USER(), 'HUMAN'
                     """).collect()
                     st.success("Invoice approved and logged to audit trail.")
                     st.rerun()
@@ -256,9 +256,9 @@ elif panel == "Review Queue":
                     session.sql(f"""
                         INSERT INTO {SCHEMA}.AUDIT_LOG
                             (INVOICE_ID, ACTION, FIELD_NAME, OLD_VALUE, NEW_VALUE, ACTOR, ACTOR_TYPE)
-                        VALUES
-                            ({row['INVOICE_ID']}, 'HUMAN_REJECTED', 'STATUS', 'REVIEW', 'REJECTED',
-                             CURRENT_USER(), 'HUMAN')
+                        SELECT
+                            {row['INVOICE_ID']}, 'HUMAN_REJECTED', 'STATUS', 'REVIEW', 'REJECTED',
+                            CURRENT_USER(), 'HUMAN'
                     """).collect()
                     st.error("Invoice rejected and logged to audit trail.")
                     st.rerun()
