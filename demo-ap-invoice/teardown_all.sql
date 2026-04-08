@@ -1,0 +1,23 @@
+/*==============================================================================
+TEARDOWN - AP Invoice Pipeline
+WARNING: This will DELETE all project objects. Cannot be undone.
+Pair-programmed by SE Community + Cortex Code | Expires: 2026-05-08
+==============================================================================*/
+
+USE ROLE SYSADMIN;
+
+-- Project objects
+DROP STREAMLIT IF EXISTS SNOWFLAKE_EXAMPLE.AP_INVOICE.AP_INVOICE_DASHBOARD;
+DROP TASK IF EXISTS SNOWFLAKE_EXAMPLE.AP_INVOICE.VALIDATE_INVOICES_TASK;
+DROP STREAM IF EXISTS SNOWFLAKE_EXAMPLE.AP_INVOICE.INVOICE_HEADER_STREAM;
+DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.AP_INVOICE CASCADE;
+DROP WAREHOUSE IF EXISTS SFE_AP_INVOICE_WH;
+DROP SEMANTIC VIEW IF EXISTS SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AP_INVOICE;
+
+-- PROTECTED - NEVER DROP:
+-- SNOWFLAKE_EXAMPLE database
+-- SNOWFLAKE_EXAMPLE.GIT_REPOS schema
+-- SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS schema
+-- SFE_GIT_API_INTEGRATION
+
+SELECT 'Teardown complete — all AP Invoice Pipeline objects removed' AS status;
