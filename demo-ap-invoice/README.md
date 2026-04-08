@@ -10,6 +10,10 @@ Automated accounts payable invoice processing using Snowflake AI functions. PDF 
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-04-08 | **Expires:** 2026-05-08 | **Status:** ACTIVE
 
+| Pipeline Status | Review Queue |
+|:---:|:---:|
+| ![Pipeline Status](assets/pipeline_status.png) | ![Review Queue](assets/review_queue.png) |
+
 ## Brand New to GitHub or Cortex Code?
 
 Start with the [Getting Started Guide](../guide-coco-setup/) -- it walks you through downloading the code and installing Cortex Code (the AI assistant that will help you with everything else).

@@ -1,0 +1,27 @@
+manifest_version: 2
+type: DCM_PROJECT
+
+default_target: DEFAULT
+
+targets:
+  DEFAULT:
+    # Replace with your Snowflake account identifier (e.g. MYORG-MYACCOUNT)
+    account_identifier: CHANGE_ME
+    project_name: SNOWFLAKE_EXAMPLE.TOOLS.DCM_DR_COST
+    project_owner: SYSADMIN
+    templating_config: DEFAULT
+
+templating:
+  defaults:
+    db: "SNOWFLAKE_EXAMPLE"
+    schema: "DR_COST_AGENT"
+    expiration_date: "2026-05-01"
+    wh_name: "SFE_TOOLS_WH"
+
+  configurations:
+    DEFAULT:
+      wh_size: "X-SMALL"
+
+    # Example: larger warehouse for accounts with many databases
+    LARGE_ACCOUNT:
+      wh_size: "SMALL"

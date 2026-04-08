@@ -1,18 +1,9 @@
-/******************************************************************************
- * DR Cost Agent - DB_METADATA_V2
- * Hybrid-table-aware database sizing for replication cost estimation.
- * Hybrid tables are SKIPPED during replication refresh (BCR-1560-1582);
- * REPLICABLE_SIZE_TB excludes them for accurate projections.
- ******************************************************************************/
-
-USE SCHEMA SNOWFLAKE_EXAMPLE.DR_COST_AGENT;
-
-CREATE OR REPLACE VIEW DB_METADATA_V2
-    COMMENT = 'TOOL: Database sizes with hybrid table exclusion for replication sizing (Expires: 2026-05-01)'
+DEFINE VIEW {{db}}.{{schema}}.DB_METADATA_V2
+    COMMENT = 'TOOL: Database sizes with hybrid table exclusion for replication sizing (Expires: {{expiration_date}})'
 AS
 WITH ALL_DBS AS (
     SELECT DATABASE_NAME
-    FROM INFORMATION_SCHEMA.DATABASES
+    FROM {{db}}.INFORMATION_SCHEMA.DATABASES
     WHERE DATABASE_NAME NOT IN ('SNOWFLAKE', 'SNOWFLAKE_SAMPLE_DATA', 'UTIL_DB')
 ),
 DB_STORAGE AS (
@@ -51,3 +42,35 @@ SELECT
 FROM ALL_DBS d
 LEFT JOIN DB_STORAGE s ON d.DATABASE_NAME = s.DATABASE_NAME
 LEFT JOIN HYBRID_STORAGE h ON d.DATABASE_NAME = h.DATABASE_NAME;
+
+
+DEFINE VIEW {{db}}.{{schema}}.HYBRID_TABLE_METADATA
+    COMMENT = 'TOOL: Hybrid table inventory per database -- excluded from replication (Expires: {{expiration_date}})'
+AS
+SELECT
+    DATABASE_NAME,
+    SCHEMA_NAME AS TABLE_SCHEMA,
+    NAME AS TABLE_NAME,
+    BYTES,
+    (BYTES / POWER(1024, 3))::NUMBER(18,4) AS SIZE_GB,
+    CREATED AS CREATED_AT,
+    LAST_ALTERED AS LAST_ALTERED_AT,
+    CURRENT_TIMESTAMP() AS AS_OF
+FROM SNOWFLAKE.ACCOUNT_USAGE.HYBRID_TABLES
+WHERE DELETED IS NULL;
+
+
+DEFINE VIEW {{db}}.{{schema}}.REPLICATION_HISTORY
+    COMMENT = 'TOOL: Actual replication costs from ACCOUNT_USAGE (Expires: {{expiration_date}})'
+AS
+SELECT
+    REPLICATION_GROUP_NAME,
+    REPLICATION_GROUP_ID,
+    START_TIME,
+    END_TIME,
+    DATE_TRUNC('day', START_TIME)::DATE AS USAGE_DATE,
+    DATE_TRUNC('month', START_TIME)::DATE AS USAGE_MONTH,
+    CREDITS_USED,
+    BYTES_TRANSFERRED,
+    (BYTES_TRANSFERRED / POWER(1024, 4))::NUMBER(18,6) AS TB_TRANSFERRED
+FROM SNOWFLAKE.ACCOUNT_USAGE.REPLICATION_GROUP_USAGE_HISTORY;
