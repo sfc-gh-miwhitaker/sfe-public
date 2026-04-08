@@ -17,6 +17,7 @@ AS
 $$
 DECLARE
     item_desc VARCHAR;
+    gl_categories VARIANT;
     classification VARIANT;
     suggested_gl VARCHAR;
 BEGIN
@@ -24,14 +25,17 @@ BEGIN
     FROM INVOICE_LINE_ITEMS
     WHERE LINE_ID = :LINE_ITEM_ID;
 
+    SELECT ARRAY_AGG(
+        OBJECT_CONSTRUCT(
+            'label', GL_CODE,
+            'description', GL_DESCRIPTION || ' (' || CATEGORY || ')'
+        )
+    ) INTO gl_categories
+    FROM GL_CODES;
+
     SELECT AI_CLASSIFY(
         :item_desc,
-        (SELECT ARRAY_AGG(
-            OBJECT_CONSTRUCT(
-                'label', GL_CODE,
-                'description', GL_DESCRIPTION || ' (' || CATEGORY || ')'
-            )
-        ) FROM GL_CODES),
+        :gl_categories,
         {
             'task_description': 'Classify this invoice line item into the correct GL account code for a gaming and hospitality company'
         }
