@@ -42,7 +42,7 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AP_INVOICE
             WITH SYNONYMS = ('processing time', 'time to approve', 'cycle time')
             COMMENT = 'Seconds elapsed between AI extraction and approval (auto or human)',
 
-        lines.LINE_TOTAL  AS LINE_AMOUNT
+        lines.LINE_AMOUNT  AS LINE_TOTAL
             WITH SYNONYMS = ('line total', 'item amount', 'line item total')
             COMMENT = 'Total amount for a single line item (quantity * unit price)',
 
@@ -54,15 +54,15 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AP_INVOICE
             WITH SYNONYMS = ('price', 'unit cost', 'per-unit price')
             COMMENT = 'Price per unit for the line item',
 
-        lines.GL_CODE_CONFIDENCE  AS GL_CONFIDENCE
+        lines.GL_CONFIDENCE  AS GL_CODE_CONFIDENCE
             WITH SYNONYMS = ('classification confidence', 'GL confidence')
             COMMENT = 'AI_CLASSIFY confidence score for the suggested GL code (0.0-1.0)',
 
-        spend.TOTAL_SPEND  AS CATEGORY_SPEND
+        spend.CATEGORY_SPEND  AS TOTAL_SPEND
             WITH SYNONYMS = ('category total', 'category spend')
             COMMENT = 'Total spend for a property/vendor/GL category combination',
 
-        spend.INVOICE_COUNT  AS CATEGORY_INVOICE_COUNT
+        spend.CATEGORY_INVOICE_COUNT  AS INVOICE_COUNT
             WITH SYNONYMS = ('number of invoices', 'invoice count per category')
             COMMENT = 'Count of distinct invoices in a property/vendor/GL category grouping'
     )
@@ -84,7 +84,7 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AP_INVOICE
             WITH SYNONYMS = ('invoice status', 'processing status', 'approval status')
             COMMENT = 'Current processing status: PROCESSED (auto-approved), REVIEW (needs human review), or PENDING',
 
-        inv.VENDOR_NAME_RESOLVED  AS VENDOR_NAME
+        inv.VENDOR_NAME  AS VENDOR_NAME_RESOLVED
             WITH SYNONYMS = ('vendor', 'supplier', 'company name', 'vendor name')
             COMMENT = 'Canonical vendor name after fuzzy matching against vendor master',
 
@@ -96,23 +96,23 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AP_INVOICE
             WITH SYNONYMS = ('currency code')
             COMMENT = 'Invoice currency (3-letter ISO code, typically USD)',
 
-        lines.DESCRIPTION  AS LINE_DESCRIPTION
+        lines.LINE_DESCRIPTION  AS DESCRIPTION
             WITH SYNONYMS = ('item description', 'line item description', 'item')
             COMMENT = 'Description of the goods or services on a line item',
 
-        lines.GL_CODE_SUGGESTED  AS GL_CODE
+        lines.GL_CODE  AS GL_CODE_SUGGESTED
             WITH SYNONYMS = ('GL', 'GL account', 'account code', 'general ledger code')
             COMMENT = 'GL account code suggested by AI_CLASSIFY for the line item',
 
-        lines.GL_SUGGESTED_DESC  AS GL_DESCRIPTION
+        lines.GL_DESCRIPTION  AS GL_SUGGESTED_DESC
             WITH SYNONYMS = ('GL name', 'account description', 'GL category')
             COMMENT = 'Human-readable description of the suggested GL code',
 
-        lines.CLASSIFICATION_STATUS  AS GL_CLASSIFICATION_STATUS
+        lines.GL_CLASSIFICATION_STATUS  AS CLASSIFICATION_STATUS
             WITH SYNONYMS = ('classification status', 'GL status')
             COMMENT = 'Whether the GL code was AI-suggested, human-confirmed, or needs review',
 
-        spend.GL_CATEGORY  AS SPEND_CATEGORY
+        spend.SPEND_CATEGORY  AS GL_CATEGORY
             WITH SYNONYMS = ('expense category', 'cost category', 'spend type')
             COMMENT = 'High-level expense category: Operating or G&A'
     )
