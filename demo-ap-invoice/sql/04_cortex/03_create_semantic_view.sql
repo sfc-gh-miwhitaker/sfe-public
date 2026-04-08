@@ -29,6 +29,44 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AP_INVOICE
         inv_to_lines AS inv(INVOICE_ID) REFERENCES lines(INVOICE_ID)
     )
 
+    FACTS (
+        inv.TOTAL_AMOUNT  AS TOTAL_AMOUNT
+            WITH SYNONYMS = ('amount', 'invoice total', 'total', 'invoice amount')
+            COMMENT = 'Total invoice amount in the invoiced currency (typically USD)',
+
+        inv.VALIDATION_SCORE  AS VALIDATION_SCORE
+            WITH SYNONYMS = ('confidence', 'confidence score', 'quality score', 'extraction quality')
+            COMMENT = 'Composite validation score (0.0-1.0) computed from field completeness, format checks, and vendor matching. Threshold for auto-approval is 0.75',
+
+        inv.PROCESSING_SECONDS  AS PROCESSING_SECONDS
+            WITH SYNONYMS = ('processing time', 'time to approve', 'cycle time')
+            COMMENT = 'Seconds elapsed between AI extraction and approval (auto or human)',
+
+        lines.LINE_TOTAL  AS LINE_AMOUNT
+            WITH SYNONYMS = ('line total', 'item amount', 'line item total')
+            COMMENT = 'Total amount for a single line item (quantity * unit price)',
+
+        lines.QUANTITY  AS QUANTITY
+            WITH SYNONYMS = ('qty', 'item quantity', 'units')
+            COMMENT = 'Quantity of items on the line',
+
+        lines.UNIT_PRICE  AS UNIT_PRICE
+            WITH SYNONYMS = ('price', 'unit cost', 'per-unit price')
+            COMMENT = 'Price per unit for the line item',
+
+        lines.GL_CODE_CONFIDENCE  AS GL_CONFIDENCE
+            WITH SYNONYMS = ('classification confidence', 'GL confidence')
+            COMMENT = 'AI_CLASSIFY confidence score for the suggested GL code (0.0-1.0)',
+
+        spend.TOTAL_SPEND  AS CATEGORY_SPEND
+            WITH SYNONYMS = ('category total', 'category spend')
+            COMMENT = 'Total spend for a property/vendor/GL category combination',
+
+        spend.INVOICE_COUNT  AS CATEGORY_INVOICE_COUNT
+            WITH SYNONYMS = ('number of invoices', 'invoice count per category')
+            COMMENT = 'Count of distinct invoices in a property/vendor/GL category grouping'
+    )
+
     DIMENSIONS (
         inv.INVOICE_NUMBER  AS INVOICE_NUMBER
             WITH SYNONYMS = ('invoice num', 'invoice #', 'inv number')
@@ -77,44 +115,6 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_AP_INVOICE
         spend.GL_CATEGORY  AS SPEND_CATEGORY
             WITH SYNONYMS = ('expense category', 'cost category', 'spend type')
             COMMENT = 'High-level expense category: Operating or G&A'
-    )
-
-    FACTS (
-        inv.TOTAL_AMOUNT  AS TOTAL_AMOUNT
-            WITH SYNONYMS = ('amount', 'invoice total', 'total', 'invoice amount')
-            COMMENT = 'Total invoice amount in the invoiced currency (typically USD)',
-
-        inv.VALIDATION_SCORE  AS VALIDATION_SCORE
-            WITH SYNONYMS = ('confidence', 'confidence score', 'quality score', 'extraction quality')
-            COMMENT = 'Composite validation score (0.0-1.0) computed from field completeness, format checks, and vendor matching. Threshold for auto-approval is 0.75',
-
-        inv.PROCESSING_SECONDS  AS PROCESSING_SECONDS
-            WITH SYNONYMS = ('processing time', 'time to approve', 'cycle time')
-            COMMENT = 'Seconds elapsed between AI extraction and approval (auto or human)',
-
-        lines.LINE_TOTAL  AS LINE_AMOUNT
-            WITH SYNONYMS = ('line total', 'item amount', 'line item total')
-            COMMENT = 'Total amount for a single line item (quantity * unit price)',
-
-        lines.QUANTITY  AS QUANTITY
-            WITH SYNONYMS = ('qty', 'item quantity', 'units')
-            COMMENT = 'Quantity of items on the line',
-
-        lines.UNIT_PRICE  AS UNIT_PRICE
-            WITH SYNONYMS = ('price', 'unit cost', 'per-unit price')
-            COMMENT = 'Price per unit for the line item',
-
-        lines.GL_CODE_CONFIDENCE  AS GL_CONFIDENCE
-            WITH SYNONYMS = ('classification confidence', 'GL confidence')
-            COMMENT = 'AI_CLASSIFY confidence score for the suggested GL code (0.0-1.0)',
-
-        spend.TOTAL_SPEND  AS CATEGORY_SPEND
-            WITH SYNONYMS = ('category total', 'category spend')
-            COMMENT = 'Total spend for a property/vendor/GL category combination',
-
-        spend.INVOICE_COUNT  AS CATEGORY_INVOICE_COUNT
-            WITH SYNONYMS = ('number of invoices', 'invoice count per category')
-            COMMENT = 'Count of distinct invoices in a property/vendor/GL category grouping'
     )
 
     METRICS (
