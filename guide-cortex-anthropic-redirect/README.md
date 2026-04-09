@@ -293,9 +293,13 @@ Create a PAT in Snowsight or SQL:
 **Option B -- SQL:**
 ```sql
 ALTER USER my_user ADD PROGRAMMATIC ACCESS TOKEN cortex_api_demo
+  ROLE_RESTRICTION = 'PUBLIC'
   DAYS_TO_EXPIRY = 30
   COMMENT = 'Cortex Anthropic redirect guide';
 ```
+
+> [!NOTE]
+> `ROLE_RESTRICTION` is required when targeting a service user (`TYPE = SERVICE`). For person users it is optional but recommended to enforce least-privilege.
 Copy the `token_secret` value from the result (shown only once -- no way to retrieve it later).
 
 Add it to `.env`:
@@ -308,10 +312,11 @@ SNOWFLAKE_PAT=ver:1:...
 
 ### 4. Verify Cortex Access
 
-Your default role must have `SNOWFLAKE.CORTEX_USER` (granted to PUBLIC by default):
+Your default role must have the `SNOWFLAKE.CORTEX_USER` database role (granted to PUBLIC by default). As of April 2026, the more granular `SNOWFLAKE.AI_FUNCTIONS_USER` role is also available for restricting access to AI functions specifically:
 ```sql
 SELECT CURRENT_ROLE();
 -- If needed: GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE my_role;
+-- For granular AI function access only: GRANT DATABASE ROLE SNOWFLAKE.AI_FUNCTIONS_USER TO ROLE my_role;
 ```
 
 ---

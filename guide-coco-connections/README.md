@@ -33,7 +33,7 @@ Partner SEs who juggle multiple customer accounts and need:
 
 Before starting, skim the official reference for the two files this guide builds on:
 
-- **[Snowflake CLI Connection Docs](https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/specify-credentials/define-connections)** — Full `config.toml` field reference and authentication methods
+- **[Snowflake CLI Connection Docs](https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/configure-connections)** — Full `config.toml` field reference and authentication methods
 - **[Cortex Code Configuration](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli)** — `--connection` flag, `SNOWFLAKE_CONNECTION` env var, `settings.json`
 
 This guide does not re-explain these. It focuses on the multi-project patterns the docs don't cover.
@@ -79,5 +79,5 @@ Or open [WORKSHOP.md](WORKSHOP.md) and follow the parts in order.
 | Resource | URL |
 |----------|-----|
 | Cortex Code CLI docs | https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli |
-| Snowflake CLI connection config | https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/specify-credentials/define-connections |
+| Snowflake CLI connection config | https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/configure-connections |
 | Authentication methods | https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/specify-credentials/authenticate-snowflake |

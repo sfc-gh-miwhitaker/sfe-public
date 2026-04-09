@@ -22,8 +22,7 @@ Step-by-step guide for loading CSV files into Snowflake using Snowsight. Covers 
 - `INFER_SCHEMA` for automatic column detection from CSV headers
 - `COPY INTO` with `ON_ERROR = 'CONTINUE'` for fault-tolerant loading
 - `VALIDATE()` function for inspecting load errors
-- Snowpipe with `AUTO_INGEST = TRUE` for hands-off ingestion
-- Scheduled tasks with `USING CRON` for batch loading cadence
+- Part 3 links to Snowpipe and scheduled task documentation (comparison table and doc links; no runnable CREATE PIPE / CREATE TASK SQL in current README)
 
 ## When Helping with This Project
 

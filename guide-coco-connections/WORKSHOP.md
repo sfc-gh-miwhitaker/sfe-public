@@ -22,8 +22,8 @@ Open each `prompts/` file in order and follow the instructions manually.
 
 | # | File | What You Do | Output |
 |---|------|-------------|--------|
-| 1 | [01_anatomy.md](prompts/01_anatomy.md) | Inspect your current connections.toml | Know what you have |
-| 2 | [02_connections_setup.md](prompts/02_connections_setup.md) | Add one named connection per customer | `~/.snowflake/connections.toml` |
+| 1 | [01_anatomy.md](prompts/01_anatomy.md) | Inspect your current config.toml | Know what you have |
+| 2 | [02_connections_setup.md](prompts/02_connections_setup.md) | Add one named connection per customer | `~/.snowflake/config.toml` |
 | 3 | [03_cli_launch.md](prompts/03_cli_launch.md) | Learn every launch pattern | One-liner per project |
 | 4 | [04_project_agents.md](prompts/04_project_agents.md) | Add connection hints to AGENTS.md | Project-locked context |
 | 5 | [05_isolation.md](prompts/05_isolation.md) | Isolate memory and sessions | No cross-project bleed |
@@ -34,7 +34,7 @@ Open each `prompts/` file in order and follow the instructions manually.
 
 - Cortex Code CLI installed (`cortex --version` returns a version)
 - At least one Snowflake account you can log into
-- A text editor for editing `~/.snowflake/connections.toml`
+- A text editor for editing `~/.snowflake/config.toml`
 
 ---
 

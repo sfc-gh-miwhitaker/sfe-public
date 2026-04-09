@@ -44,7 +44,7 @@ Because the workspace is connected to the Git repo containing `AGENTS.md`, Corte
 | Aspect | CLI | Snowsight |
 |--------|-----|-----------|
 | How AGENTS.md is loaded | From working directory | From Git-connected workspace |
-| How skills are loaded | From `.cortex/skills/` or `.claude/skills/` in repo + user `~/.snowflake/cortex/skills/` | Personal skills in `.snowflake/cortex/skills` within the workspace (Agent Skills integration coming soon) |
+| How skills are loaded | From `.cortex/skills/` or `.claude/skills/` in repo + user `~/.snowflake/cortex/skills/` | Personal skills in `.snowflake/cortex/skills` within the workspace ([Agent Skills from Git-connected repos](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-snowsight) also supported) |
 | How you update | `git pull` | Sync button in workspace |
 
 ---
@@ -140,7 +140,7 @@ The managed-settings layer sits above GitHub. Developers' personal `CLAUDE.md` o
 To try this pattern with sample data, create these objects in Snowflake:
 
 ```sql
-USE ROLE ACCOUNTADMIN;
+USE ROLE SYSADMIN;
 
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB;
@@ -154,21 +154,21 @@ USE SCHEMA SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB;
 
 CREATE OR REPLACE TABLE CUSTOMERS (
   CUSTOMER_ID NUMBER, NAME VARCHAR, EMAIL VARCHAR, REGION VARCHAR,
-  CREATED_AT TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
-  COMMENT = 'DEMO: Sample customers for standards testing'
-);
+  CREATED_AT TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+)
+COMMENT = 'DEMO: Sample customers for standards testing';
 
 CREATE OR REPLACE TABLE ORDERS (
   ORDER_ID NUMBER, CUSTOMER_ID NUMBER, ORDER_DATE DATE,
-  AMOUNT NUMBER(10,2), STATUS VARCHAR,
-  COMMENT = 'DEMO: Sample orders for standards testing'
-);
+  AMOUNT NUMBER(10,2), STATUS VARCHAR
+)
+COMMENT = 'DEMO: Sample orders for standards testing';
 
 CREATE OR REPLACE TABLE PRODUCTS (
   PRODUCT_ID NUMBER, NAME VARCHAR, CATEGORY VARCHAR,
-  PRICE NUMBER(10,2),
-  COMMENT = 'DEMO: Sample products for standards testing'
-);
+  PRICE NUMBER(10,2)
+)
+COMMENT = 'DEMO: Sample products for standards testing';
 ```
 
 Cleanup: `DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.COCO_GOVERNANCE_GITHUB CASCADE;`

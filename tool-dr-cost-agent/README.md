@@ -10,7 +10,7 @@ Inspired by a real customer question: *"We need to budget for cross-region repli
 This tool answers that question with a Snowflake Intelligence agent that estimates DR/replication costs with hybrid-table awareness, pre-loaded Business Critical pricing for 60 AWS/Azure/GCP regions, and a custom cost projection procedure. Ask in natural language, get cost estimates with charts.
 
 **Author:** SE Community
-**Created:** 2025-12-08 | **Last Updated:** 2026-03-04 | **Expires:** 2026-05-01 | **Status:** ACTIVE
+**Created:** 2025-12-08 | **Last Updated:** 2026-04-09 | **Expires:** 2026-05-01 | **Status:** ACTIVE
 
 > **No support provided.** This code is for reference only. Review, test, and modify before any production use.
 > This tool expires on 2026-05-01. After expiration, validate against current Snowflake docs before use.

@@ -3,7 +3,7 @@
 -- =============================================================================
 -- Author: SE Community
 -- Last Updated: 2026-03-02
--- Expires: 2026-05-01
+-- Expires: 2026-05-22
 -- Purpose: Reliably extract agent specs for comparison and version control
 --
 -- DESCRIBE AGENT Output Columns (per Snowflake docs):
@@ -30,7 +30,10 @@ SET output_format = 'export';  -- Options: 'full', 'spec_only', 'export'
 DESC AGENT IDENTIFIER($agent_fqn);
 
 CREATE OR REPLACE TEMPORARY TABLE _agent_desc AS
-SELECT * FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+SELECT
+    "name", "database_name", "schema_name", "owner",
+    "comment", "profile", "agent_spec", "created_on"
+FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
 
 -- =============================================================================
 -- Option 1: Full Agent Metadata (output_format = 'full')

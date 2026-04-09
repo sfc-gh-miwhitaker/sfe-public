@@ -77,8 +77,21 @@ SELECT
 FROM bronze_keys bk
 LEFT JOIN silver_columns sc
     ON UPPER(bk.column_name) = UPPER(sc.column_name)
-       OR UPPER(bk.column_name) || '_RAW' = UPPER(sc.column_name)
-ORDER BY status DESC, bk.column_name;
+
+UNION ALL
+
+SELECT
+    bk.column_name,
+    bk.detected_type,
+    CASE
+        WHEN sc.column_name IS NOT NULL THEN 'EXISTS'
+        ELSE 'NEW - needs review'
+    END AS status
+FROM bronze_keys bk
+LEFT JOIN silver_columns sc
+    ON UPPER(bk.column_name) || '_RAW' = UPPER(sc.column_name)
+WHERE UPPER(bk.column_name) NOT IN (SELECT UPPER(column_name) FROM silver_columns)
+ORDER BY status DESC, column_name;
 
 -- ============================================================================
 -- STEP 4: Create schema evolution audit log
@@ -104,7 +117,9 @@ CREATE TABLE IF NOT EXISTS schema_evolution_log (
 INSERT INTO schema_evolution_log (source_table, column_name, detected_type, change_type)
 VALUES ('bronze_events', 'loyalty_tier', 'VARCHAR', 'NEW_KEY_ADDITIVE');
 
-SELECT * FROM schema_evolution_log ORDER BY detected_at DESC;
+SELECT detected_at, source_table, column_name, detected_type, change_type, applied, applied_at, applied_by
+FROM schema_evolution_log
+ORDER BY detected_at DESC;
 
 -- ============================================================================
 -- STEP 6: Rebuild silver DT with new column

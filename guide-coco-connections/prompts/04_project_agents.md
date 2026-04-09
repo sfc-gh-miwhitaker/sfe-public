@@ -113,7 +113,7 @@ role: PARTNER_SE_ROLE, warehouse: PARTNER_WH, database: ANALYTICS"
 ## Checkpoint
 
 - [ ] At least one customer project has a Snowflake Connection section in its `AGENTS.md`
-- [ ] The `Launch with:` line in AGENTS.md matches a real connection in `connections.toml`
+- [ ] The `Launch with:` line in AGENTS.md matches a real connection in `config.toml`
 - [ ] Optional: safety check instruction added for DDL operations
 
 **Next:** [Part 5 — Environment Isolation](05_isolation.md)

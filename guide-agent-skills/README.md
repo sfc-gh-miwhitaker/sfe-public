@@ -1,5 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
+![Expires](https://img.shields.io/badge/Expires-2026--05--22-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Agent Skills: Right Tool, Right Budget
@@ -7,6 +8,7 @@
 Inspired by the question every AI-pair user hits after week two: *"I installed a bunch of skills and now the agent feels slower and less focused -- what did I do wrong?"*
 
 **Author:** SE Community
+**Created:** 2026-03-25 | **Expires:** 2026-05-22 | **Status:** ACTIVE
 **Read time:** ~5 minutes | **Result:** A mental model for context budget management
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.

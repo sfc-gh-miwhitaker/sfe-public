@@ -266,10 +266,14 @@ CREATE MCP SERVER my_hybrid_server
 Or via SQL:
 
 ```sql
-ALTER USER CURRENT_USER() ADD PROGRAMMATIC ACCESS TOKEN my_mcp_pat
+ALTER USER ADD PROGRAMMATIC ACCESS TOKEN my_mcp_pat
   ROLE_RESTRICTION = 'ANALYST_ROLE'
+  DAYS_TO_EXPIRY = 30
   COMMENT = 'PAT for MCP server access from Cursor';
 ```
+
+> [!NOTE]
+> When targeting the current user, omit the user name (per [ALTER USER docs](https://docs.snowflake.com/en/sql-reference/sql/alter-user)). For service users (`TYPE = SERVICE`), `ROLE_RESTRICTION` is required. Set `DAYS_TO_EXPIRY` to enforce token rotation.
 
 **3. Grants on both the MCP server and underlying tools:**
 
@@ -632,8 +636,12 @@ CREATE OR REPLACE SECURITY INTEGRATION mcp_app_oauth
     OAUTH_ISSUE_REFRESH_TOKENS = TRUE
     OAUTH_REFRESH_TOKEN_VALIDITY = 86400
     OAUTH_ENFORCE_PKCE = TRUE
-    PRE_AUTHORIZED_ROLES_LIST = ('ANALYST_ROLE', 'ENGINEER_ROLE');
+    PRE_AUTHORIZED_ROLES_LIST = ('ANALYST_ROLE', 'ENGINEER_ROLE')
+    COMMENT = 'OAuth integration for MCP app';
 ```
+
+> [!TIP]
+> For production hardening, also consider `NETWORK_POLICY` to restrict token usage to known IPs, and `OAUTH_SINGLE_USE_REFRESH_TOKENS_REQUIRED = TRUE` to prevent token replay.
 
 Key parameters:
 
@@ -925,9 +933,9 @@ When multiple tenants share the same tables, use Row Access Policies to enforce 
 CREATE OR REPLACE ROW ACCESS POLICY tenant_isolation
   AS (row_region VARCHAR) RETURNS BOOLEAN ->
     CASE
-        WHEN CURRENT_ROLE() IN ('ACCOUNTADMIN', 'SYSADMIN') THEN TRUE
-        WHEN CURRENT_ROLE() = 'ANALYST_NA' THEN row_region = 'North America'
-        WHEN CURRENT_ROLE() = 'ANALYST_EMEA' THEN row_region = 'EMEA'
+        WHEN IS_ROLE_IN_SESSION('SYSADMIN') THEN TRUE
+        WHEN IS_ROLE_IN_SESSION('ANALYST_NA') THEN row_region = 'North America'
+        WHEN IS_ROLE_IN_SESSION('ANALYST_EMEA') THEN row_region = 'EMEA'
         ELSE FALSE
     END;
 

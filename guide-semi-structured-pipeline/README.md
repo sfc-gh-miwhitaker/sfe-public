@@ -282,7 +282,7 @@ FROM (
         CURRENT_TIMESTAMP()
     FROM @events_stage/
 )
-FILE_FORMAT = (FORMAT_NAME = 'ff_parquet');
+FILE_FORMAT = (FORMAT_NAME = 'ff_json');
 ```
 
 See [Snowpipe auto-ingest](https://docs.snowflake.com/en/user-guide/data-load-snowpipe-auto-s3) for cloud-specific notification setup (S3 SQS, GCS Pub/Sub, Azure Event Grid).

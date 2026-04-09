@@ -18,7 +18,7 @@ Operational patterns for running Cortex Agents in production: monitoring, access
 ## When Helping with This Project
 
 - This is a guide, not a demo -- no deploy_all.sql, no Snowflake objects to create
-- All SQL is embedded in README.md (no separate .sql files)
+- Most SQL is embedded in README.md; standalone utility scripts live in `scripts/`
 - Cortex Guard uses boolean `true` (not the old object syntax)
 - Network policies for agents are supported as of March 2026, with caveats
 - CORTEX_AGENT_USAGE_HISTORY has up to 3-hour latency

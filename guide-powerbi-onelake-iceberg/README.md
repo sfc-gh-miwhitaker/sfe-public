@@ -138,8 +138,12 @@ CREATE OR REPLACE CATALOG INTEGRATION onelake_catalog_int
         OAUTH_CLIENT_SECRET = '<entra-app-client-secret>'
         OAUTH_ALLOWED_SCOPES = ('https://storage.azure.com/.default')
     )
-    ENABLED = TRUE;
+    ENABLED = TRUE
+    ALLOWED_WRITE_OPERATIONS = 'NONE';
 ```
+
+> [!TIP]
+> Setting `ALLOWED_WRITE_OPERATIONS = 'NONE'` (the default for OneLake) ensures Snowflake treats the catalog as read-only. See the [OneLake catalog integration docs](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-onelake) for write options.
 
 </details>
 

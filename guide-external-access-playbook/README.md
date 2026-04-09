@@ -68,7 +68,22 @@ CREATE NETWORK RULE SFE_API_NETWORK_RULE
     VALUE_LIST = ('jsonplaceholder.typicode.com:443');
 ```
 
-## Part 2: Secrets
+## Part 2: Security Integration + Secrets
+
+OAuth secrets reference a security integration that handles token exchange. Create this first:
+
+```sql
+CREATE SECURITY INTEGRATION SFE_QBO_OAUTH_INTEGRATION
+    TYPE = API_AUTHENTICATION
+    AUTH_TYPE = OAUTH2
+    OAUTH_CLIENT_ID = '<client_id>'
+    OAUTH_CLIENT_SECRET = '<client_secret>'
+    OAUTH_TOKEN_ENDPOINT = 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer'
+    ENABLED = TRUE;
+```
+
+> [!TIP]
+> Always include the token endpoint hostname in your network rule alongside the API hostname. See [CREATE SECURITY INTEGRATION (External API Authentication)](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth) for full parameter reference.
 
 **Client credentials flow** (server-to-server, no user interaction):
 

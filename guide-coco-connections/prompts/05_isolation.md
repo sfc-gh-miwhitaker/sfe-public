@@ -152,7 +152,7 @@ Where `~/projects/acme/.coco-settings.json` contains:
 ## You're Done
 
 You now have:
-- Named connections per customer in `connections.toml`
+- Named connections per customer in `config.toml`
 - Launch patterns for every situation (`-c` flag, env var, alias)
 - AGENTS.md connection hints locking each project to the right account
 - Isolation controls for memory, sessions, and settings

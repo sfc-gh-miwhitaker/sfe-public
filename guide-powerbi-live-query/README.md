@@ -230,7 +230,7 @@ AS
     GROUP BY sale_date, region, product_category;
 ```
 
-The refresh warehouse is a standard warehouse (not the interactive warehouse). This separates refresh compute from query-serving compute. Choose a `TARGET_LAG` that balances data freshness against refresh cost -- the same considerations as dynamic table target lag apply.
+The refresh warehouse is a standard warehouse (not the interactive warehouse). This separates refresh compute from query-serving compute. Choose a `TARGET_LAG` that balances data freshness against refresh cost -- the same considerations as dynamic table target lag apply. Note that `TARGET_LAG` on interactive tables requires a minimum of **60 seconds**, and `WAREHOUSE` is required whenever `TARGET_LAG` is set.
 
 ### Interactive Materialized Views
 
@@ -283,9 +283,11 @@ Size the warehouse based on your **working set** -- the data your queries actual
 | ~5.5 TB - ~11 TB | 2XLARGE |
 | ~11 TB - ~22 TB | 3XLARGE |
 | ~22 TB - ~44 TB | 4XLARGE |
+| ~44 TB - ~88 TB | 5XLARGE |
+| ~88 TB - ~176 TB | 6XLARGE |
 
 > [!NOTE]
-> These ranges are from the [official Snowflake documentation](https://docs.snowflake.com/en/user-guide/interactive). Actual performance depends on your data distribution and query patterns -- always benchmark.
+> These ranges are from the [official Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/create-interactive-warehouse). Actual performance depends on your data distribution and query patterns -- always benchmark.
 
 If your queries filter on the last 7 days and your table holds 2 years, the working set is roughly `(7/730) * total_table_size`. Start with the size that covers your working set and benchmark.
 
@@ -477,7 +479,7 @@ SELECT
 FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY qh
 JOIN SNOWFLAKE.ACCOUNT_USAGE.SESSIONS s
     ON qh.session_id = s.session_id
-WHERE s.client_application_id ILIKE '%power%bi%'
+WHERE TRIM(s.client_application_id) IN ('Power BI Desktop', 'Power BI Service', 'Power BI Gateway')
     AND qh.start_time >= DATEADD('hour', -24, CURRENT_TIMESTAMP())
 ORDER BY qh.execution_time DESC
 LIMIT 50;
@@ -502,7 +504,7 @@ SELECT
 FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY qh
 JOIN SNOWFLAKE.ACCOUNT_USAGE.SESSIONS s
     ON qh.session_id = s.session_id
-WHERE s.client_application_id ILIKE '%power%bi%'
+WHERE TRIM(s.client_application_id) IN ('Power BI Desktop', 'Power BI Service', 'Power BI Gateway')
     AND qh.partitions_total > 0
     AND qh.start_time >= DATEADD('hour', -24, CURRENT_TIMESTAMP())
 QUALIFY ROW_NUMBER() OVER (ORDER BY qh.partitions_scanned DESC) <= 20;

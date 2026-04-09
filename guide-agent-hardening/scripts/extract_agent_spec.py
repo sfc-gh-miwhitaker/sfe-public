@@ -25,8 +25,24 @@ from datetime import datetime, timezone
 import snowflake.connector
 
 
+def _validate_fqn(agent_fqn: str) -> str:
+    """Validate that agent_fqn is a three-part Snowflake identifier (DB.SCHEMA.NAME)."""
+    import re
+    identifier = r'[A-Za-z_][A-Za-z0-9_$]*'
+    quoted = r'"[^"]*"'
+    part = rf'(?:{identifier}|{quoted})'
+    pattern = rf'^{part}\.{part}\.{part}$'
+    if not re.match(pattern, agent_fqn):
+        raise ValueError(
+            f"Invalid agent FQN: {agent_fqn!r}. "
+            "Expected format: DATABASE.SCHEMA.AGENT_NAME (three unquoted or quoted identifiers)."
+        )
+    return agent_fqn
+
+
 def extract_agent_spec(conn, agent_fqn: str, output_format: str = "export") -> dict:
     """Extract agent specification from Snowflake."""
+    agent_fqn = _validate_fqn(agent_fqn)
     cursor = conn.cursor()
 
     try:
