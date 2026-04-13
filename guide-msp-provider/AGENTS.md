@@ -7,7 +7,7 @@
 
 Multi-tenant Snowflake account design for MSPs with 3rd-party vendor Snowsight access:
 
-- **Organisation level:** One MSP_OPS account + one account per customer
+- **Organization level:** One MSP_OPS account + one account per customer
 - **Per-account layers:** RAW_INTERNAL, RAW_VENDOR (managed access), INTEGRATION, PRESENTATION, WORKSPACE
 - **Role hierarchy:** MSP roles (inherit system roles) > Customer roles > Vendor roles (per-vendor)
 - **Isolation:** Schema-level (managed access), warehouse-level, network policy per user, auth policy per user

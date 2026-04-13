@@ -10,7 +10,7 @@ One concrete architecture for per-customer Snowflake accounts where MSP staff, c
 
 ## Architecture
 ```
-Organisation: MSP-US
+Organization: MSP-US
 ├─ MSP_OPS (central monitoring via Org Usage views)
 ├─ CUST_ACME_PROD
 │   ├─ Roles: MSP_ACCOUNT_ADMIN > MSP_SECURITY_ADMIN > MSP_PLATFORM_ENGINEER
@@ -46,7 +46,7 @@ Organisation: MSP-US
 ## Snowflake Objects
 - No Snowflake objects are created -- this is a reference guide
 - SQL scripts are templates the customer copies and adapts
-- Requires: Snowflake Organisation with ACCOUNTADMIN access to customer accounts
+- Requires: Snowflake Organization with ACCOUNTADMIN access to customer accounts
 
 ## Gotchas
 - MSP_ACCOUNT_ADMIN is **granted** ACCOUNTADMIN, not layered above it -- ACCOUNTADMIN is the hierarchy ceiling

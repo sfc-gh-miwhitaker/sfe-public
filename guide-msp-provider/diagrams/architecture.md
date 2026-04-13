@@ -1,10 +1,10 @@
 # Architecture Diagrams -- MSP Provider Guide
 
-## Organisation Layout
+## Organization Layout
 
 ```mermaid
 flowchart TB
-    subgraph org [Organisation: ACME-MSP]
+    subgraph org [Organization: ACME-MSP]
         OPS["MSP_OPS (us-east-1)"]
         ACME_DEV["CUST_ACME_DEV (us-east-1)"]
         ACME_PROD["CUST_ACME_PROD (us-east-1)"]

@@ -1,11 +1,11 @@
 /*==============================================================================
 MONITORING -- MSP Provider Guide
 Queries for cross-account and per-account monitoring.
-Run sections as needed; Organisation Usage queries run in MSP_OPS account.
+Run sections as needed; Organization Usage queries run in MSP_OPS account.
 ==============================================================================*/
 
 ----------------------------------------------------------------------
--- PART A: Organisation-level queries (run in MSP_OPS account)
+-- PART A: Organization-level queries (run in MSP_OPS account)
 -- These use SNOWFLAKE.ORGANIZATION_USAGE — no data shares required.
 -- PREREQUISITE: These views are only available in the organization
 -- account. MSP_OPS must be the org account, or the querying user

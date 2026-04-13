@@ -21,7 +21,7 @@ One concrete architecture for per-customer Snowflake accounts where MSP staff, c
 ## Who This Is For
 
 MSP platform engineers who:
-- Manage one or more Snowflake accounts per customer under a Snowflake Organisation
+- Manage one or more Snowflake accounts per customer under a Snowflake Organization
 - Need to give 3rd-party vendors **Snowsight UI access** to bring in their own data feeds
 - Want a repeatable, automatable pattern that scales to dozens of customers
 
@@ -31,11 +31,11 @@ Comfortable with Snowflake RBAC and SQL DDL. No prior multi-tenant MSP experienc
 
 ## Architecture Overview
 
-### Organisation Level
+### Organization Level
 
 ```mermaid
 flowchart TB
-    subgraph org [Organisation: ACME-MSP]
+    subgraph org [Organization: ACME-MSP]
         OPS["MSP_OPS (us-east-1)"]
         ACME["CUST_ACME_PROD (us-east-1)"]
         BRAVO["CUST_BRAVO_PROD (eu-west-1)"]
@@ -46,10 +46,10 @@ flowchart TB
     OPS -->|"Org Usage Views"| CHARLIE
 ```
 
-- A single Snowflake **Organisation** spans all regions and cloud platforms. You do not need one Organisation per region -- one Organisation holds every account regardless of where it runs (AWS us-east-1, Azure westeurope, etc.). Multiple Organisations only arise from separate legal entities or acquisitions.
-- Under the Organisation: **one account per customer** (optionally Dev/Test/Prod per customer), placed in the region closest to the customer's data.
+- A single Snowflake **Organization** spans all regions and cloud platforms. You do not need one Organization per region -- one Organization holds every account regardless of where it runs (AWS us-east-1, Azure westeurope, etc.). Multiple Organizations only arise from separate legal entities or acquisitions.
+- Under the Organization: **one account per customer** (optionally Dev/Test/Prod per customer), placed in the region closest to the customer's data.
 - One **MSP_OPS account** for central monitoring and cost analysis.
-- MSP_OPS uses **Organisation Usage views** (`SNOWFLAKE.ORGANIZATION_USAGE`) for cross-account telemetry -- no data shares required for basic monitoring. These views cover all accounts across all regions in the Organisation. **Prerequisite:** Organisation Usage views are premium views available only in the [organization account](https://docs.snowflake.com/en/user-guide/organization-accounts). The MSP_OPS account must be the organization account, or an account with the ORGADMIN role.
+- MSP_OPS uses **Organization Usage views** (`SNOWFLAKE.ORGANIZATION_USAGE`) for cross-account telemetry -- no data shares required for basic monitoring. These views cover all accounts across all regions in the Organization. **Prerequisite:** Organization Usage views are premium views available only in the [organization account](https://docs.snowflake.com/en/user-guide/organization-accounts). The MSP_OPS account must be the organization account, or an account with the ORGADMIN role.
 - All 3rd-party users log into the **customer account**, never into MSP_OPS.
 
 ### Per-Account Data Flow
@@ -415,7 +415,7 @@ Full script: [`sql/04_monitoring.sql`](sql/04_monitoring.sql)
 
 ### Cross-Account Monitoring (MSP_OPS Account)
 
-Use **Organisation Usage views** -- no data shares required:
+Use **Organization Usage views** -- no data shares required:
 
 ```sql
 -- Credit consumption per account, last 30 days
@@ -538,7 +538,7 @@ Treat RBAC changes and vendor lifecycle as change-controlled actions:
 | [`sql/01_account_baseline.sql`](sql/01_account_baseline.sql) | Roles, databases, schemas, warehouses, resource monitors, tags | ACCOUNTADMIN |
 | [`sql/02_vendor_onboard.sql`](sql/02_vendor_onboard.sql) | Parameterised vendor onboarding (roles, schema, warehouse, grants, network, auth) | ACCOUNTADMIN |
 | [`sql/03_vendor_offboard.sql`](sql/03_vendor_offboard.sql) | Vendor offboarding (disable, transfer ownership, revoke, clean up) | ACCOUNTADMIN |
-| [`sql/04_monitoring.sql`](sql/04_monitoring.sql) | Organisation-level and per-account monitoring queries | ACCOUNTADMIN |
+| [`sql/04_monitoring.sql`](sql/04_monitoring.sql) | Organization-level and per-account monitoring queries | ACCOUNTADMIN |
 | [`sql/05_guardrails.sql`](sql/05_guardrails.sql) | Network rules, auth policies, masking, row access, audit checks | ACCOUNTADMIN |
 
 ---
@@ -554,5 +554,5 @@ Treat RBAC changes and vendor lifecycle as change-controlled actions:
 - [Masking Policies](https://docs.snowflake.com/en/user-guide/security-column-ddm-intro)
 - [Row Access Policies](https://docs.snowflake.com/en/user-guide/security-row-intro)
 - [Resource Monitors](https://docs.snowflake.com/en/user-guide/resource-monitors)
-- [Organisation Usage Views](https://docs.snowflake.com/en/sql-reference/organization-usage)
+- [Organization Usage Views](https://docs.snowflake.com/en/sql-reference/organization-usage)
 - [Object Tagging for Cost Attribution](https://docs.snowflake.com/en/user-guide/cost-attributing)
