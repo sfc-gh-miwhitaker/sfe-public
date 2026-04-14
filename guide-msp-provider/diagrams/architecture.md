@@ -260,7 +260,7 @@ flowchart TB
 
 ### Analytics Role Position in the Hierarchy
 
-Both `CUST_ACME_BI_READONLY`, `CUST_ACME_SI_READONLY`, and `CUST_ACME_API_READONLY` are flat grant roles — they do not sit in the customer role hierarchy. `MSP_PLATFORM_ENGINEER` creates and owns them but they are not granted to `CUST_ADMIN`.
+`CUST_ACME_BI_READONLY`, `CUST_ACME_SI_READONLY`, `CUST_ACME_API_READONLY`, and `CUST_ACME_MCP_READONLY` are flat grant roles — they do not sit in the customer role hierarchy. `MSP_PLATFORM_ENGINEER` creates and owns them but they are not granted to `CUST_ADMIN`.
 
 ```mermaid
 flowchart BT
@@ -272,6 +272,7 @@ flowchart BT
     BI_RO["CUST_ACME_BI_READONLY\nservice account — PowerBI"]
     SI_RO["CUST_ACME_SI_READONLY\nhuman users — Snowsight + SI"]
     API_RO["CUST_ACME_API_READONLY\nservice account — Cortex Analyst API"]
+    MCP_RO["CUST_ACME_MCP_READONLY\nOAuth user — AI client MCP"]
 
     ACCOUNTADMIN --> MSP_AA
     SYSADMIN --> MSP_PE
@@ -280,4 +281,60 @@ flowchart BT
     BI_RO -.->|"created by"| MSP_PE
     SI_RO -.->|"created by"| MSP_PE
     API_RO -.->|"created by"| MSP_PE
+    MCP_RO -.->|"created by"| MSP_PE
 ```
+
+---
+
+## AI Client Access Patterns (MCP / Cortex Code)
+
+Three options for connecting AI clients (Claude, Cortex Code CLI, Cursor, etc.) to MSP-managed Snowflake data. These extend the BI/SI options above with MCP-based tooling.
+
+```mermaid
+flowchart TB
+    subgraph optD1 ["Option D1: Managed MCP Server + OAuth (Gate 1, human login)"]
+        direction LR
+        D1_CLIENT["AI client\nClaude.ai / ChatGPT / etc."]
+        D1_OAUTH["OAuth redirect\nSnowsight login"]
+        D1_MCP["MCP SERVER object\nCORTEX_ANALYST_MESSAGE tool"]
+        D1_SV["Semantic View\nPRESENTATION.ANALYTICS"]
+        D1_CLIENT -->|"OAuth flow"| D1_OAUTH
+        D1_OAUTH -->|"token"| D1_MCP
+        D1_MCP -->|"tools/call"| D1_SV
+    end
+
+    subgraph optD2 ["Option D2: Client-Side MCP / CoCo CLI (Gate 1, credentials issued)"]
+        direction LR
+        D2_CLIENT["AI client\nClaude Desktop / CoCo / Cursor"]
+        D2_LOCAL["Local MCP server\nor CoCo process"]
+        D2_SVC["CUST_ACME_API_SVC\nTYPE = SERVICE\nkey-pair auth\nnetwork policy"]
+        D2_DATA["PRESENTATION.ANALYTICS\nSemantic Views"]
+        D2_CLIENT -->|"local process"| D2_LOCAL
+        D2_LOCAL -->|"key-pair auth"| D2_SVC
+        D2_SVC -->|"SELECT only"| D2_DATA
+    end
+
+    subgraph optD3 ["Option D3: MSP-Mediated MCP (no Gate 1)"]
+        direction LR
+        D3_CLIENT["Customer AI client"]
+        D3_MSP["MSP MCP endpoint\nDocker / SPCS"]
+        D3_BE["MSP service account\nkey-pair auth"]
+        D3_DATA["PRESENTATION.ANALYTICS\nSemantic Views"]
+        D3_CLIENT -->|"HTTP to MSP"| D3_MSP
+        D3_MSP -->|"MSP credentials"| D3_BE
+        D3_BE -->|"SELECT only"| D3_DATA
+    end
+```
+
+| | Option D1: Managed MCP + OAuth | Option D2: Client-Side MCP / CoCo | Option D3: MSP-Mediated MCP |
+|-|-------------------------------|----------------------------------|---------------------------|
+| Gate 1 triggered | Yes — human OAuth login | Yes — credentials issued | No — MSP mediates |
+| Who authenticates to Snowflake | Customer user via OAuth | Customer's service account / PAT | MSP service account |
+| Customer has SF credentials | Yes, OAuth token | Yes, key-pair or PAT | No |
+| MCP server runs where | In Snowflake (managed) | On customer's machine | In MSP infra |
+| AI clients supported | Claude.ai web, any OAuth MCP client | Claude Desktop, CoCo CLI, Cursor, Codex | Any (customer hits MSP endpoint) |
+| Write access risk | **High** — OAuth secondary roles activate ALL user roles | Low — service account has one role | None — MSP controls |
+| MSP dev effort | Low–Medium | Low (provide config YAML) | Medium–High |
+| Closest existing option | B1 (human login) | B2 (API service account) | C (embedded) |
+
+> **OAuth secondary roles are the #1 MSP risk in D1.** `OAUTH_USE_SECONDARY_ROLES = IMPLICIT` activates the user's default secondary roles (per the `DEFAULT_SECONDARY_ROLES` property, which defaults to `('ALL')` for new users). If any activated role has write access — even inherited — the AI client can write data. The MSP must either set `DEFAULT_SECONDARY_ROLES = ()` on the MCP user or ensure the user has **only** the MCP readonly role. PATs (used in D2) do not evaluate secondary roles and are safer for MSP use. See README.md Option D1 for full context.

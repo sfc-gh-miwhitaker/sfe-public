@@ -34,7 +34,7 @@ A Connected App provider (Gate 1 = No) belongs in a different pattern — Native
 - `sql/03_vendor_offboard.sql` -- Vendor offboarding and cleanup
 - `sql/04_monitoring.sql` -- Org-level and per-account monitoring queries
 - `sql/05_guardrails.sql` -- Network rules, auth policies, masking, row access, audit checks
-- `sql/06_analytics_access.sql` -- Customer analytics access: Data Sharing, BI service account, SI human users
+- `sql/06_analytics_access.sql` -- Customer analytics access: Data Sharing, BI service account, SI human users, MCP server + OAuth
 - `diagrams/architecture.md` -- Mermaid diagrams (org layout, role hierarchy, data flow)
 
 ## When Helping with This Project
@@ -43,13 +43,7 @@ A Connected App provider (Gate 1 = No) belongs in a different pattern — Native
 - This is a guide, not a demo -- no deploy_all.sql, no Snowflake objects to create
 - SQL files are reference scripts the customer copies and adapts; they are not idempotent deployments
 - All vendor SQL is parameterised with `SET vendor_name`
-- MANAGED ACCESS is critical: without it, vendors can grant access to objects they create
-- Future grants are required so MSP pipelines can read vendor-created objects
-- Network policies at the user level override account-level policies
-- CUST_ADMIN user management must go through stored procedure, never direct privilege grants
-- Gate 3 (billing) connects to SPN Managed Applications enrollment; Partial MSPs do not have SNOWFLAKE.ORGANIZATION_USAGE access
-- **Customer analytics access (Part 7):** four options — Data Sharing (§1.4(a) carveout, preferred), B1 Snowsight User for SI product (human login + MFA + `CORTEX_USER` + `CLIENT_TYPES = SNOWFLAKE_UI`), B2 API-Only for Cortex Analyst REST API (service account + `CORTEX_ANALYST_USER` + `CLIENT_TYPES = DRIVERS` + no Snowsight), or Embedded/C (MSP backend calls same API, no customer credentials). Critical: `CLIENT_TYPES` does not restrict REST APIs — network policy is the real boundary. `MFA_ENROLLMENT = REQUIRED` forces `CLIENT_TYPES` to include `SNOWFLAKE_UI`. `BI_READONLY`, `SI_READONLY`, and `API_READONLY` roles are flat grant roles NOT in the customer hierarchy
-- **ToS awareness:** the three gates map to Snowflake ToS clauses — §1.1 + §1.4(a) for Gate 1 (vendor as Contractor not third party), §2.2(a) for Gate 2 (Customer data responsibility is contractual), §1.4(a) service bureau clause for Gate 3; always refer users to their legal team for specific advice
+- See README.md for all technical details, constraints, ToS context, analytics access options, and troubleshooting
 
 ## Related Projects
 

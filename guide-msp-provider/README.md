@@ -9,6 +9,17 @@ Inspired by a real customer question: *"We're an MSP. We manage Snowflake accoun
 
 ---
 
+## How to Read This Guide
+
+This guide contains four types of content:
+
+- **Snowflake behavior** — Verified against Snowflake documentation (April 2026). If Snowflake changes the feature, this may become stale.
+- **Architecture recommendation** — The authors' opinion on how to structure an MSP environment. Other valid approaches exist.
+- **ToS context** — Paraphrases of Snowflake ToS clauses with author interpretation. Quotes are verified against ToS dated January 28, 2026. Interpretations are not legal advice.
+- **SPN program details** — Confirmed against SPN Program Guide v03/2026 (internal partner documentation). Program categories and requirements may change.
+
+---
+
 ## Is This Guide For You?
 
 Before diving in, answer three questions. Your answers determine whether this guide is a direct fit or whether a different Snowflake pattern applies.
@@ -43,7 +54,7 @@ flowchart TD
 | Organization Usage Views | Not available | Available in MSP_OPS account |
 | Vendor isolation mechanism | App-layer or row access policies | Schema + network policy + auth policy |
 | Data responsibility (ToS §2.2a) | You own the pipelines | You own everything, including what vendors bring in |
-| SPN enrollment | AI Data Cloud Products → Connected | AI Data Cloud Products → Managed Applications |
+| SPN enrollment | AI Data Cloud Products → Connected | AI Data Cloud Products → Managed Applications (Source: SPN Program Guide v03/2026) |
 
 ### Where the Lines Blur
 
@@ -88,27 +99,33 @@ The three gates are not arbitrary — each maps to a specific clause in the Snow
 
 ### Gate 1 ↔ ToS §1.1 and §1.4(a)
 
-**§1.1** allows Contractors and Affiliates to be Users, but only "solely for the benefit of Customer." A vendor who logs in with Snowsight credentials to load their own data into your account is acting as a Contractor in service of your managed delivery — that is permissible. A vendor who is using your Snowflake environment as a general-purpose data platform for their own business is not.
+**ToS text:** §1.1 allows Contractors and Affiliates to be Users, but only "solely for the benefit of Customer or such Affiliate." §1.4(a) prohibits "provide access to... the Service... to a third party" except for "Service features expressly intended to enable Customer to provide its third parties with access to Customer Data" or "as set forth in an SOW, as applicable."
 
-**§1.4(a)** prohibits "provide access to... the Service... to a third party" except for "Service features expressly intended to enable Customer to provide its third parties with access to Customer Data." That carveout covers Data Sharing (read-only) — it does not cover write-capable Snowsight access for data ingestion. The legitimising mechanism for MSPs is the SPN Managed Applications program: under a capacity agreement, vendor users are Contractors of the MSP (the Customer), not standalone third parties receiving a sublicense to Snowflake.
+**Author interpretation:** A vendor who logs in with Snowsight credentials to load their own data into your account is acting as a Contractor in service of your managed delivery — that is permissible under §1.1. A vendor using your Snowflake environment as a general-purpose data platform for their own business is not. The first §1.4(a) carveout covers Data Sharing (read-only). The second allows additional access patterns explicitly authorized in a Statement of Work. Neither carveout covers write-capable Snowsight access for data ingestion by default. The legitimising mechanism for MSPs is the SPN Managed Applications program (Source: SPN Program Guide v03/2026): under a capacity agreement, vendor users are Contractors of the MSP (the Customer), not standalone third parties receiving a sublicense to Snowflake.
 
-This is why the architecture in this guide constrains vendor access to a single managed-access schema with the minimum necessary privileges. Any broader access would look less like "Contractor acting for Customer" and more like "third party receiving Snowflake access" — which §1.4(a) prohibits.
+**Architectural conclusion (opinion):** This is why the architecture in this guide constrains vendor access to a single managed-access schema with the minimum necessary privileges. Any broader access would look less like "Contractor acting for Customer" and more like "third party receiving Snowflake access" — which §1.4(a) prohibits. Review this interpretation with your legal team.
 
 ### Gate 2 ↔ ToS §2.2(a)
 
-**§2.2(a)**: "Customer is solely responsible for the accuracy, content and legality of all Customer Data."
+**ToS text:** §2.2(a): "Customer is solely responsible for the accuracy, content and legality of all Customer Data."
 
-Once a vendor loads data into your account, it is Customer Data and you are contractually responsible to Snowflake for it — its accuracy, legality, and compliance. Gate 2 is not a policy choice; it is a contractual fact that exists the moment Gate 1 is triggered. Managed Access schemas, future grants, and the ownership-transfer step in vendor offboarding (Part 3) are direct architectural responses to this clause. Skipping them does not make the liability go away; it just removes your ability to exercise control.
+**Author interpretation:** Once a vendor loads data into your account, it is Customer Data and you are contractually responsible to Snowflake for it — its accuracy, legality, and compliance. Gate 2 is not a policy choice; it is a contractual fact that exists the moment Gate 1 is triggered.
 
-### Gate 3 ↔ ToS §1.4(a) service bureau prohibition
+**Architectural conclusion (opinion):** Managed Access schemas, future grants, and the ownership-transfer step in vendor offboarding (Part 3) are direct architectural responses to this clause. Skipping them does not make the liability go away; it just removes your ability to exercise control.
 
-**§1.4(a)** also prohibits using the Service "in a service bureau or outsourcing offering." A company that manages Snowflake accounts on behalf of clients, bills those clients for Snowflake consumption, and does so without an active capacity agreement with Snowflake is operating as an unlicensed service bureau under this clause.
+### Gate 3 ↔ ToS §1.4(a) service bureau / outsourcing offering prohibition
 
-The resolution is the SPN Managed Applications enrollment: an active capacity agreement for your managed workload is what distinguishes a legitimate Managed App provider from an unlicensed service bureau. If you answer Yes to Gate 3, a standard Customer contract is not sufficient — you need to be enrolled in SPN Managed Applications, with your customer accounts registered under "Accounts Powered by Snowflake."
+**ToS text:** §1.4(a) also prohibits using the Service "in a service bureau or outsourcing offering."
+
+**Author interpretation:** A company that manages Snowflake accounts on behalf of clients, bills those clients for Snowflake consumption, and does so without an active capacity agreement with Snowflake is operating as an unlicensed service bureau under this clause.
+
+**SPN program resolution (Source: SPN Program Guide v03/2026):** The resolution is the SPN Managed Applications enrollment: an active capacity agreement for your managed workload is what distinguishes a legitimate Managed App provider from an unlicensed service bureau. If you answer Yes to Gate 3, a standard Customer contract is not sufficient — you need to be enrolled in SPN Managed Applications, with your customer accounts registered under "Accounts Powered by Snowflake."
 
 ### The Connected App tension
 
-**§1.4(b)** prohibits "use the Service to provide, or incorporate the Service into, any substantially similar cloud-based service for the benefit of a third party." A Connected App / service provider who runs Snowflake compute to produce outputs they sell to clients sits close to this line. Snowflake's distinction is architectural: in a Connected App, the data and compute stay in the *client's* Snowflake account — the provider does not host or operate Snowflake on the client's behalf. If you start hosting your clients' data in your own Snowflake org and billing them for it, §1.4(b) and Gate 3 both apply.
+**ToS text:** §1.4(b) prohibits "use the Service to provide, or incorporate the Service into, any substantially similar cloud-based service for the benefit of a third party."
+
+**Author interpretation:** A Connected App / service provider who runs Snowflake compute to produce outputs they sell to clients sits close to this line. Snowflake's distinction is architectural: in a Connected App, the data and compute stay in the *client's* Snowflake account — the provider does not host or operate Snowflake on the client's behalf. If you start hosting your clients' data in your own Snowflake org and billing them for it, §1.4(b) and Gate 3 both apply.
 
 ---
 
@@ -132,7 +149,7 @@ flowchart TB
 - A single Snowflake **Organization** spans all regions and cloud platforms. You do not need one Organization per region -- one Organization holds every account regardless of where it runs (AWS us-east-1, Azure westeurope, etc.). Multiple Organizations only arise from separate legal entities or acquisitions.
 - Under the Organization: **one account per customer** (optionally Dev/Test/Prod per customer), placed in the region closest to the customer's data.
 - One **MSP_OPS account** for central monitoring and cost analysis.
-- MSP_OPS uses **Organization Usage views** (`SNOWFLAKE.ORGANIZATION_USAGE`) for cross-account telemetry -- no data shares required for basic monitoring. These views cover all accounts across all regions in the Organization. **Prerequisite:** Organization Usage views are premium views available only in the [organization account](https://docs.snowflake.com/en/user-guide/organization-accounts). The MSP_OPS account must be the organization account, or an account with the ORGADMIN role.
+- MSP_OPS uses **Organization Usage views** (`SNOWFLAKE.ORGANIZATION_USAGE`) for cross-account telemetry -- no data shares required for basic monitoring. These views cover all accounts across all regions in the Organization. **Prerequisite:** Organization Usage views are available in the organization account and any regular account with ORGADMIN role enabled. Certain premium views (e.g., `DATA_TRANSFER_HISTORY`) are restricted to the organization account only. The MSP_OPS account must be the organization account, or an account with the ORGADMIN role.
 - All 3rd-party users log into the **customer account**, never into MSP_OPS.
 
 ### Per-Account Data Flow
@@ -270,7 +287,7 @@ This runs with the owner's privileges (ACCOUNTADMIN) but validates inputs: only 
 | WORKSPACE | MSP | MSP experiments | No |
 | WORKSPACE | CUST | Customer sandbox | No |
 
-**Why Managed Access?** In a standard schema, the object owner can grant privileges to other roles. In a `WITH MANAGED ACCESS` schema, only the schema owner controls grants. This prevents vendors from granting access to objects they create in `RAW_VENDOR.VENDOR_X` to anyone other than the MSP.
+**Why Managed Access?** In a standard schema, the object owner can grant privileges to other roles. In a `WITH MANAGED ACCESS` schema, only the schema owner or a role with the `MANAGE GRANTS` privilege controls grants. This prevents vendors from granting access to objects they create in `RAW_VENDOR.VENDOR_X` to anyone other than the MSP.
 
 ```sql
 CREATE SCHEMA IF NOT EXISTS RAW_VENDOR.VENDOR_X
@@ -362,7 +379,7 @@ ALTER USER VENDOR_X_ENGINEER_1 SET NETWORK_POLICY = VENDOR_X_NETWORK_POLICY;
 
 ### Authentication Policies
 
-Enforce MFA for vendor users:
+Enforce MFA for vendor users (`MFA_ENROLLMENT` accepts `REQUIRED`, `REQUIRED_PASSWORD_ONLY`, or `OPTIONAL`; `OPTIONAL` is retained for backward compatibility only):
 
 ```sql
 CREATE AUTHENTICATION POLICY IF NOT EXISTS RAW_VENDOR.VENDOR_X.VENDOR_AUTH_POLICY
@@ -443,7 +460,7 @@ CREATE NETWORK POLICY IF NOT EXISTS ACCOUNT_NETWORK_POLICY
 ALTER ACCOUNT SET NETWORK_POLICY = ACCOUNT_NETWORK_POLICY;
 ```
 
-**Vendor-specific policies** are applied per-user and take precedence over the account policy. This means a vendor user's IP must match both the account policy (if they aren't overridden) or their user-level policy.
+**Vendor-specific policies** are applied per-user. Network policy precedence is: Security Integration > User > Account. A user-level policy overrides the account-level policy, and a security integration policy (e.g., OAuth) overrides both. This means a vendor user's IP must match their user-level policy (if set), not the account policy.
 
 ### Masking Policies
 
@@ -496,7 +513,7 @@ Run these weekly (or automate with a task):
 
 ## Part 5: Monitoring
 
-> **Gate 3 in practice.** Because your Snowflake bill covers every customer account, cross-account visibility is an operational requirement, not a nice-to-have. `SNOWFLAKE.ORGANIZATION_USAGE` is your primary tool. A Partial MSP or systems integrator who answered No to Gate 3 does not have access to these views — work with your client to expose cost data via a data share or exported report, or request ORGADMIN access under their Organization. Separately: as a Managed App provider under SPN, keeping your "Accounts Powered by Snowflake" list current is how your managed workload consumption gets attributed to your program tier.
+> **Gate 3 in practice.** Because your Snowflake bill covers every customer account, cross-account visibility is an operational requirement, not a nice-to-have. `SNOWFLAKE.ORGANIZATION_USAGE` is your primary tool. A Partial MSP or systems integrator who answered No to Gate 3 does not have access to these views — work with your client to expose cost data via a data share or exported report, or request ORGADMIN access under their Organization. Separately: as a Managed App provider under SPN, keeping your "Accounts Powered by Snowflake" list current is how your managed workload consumption gets attributed to your program tier (Source: SPN Program Guide v03/2026).
 
 > **Problem:** You manage dozens of customer accounts and need to see credit burn, vendor activity, and pipeline health across all of them from one place.
 
@@ -610,19 +627,20 @@ Treat RBAC changes and vendor lifecycle as change-controlled actions:
 
 > **Problem:** Your customer is happy with your managed service but wants to plug in their own PowerBI or use Snowflake Intelligence directly. How do you enable this without handing them the keys to your entire managed environment?
 
-Full script: [`sql/06_analytics_access.sql`](sql/06_analytics_access.sql) — Diagrams: [Customer BI Tool Access](diagrams/architecture.md#customer-bi-tool-access-powerbi-example) | [Snowflake Intelligence / Cortex Analyst Access](diagrams/architecture.md#snowflake-intelligence--cortex-analyst-access)
+Full script: [`sql/06_analytics_access.sql`](sql/06_analytics_access.sql) — Diagrams: [Customer BI Tool Access](diagrams/architecture.md#customer-bi-tool-access-powerbi-example) | [Snowflake Intelligence / Cortex Analyst Access](diagrams/architecture.md#snowflake-intelligence--cortex-analyst-access) | [AI Client Access (MCP)](diagrams/architecture.md#ai-client-access-patterns-mcp--cortex-code)
 
-### Three Things That Sound the Same but Aren't
+### Five Things That Sound the Same but Aren't
 
 Before choosing an option, understand what your customer is actually asking for:
 
-| | Snowsight | Snowflake Intelligence | Cortex Analyst API |
-|-|-----------|----------------------|-------------------|
-| What it is | The web interface (`app.snowflake.com`) | AI analytics product inside Snowsight — agents, natural language queries, charts | REST API (`/api/v2/cortex/analyst/message`) that powers SI under the hood |
-| How it's accessed | Browser login | Snowsight navigation (AI & ML → Agents) | Any HTTP client with auth token — no browser needed |
-| Requires Snowsight | — | Yes | No |
-| `SNOWFLAKE.CORTEX_USER` needed | No | Yes | Yes |
-| Can `CLIENT_TYPES` block it | Yes — set to `('DRIVERS')` to block UI | Yes — blocked if Snowsight is blocked | **No** — `CLIENT_TYPES` does not restrict REST API access |
+| | Snowsight | Snowflake Intelligence | Cortex Analyst API | Snowflake-Managed MCP Server | Client-Side MCP / Cortex Code CLI |
+|-|-----------|----------------------|-------------------|------------------------------|----------------------------------|
+| What it is | The web interface (`app.snowflake.com`) | AI analytics product inside Snowsight — agents, NL queries, charts | REST API (`/api/v2/cortex/analyst/message`) that powers SI under the hood | `CREATE MCP SERVER` object in Snowflake — exposes Cortex tools via MCP protocol | Local process (Snowflake-Labs/mcp or CoCo CLI) that connects to Snowflake on behalf of an AI client |
+| How it's accessed | Browser login | Snowsight navigation (AI & ML → Agents) | Any HTTP client with auth token | AI client (Claude.ai, etc.) connects via OAuth to MCP server URL | AI client (Claude Desktop, CoCo, Cursor) launches local MCP server or CoCo process |
+| Requires Snowsight | — | Yes | No | No — OAuth flow only | No |
+| `SNOWFLAKE.CORTEX_USER` needed | No | Yes | Yes | No — uses `USAGE ON MCP SERVER` + per-tool grants | Yes (CoCo CLI); varies (Snowflake-Labs/mcp) |
+| Can `CLIENT_TYPES` block it | Yes | Yes — blocked if Snowsight is blocked | **No** — does not restrict REST APIs | Depends on client type used by OAuth flow | No — uses driver/connector auth |
+| Who authenticates | Human via browser | Human via browser | App server or service account | Human via OAuth redirect | Human (browser/PAT) or service account (key-pair) |
 
 > **`CLIENT_TYPES` limitation (from Snowflake docs):** *"CLIENT_TYPES is a best-effort method to block user logins based on specific clients. It should not be used as the sole control to establish a security boundary. Notably, it does not restrict access to the Snowflake REST APIs."*
 
@@ -641,6 +659,8 @@ This means a user with `CORTEX_USER` + `SELECT` on the presentation layer can ca
 | MSP controls schema exposure | Via share definition | Via role GRANTs | Via role GRANTs | Via app/API layer |
 | Requires customer SF account | Yes (or reader account) | No | No | No |
 | MSP dev effort | Low | Low | Medium | High |
+
+The same framework extends to AI client access (Options D1–D3 below). The table above covers BI tools and Snowflake Intelligence; the AI client options cover MCP-based integrations with Claude, Cortex Code CLI, Cursor, and similar tools.
 
 The trap to avoid: granting customer users CREATE or INSERT privileges under the guise of "analytics access." A customer user who can create a stage, run COPY INTO, or modify a schema has crossed from read-only analytics into full Gate 1 territory — with Gate 2 implications if they corrupt data.
 
@@ -829,6 +849,149 @@ Authorization: Bearer <MSP backend OAuth token>
 
 This is the pure Connected App / service provider pattern. Gate 1 is not triggered. The MSP's application mediates all access. The tradeoff: more development investment, but the MSP retains full control over the analytics experience and the customer's interaction surface.
 
+### Option D1: Snowflake-Managed MCP Server + OAuth (Gate 1, human login)
+
+The customer wants to use an AI client (Claude.ai, ChatGPT, etc.) that supports Snowflake's managed MCP server. The MSP creates a `CREATE MCP SERVER` object that exposes Cortex Analyst semantic views as MCP tools. The customer authenticates via OAuth — their AI client redirects to Snowsight for login, gets a token, and calls MCP tools.
+
+This is architecturally similar to B1 (human Snowsight login) but the customer never stays in Snowsight — they interact through their AI client.
+
+> **OAuth secondary roles trap:** When the OAuth security integration uses `OAUTH_USE_SECONDARY_ROLES = IMPLICIT`, Snowflake activates the user's default secondary roles (controlled by the `DEFAULT_SECONDARY_ROLES` user property). Because `DEFAULT_SECONDARY_ROLES` defaults to `('ALL')` for new users, all granted roles will activate unless the MSP explicitly restricts it. If any activated role has write access — even inherited through PUBLIC — the AI client has write access. The MSP **must** either set `DEFAULT_SECONDARY_ROLES = ()` on the MCP user or ensure the user has **only** the read-only analytics role and no other role grants.
+
+```sql
+-- Full script: sql/06_analytics_access.sql  Option D1 block
+
+-- MCP server object exposing Cortex Analyst as a tool
+CREATE MCP SERVER IF NOT EXISTS CUST_ACME_MCP_SERVER
+  FROM SPECIFICATION $$
+    tools:
+      - name: "acme-analytics"
+        type: "CORTEX_ANALYST_MESSAGE"
+        identifier: "PRESENTATION.ANALYTICS.CUST_ACME_SEMANTIC_VIEW"
+        description: "Natural language analytics for ACME customer data"
+        title: "ACME Analytics"
+  $$;
+
+-- Dedicated role: USAGE on MCP server + SELECT on semantic view + warehouse
+CREATE ROLE IF NOT EXISTS CUST_ACME_MCP_READONLY;
+GRANT USAGE ON DATABASE PRESENTATION TO ROLE CUST_ACME_MCP_READONLY;
+GRANT USAGE ON SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_MCP_READONLY;
+GRANT SELECT ON ALL VIEWS IN SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_MCP_READONLY;
+GRANT SELECT ON FUTURE VIEWS IN SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_MCP_READONLY;
+GRANT USAGE ON WAREHOUSE CUST_ANALYTICS_WH TO ROLE CUST_ACME_MCP_READONLY;
+GRANT USAGE ON MCP SERVER CUST_ACME_MCP_SERVER TO ROLE CUST_ACME_MCP_READONLY;
+GRANT SELECT ON SEMANTIC VIEW PRESENTATION.ANALYTICS.CUST_ACME_SEMANTIC_VIEW
+    TO ROLE CUST_ACME_MCP_READONLY;
+GRANT ROLE CUST_ACME_MCP_READONLY TO ROLE MSP_PLATFORM_ENGINEER;
+
+-- OAuth security integration — redirect URI is AI-client-specific
+CREATE SECURITY INTEGRATION IF NOT EXISTS CUST_ACME_MCP_OAUTH
+    TYPE = OAUTH
+    OAUTH_CLIENT = CUSTOM
+    ENABLED = TRUE
+    OAUTH_CLIENT_TYPE = 'CONFIDENTIAL'
+    OAUTH_REDIRECT_URI = '<AI_CLIENT_REDIRECT_URI>'
+    OAUTH_USE_SECONDARY_ROLES = IMPLICIT;
+
+-- Retrieve client_id and client_secret for AI client configuration:
+-- SELECT SYSTEM$SHOW_OAUTH_CLIENT_SECRETS('CUST_ACME_MCP_OAUTH');
+
+-- CRITICAL: grant ONLY the MCP readonly role. No other roles.
+-- OAuth secondary roles activate DEFAULT_SECONDARY_ROLES (defaults to ALL for new users).
+-- Set DEFAULT_SECONDARY_ROLES = () to prevent role escalation.
+CREATE USER IF NOT EXISTS CUST_ACME_MCP_USER
+    DEFAULT_ROLE = CUST_ACME_MCP_READONLY
+    EMAIL = '<USER_EMAIL>'
+    MUST_CHANGE_PASSWORD = TRUE;
+
+GRANT ROLE CUST_ACME_MCP_READONLY TO USER CUST_ACME_MCP_USER;
+-- Do NOT grant any other roles to this user.
+-- Restrict secondary roles to prevent OAuth role escalation:
+ALTER USER CUST_ACME_MCP_USER SET DEFAULT_SECONDARY_ROLES = ();
+```
+
+**MCP server URL format:** `https://<org>-<account>.snowflakecomputing.com/api/v2/databases/PRESENTATION/schemas/ANALYTICS/mcp-servers/CUST_ACME_MCP_SERVER`
+
+> **Hostname gotcha:** If your Snowflake account name contains underscores, replace them with hyphens in the URL. `ACME_PROD` → `acme-prod` in the hostname. The MCP protocol has connection issues with underscores in hostnames.
+
+**How this differs from B1:** The customer never logs into Snowsight directly. They authenticate via OAuth redirect, and the AI client makes MCP `tools/call` requests. The MCP server object controls which tools are exposed. But OAuth secondary roles make role isolation **more critical** than B1 — in B1, the network policy and `CLIENT_TYPES` provide layers of defense. In D1, all roles activate through the OAuth token.
+
+### Option D2: Client-Side MCP / Cortex Code CLI (Gate 1, credentials issued)
+
+The customer runs a local MCP server ([Snowflake-Labs/mcp](https://github.com/Snowflake-Labs/mcp)) or Cortex Code CLI on their own machine. They connect to the MSP's Snowflake account using a service account with key-pair auth (same as B2) and use their AI client (Claude Desktop, Cursor, CoCo CLI) to query data via MCP tools.
+
+This reuses the B2 service account pattern — `TYPE = SERVICE`, key-pair auth, network policy — with an MCP configuration layer on top. The MSP provides a locked-down MCP configuration YAML that restricts SQL statement types.
+
+```sql
+-- D2 reuses the B2 service account (CUST_ACME_API_SVC).
+-- See Option B2 block in sql/06_analytics_access.sql.
+-- The customer runs the local MCP server with this connection config.
+```
+
+**MCP configuration YAML** (provided by MSP to customer):
+
+```yaml
+analyst_services:
+  - service_name: acme_analytics
+    semantic_model: PRESENTATION.ANALYTICS.CUST_ACME_SEMANTIC_VIEW
+    description: >
+      Natural language analytics for ACME customer data.
+      Covers revenue, operations, and customer metrics.
+
+other_services:
+  object_manager: False
+  query_manager: True
+  semantic_manager: True
+
+sql_statement_permissions:
+  - Select: True
+  - Describe: True
+  - Alter: False
+  - Create: False
+  - Delete: False
+  - Drop: False
+  - Insert: False
+  - Merge: False
+  - Update: False
+  - TruncateTable: False
+  - Unknown: False
+```
+
+**Cortex Code CLI connection** (`~/.snowflake/connections.toml` on customer machine):
+
+```toml
+[acme_analytics]
+account = "<ORG>-<ACCOUNT>"
+user = "CUST_ACME_API_SVC"
+role = "CUST_ACME_API_READONLY"
+warehouse = "CUST_ANALYTICS_WH"
+authenticator = "SNOWFLAKE_JWT"
+private_key_file = "/path/to/rsa_key.p8"
+```
+
+> **PATs vs key-pair for MCP:** Programmatic Access Tokens (PATs) do not evaluate secondary roles — a PAT is scoped to one role. This is actually **safer** for MSP use than OAuth, because the customer cannot accidentally escalate to another role. Use PATs or key-pair auth for D2; avoid password auth entirely.
+
+**How this differs from B2:** Same auth and role setup. The difference is the tooling layer — B2 is raw Cortex Analyst REST API calls; D2 wraps it in MCP, giving the customer a richer AI client experience with tool discovery, semantic view querying, and (optionally) object management. The `sql_statement_permissions` in the MCP config add a second enforcement layer beyond Snowflake RBAC.
+
+**How this differs from D1:** D1 uses Snowflake's managed MCP server + OAuth (human login, secondary roles risk). D2 uses a client-side MCP server + service account (key-pair, no secondary roles, more explicit role scoping). D2 is harder for the customer to set up but gives the MSP tighter control.
+
+### Option D3: MSP-Mediated MCP Server (no Gate 1)
+
+The MSP runs the MCP server in their own infrastructure (container, SPCS, or VM) and exposes it as an HTTP endpoint. The customer's AI client connects to the MSP's endpoint — not to Snowflake. The MSP's service account authenticates to Snowflake; the customer never receives Snowflake credentials.
+
+This is Option C with an MCP interface instead of a custom web app. Gate 1 is not triggered.
+
+```
+Customer's AI client
+    → HTTP to MSP MCP endpoint (https://mcp.acme-msp.com/snowflake-mcp)
+    → MSP MCP server (Docker / SPCS) authenticates to Snowflake with MSP service account
+    → Cortex Analyst / Cortex Search / SQL execution (SELECT only)
+    → Results returned to customer AI client
+```
+
+The MSP deploys the [Snowflake-Labs/mcp](https://github.com/Snowflake-Labs/mcp) server in a container with `streamable-http` transport, `sql_statement_permissions` locked to `Select: True`, and the MSP's own service account credentials. The customer configures their AI client to point at the MSP's MCP endpoint URL.
+
+**How this differs from D2:** In D2, the customer holds credentials and runs the MCP server locally — Gate 1 is triggered. In D3, the MSP holds credentials and runs the MCP server — Gate 1 is not triggered. The MCP tools are identical; the difference is who authenticates to Snowflake.
+
 ### Choosing an Option
 
 | Scenario | Recommended | Why |
@@ -839,9 +1002,12 @@ This is the pure Connected App / service provider pattern. Gate 1 is not trigger
 | Customer wants full SI experience but has no SF account | Option B1 | Human Snowsight login, MFA + network policy, `CLIENT_TYPES = ('SNOWFLAKE_UI')` |
 | Customer wants to build their own NL analytics app against your data | Option B2 | API-only service account, no Snowsight, `CORTEX_ANALYST_USER` |
 | MSP wants to own the entire analytics experience | Option C | Cortex Analyst API from MSP backend, no customer credentials |
+| Customer wants to use Claude.ai or similar AI client with OAuth | Option D1 | Managed MCP server + OAuth — watch for secondary roles risk |
+| Customer wants to use Claude Desktop, CoCo CLI, or Cursor locally | Option D2 | Reuses B2 service account with local MCP server — safest AI client option |
+| MSP wants to offer an MCP endpoint to customers without issuing SF credentials | Option D3 | MSP runs MCP server in own infra — same as C but with MCP interface |
 | Customer is asking for more than SELECT access | Stop | This is a Gate 1 vendor onboarding question, not analytics access |
 
-> **Small team guidance:** If you're a 3-person MSP platform team and your customer asks for "Snowflake Intelligence access," start with Option A (Data Sharing) if they have a Snowflake account, or Option B2 (API-only) if they don't. Option B1 (full Snowsight) creates the most operational surface area — MFA enrollment, `CLIENT_TYPES` management, and the residual risk that `CLIENT_TYPES` doesn't block REST APIs. Option C is the most controlled but requires building and maintaining a frontend.
+> **Small team guidance:** If you're a 3-person MSP platform team and your customer asks for "AI access to our data," start with Option D2 (client-side MCP with B2 service account). It reuses existing infrastructure, PATs don't activate secondary roles, and the `sql_statement_permissions` config provides a second enforcement layer. Option D1 (managed MCP + OAuth) is simpler for the customer but the secondary roles risk requires careful role isolation. Option D3 is the most controlled but requires hosting infrastructure.
 
 ---
 
@@ -858,6 +1024,12 @@ This is the pure Connected App / service provider pattern. Gate 1 is not trigger
 | SI user can call Cortex Analyst REST API despite `CLIENT_TYPES = ('SNOWFLAKE_UI')` | `CLIENT_TYPES` does not restrict REST API access (documented limitation) | Network policy is the real boundary. Ensure IP range is tight. Accept that `CLIENT_TYPES` is defense-in-depth, not primary control. |
 | Cannot create auth policy with `MFA_ENROLLMENT = 'REQUIRED'` and `CLIENT_TYPES = ('DRIVERS')` | MFA enrollment can only happen in Snowsight | `MFA_ENROLLMENT = 'REQUIRED'` forces `CLIENT_TYPES` to include `SNOWFLAKE_UI`. For API-only users (B2), skip MFA and use `TYPE = SERVICE` + key-pair instead. |
 | B2 API service account can still reach Snowsight | `CLIENT_TYPES = ('DRIVERS')` is best-effort | `TYPE = SERVICE` users have no password and cannot log into Snowsight regardless. The auth policy is defense-in-depth. |
+| D1 MCP user can write data despite read-only role being set as default | `OAUTH_USE_SECONDARY_ROLES = IMPLICIT` activates the user's `DEFAULT_SECONDARY_ROLES` (defaults to `('ALL')` for new users), enabling all granted roles | `SHOW GRANTS TO USER <mcp_user>` — revoke every role except the MCP readonly role, **and** set `ALTER USER <mcp_user> SET DEFAULT_SECONDARY_ROLES = ()`. |
+| D1 AI client shows "Invalid Consent Request" when connecting | User's default role may be blocked (e.g., ACCOUNTADMIN), or `PRE_AUTHORIZED_ROLES_LIST` is misconfigured | Leave `PRE_AUTHORIZED_ROLES_LIST` empty. Ensure the user's default role is the MCP readonly role. |
+| D1 MCP server URL returns SSL or connection error | Account name contains underscores | Replace underscores with hyphens in the hostname only: `ACME_PROD` → `acme-prod` in the URL. |
+| D2 PAT cannot access objects that the role should see | PATs do not evaluate secondary roles | When creating a PAT, select the single role that has access to all required objects. A new PAT is needed to change the role. |
+| D2 MCP tools show in client but SQL execution fails with permission error | `sql_statement_permissions` in MCP config blocks the statement type | Check the MCP `configuration.yaml` — ensure `Select: True` and `Describe: True` are set. |
+| D1/D2 MCP server tools not appearing in AI client | Missing `USAGE` grant on MCP SERVER or tool-level grants | `GRANT USAGE ON MCP SERVER ... TO ROLE ...` and grant per-tool access (`SELECT` on semantic view, `USAGE` on search service). |
 
 ---
 
@@ -870,7 +1042,7 @@ This is the pure Connected App / service provider pattern. Gate 1 is not trigger
 | [`sql/03_vendor_offboard.sql`](sql/03_vendor_offboard.sql) | Vendor offboarding (disable, transfer ownership, revoke, clean up) | ACCOUNTADMIN |
 | [`sql/04_monitoring.sql`](sql/04_monitoring.sql) | Organization-level and per-account monitoring queries | ACCOUNTADMIN |
 | [`sql/05_guardrails.sql`](sql/05_guardrails.sql) | Network rules, auth policies, masking, row access, audit checks | ACCOUNTADMIN |
-| [`sql/06_analytics_access.sql`](sql/06_analytics_access.sql) | Customer analytics access: Data Sharing, BI service account, SI human users | MSP_PLATFORM_ENGINEER |
+| [`sql/06_analytics_access.sql`](sql/06_analytics_access.sql) | Customer analytics access: Data Sharing, BI service account, SI human users, MCP server + OAuth | MSP_PLATFORM_ENGINEER |
 
 ---
 
@@ -887,3 +1059,10 @@ This is the pure Connected App / service provider pattern. Gate 1 is not trigger
 - [Resource Monitors](https://docs.snowflake.com/en/user-guide/resource-monitors)
 - [Organization Usage Views](https://docs.snowflake.com/en/sql-reference/organization-usage)
 - [Object Tagging for Cost Attribution](https://docs.snowflake.com/en/user-guide/cost-attributing)
+- [Snowflake-Managed MCP Server](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp)
+- [Snowflake-Labs MCP Server (GitHub)](https://github.com/Snowflake-Labs/mcp)
+- [Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli)
+- [Cortex Code CLI Security](https://docs.snowflake.com/en/user-guide/cortex-code/security)
+- [Snowflake OAuth Overview](https://docs.snowflake.com/en/user-guide/oauth-snowflake-overview)
+- [Snowflake Terms of Service](https://www.snowflake.com/en/legal/terms-of-service/) (last updated January 28, 2026)
+- Snowflake Partner Network (SPN) Program Guide v03/2026 — internal partner documentation; SPN program categories and enrollment requirements may change. Not publicly available.

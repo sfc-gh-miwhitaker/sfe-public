@@ -9,6 +9,9 @@ Options:
   B1. Snowsight User     — SI product, human login, MFA + CLIENT_TYPES
   B2. API-Only User      — Cortex Analyst REST API, service account, no Snowsight
   C.  Embedded           — no SQL here; MSP backend calls Cortex Analyst API
+  D1. Managed MCP Server — CREATE MCP SERVER + OAuth, AI client access
+  D2. Client-Side MCP    — reuses B2 service account with local MCP server / CoCo CLI
+  D3. MSP-Mediated MCP   — no SQL here; MSP runs MCP server in own infra
 
 IMPORTANT:
   - CLIENT_TYPES is best-effort and does NOT restrict REST API access.
@@ -27,7 +30,9 @@ SET cust_sf_account    = '<CUST_SNOWFLAKE_ACCT_IDENTIFIER>'; -- for Option A onl
 SET bi_gateway_ip      = '0.0.0.0/32';          -- Option B-BI: PowerBI on-prem gateway IP
 SET si_office_cidr     = '203.0.113.0/24';      -- Option B1: customer office or VPN CIDR
 SET si_user_email      = '<USER_EMAIL>';         -- Option B1: customer SI user email
-SET api_server_ip      = '0.0.0.0/32';          -- Option B2: customer app server IP
+SET api_server_ip      = '0.0.0.0/32';          -- Option B2 / D2: customer app server IP
+SET mcp_user_email     = '<USER_EMAIL>';         -- Option D1: customer MCP/AI client user email
+SET mcp_redirect_uri   = '<AI_CLIENT_REDIRECT_URI>'; -- Option D1: AI client OAuth redirect URI
 
 ----------------------------------------------------------------------
 -- A. DATA SHARING
@@ -238,6 +243,105 @@ GRANT ROLE IDENTIFIER($cust_name || '_API_READONLY')
 -- ALTER USER IDENTIFIER($cust_name || '_API_SVC') SET RSA_PUBLIC_KEY = '<PUBLIC_KEY>';
 
 ----------------------------------------------------------------------
+-- D1. SNOWFLAKE-MANAGED MCP SERVER + OAUTH
+-- Gate 1 triggered (read-only). Customer authenticates via OAuth in
+-- their AI client (Claude.ai, ChatGPT, etc.). AI client calls MCP
+-- tools exposed by a CREATE MCP SERVER object in the MSP account.
+--
+-- CRITICAL: OAUTH_USE_SECONDARY_ROLES = IMPLICIT activates the user's
+-- DEFAULT_SECONDARY_ROLES (which defaults to ('ALL') for new users).
+-- If DEFAULT_SECONDARY_ROLES is not restricted, all granted roles
+-- activate and the AI client inherits the union of their privileges.
+-- Grant ONLY the MCP readonly role AND set DEFAULT_SECONDARY_ROLES = ().
+--
+-- The managed MCP server only supports semantic views (not YAML files)
+-- for the CORTEX_ANALYST_MESSAGE tool type.
+----------------------------------------------------------------------
+
+USE ROLE MSP_PLATFORM_ENGINEER;
+
+CREATE MCP SERVER IF NOT EXISTS IDENTIFIER($cust_name || '_MCP_SERVER')
+  FROM SPECIFICATION $$
+    tools:
+      - name: "customer-analytics"
+        type: "CORTEX_ANALYST_MESSAGE"
+        identifier: "PRESENTATION.ANALYTICS.CUST_ACME_SEMANTIC_VIEW"
+        description: "Natural language analytics for customer data"
+        title: "Customer Analytics"
+  $$;
+
+CREATE ROLE IF NOT EXISTS IDENTIFIER($cust_name || '_MCP_READONLY')
+    COMMENT = $cust_name || ' MCP AI client — USAGE on MCP server + SELECT on semantic view';
+
+GRANT USAGE ON DATABASE PRESENTATION
+    TO ROLE IDENTIFIER($cust_name || '_MCP_READONLY');
+GRANT USAGE ON SCHEMA PRESENTATION.ANALYTICS
+    TO ROLE IDENTIFIER($cust_name || '_MCP_READONLY');
+GRANT SELECT ON ALL VIEWS IN SCHEMA PRESENTATION.ANALYTICS
+    TO ROLE IDENTIFIER($cust_name || '_MCP_READONLY');
+GRANT SELECT ON FUTURE VIEWS IN SCHEMA PRESENTATION.ANALYTICS
+    TO ROLE IDENTIFIER($cust_name || '_MCP_READONLY');
+GRANT USAGE ON WAREHOUSE CUST_ANALYTICS_WH
+    TO ROLE IDENTIFIER($cust_name || '_MCP_READONLY');
+
+GRANT USAGE ON MCP SERVER IDENTIFIER($cust_name || '_MCP_SERVER')
+    TO ROLE IDENTIFIER($cust_name || '_MCP_READONLY');
+-- Semantic view grant (required for CORTEX_ANALYST_MESSAGE tool):
+-- GRANT SELECT ON SEMANTIC VIEW PRESENTATION.ANALYTICS.<SEMANTIC_VIEW>
+--     TO ROLE IDENTIFIER($cust_name || '_MCP_READONLY');
+
+GRANT ROLE IDENTIFIER($cust_name || '_MCP_READONLY') TO ROLE MSP_PLATFORM_ENGINEER;
+
+-- OAuth security integration — redirect URI is AI-client-specific.
+-- Claude.ai:  https://claude.ai/api/mcp/auth_callback
+-- Other clients: check client documentation for redirect URI.
+CREATE SECURITY INTEGRATION IF NOT EXISTS IDENTIFIER($cust_name || '_MCP_OAUTH')
+    TYPE = OAUTH
+    OAUTH_CLIENT = CUSTOM
+    ENABLED = TRUE
+    OAUTH_CLIENT_TYPE = 'CONFIDENTIAL'
+    OAUTH_REDIRECT_URI = $mcp_redirect_uri
+    OAUTH_USE_SECONDARY_ROLES = IMPLICIT
+    COMMENT = $cust_name || ' MCP OAuth — AI client access';
+
+-- Retrieve client_id and client_secret for the AI client configuration:
+SELECT SYSTEM$SHOW_OAUTH_CLIENT_SECRETS(UPPER($cust_name) || '_MCP_OAUTH');
+
+-- CRITICAL: grant ONLY the MCP readonly role to this user.
+-- OAuth activates DEFAULT_SECONDARY_ROLES (defaults to ALL for new users).
+-- Set DEFAULT_SECONDARY_ROLES = () to prevent role escalation.
+CREATE USER IF NOT EXISTS IDENTIFIER($cust_name || '_MCP_USER')
+    DEFAULT_ROLE = IDENTIFIER($cust_name || '_MCP_READONLY')
+    EMAIL        = $mcp_user_email
+    MUST_CHANGE_PASSWORD = TRUE
+    COMMENT      = $cust_name || ' MCP/AI client user — OAuth access only';
+
+GRANT ROLE IDENTIFIER($cust_name || '_MCP_READONLY')
+    TO USER IDENTIFIER($cust_name || '_MCP_USER');
+
+ALTER USER IDENTIFIER($cust_name || '_MCP_USER')
+    SET DEFAULT_SECONDARY_ROLES = ();
+
+-- Network policy for MCP user (optional but recommended)
+-- Lock to customer's known IP range if possible.
+-- CREATE NETWORK RULE IF NOT EXISTS IDENTIFIER($cust_name || '_MCP_INGRESS_RULE')
+--     MODE       = INGRESS
+--     TYPE       = IPV4
+--     VALUE_LIST = ($si_office_cidr);
+-- CREATE NETWORK POLICY IF NOT EXISTS IDENTIFIER($cust_name || '_MCP_NETWORK_POLICY')
+--     ALLOWED_NETWORK_RULE_LIST = (IDENTIFIER($cust_name || '_MCP_INGRESS_RULE'));
+-- ALTER USER IDENTIFIER($cust_name || '_MCP_USER')
+--     SET NETWORK_POLICY = IDENTIFIER($cust_name || '_MCP_NETWORK_POLICY');
+
+----------------------------------------------------------------------
+-- D2. CLIENT-SIDE MCP / CORTEX CODE CLI
+-- Reuses the B2 service account (CUST_ACME_API_SVC) with key-pair auth.
+-- Customer runs Snowflake-Labs/mcp locally or uses CoCo CLI.
+-- MSP provides a locked-down MCP configuration YAML (Select only).
+-- No additional SQL needed beyond the B2 block above.
+----------------------------------------------------------------------
+
+----------------------------------------------------------------------
 -- VERIFICATION
 ----------------------------------------------------------------------
 
@@ -245,14 +349,22 @@ GRANT ROLE IDENTIFIER($cust_name || '_API_READONLY')
 SHOW GRANTS TO ROLE IDENTIFIER($cust_name || '_BI_READONLY');
 SHOW GRANTS TO ROLE IDENTIFIER($cust_name || '_SI_READONLY');
 SHOW GRANTS TO ROLE IDENTIFIER($cust_name || '_API_READONLY');
+SHOW GRANTS TO ROLE IDENTIFIER($cust_name || '_MCP_READONLY');
 
 -- Confirm service accounts have no password auth vector
 SHOW USERS LIKE $cust_name || '_BI_SVC';
 SHOW USERS LIKE $cust_name || '_API_SVC';
+SHOW USERS LIKE $cust_name || '_MCP_USER';
 
 -- Confirm human SI users have MFA, network policies, and CLIENT_TYPES applied
 SHOW PARAMETERS LIKE 'NETWORK_POLICY'       IN USER IDENTIFIER($cust_name || '_SI_USER_1');
 SHOW PARAMETERS LIKE 'AUTHENTICATION_POLICY' IN USER IDENTIFIER($cust_name || '_SI_USER_1');
+
+-- Confirm MCP user has ONLY the MCP readonly role (OAuth secondary roles check)
+SHOW GRANTS TO USER IDENTIFIER($cust_name || '_MCP_USER');
+
+-- Confirm MCP server exists and has correct tools
+DESCRIBE MCP SERVER IDENTIFIER($cust_name || '_MCP_SERVER');
 
 -- Confirm no write privileges on any RAW or INTEGRATION objects
 SELECT *
@@ -260,7 +372,8 @@ FROM   SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_ROLES
 WHERE  grantee_name IN (
     UPPER($cust_name) || '_BI_READONLY',
     UPPER($cust_name) || '_SI_READONLY',
-    UPPER($cust_name) || '_API_READONLY'
+    UPPER($cust_name) || '_API_READONLY',
+    UPPER($cust_name) || '_MCP_READONLY'
 )
    AND privilege NOT IN ('USAGE', 'SELECT')
 ORDER BY grantee_name, granted_on, name;

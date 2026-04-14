@@ -26,7 +26,7 @@ GRANT ROLE IDENTIFIER($vendor_name || '_INGEST')   TO ROLE MSP_PLATFORM_ENGINEER
 GRANT ROLE IDENTIFIER($vendor_name || '_READONLY')  TO ROLE MSP_PLATFORM_ENGINEER;
 
 ----------------------------------------------------------------------
--- 2. Schema (MANAGED ACCESS — vendor cannot grant to other roles)
+-- 2. Schema (MANAGED ACCESS — only schema owner or MANAGE GRANTS role can grant)
 ----------------------------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS IDENTIFIER('RAW_VENDOR.' || $vendor_name)
     WITH MANAGED ACCESS
@@ -108,6 +108,10 @@ CREATE NETWORK POLICY IF NOT EXISTS IDENTIFIER($vendor_name || '_NETWORK_POLICY'
 
 ----------------------------------------------------------------------
 -- 7. Authentication policy (enforce MFA for vendor users)
+-- MFA_ENROLLMENT accepts: REQUIRED, REQUIRED_PASSWORD_ONLY, OPTIONAL
+-- OPTIONAL is retained for backward compatibility only.
+-- REQUIRED_PASSWORD_ONLY enforces MFA only for password-based logins
+-- (useful when the same policy covers both human and key-pair users).
 ----------------------------------------------------------------------
 CREATE AUTHENTICATION POLICY IF NOT EXISTS IDENTIFIER('RAW_VENDOR.' || $vendor_name || '.VENDOR_AUTH_POLICY')
     MFA_ENROLLMENT = 'REQUIRED'
