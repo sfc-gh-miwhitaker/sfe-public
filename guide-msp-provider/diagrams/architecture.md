@@ -1,6 +1,41 @@
 # Architecture Diagrams -- MSP Provider Guide
 
-## Organization Layout
+## Connected App vs Managed App (MSP)
+
+Two fundamentally different patterns. Gate 1 — whether 3rd parties log directly into Snowflake and write data — is the dividing line.
+
+```mermaid
+flowchart TB
+    subgraph connected [Connected App pattern]
+        direction LR
+        CA_APP["Provider App / UI\n(runs outside Snowflake)"]
+        CA_ACCOUNT["Client's own Snowflake account\n(client retains governance + billing)"]
+        CA_APP -->|"connection + queries"| CA_ACCOUNT
+    end
+
+    subgraph managed [Managed App / MSP pattern]
+        direction LR
+        MA_ORG["Provider's Snowflake Org\n(provider owns billing + ops)"]
+        MA_ACME["CUST_ACME_PROD"]
+        MA_BRAVO["CUST_BRAVO_PROD"]
+        MA_OPS["MSP_OPS\n(monitoring)"]
+        MA_ORG --> MA_ACME
+        MA_ORG --> MA_BRAVO
+        MA_ORG --> MA_OPS
+    end
+```
+
+| | Connected App | Managed App (MSP) |
+|-|--------------|-------------------|
+| Gate 1: direct login + write | No | Yes |
+| Gate 2: data responsibility | No | Yes |
+| Gate 3: billing entity | Client | Provider |
+| Data lives in | Client's account | Provider's org |
+| SPN enrollment | AI Data Cloud Products → Connected | AI Data Cloud Products → Managed Applications |
+
+---
+
+## Organization Layout (Managed App / MSP Pattern)
 
 ```mermaid
 flowchart TB
@@ -17,7 +52,7 @@ flowchart TB
     OPS -->|"Org Usage Views"| CHARLIE
 ```
 
-## Per-Account Role Hierarchy
+## Per-Account Role Hierarchy (Gate 1 + 2: who can write, who owns the result)
 
 ```mermaid
 flowchart BT
@@ -46,7 +81,7 @@ flowchart BT
     VX_R --> MSP_PE
 ```
 
-## Per-Account Data Flow
+## Per-Account Data Flow (Gate 2: MSP owns everything past the RAW boundary)
 
 ```mermaid
 flowchart LR
@@ -81,7 +116,7 @@ flowchart LR
     API -.->|"Optional read-back"| VS
 ```
 
-## Database and Schema Layout
+## Database and Schema Layout (Gate 2: Managed Access enforces who controls grants)
 
 ```mermaid
 flowchart TB

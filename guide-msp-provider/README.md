@@ -7,6 +7,54 @@
 
 Inspired by a real customer question: *"We're an MSP. We manage Snowflake accounts for our customers. Now a 3rd-party vendor needs Snowsight access to bring in their own data. How do we do that securely without losing control?"*
 
+---
+
+## Is This Guide For You?
+
+Before diving in, answer three questions. Your answers determine whether this guide is a direct fit or whether a different Snowflake pattern applies.
+
+Snowflake's official terminology for these two patterns: a **Connected App** runs its UI and infrastructure outside Snowflake while data and compute stay in the *customer's* account; a **Managed App** hosts customer data and workloads inside the *provider's* Snowflake org. Most MSPs are Managed App providers.
+
+```mermaid
+flowchart TD
+    Q1{"Gate 1: Do 3rd parties log in\ndirectly to Snowflake\nand write data?"}
+    Q2{"Gate 2: Are you fully responsible\nfor the data they bring in?"}
+    Q3{"Gate 3: Does your Snowflake bill\ninclude their consumption?"}
+    MSP["Managed App / MSP pattern.\nThis guide applies end to end.\nEnroll in SPN Managed Applications."]
+    SvcProvider["Connected App pattern.\nData + compute stay in the client's\naccount. Consider Native Apps or\nData Sharing instead."]
+    Partial["Partial MSP or systems integrator.\nParts 1-4 apply. Org-level features\nrequire ORGADMIN in the client's\nOrganization, or they run Part 5."]
+
+    Q1 -->|Yes| Q2
+    Q1 -->|No| SvcProvider
+    Q2 -->|Yes| Q3
+    Q2 -->|No| Partial
+    Q3 -->|Yes| MSP
+    Q3 -->|No| Partial
+```
+
+| | Connected App | Managed App (MSP) |
+|-|--------------|-------------------|
+| Where data lives | Customer's own Snowflake account | Your Snowflake org and accounts |
+| Client Snowflake access | Through your app or API | Direct Snowsight or connector login |
+| Who writes data | Your pipelines | Client or their vendors |
+| Billing entity (ToS §1.4a) | Client pays Snowflake directly | You pay Snowflake; clients pay you |
+| Account structure | One or few accounts you own | One dedicated account per client |
+| ORGADMIN needed | No | Yes |
+| Organization Usage Views | Not available | Available in MSP_OPS account |
+| Vendor isolation mechanism | App-layer or row access policies | Schema + network policy + auth policy |
+| Data responsibility (ToS §2.2a) | You own the pipelines | You own everything, including what vendors bring in |
+| SPN enrollment | AI Data Cloud Products → Connected | AI Data Cloud Products → Managed Applications |
+
+### Where the Lines Blur
+
+**The SaaS company that crossed the line.** *"We give every enterprise client a dedicated Snowflake account."* Once you provision per-client accounts under your Organization, you are a Managed App provider for billing and operations purposes — even if you think of yourself as a software company. Gate 3 applies: your Snowflake invoice covers all accounts, and Snowflake's SPN expects you to enroll under Managed Applications, not Connected.
+
+**The systems integrator.** *"We manage Snowflake for our clients, but each client has their own Snowflake contract."* You answer Yes to Gates 1 and 2, but No to Gate 3. You are a Partial MSP. Parts 1–4 of this guide apply. You do not have access to `SNOWFLAKE.ORGANIZATION_USAGE` — that belongs to the account owner. Ask your client to run the Part 5 monitoring scripts, or request ORGADMIN access under their Organization.
+
+**The data agency with a surprise vendor.** *"Our client just told us their logistics data vendor wants to push feeds directly into the Snowflake account we manage."* If you manage the account (Gates 1 and 2 apply), this is exactly the scenario this guide was built for. Start at Part 2.
+
+---
+
 One concrete architecture for per-customer Snowflake accounts where MSP staff, customer users, and 3rd-party vendors all coexist safely. Every section includes copy-paste SQL.
 
 **Pair-programmed by:** SE Community + Cortex Code
@@ -20,12 +68,47 @@ One concrete architecture for per-customer Snowflake accounts where MSP staff, c
 
 ## Who This Is For
 
-MSP platform engineers who:
-- Manage one or more Snowflake accounts per customer under a Snowflake Organization
-- Need to give 3rd-party vendors **Snowsight UI access** to bring in their own data feeds
-- Want a repeatable, automatable pattern that scales to dozens of customers
+MSP platform engineers who answer **Yes to all three gates above**:
+
+- **Gate 1:** Your clients or their vendors log directly into a Snowflake account you provision and operate — via Snowsight, a connector, or an API key
+- **Gate 2:** You are accountable for data quality, security, and compliance of everything that lands in those accounts, including what 3rd-party vendors bring in
+- **Gate 3:** Your Snowflake contract covers the accounts you manage; you handle chargeback to clients
 
 Comfortable with Snowflake RBAC and SQL DDL. No prior multi-tenant MSP experience required.
+
+> **Not your pattern?** If you answer No to Gate 1, you are building a **Connected App** — your clients interact through your application, not directly through Snowflake, and their data stays in their own account. Look at [Snowflake Native Apps](https://docs.snowflake.com/en/developer-guide/native-apps/native-apps-about) (for deploying logic into client accounts) or [Data Sharing](https://docs.snowflake.com/en/user-guide/data-sharing-intro) (for exposing curated data to clients) instead. For SPN enrollment, Connected App providers register under AI Data Cloud Products → Connected, not Managed Applications.
+
+---
+
+## Legal Context — Why the Three Gates Exist
+
+> **Not legal advice.** This section describes the contractual landscape that motivated this guide's architecture. Review the [Snowflake Terms of Service](https://www.snowflake.com/en/legal/terms-of-service/) and your specific agreement with your legal team before applying any pattern here.
+
+The three gates are not arbitrary — each maps to a specific clause in the Snowflake ToS (last updated January 28, 2026) that creates a compliance obligation for anyone managing Snowflake on behalf of others.
+
+### Gate 1 ↔ ToS §1.1 and §1.4(a)
+
+**§1.1** allows Contractors and Affiliates to be Users, but only "solely for the benefit of Customer." A vendor who logs in with Snowsight credentials to load their own data into your account is acting as a Contractor in service of your managed delivery — that is permissible. A vendor who is using your Snowflake environment as a general-purpose data platform for their own business is not.
+
+**§1.4(a)** prohibits "provide access to... the Service... to a third party" except for "Service features expressly intended to enable Customer to provide its third parties with access to Customer Data." That carveout covers Data Sharing (read-only) — it does not cover write-capable Snowsight access for data ingestion. The legitimising mechanism for MSPs is the SPN Managed Applications program: under a capacity agreement, vendor users are Contractors of the MSP (the Customer), not standalone third parties receiving a sublicense to Snowflake.
+
+This is why the architecture in this guide constrains vendor access to a single managed-access schema with the minimum necessary privileges. Any broader access would look less like "Contractor acting for Customer" and more like "third party receiving Snowflake access" — which §1.4(a) prohibits.
+
+### Gate 2 ↔ ToS §2.2(a)
+
+**§2.2(a)**: "Customer is solely responsible for the accuracy, content and legality of all Customer Data."
+
+Once a vendor loads data into your account, it is Customer Data and you are contractually responsible to Snowflake for it — its accuracy, legality, and compliance. Gate 2 is not a policy choice; it is a contractual fact that exists the moment Gate 1 is triggered. Managed Access schemas, future grants, and the ownership-transfer step in vendor offboarding (Part 3) are direct architectural responses to this clause. Skipping them does not make the liability go away; it just removes your ability to exercise control.
+
+### Gate 3 ↔ ToS §1.4(a) service bureau prohibition
+
+**§1.4(a)** also prohibits using the Service "in a service bureau or outsourcing offering." A company that manages Snowflake accounts on behalf of clients, bills those clients for Snowflake consumption, and does so without an active capacity agreement with Snowflake is operating as an unlicensed service bureau under this clause.
+
+The resolution is the SPN Managed Applications enrollment: an active capacity agreement for your managed workload is what distinguishes a legitimate Managed App provider from an unlicensed service bureau. If you answer Yes to Gate 3, a standard Customer contract is not sufficient — you need to be enrolled in SPN Managed Applications, with your customer accounts registered under "Accounts Powered by Snowflake."
+
+### The Connected App tension
+
+**§1.4(b)** prohibits "use the Service to provide, or incorporate the Service into, any substantially similar cloud-based service for the benefit of a third party." A Connected App / service provider who runs Snowflake compute to produce outputs they sell to clients sits close to this line. Snowflake's distinction is architectural: in a Connected App, the data and compute stay in the *client's* Snowflake account — the provider does not host or operate Snowflake on the client's behalf. If you start hosting your clients' data in your own Snowflake org and billing them for it, §1.4(b) and Gate 3 both apply.
 
 ---
 
@@ -219,6 +302,8 @@ ALTER WAREHOUSE CUST_ANALYTICS_WH SET TAG RAW_INTERNAL.PUBLIC.COST_CENTER = 'cus
 
 ## Part 2: Vendor Onboarding
 
+> **Gates 1 + 2 in practice.** This is the moment a 3rd party receives Snowsight credentials and CREATE privileges — Gate 1 is triggered. The instant they load data, Gate 2 follows: you are responsible for what lands in this account, its quality, its compliance, and its security.
+
 > **Problem:** A new 3rd-party vendor needs Snowsight access to configure stages, file formats, and landing tables -- without seeing other vendors or touching your core models.
 
 Full script: [`sql/02_vendor_onboard.sql`](sql/02_vendor_onboard.sql)
@@ -305,6 +390,8 @@ ALTER USER VENDOR_X_ENGINEER_1 SET AUTHENTICATION POLICY
 ---
 
 ## Part 3: Vendor Offboarding
+
+> **Gate 2 consequence.** Because you accepted full data responsibility at onboarding, you cannot simply drop a vendor's roles and walk away. Ownership of every object they created must transfer to MSP before their roles are revoked — or those objects become inaccessible in a managed-access schema. Step 4 (ownership transfer) is non-negotiable.
 
 > **Problem:** A vendor engagement ends. You need to revoke access immediately, preserve data for MSP pipelines, and clean up resources.
 
@@ -408,6 +495,8 @@ Run these weekly (or automate with a task):
 ---
 
 ## Part 5: Monitoring
+
+> **Gate 3 in practice.** Because your Snowflake bill covers every customer account, cross-account visibility is an operational requirement, not a nice-to-have. `SNOWFLAKE.ORGANIZATION_USAGE` is your primary tool. A Partial MSP or systems integrator who answered No to Gate 3 does not have access to these views — work with your client to expose cost data via a data share or exported report, or request ORGADMIN access under their Organization. Separately: as a Managed App provider under SPN, keeping your "Accounts Powered by Snowflake" list current is how your managed workload consumption gets attributed to your program tier.
 
 > **Problem:** You manage dozens of customer accounts and need to see credit burn, vendor activity, and pipeline health across all of them from one place.
 

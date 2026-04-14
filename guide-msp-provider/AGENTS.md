@@ -5,9 +5,15 @@
 
 ## Architecture
 
-Multi-tenant Snowflake account design for MSPs with 3rd-party vendor Snowsight access:
+This guide covers the **Managed App (MSP)** pattern — the provider hosts customer data and workloads in their own Snowflake org. Three gates distinguish this from a Connected App (where data stays in the client's account):
 
-- **Organization level:** One MSP_OPS account + one account per customer
+- **Gate 1:** 3rd parties log directly into Snowflake and write data (Snowsight, connector, API)
+- **Gate 2:** Provider is fully responsible for data quality, security, and compliance
+- **Gate 3:** Provider's Snowflake bill covers all customer accounts (Managed Applications in SPN)
+
+A Connected App provider (Gate 1 = No) belongs in a different pattern — Native Apps or Data Sharing.
+
+- **Organization level:** One MSP_OPS account (org account or ORGADMIN-enabled) + one account per customer
 - **Per-account layers:** RAW_INTERNAL, RAW_VENDOR (managed access), INTEGRATION, PRESENTATION, WORKSPACE
 - **Role hierarchy:** MSP roles (inherit system roles) > Customer roles > Vendor roles (per-vendor)
 - **Isolation:** Schema-level (managed access), warehouse-level, network policy per user, auth policy per user
@@ -32,6 +38,7 @@ Multi-tenant Snowflake account design for MSPs with 3rd-party vendor Snowsight a
 
 ## When Helping with This Project
 
+- Establish which gate pattern applies before giving advice: Connected App (Gate 1 = No) vs Managed App / MSP (all 3 gates = Yes); a systems integrator who manages but doesn't own billing is a Partial MSP (Gates 1+2 only)
 - This is a guide, not a demo -- no deploy_all.sql, no Snowflake objects to create
 - SQL files are reference scripts the customer copies and adapts; they are not idempotent deployments
 - All vendor SQL is parameterised with `SET vendor_name`
@@ -39,6 +46,8 @@ Multi-tenant Snowflake account design for MSPs with 3rd-party vendor Snowsight a
 - Future grants are required so MSP pipelines can read vendor-created objects
 - Network policies at the user level override account-level policies
 - CUST_ADMIN user management must go through stored procedure, never direct privilege grants
+- Gate 3 (billing) connects to SPN Managed Applications enrollment; Partial MSPs do not have SNOWFLAKE.ORGANIZATION_USAGE access
+- **ToS awareness:** the three gates map to Snowflake ToS clauses — §1.1 + §1.4(a) for Gate 1 (vendor as Contractor not third party), §2.2(a) for Gate 2 (Customer data responsibility is contractual), §1.4(a) service bureau clause for Gate 3; always refer users to their legal team for specific advice
 
 ## Related Projects
 

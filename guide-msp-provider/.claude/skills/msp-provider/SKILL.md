@@ -1,12 +1,22 @@
 ---
 name: msp-provider
-description: "MSP multi-tenant Snowflake guide with vendor Snowsight access. Use when: MSP architecture, vendor onboarding, multi-tenant snowflake, managed service provider, 3rd party access, vendor isolation, managed access schema."
+description: "MSP multi-tenant Snowflake guide with vendor Snowsight access. Use when: MSP architecture, vendor onboarding, multi-tenant snowflake, managed service provider, 3rd party access, vendor isolation, managed access schema, Connected App vs Managed App, Snowflake partner pattern, SPN Managed Applications, Gate 1 direct login, Gate 2 data responsibility, Gate 3 billing, systems integrator Snowflake, which pattern am I."
 ---
 
 # MSP Provider Guide
 
 ## Purpose
-One concrete architecture for per-customer Snowflake accounts where MSP staff, customer users, and 3rd-party vendors coexist. Covers role hierarchy, managed access schemas, vendor onboarding/offboarding, network rules, authentication policies, monitoring, and cost attribution.
+One concrete architecture for per-customer Snowflake accounts where MSP staff, customer users, and 3rd-party vendors coexist. This is the **Managed App (MSP)** pattern in Snowflake's official terminology: the provider hosts data and workloads in their own org and answers Yes to all three gates:
+
+| Gate | Question | MSP answer |
+|------|----------|------------|
+| 1 | Do 3rd parties log directly into Snowflake and write data? | Yes |
+| 2 | Is the provider fully responsible for data quality and compliance? | Yes |
+| 3 | Does the provider's Snowflake bill include customer consumption? | Yes |
+
+A **Connected App** provider (Gate 1 = No, data stays in client's account) belongs in a different pattern. See Native Apps or Data Sharing instead.
+
+Covers role hierarchy, managed access schemas, vendor onboarding/offboarding, network rules, authentication policies, monitoring, and cost attribution.
 
 ## Architecture
 ```
@@ -49,6 +59,10 @@ Organization: MSP-US
 - Requires: Snowflake Organization with ACCOUNTADMIN access to customer accounts
 
 ## Gotchas
+- **ToS basis for the gates:** Gate 1 ↔ §1.1 (vendor as Contractor of MSP) + §1.4(a) (no third-party access except via Data Sharing); Gate 2 ↔ §2.2(a) (Customer solely responsible for Customer Data); Gate 3 ↔ §1.4(a) service bureau prohibition — resolved by SPN Managed Applications capacity agreement. §1.4(b) is the Connected App tension (no running Snowflake for benefit of third parties). Always direct legal questions to the reader's legal team.
+- **Pattern first:** establish whether the reader is a Managed App (Gates 1+2+3 = Yes), Partial MSP/integrator (Gates 1+2, No to Gate 3), or Connected App (Gate 1 = No) before advising on architecture
+- **Gate 3 + ORGANIZATION_USAGE:** Partial MSPs (systems integrators) do not own the Snowflake org and cannot access `SNOWFLAKE.ORGANIZATION_USAGE`; they need the client to run Part 5 or share cost data another way
+- **SPN enrollment:** Managed App providers should enroll under AI Data Cloud Products → Managed Applications; Connected App providers enroll under Connected
 - MSP_ACCOUNT_ADMIN is **granted** ACCOUNTADMIN, not layered above it -- ACCOUNTADMIN is the hierarchy ceiling
 - CUST_ADMIN user management must use the stored procedure pattern; direct CREATE USER grants are dangerous
 - Vendor schemas must use `WITH MANAGED ACCESS` or vendors can grant access to their objects
