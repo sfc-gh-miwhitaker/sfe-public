@@ -606,10 +606,248 @@ Treat RBAC changes and vendor lifecycle as change-controlled actions:
 
 ---
 
+## Part 7: Customer Analytics Access Patterns
+
+> **Problem:** Your customer is happy with your managed service but wants to plug in their own PowerBI or use Snowflake Intelligence directly. How do you enable this without handing them the keys to your entire managed environment?
+
+Full script: [`sql/06_analytics_access.sql`](sql/06_analytics_access.sql) — Diagrams: [Customer BI Tool Access](diagrams/architecture.md#customer-bi-tool-access-powerbi-example) | [Snowflake Intelligence / Cortex Analyst Access](diagrams/architecture.md#snowflake-intelligence--cortex-analyst-access)
+
+### Three Things That Sound the Same but Aren't
+
+Before choosing an option, understand what your customer is actually asking for:
+
+| | Snowsight | Snowflake Intelligence | Cortex Analyst API |
+|-|-----------|----------------------|-------------------|
+| What it is | The web interface (`app.snowflake.com`) | AI analytics product inside Snowsight — agents, natural language queries, charts | REST API (`/api/v2/cortex/analyst/message`) that powers SI under the hood |
+| How it's accessed | Browser login | Snowsight navigation (AI & ML → Agents) | Any HTTP client with auth token — no browser needed |
+| Requires Snowsight | — | Yes | No |
+| `SNOWFLAKE.CORTEX_USER` needed | No | Yes | Yes |
+| Can `CLIENT_TYPES` block it | Yes — set to `('DRIVERS')` to block UI | Yes — blocked if Snowsight is blocked | **No** — `CLIENT_TYPES` does not restrict REST API access |
+
+> **`CLIENT_TYPES` limitation (from Snowflake docs):** *"CLIENT_TYPES is a best-effort method to block user logins based on specific clients. It should not be used as the sole control to establish a security boundary. Notably, it does not restrict access to the Snowflake REST APIs."*
+
+This means a user with `CORTEX_USER` + `SELECT` on the presentation layer can call the Cortex Analyst REST API even if you block Snowsight entirely. The API is the same one your own embedded app (Option C) would use — the difference is who mediates access.
+
+> **MFA enrollment catch-22:** If you set `MFA_ENROLLMENT = 'REQUIRED'` on an authentication policy, `CLIENT_TYPES` **must** include `SNOWFLAKE_UI` because Snowsight is the only place users can enroll in MFA. You cannot simultaneously require MFA and permanently block Snowsight — users need UI access at least once to enroll.
+
+### Options Overview
+
+| | Option A: Data Sharing | Option B1: Snowsight User (SI product) | Option B2: API-Only User (Cortex Analyst) | Option C: Embedded |
+|-|----------------------|--------------------------------------|----------------------------------------|-------------------|
+| Gate 1 triggered | No — §1.4(a) carveout | Yes — human Snowsight login | Yes — credentials issued, no UI | No — app mediates |
+| Customer has SF credentials | In their own account | Yes, human Snowsight login | Yes, service or PAT-based | No |
+| Snowsight access | In their own account | Yes — required for SI product | Blocked via `CLIENT_TYPES` (best-effort) | No |
+| Write access possible | Never — shares are read-only | No — role is SELECT only | No — role is SELECT only | No |
+| MSP controls schema exposure | Via share definition | Via role GRANTs | Via role GRANTs | Via app/API layer |
+| Requires customer SF account | Yes (or reader account) | No | No | No |
+| MSP dev effort | Low | Low | Medium | High |
+
+The trap to avoid: granting customer users CREATE or INSERT privileges under the guise of "analytics access." A customer user who can create a stage, run COPY INTO, or modify a schema has crossed from read-only analytics into full Gate 1 territory — with Gate 2 implications if they corrupt data.
+
+### Option A: Data Sharing (ToS §1.4(a) explicit carveout)
+
+Snowflake Data Sharing is explicitly permitted under §1.4(a) as a "Service feature expressly intended to enable Customer to provide its third parties with access to Customer Data." No third party is logging into your MSP account — they receive a share in their own.
+
+**BI tools (PowerBI):** Customer's PowerBI connector points at their own account (or an MSP-provisioned reader account). No credentials to your account.
+
+**Snowflake Intelligence:** Customer uses SI in their own account against the shared data. Semantic views can be included in the share, so the MSP's query definitions travel with the data. The customer needs a full Snowflake account (not a reader account) for SI access.
+
+```sql
+-- Full script: sql/06_analytics_access.sql  Option A block
+
+CREATE SHARE IF NOT EXISTS CUST_ACME_ANALYTICS_SHARE;
+GRANT USAGE ON DATABASE PRESENTATION TO SHARE CUST_ACME_ANALYTICS_SHARE;
+GRANT USAGE ON SCHEMA PRESENTATION.ANALYTICS TO SHARE CUST_ACME_ANALYTICS_SHARE;
+GRANT SELECT ON ALL VIEWS IN SCHEMA PRESENTATION.ANALYTICS TO SHARE CUST_ACME_ANALYTICS_SHARE;
+
+-- If customer has their own Snowflake account:
+ALTER SHARE CUST_ACME_ANALYTICS_SHARE ADD ACCOUNTS = <CUST_SNOWFLAKE_ACCOUNT_IDENTIFIER>;
+
+-- If customer does not have a Snowflake account, provision a reader account:
+CREATE MANAGED ACCOUNT CUST_ACME_READER_ACCOUNT
+    ADMIN_NAME     = cust_acme_reader_admin
+    ADMIN_PASSWORD = '<YOUR_READER_ADMIN_PASSWORD>'
+    TYPE           = READER;
+-- Then grant the share to the reader account locator returned above.
+```
+
+**Limitation:** Reader accounts cannot run Snowflake Intelligence — the customer can query the share with BI tooling but not use natural language AI features. For SI access via Data Sharing, the customer needs a full Snowflake account with SI enabled.
+
+### Option B1: Snowsight User in MSP Account — Snowflake Intelligence Product (Gate 1, read-only)
+
+Gate 1 is triggered — the customer receives a human Snowsight login in your account. This is the only way to give them the full Snowflake Intelligence experience (agents, charts, multi-turn conversation) inside your MSP account.
+
+Keep this defensible under §1.1 by:
+1. Never granting any privilege except SELECT on `PRESENTATION` layer objects
+2. Granting `SNOWFLAKE.CORTEX_USER` for AI features (or `SNOWFLAKE.CORTEX_ANALYST_USER` to limit to Analyst only)
+3. Locking the credential to the customer's office/VPN IP range
+4. Requiring MFA — non-negotiable for human Snowsight logins
+5. Setting `CLIENT_TYPES = ('SNOWFLAKE_UI')` to restrict to Snowsight only (blocks driver/CLI access — but note this does not block REST APIs)
+
+```sql
+-- Full script: sql/06_analytics_access.sql  Option B1-SI block
+
+CREATE ROLE IF NOT EXISTS CUST_ACME_SI_READONLY;
+GRANT USAGE ON DATABASE PRESENTATION TO ROLE CUST_ACME_SI_READONLY;
+GRANT USAGE ON SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_SI_READONLY;
+GRANT SELECT ON ALL VIEWS IN SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_SI_READONLY;
+GRANT SELECT ON FUTURE VIEWS IN SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_SI_READONLY;
+GRANT USAGE ON WAREHOUSE CUST_ANALYTICS_WH TO ROLE CUST_ACME_SI_READONLY;
+GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE CUST_ACME_SI_READONLY;
+GRANT ROLE CUST_ACME_SI_READONLY TO ROLE MSP_PLATFORM_ENGINEER;
+
+CREATE NETWORK RULE IF NOT EXISTS CUST_ACME_SI_INGRESS_RULE
+    MODE = INGRESS  TYPE = IPV4
+    VALUE_LIST = ('<CUSTOMER_OFFICE_CIDR>');
+
+CREATE NETWORK POLICY IF NOT EXISTS CUST_ACME_SI_NETWORK_POLICY
+    ALLOWED_NETWORK_RULE_LIST = (CUST_ACME_SI_INGRESS_RULE);
+
+-- Auth policy: MFA required, Snowsight only
+-- CLIENT_TYPES must include SNOWFLAKE_UI when MFA_ENROLLMENT = REQUIRED
+-- because Snowsight is the only place users can enroll in MFA.
+CREATE AUTHENTICATION POLICY IF NOT EXISTS CUST_ACME_SI_AUTH_POLICY
+    MFA_ENROLLMENT = 'REQUIRED'
+    CLIENT_TYPES = ('SNOWFLAKE_UI');
+
+CREATE USER IF NOT EXISTS CUST_ACME_SI_USER_1
+    DEFAULT_ROLE         = CUST_ACME_SI_READONLY
+    EMAIL                = '<USER_EMAIL>'
+    MUST_CHANGE_PASSWORD = TRUE;
+
+ALTER USER CUST_ACME_SI_USER_1 SET NETWORK_POLICY       = CUST_ACME_SI_NETWORK_POLICY;
+ALTER USER CUST_ACME_SI_USER_1 SET AUTHENTICATION POLICY = CUST_ACME_SI_AUTH_POLICY;
+GRANT ROLE CUST_ACME_SI_READONLY TO USER CUST_ACME_SI_USER_1;
+```
+
+> **Residual risk:** `CLIENT_TYPES` is best-effort. A determined user with the credential could potentially call the Cortex Analyst REST API directly, bypassing Snowsight. The network policy is your primary security boundary — not `CLIENT_TYPES`.
+
+### Option B2: API-Only User — Cortex Analyst Without Snowsight (Gate 1, read-only)
+
+The customer wants natural language analytics but you don't want to expose the Snowsight UI. Issue credentials for Cortex Analyst REST API access only — the customer builds or uses their own lightweight frontend.
+
+This is a middle ground between B1 (full Snowsight) and C (MSP builds everything). The customer owns the UI; the MSP owns the data, semantic models, and account.
+
+```sql
+-- Full script: sql/06_analytics_access.sql  Option B2-API block
+
+CREATE ROLE IF NOT EXISTS CUST_ACME_API_READONLY;
+GRANT USAGE ON DATABASE PRESENTATION TO ROLE CUST_ACME_API_READONLY;
+GRANT USAGE ON SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_API_READONLY;
+GRANT SELECT ON ALL VIEWS IN SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_API_READONLY;
+GRANT SELECT ON FUTURE VIEWS IN SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_API_READONLY;
+GRANT USAGE ON WAREHOUSE CUST_ANALYTICS_WH TO ROLE CUST_ACME_API_READONLY;
+GRANT DATABASE ROLE SNOWFLAKE.CORTEX_ANALYST_USER TO ROLE CUST_ACME_API_READONLY;
+GRANT ROLE CUST_ACME_API_READONLY TO ROLE MSP_PLATFORM_ENGINEER;
+
+CREATE NETWORK RULE IF NOT EXISTS CUST_ACME_API_INGRESS_RULE
+    MODE = INGRESS  TYPE = IPV4
+    VALUE_LIST = ('<CUSTOMER_APP_SERVER_IP>/32');
+
+CREATE NETWORK POLICY IF NOT EXISTS CUST_ACME_API_NETWORK_POLICY
+    ALLOWED_NETWORK_RULE_LIST = (CUST_ACME_API_INGRESS_RULE);
+
+-- Auth policy: block Snowsight, allow drivers only (for API access)
+-- No MFA_ENROLLMENT since we are blocking the UI enrollment path.
+CREATE AUTHENTICATION POLICY IF NOT EXISTS CUST_ACME_API_AUTH_POLICY
+    CLIENT_TYPES = ('DRIVERS');
+
+CREATE USER IF NOT EXISTS CUST_ACME_API_SVC
+    DEFAULT_ROLE = CUST_ACME_API_READONLY
+    TYPE         = SERVICE;
+
+ALTER USER CUST_ACME_API_SVC SET NETWORK_POLICY       = CUST_ACME_API_NETWORK_POLICY;
+ALTER USER CUST_ACME_API_SVC SET AUTHENTICATION POLICY = CUST_ACME_API_AUTH_POLICY;
+GRANT ROLE CUST_ACME_API_READONLY TO USER CUST_ACME_API_SVC;
+-- ALTER USER CUST_ACME_API_SVC SET RSA_PUBLIC_KEY = '<PUBLIC_KEY>';
+```
+
+**How this differs from B1:**
+- `CORTEX_ANALYST_USER` instead of `CORTEX_USER` — limits to Analyst only, no other Cortex features
+- `CLIENT_TYPES = ('DRIVERS')` — best-effort Snowsight block (REST APIs still reachable, but the user has no password to log into Snowsight anyway since `TYPE = SERVICE`)
+- `TYPE = SERVICE` — no password auth, no MFA enrollment needed, key-pair only
+- The customer calls the REST API from their own application server, not from a browser
+
+**How this differs from C:** The customer holds the credentials, not the MSP backend. Gate 1 is triggered. The MSP still controls the semantic model, the role grants, and the network boundary — but the customer's application makes the API calls directly.
+
+**The line between B2 and C:** In B2, the customer holds credentials and calls the API from their own server — Gate 1 is triggered. In C, the MSP holds credentials and the customer never touches Snowflake — Gate 1 is not triggered. The API call is identical; the difference is who authenticates.
+
+### Option B — BI Tool (PowerBI)
+
+PowerBI uses a machine-to-machine service account with key-pair auth. `TYPE = SERVICE` disables password auth entirely.
+
+```sql
+-- Full script: sql/06_analytics_access.sql  Option B-BI block
+
+-- Role: SELECT only on PRESENTATION layer
+CREATE ROLE IF NOT EXISTS CUST_ACME_BI_READONLY;
+GRANT USAGE ON DATABASE PRESENTATION TO ROLE CUST_ACME_BI_READONLY;
+GRANT USAGE ON SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_BI_READONLY;
+GRANT SELECT ON ALL VIEWS IN SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_BI_READONLY;
+GRANT SELECT ON FUTURE VIEWS IN SCHEMA PRESENTATION.ANALYTICS TO ROLE CUST_ACME_BI_READONLY;
+GRANT USAGE ON WAREHOUSE CUST_ANALYTICS_WH TO ROLE CUST_ACME_BI_READONLY;
+GRANT ROLE CUST_ACME_BI_READONLY TO ROLE MSP_PLATFORM_ENGINEER;
+
+-- Network rule: restrict to PowerBI gateway IP
+CREATE NETWORK RULE IF NOT EXISTS CUST_ACME_BI_INGRESS_RULE
+    MODE = INGRESS
+    TYPE = IPV4
+    VALUE_LIST = ('<POWERBI_GATEWAY_IP>/32');
+
+CREATE NETWORK POLICY IF NOT EXISTS CUST_ACME_BI_NETWORK_POLICY
+    ALLOWED_NETWORK_RULE_LIST = (CUST_ACME_BI_INGRESS_RULE);
+
+-- Service account: key-pair only, no MFA, no password
+CREATE USER IF NOT EXISTS CUST_ACME_BI_SVC
+    DEFAULT_ROLE = CUST_ACME_BI_READONLY
+    TYPE = SERVICE;
+
+ALTER USER CUST_ACME_BI_SVC SET NETWORK_POLICY = CUST_ACME_BI_NETWORK_POLICY;
+GRANT ROLE CUST_ACME_BI_READONLY TO USER CUST_ACME_BI_SVC;
+-- Key-pair setup: generate RSA key pair, set public key on user
+-- ALTER USER CUST_ACME_BI_SVC SET RSA_PUBLIC_KEY = '<PUBLIC_KEY>';
+```
+
+> **Important:** `CUST_ACME_BI_READONLY`, `CUST_ACME_SI_READONLY`, and `CUST_ACME_API_READONLY` are flat grant roles — they are NOT granted to `CUST_ADMIN` and do not appear in the customer's management hierarchy. Only `MSP_PLATFORM_ENGINEER` creates, modifies, or drops them.
+
+### Option C: Embedded Analytics (no Gate 1)
+
+The MSP builds analytics into their own web application. Customers never receive Snowflake credentials or see a Snowsight URL.
+
+**BI tools:** Embed a BI library (Tableau Embedded, Sigma, Metabase, etc.) inside the MSP web app. The web app's backend makes queries using a service account.
+
+**Cortex Analyst:** Call the Cortex Analyst REST API from the MSP backend — the same API that B2 uses, but the MSP's service account makes the call, not the customer's. The MSP defines the semantic model and the web app exposes a chat interface. The customer interacts with a natural language query box in your product, not Snowsight and not the raw API.
+
+```
+POST /api/v2/cortex/analyst/message
+Authorization: Bearer <MSP backend OAuth token>
+{
+  "messages": [...],
+  "semantic_model_file": "@PRESENTATION.ANALYTICS.SEMANTIC_MODELS/cust_acme.yaml"
+}
+```
+
+This is the pure Connected App / service provider pattern. Gate 1 is not triggered. The MSP's application mediates all access. The tradeoff: more development investment, but the MSP retains full control over the analytics experience and the customer's interaction surface.
+
+### Choosing an Option
+
+| Scenario | Recommended | Why |
+|----------|-------------|-----|
+| Customer has their own SF account, just wants PowerBI | Option A | §1.4(a) carveout, cleanest ToS position |
+| Customer has no SF account, needs PowerBI | Option B-BI | Service account, key-pair, locked to gateway IP |
+| Customer wants full SI experience and has their own SF account | Option A | SI in their own account against shared data |
+| Customer wants full SI experience but has no SF account | Option B1 | Human Snowsight login, MFA + network policy, `CLIENT_TYPES = ('SNOWFLAKE_UI')` |
+| Customer wants to build their own NL analytics app against your data | Option B2 | API-only service account, no Snowsight, `CORTEX_ANALYST_USER` |
+| MSP wants to own the entire analytics experience | Option C | Cortex Analyst API from MSP backend, no customer credentials |
+| Customer is asking for more than SELECT access | Stop | This is a Gate 1 vendor onboarding question, not analytics access |
+
+> **Small team guidance:** If you're a 3-person MSP platform team and your customer asks for "Snowflake Intelligence access," start with Option A (Data Sharing) if they have a Snowflake account, or Option B2 (API-only) if they don't. Option B1 (full Snowsight) creates the most operational surface area — MFA enrollment, `CLIENT_TYPES` management, and the residual risk that `CLIENT_TYPES` doesn't block REST APIs. Option C is the most controlled but requires building and maintaining a frontend.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
 | Vendor user cannot log in | Network policy blocking their IP | Check user-level and account-level network policies. `SHOW PARAMETERS LIKE 'NETWORK_POLICY' IN USER <user>` |
 | Vendor can log in but sees no objects | Missing `USAGE` on database or schema | Grant `USAGE ON DATABASE RAW_VENDOR` and `USAGE ON SCHEMA RAW_VENDOR.VENDOR_X` to the vendor role |
 | Vendor creates a table but MSP pipeline cannot read it | Missing future grants | Run `GRANT SELECT ON FUTURE TABLES IN SCHEMA RAW_VENDOR.VENDOR_X TO ROLE MSP_PLATFORM_ENGINEER` and then `GRANT SELECT ON ALL TABLES ...` for existing tables |
@@ -617,6 +855,9 @@ Treat RBAC changes and vendor lifecycle as change-controlled actions:
 | Credit runaway from vendor warehouse | Resource monitor not set or threshold too high | Check `SHOW RESOURCE MONITORS` and adjust quota |
 | CUST_ADMIN created a user with ACCOUNTADMIN default role | Direct `CREATE USER` privilege instead of stored procedure | Revoke `CREATE USER` from CUST_ADMIN, use the stored procedure pattern from Part 1 |
 | Vendor user sees other vendors' query history | ACCOUNT_USAGE access granted too broadly | Vendor roles should never have access to SNOWFLAKE.ACCOUNT_USAGE. Only MSP roles. |
+| SI user can call Cortex Analyst REST API despite `CLIENT_TYPES = ('SNOWFLAKE_UI')` | `CLIENT_TYPES` does not restrict REST API access (documented limitation) | Network policy is the real boundary. Ensure IP range is tight. Accept that `CLIENT_TYPES` is defense-in-depth, not primary control. |
+| Cannot create auth policy with `MFA_ENROLLMENT = 'REQUIRED'` and `CLIENT_TYPES = ('DRIVERS')` | MFA enrollment can only happen in Snowsight | `MFA_ENROLLMENT = 'REQUIRED'` forces `CLIENT_TYPES` to include `SNOWFLAKE_UI`. For API-only users (B2), skip MFA and use `TYPE = SERVICE` + key-pair instead. |
+| B2 API service account can still reach Snowsight | `CLIENT_TYPES = ('DRIVERS')` is best-effort | `TYPE = SERVICE` users have no password and cannot log into Snowsight regardless. The auth policy is defense-in-depth. |
 
 ---
 
@@ -629,6 +870,7 @@ Treat RBAC changes and vendor lifecycle as change-controlled actions:
 | [`sql/03_vendor_offboard.sql`](sql/03_vendor_offboard.sql) | Vendor offboarding (disable, transfer ownership, revoke, clean up) | ACCOUNTADMIN |
 | [`sql/04_monitoring.sql`](sql/04_monitoring.sql) | Organization-level and per-account monitoring queries | ACCOUNTADMIN |
 | [`sql/05_guardrails.sql`](sql/05_guardrails.sql) | Network rules, auth policies, masking, row access, audit checks | ACCOUNTADMIN |
+| [`sql/06_analytics_access.sql`](sql/06_analytics_access.sql) | Customer analytics access: Data Sharing, BI service account, SI human users | MSP_PLATFORM_ENGINEER |
 
 ---
 
