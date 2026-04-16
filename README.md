@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-20-blue)
+![Projects](https://img.shields.io/badge/Projects-19-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -51,7 +51,6 @@ Documentation, patterns, and examples (no deploy/teardown).
 |---|---|---|
 | [guide-csv-import](guide-csv-import/) | Load CSV files into Snowflake: one-time setup, repeatable imports, and automation | Stages, COPY INTO, File Formats |
 | [guide-agent-skills](guide-agent-skills/) | Agent skills as resource management: context budget mental model | Skills, Context Management |
-| [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) | Redirect Anthropic SDK calls to Snowflake Cortex with 3 code changes | Cortex REST API, Messages API, PAT Auth |
 | [guide-ai-tool-rollout](guide-ai-tool-rollout/) | Roll out AI coding tools enterprise-wide: MDM, Snowflake standards, red-team, distribution | managed-settings.json, MDM, Dual-Surface |
 | [guide-agent-hardening](guide-agent-hardening/) | Harden Cortex Agents for production: monitoring, RBAC, guardrails, cost controls, config diff | Cortex Guard, CORTEX_AGENT_USAGE_HISTORY, Row Access Policies, DESC AGENT |
 | [guide-mcp-auth](guide-mcp-auth/) | MCP server authentication walkthrough: PAT, OAuth + PKCE, RBAC, multi-tenant, enterprise IdP | Snowflake MCP, OAuth, PAT, RBAC |
@@ -73,7 +72,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 |---|---|---|---|
 | **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, harden for production, and connect via MCP | demo-cortex-teams-agent → guide-agent-hardening → guide-mcp-auth | [demo-cortex-teams-agent](demo-cortex-teams-agent/) |
 | **AI Governance** | Roll out AI coding tools across your organization | guide-agent-skills → guide-ai-tool-rollout | [guide-agent-skills](guide-agent-skills/) |
-| **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | guide-cortex-anthropic-redirect → tool-ai-spend-controls → tool-code-spend-controls → guide-query-tuning | [guide-cortex-anthropic-redirect](guide-cortex-anthropic-redirect/) |
+| **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | tool-ai-spend-controls → tool-code-spend-controls → guide-query-tuning | [tool-ai-spend-controls](tool-ai-spend-controls/) |
 | **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-csv-import → guide-semi-structured-pipeline → guide-data-quality-governance | [guide-csv-import](guide-csv-import/) |
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | guide-external-access-playbook | [guide-external-access-playbook](guide-external-access-playbook/) |
 | **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | demo-cortex-financial-agents | [demo-cortex-financial-agents](demo-cortex-financial-agents/) |
