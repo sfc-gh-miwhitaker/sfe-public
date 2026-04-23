@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-19-blue)
+![Projects](https://img.shields.io/badge/Projects-17-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -57,8 +57,6 @@ Documentation, patterns, and examples (no deploy/teardown).
 | [guide-data-quality-governance](guide-data-quality-governance/) | Data quality governance: DMFs, tagging, masking, anomaly detection | Data Metric Functions, Tags, Masking Policies |
 | [guide-semi-structured-pipeline](guide-semi-structured-pipeline/) | Bronze-to-gold pipeline architecture for semi-structured data with Dynamic Tables | Dynamic Tables, TRY_CAST, FLATTEN, INFER_SCHEMA, OpenFlow, DMFs |
 | [guide-external-access-playbook](guide-external-access-playbook/) | External access patterns: network rules, EAI, secrets, OAuth | External Access Integration, Network Rules, Secrets |
-| [guide-powerbi-live-query](guide-powerbi-live-query/) | Power BI DirectQuery at scale: interactive tables, hybrid tables, and optimization patterns | Interactive Tables, Interactive Warehouses, Hybrid Tables, Power BI SSO |
-| [guide-powerbi-onelake-iceberg](guide-powerbi-onelake-iceberg/) | Power BI + Snowflake via OneLake and Iceberg: bi-directional access and Direct Lake mode | Iceberg Tables, OneLake, Catalog-Linked Databases, External Volumes |
 | [guide-query-tuning](guide-query-tuning/) | Tune queries to reduce warehouse cost: pruning, clustering, and search optimization before resizing | Warehouse Optimization, Clustering, Search Optimization, Pruning |
 | [guide-msp-provider](guide-msp-provider/) | MSP multi-tenant architecture: vendor Snowsight access, managed access schemas, onboarding/offboarding runbooks | RBAC, Managed Access, Network Rules, Auth Policies, Org Usage |
 | [guide-coco-connections](guide-coco-connections/) | Multi-connection setup for Cortex Code CLI: config.toml, launch patterns, per-project AGENTS.md, environment isolation | Cortex Code CLI, connections.toml, AGENTS.md, Partner SE |
@@ -76,7 +74,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 | **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-csv-import → guide-semi-structured-pipeline → guide-data-quality-governance | [guide-csv-import](guide-csv-import/) |
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | guide-external-access-playbook | [guide-external-access-playbook](guide-external-access-playbook/) |
 | **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | demo-cortex-financial-agents | [demo-cortex-financial-agents](demo-cortex-financial-agents/) |
-| **BI Integration** | Connect Power BI via DirectQuery and OneLake/Iceberg | guide-powerbi-live-query → guide-powerbi-onelake-iceberg | [guide-powerbi-live-query](guide-powerbi-live-query/) |
+| **BI Integration** | Connect Power BI via DirectQuery and OneLake/Iceberg | guide-powerbi-onelake-iceberg | [guide-powerbi-onelake-iceberg](guide-powerbi-onelake-iceberg/) |
 ---
 
 ## Quick Start
