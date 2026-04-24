@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-17-blue)
+![Projects](https://img.shields.io/badge/Projects-14-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -29,8 +29,6 @@ Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
 |---|---|---|
 | [demo-cortex-teams-agent](demo-cortex-teams-agent/) | Snowflake Cortex Agents for Microsoft Teams & M365 Copilot | Cortex Agents, AI_COMPLETE, Cortex Guard |
 | [glaze-and-classify](https://github.com/sfc-gh-miwhitaker/glaze-and-classify) | Multi-method product classification showdown (SQL, Cortex AI, SPCS Vision) | AI_COMPLETE, SPCS, Semantic Views, Intelligence Agents |
-| [demo-music-label-marketing-analytics](demo-music-label-marketing-analytics/) | Music label marketing analytics with AI enrichment, spreadsheet-style budget entry, and Intelligence agent | Dynamic Tables, AI_CLASSIFY, AI_EXTRACT, Semantic Views, Streamlit, Intelligence Agents |
-| [demo-gaming-player-analytics](demo-gaming-player-analytics/) | Player behavior analytics with AI cohort segmentation, churn risk scoring, feedback analysis, and Intelligence agent | Dynamic Tables, AI_CLASSIFY, AI_EXTRACT, Semantic Views, Streamlit, Intelligence Agents |
 
 ### Deployable Tools
 
@@ -55,7 +53,6 @@ Documentation, patterns, and examples (no deploy/teardown).
 | [guide-agent-hardening](guide-agent-hardening/) | Harden Cortex Agents for production: monitoring, RBAC, guardrails, cost controls, config diff | Cortex Guard, CORTEX_AGENT_USAGE_HISTORY, Row Access Policies, DESC AGENT |
 | [guide-mcp-auth](guide-mcp-auth/) | MCP server authentication walkthrough: PAT, OAuth + PKCE, RBAC, multi-tenant, enterprise IdP | Snowflake MCP, OAuth, PAT, RBAC |
 | [guide-data-quality-governance](guide-data-quality-governance/) | Data quality governance: DMFs, tagging, masking, anomaly detection | Data Metric Functions, Tags, Masking Policies |
-| [guide-semi-structured-pipeline](guide-semi-structured-pipeline/) | Bronze-to-gold pipeline architecture for semi-structured data with Dynamic Tables | Dynamic Tables, TRY_CAST, FLATTEN, INFER_SCHEMA, OpenFlow, DMFs |
 | [guide-external-access-playbook](guide-external-access-playbook/) | External access patterns: network rules, EAI, secrets, OAuth | External Access Integration, Network Rules, Secrets |
 | [guide-query-tuning](guide-query-tuning/) | Tune queries to reduce warehouse cost: pruning, clustering, and search optimization before resizing | Warehouse Optimization, Clustering, Search Optimization, Pruning |
 | [guide-msp-provider](guide-msp-provider/) | MSP multi-tenant architecture: vendor Snowsight access, managed access schemas, onboarding/offboarding runbooks | RBAC, Managed Access, Network Rules, Auth Policies, Org Usage |
@@ -71,7 +68,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 | **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, harden for production, and connect via MCP | demo-cortex-teams-agent → guide-agent-hardening → guide-mcp-auth | [demo-cortex-teams-agent](demo-cortex-teams-agent/) |
 | **AI Governance** | Roll out AI coding tools across your organization | guide-agent-skills → guide-ai-tool-rollout | [guide-agent-skills](guide-agent-skills/) |
 | **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | tool-ai-spend-controls → tool-code-spend-controls → guide-query-tuning | [tool-ai-spend-controls](tool-ai-spend-controls/) |
-| **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-csv-import → guide-semi-structured-pipeline → guide-data-quality-governance | [guide-csv-import](guide-csv-import/) |
+| **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-csv-import → guide-data-quality-governance | [guide-csv-import](guide-csv-import/) |
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | guide-external-access-playbook | [guide-external-access-playbook](guide-external-access-playbook/) |
 | **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | demo-cortex-financial-agents | [demo-cortex-financial-agents](demo-cortex-financial-agents/) |
 | **BI Integration** | Connect Power BI via DirectQuery and OneLake/Iceberg | guide-powerbi-onelake-iceberg | [guide-powerbi-onelake-iceberg](guide-powerbi-onelake-iceberg/) |
