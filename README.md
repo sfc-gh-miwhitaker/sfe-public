@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-14-blue)
+![Projects](https://img.shields.io/badge/Projects-12-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -27,7 +27,6 @@ Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
 
 | Directory | Description | Features |
 |---|---|---|
-| [demo-cortex-teams-agent](demo-cortex-teams-agent/) | Snowflake Cortex Agents for Microsoft Teams & M365 Copilot | Cortex Agents, AI_COMPLETE, Cortex Guard |
 | [glaze-and-classify](https://github.com/sfc-gh-miwhitaker/glaze-and-classify) | Multi-method product classification showdown (SQL, Cortex AI, SPCS Vision) | AI_COMPLETE, SPCS, Semantic Views, Intelligence Agents |
 
 ### Deployable Tools
@@ -38,7 +37,6 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 |---|---|---|
 | [tool-ai-spend-controls](tool-ai-spend-controls/) | Control Cortex AI Function spend — monitoring, alerts, per-user limits, runaway detection | Notebooks, Streamlit, ACCOUNT_USAGE, Alerts, Tasks |
 | [tool-code-spend-controls](tool-code-spend-controls/) | Control Cortex Code spend — budgets, per-user limits, RBAC, scenario runbooks | Notebooks, Worksheets, ACCOUNT_USAGE, Budgets |
-| [tool-dr-cost-agent](tool-dr-cost-agent/) | DR replication cost estimation agent with hybrid table awareness | Snowflake Intelligence, Semantic Views, ACCOUNT_USAGE |
 | [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |
 
 ### Guides and References
@@ -65,7 +63,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 
 | Journey | Story | Path | Start Here |
 |---|---|---|---|
-| **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, harden for production, and connect via MCP | demo-cortex-teams-agent → guide-agent-hardening → guide-mcp-auth | [demo-cortex-teams-agent](demo-cortex-teams-agent/) |
+| **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, harden for production, and connect via MCP | guide-agent-hardening → guide-mcp-auth | [guide-agent-hardening](guide-agent-hardening/) |
 | **AI Governance** | Roll out AI coding tools across your organization | guide-agent-skills → guide-ai-tool-rollout | [guide-agent-skills](guide-agent-skills/) |
 | **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | tool-ai-spend-controls → tool-code-spend-controls → guide-query-tuning | [tool-ai-spend-controls](tool-ai-spend-controls/) |
 | **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-csv-import → guide-data-quality-governance | [guide-csv-import](guide-csv-import/) |
