@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-12-blue)
+![Projects](https://img.shields.io/badge/Projects-11-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -54,7 +54,6 @@ Documentation, patterns, and examples (no deploy/teardown).
 | [guide-external-access-playbook](guide-external-access-playbook/) | External access patterns: network rules, EAI, secrets, OAuth | External Access Integration, Network Rules, Secrets |
 | [guide-query-tuning](guide-query-tuning/) | Tune queries to reduce warehouse cost: pruning, clustering, and search optimization before resizing | Warehouse Optimization, Clustering, Search Optimization, Pruning |
 | [guide-msp-provider](guide-msp-provider/) | MSP multi-tenant architecture: vendor Snowsight access, managed access schemas, onboarding/offboarding runbooks | RBAC, Managed Access, Network Rules, Auth Policies, Org Usage |
-| [guide-coco-connections](guide-coco-connections/) | Multi-connection setup for Cortex Code CLI: config.toml, launch patterns, per-project AGENTS.md, environment isolation | Cortex Code CLI, connections.toml, AGENTS.md, Partner SE |
 
 
 ## Learning Journeys
