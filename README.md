@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-11-blue)
+![Projects](https://img.shields.io/badge/Projects-10-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -37,7 +37,6 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 |---|---|---|
 | [tool-ai-spend-controls](tool-ai-spend-controls/) | Control Cortex AI Function spend — monitoring, alerts, per-user limits, runaway detection | Notebooks, Streamlit, ACCOUNT_USAGE, Alerts, Tasks |
 | [tool-code-spend-controls](tool-code-spend-controls/) | Control Cortex Code spend — budgets, per-user limits, RBAC, scenario runbooks | Notebooks, Worksheets, ACCOUNT_USAGE, Budgets |
-| [tool-cortex-semantic-enhancer](tool-cortex-semantic-enhancer/) | AI-enhanced semantic view descriptions using Cortex | AI_COMPLETE, Semantic Views |
 
 ### Guides and References
 
