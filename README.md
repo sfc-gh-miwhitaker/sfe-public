@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-13-blue)
+![Projects](https://img.shields.io/badge/Projects-14-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -50,6 +50,7 @@ Documentation, patterns, and examples (no deploy/teardown).
 | [guide-ai-tool-rollout](guide-ai-tool-rollout/) | Roll out AI coding tools enterprise-wide: MDM, Snowflake standards, red-team, distribution | managed-settings.json, MDM, Dual-Surface |
 | [guide-agent-hardening](guide-agent-hardening/) | Harden Cortex Agents for production: monitoring, RBAC, guardrails, cost controls, config diff | Cortex Guard, CORTEX_AGENT_USAGE_HISTORY, Row Access Policies, DESC AGENT |
 | [guide-mcp-auth](guide-mcp-auth/) | MCP server authentication walkthrough: PAT, OAuth + PKCE, RBAC, multi-tenant, enterprise IdP | Snowflake MCP, OAuth, PAT, RBAC |
+| [guide-connecting-claude-snowflake](guide-connecting-claude-snowflake/) | Connect Claude to Snowflake: MCP OAuth, Entra ID External OAuth, and Cortex Code plugin with profiles | MCP, External OAuth, Entra ID, Cortex Code Plugin, Profiles |
 | [guide-data-quality-governance](guide-data-quality-governance/) | Data quality governance: DMFs, tagging, masking, anomaly detection | Data Metric Functions, Tags, Masking Policies |
 | [guide-external-access-playbook](guide-external-access-playbook/) | External access patterns: network rules, EAI, secrets, OAuth | External Access Integration, Network Rules, Secrets |
 | [guide-query-tuning](guide-query-tuning/) | Tune queries to reduce warehouse cost: pruning, clustering, and search optimization before resizing | Warehouse Optimization, Clustering, Search Optimization, Pruning |
