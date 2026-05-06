@@ -1,0 +1,6 @@
+name: streamlit
+channels:
+  - snowflake
+dependencies:
+  - streamlit=1.40.0
+  - pandas
