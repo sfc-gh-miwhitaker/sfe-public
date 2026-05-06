@@ -264,7 +264,7 @@ diff agent_spec_v1.yaml agent_spec_v2.yaml
 - [`demo-agent-multicontext`](../demo-agent-multicontext/) -- Per-request context injection with Row Access Policies and observability
 - [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Cost governance platform with budgets, alerts, and runaway detection
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods
-- [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant architecture with Azure AD OAuth + RAPs
+- [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant agent patterns: session variables, isolation gotchas, API reference
 
 ## References
 

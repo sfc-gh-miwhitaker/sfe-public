@@ -23,10 +23,10 @@ flowchart TD
     Endpoint --> RBAC["Snowflake RBAC enforces access"]
     RBAC --> Tools["Tool discovery and invocation"]
 
-    style ExtOAuth stroke-dasharray: 5 5
+
 ```
 
-The dashed border on External OAuth indicates this path has limitations -- external IdP tokens for the managed MCP server are not yet fully productized. See Part 5 of the guide for workarounds.
+External OAuth with Entra ID is validated and working with the managed MCP endpoint. See Part 5 of the guide for configuration details and common pitfalls.
 
 ## Decision Matrix
 

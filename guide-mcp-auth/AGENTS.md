@@ -30,6 +30,7 @@ How to connect AI clients (Cursor, Claude Desktop, VS Code, Cortex Code, Windsur
 
 ## Related Projects
 
+- [`guide-connecting-claude-snowflake`](../guide-connecting-claude-snowflake/) -- Claude-specific paths: Snowflake OAuth, External OAuth via Entra, Cortex Code plugin
 - [`guide-agent-hardening`](../guide-agent-hardening/) -- Agent governance playbook (RBAC, monitoring, cost)
 - [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant agent pattern with OAuth + RAPs
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods

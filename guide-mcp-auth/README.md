@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2026--05--24-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--07--05-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # MCP Server Authentication Guide
@@ -10,7 +10,7 @@ Inspired by the question everyone asks first: *"How do I connect Cursor / Claude
 This guide answers that question with exact configs for every major AI client, then goes deep on OAuth + PKCE for production apps, multi-tenant RBAC with role-scoped tokens, enterprise IdP integration (with honest assessment of current gaps), and a complete production readiness checklist.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-25 | **Expires:** 2026-05-24 | **Status:** ACTIVE
+**Created:** 2026-03-25 | **Expires:** 2026-07-05 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -73,7 +73,7 @@ flowchart LR
 | &nbsp;&nbsp;&nbsp;&nbsp;[Cursor](#cursor) &#183; [Claude Desktop](#claude-desktop) &#183; [VS Code + Copilot](#vs-code--github-copilot) &#183; [Cortex Code](#cortex-code-claude-code) &#183; [Windsurf](#windsurf) &#183; [ChatGPT](#chatgpt-custom-gpts) &#183; [curl / Python](#custom-clients-curl--python) | [Troubleshooting](#troubleshooting-all-clients) |
 | **[Part 3: OAuth + PKCE for Production](#part-3-production-web-app-with-oauth--pkce)** | Security integration, PKCE flow, token exchange, Streamlit example |
 | **[Part 4: Multi-Tenant RBAC](#part-4-multi-tenant-rbac-with-role-scoped-tokens)** | Role-scoped tokens, per-role grants, Row Access Policies |
-| **[Part 5: Enterprise IdP](#part-5-enterprise-with-corporate-idp----the-gap-and-workarounds)** | Entra/Okta gap, three workarounds |
+| **[Part 5: Enterprise IdP](#part-5-enterprise-with-corporate-idp-external-oauth)** | Entra/Okta: External OAuth integration, service account PATs, proxy pattern |
 | **[Part 6: Known Limitations](#part-6-known-limitations-and-gotchas)** | Protocol mismatches, streaming, billing, PrivateLink |
 | **[Production Readiness Checklist](#production-readiness-checklist)** | Pre-launch verification table |
 
@@ -110,10 +110,9 @@ flowchart TD
 
     Header --> Endpoint["POST /api/v2/databases/DB/schemas/SCHEMA/mcp-servers/NAME"]
 
-    style ExtOAuth stroke-dasharray: 5 5
 ```
 
-The dashed border on External OAuth is intentional -- external IdP tokens for the managed MCP server are not yet fully productized. Part 5 covers this honestly.
+External OAuth with Entra ID is validated and working. Part 5 covers the configuration steps and common pitfalls.
 
 ### Decision Matrix
 
@@ -123,7 +122,7 @@ The dashed border on External OAuth is intentional -- external IdP tokens for th
 | Streamlit / web app with user login | OAuth + PKCE | Production multi-user apps | End-user identity |
 | Automated pipeline or CI/CD | PAT with least-privilege role | Non-interactive service accounts | Service identity |
 | Multi-tenant SaaS platform | OAuth + PKCE with role scoping | Role-based data isolation | End-user + role identity |
-| Enterprise with Entra/Okta mandate | External OAuth (limited today) | Federated auth compliance | Federated identity |
+| Enterprise with Entra/Okta mandate | External OAuth | Federated auth compliance | Federated identity |
 
 ### What Both Methods Share
 
@@ -197,6 +196,10 @@ CREATE MCP SERVER my_mcp_server
         type: "SYSTEM_EXECUTE_SQL"
         description: "Execute SQL queries against the connected Snowflake database"
         title: "SQL Execution"
+        config:
+          read_only: true
+          query_timeout: 60
+          warehouse: "MY_WH"
   $$;
 ```
 
@@ -505,7 +508,7 @@ export MCP_URL="https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com/api/v2/datab
 curl -X POST "${MCP_URL}" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${SNOWFLAKE_PAT}" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}'
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25"}}'
 ```
 
 Then list tools:
@@ -945,27 +948,22 @@ ALTER TABLE MY_DB.MY_SCHEMA.REVENUE_DATA
 
 With this policy, an analyst authenticated with `scope=session:role:ANALYST_NA` querying through the MCP server's Cortex Analyst tool will only see North American data -- the policy is enforced at the SQL layer, invisible to the MCP client.
 
-For the complete multi-tenant pattern with Azure AD OAuth, see [guide-agent-multi-tenant](../guide-agent-multi-tenant/).
+For the complete multi-tenant pattern with session variables and Row Access Policies, see [guide-agent-multi-tenant](../guide-agent-multi-tenant/).
 
 ---
 
-## Part 5: Enterprise with Corporate IdP -- The Gap and Workarounds
+## Part 5: Enterprise with Corporate IdP (External OAuth)
 
 > **Scenario:** Your enterprise security team mandates that all authentication flows through Entra ID (Azure AD) or Okta. They want MCP access tokens issued by the corporate IdP, not by Snowflake's built-in OAuth.
 
-### The Current State (Honest Assessment)
+### The Current State
 
-External IdP OAuth tokens for the Snowflake-managed MCP server are **not yet fully supported**. Today, the managed MCP server authenticates via:
+External OAuth with Entra ID works with the Snowflake-managed MCP server. You create a security integration that trusts your IdP, obtain a JWT from Entra, and pass it as a Bearer token to the MCP endpoint. The configuration requires exact alignment between Entra app registration, Snowflake integration, and user mapping.
 
-1. **Snowflake's built-in OAuth** (CREATE SECURITY INTEGRATION with OAUTH_CLIENT = CUSTOM)
-2. **Programmatic Access Tokens** (PATs)
+> [!IMPORTANT]
+> This path is validated and working (see [Kevin Keller's External OAuth + MCP walkthrough](https://kevinkeller.org/posts/snowflake-mcp-external-oauth-authentication/) and [InterWorks: Governed NL Access via Claude Desktop](https://interworks.com/blog/2026/04/01/governed-natural-language-access-to-snowflake-data-via-claude-desktop/)). However, configuration is exacting -- issuer URLs, audience values, and user mapping claims must match precisely or auth fails silently.
 
-> [!CAUTION]
-> There is no path today to hand the MCP server a token issued by Entra ID or Okta and have it accepted directly. This is a known product gap. Customers requiring uniform IdP-issued tokens across all access paths see MCP as a compliance gap until this is delivered.
-
-### Workaround 1: Snowflake External OAuth + Custom Token Exchange
-
-Snowflake supports [External OAuth](https://docs.snowflake.com/en/user-guide/oauth-ext-overview) for regular SQL connections. You can create a security integration that trusts your IdP:
+### Option 1: External OAuth with Entra ID (Recommended)
 
 ```sql
 CREATE SECURITY INTEGRATION ext_oauth_entra
@@ -974,15 +972,27 @@ CREATE SECURITY INTEGRATION ext_oauth_entra
     EXTERNAL_OAUTH_TYPE = AZURE
     EXTERNAL_OAUTH_ISSUER = 'https://sts.windows.net/<TENANT_ID>/'
     EXTERNAL_OAUTH_JWS_KEYS_URL = 'https://login.microsoftonline.com/<TENANT_ID>/discovery/v2.0/keys'
-    EXTERNAL_OAUTH_AUDIENCE_LIST = ('https://<ACCOUNT>.snowflakecomputing.com')
+    EXTERNAL_OAUTH_AUDIENCE_LIST = ('<SNOWFLAKE_APPLICATION_ID_URI>')
     EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM = 'upn'
-    EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = 'login_name';
+    EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE = 'login_name'
+    EXTERNAL_OAUTH_ANY_ROLE_MODE = 'ENABLE';
 ```
 
 > [!WARNING]
-> This integration works for SQL API connections and the Snowflake Python connector, but **may not be accepted by the managed MCP endpoint**. Test thoroughly in your environment before committing to this path.
+> Configuration is case-sensitive and must exactly match what Entra provides. The issuer URL trailing slash matters. Each Snowflake user must have `LOGIN_NAME` set to their Entra UPN. Validate with `SELECT SYSTEM$VERIFY_EXTERNAL_OAUTH_TOKEN('<token>');` before configuring clients.
 
-### Workaround 2: Service Account PAT with Automated Rotation
+**Key setup steps:**
+
+1. Register Snowflake as an OAuth Resource in Entra ID (App Registration with Application ID URI)
+2. Create an OAuth Client App in Entra ID (client credentials or auth code flow)
+3. Create the External OAuth security integration in Snowflake (SQL above)
+4. Set Snowflake user `LOGIN_NAME` to match Entra UPN
+5. Obtain token from Entra and validate in Snowflake
+6. Configure MCP client with Bearer token in headers
+
+For a complete step-by-step walkthrough with Azure portal screenshots and curl examples, see [`guide-connecting-claude-snowflake/mcp-oauth.md`](../guide-connecting-claude-snowflake/mcp-oauth.md) Option B.
+
+### Option 2: Service Account PAT with Automated Rotation
 
 For service-to-service flows where the enterprise accepts a Snowflake-issued credential (as long as it's properly rotated and scoped):
 
@@ -999,7 +1009,7 @@ CREATE USER mcp_service_user
 GRANT ROLE MCP_SERVICE_ROLE TO USER mcp_service_user;
 ```
 
-### Workaround 3: Proxy Pattern
+### Option 3: Proxy Pattern
 
 Build a thin proxy service that:
 
@@ -1009,11 +1019,17 @@ Build a thin proxy service that:
 4. Calls the Snowflake MCP server with a Snowflake-native token (PAT or OAuth)
 5. Returns the MCP response to the caller
 
-This adds latency and operational complexity, but satisfies the "all auth through our IdP" requirement at the edge while using Snowflake-native auth under the hood.
+This adds latency and operational complexity, but satisfies strict "all auth through our IdP at every layer" requirements. Most enterprises should use Option 1 instead.
 
-### What's Coming
+### Common Pitfalls
 
-The product gap for external OAuth token validation on the MCP endpoint is tracked internally. When delivered, it will allow the managed MCP server to accept tokens from registered external IdPs without a proxy layer. No committed timeline.
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Token validation fails silently | Issuer URL trailing slash mismatch | Exact match required -- check with/without `/` |
+| "User not found" | `LOGIN_NAME` doesn't match token claim | `ALTER USER SET LOGIN_NAME = 'user@company.com'` |
+| HTTP 200 but JSON-RPC error | Auth failure in body, not headers | Check `error` field in response JSON |
+| Token works for SQL API but not MCP | Different audience or scope expected | Verify `EXTERNAL_OAUTH_AUDIENCE_LIST` includes correct URI |
+| Entra token expired mid-session | Default ~60 min TTL | Implement refresh or use shorter-lived sessions |
 
 For network-level security patterns that complement any auth approach, see [guide-external-access-playbook](../guide-external-access-playbook/).
 
@@ -1031,7 +1047,7 @@ The Snowflake managed MCP server supports **tool capabilities only**. The follow
 
 | Limitation | Impact | Status |
 |---|---|---|
-| External IdP tokens not accepted by managed MCP endpoint | Enterprises requiring federated auth need workarounds (Part 5) | Product gap, actively tracked |
+| External IdP tokens require exact configuration | Issuer URL, audience, and user mapping must match precisely or auth fails silently | Supported via External OAuth integration; see Part 5 |
 | No per-tool OAuth scopes | Cannot scope a token to specific tools within an MCP server; access control is per-server via RBAC | By design -- use Snowflake roles for per-tool control |
 | No per-tool RBAC at MCP layer | All tools in one MCP server execute under the same role context | Use multiple MCP servers for hard isolation between tool sets |
 | Secret management for external MCP calls still maturing | When Snowflake agents call external MCP servers, token refresh and least-privilege patterns are limited | Under active development |
@@ -1092,8 +1108,9 @@ The Snowflake managed MCP server supports **tool capabilities only**. The follow
 
 ## Related Projects
 
+- [`guide-connecting-claude-snowflake`](../guide-connecting-claude-snowflake/) -- Claude-specific paths: Snowflake OAuth, External OAuth via Entra ID, and Cortex Code plugin
 - [`guide-agent-hardening`](../guide-agent-hardening/) -- Agent governance playbook: RBAC, monitoring, cost controls, audit trails
-- [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant agent pattern with Azure AD OAuth + Row Access Policies
+- [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant agent patterns: session variables, RAPs, API gotchas
 - [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with PAT, key-pair JWT, and OAuth auth methods
 - [`guide-external-access-playbook`](../guide-external-access-playbook/) -- External access patterns: network rules, secrets, OAuth integrations
 - [`tool-secrets-rotation-aws`](../tool-secrets-rotation-aws/) -- Automated PAT and key-pair rotation with AWS Secrets Manager
@@ -1106,5 +1123,8 @@ The Snowflake managed MCP server supports **tool capabilities only**. The follow
 - [Getting Started Quickstart](https://quickstarts.snowflake.com/guide/getting-started-with-snowflake-mcp-server/index.html)
 - [CREATE MCP SERVER Reference](https://docs.snowflake.com/en/sql-reference/sql/create-mcp-server)
 - [Snowflake OAuth for Custom Clients](https://docs.snowflake.com/en/user-guide/oauth-custom)
+- [Configure Entra ID for External OAuth](https://docs.snowflake.com/en/user-guide/oauth-azure)
+- [External OAuth + MCP Walkthrough (Kevin Keller, Mar 2026)](https://kevinkeller.org/posts/snowflake-mcp-external-oauth-authentication/)
+- [Governed NL Access via Claude Desktop (InterWorks, Apr 2026)](https://interworks.com/blog/2026/04/01/governed-natural-language-access-to-snowflake-data-via-claude-desktop/)
 - [OAuth + RBAC Blog Post (Ram Palagummi)](https://medium.com/snowflake/connecting-to-snowflake-mcp-servers-with-oauth-2-0-and-role-based-access-control-a-complete-guide-c17d20be8a67)
 - [PKCE RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)
