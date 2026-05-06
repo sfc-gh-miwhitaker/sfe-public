@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-9-blue)
+![Projects](https://img.shields.io/badge/Projects-13-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -27,6 +27,8 @@ Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
 
 | Directory | Description | Features |
 |---|---|---|
+| [demo-ap-invoice](demo-ap-invoice/) | AP invoice pipeline: PDF extraction, vendor matching, auto-approval scoring, review queue | AI_EXTRACT, Streamlit, Cortex Analyst, Tasks |
+| [demo-coco-governance-github](demo-coco-governance-github/) | GitHub-powered project standards that Cortex Code reads in CLI and Snowsight | AGENTS.md, Git Integration, Deploy Scripts |
 | [glaze-and-classify](https://github.com/sfc-gh-miwhitaker/glaze-and-classify) | Multi-method product classification showdown (SQL, Cortex AI, SPCS Vision) | AI_COMPLETE, SPCS, Semantic Views, Intelligence Agents |
 
 ### Deployable Tools
@@ -65,8 +67,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 | **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | tool-ai-spend-controls → tool-code-spend-controls → guide-query-tuning | [tool-ai-spend-controls](tool-ai-spend-controls/) |
 | **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-data-quality-governance | [guide-data-quality-governance](guide-data-quality-governance/) |
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | guide-external-access-playbook | [guide-external-access-playbook](guide-external-access-playbook/) |
-| **Search & RAG** | Build a Cortex Search service, then integrate it into a financial agent | demo-cortex-financial-agents | [demo-cortex-financial-agents](demo-cortex-financial-agents/) |
-| **BI Integration** | Connect Power BI via DirectQuery and OneLake/Iceberg | guide-powerbi-onelake-iceberg | [guide-powerbi-onelake-iceberg](guide-powerbi-onelake-iceberg/) |
+| **Document AI** | Extract data from PDFs, score confidence, route for review | demo-ap-invoice | [demo-ap-invoice](demo-ap-invoice/) |
 ---
 
 ## Quick Start
