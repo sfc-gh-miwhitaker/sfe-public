@@ -37,11 +37,16 @@ Organization-level policy is the highest-priority layer. Users cannot override i
     "forceSandboxMode": "regular"
   },
   "required": {
-    "minimumVersion": "0.25.0"
+    "minimumVersion": "1.0.0"
   },
   "defaults": {
     "connectionName": "prod",
+    "profileName": "corporate",
     "theme": "dark"
+  },
+  "files": {
+    "connectionsFile": "/etc/cortex/connections.toml",
+    "mcpFile": "/etc/cortex/mcp.json"
   },
   "ui": {
     "showManagedBanner": true,
@@ -49,6 +54,22 @@ Organization-level policy is the highest-priority layer. Users cannot override i
     "hideDangerousOptions": true
   }
 }
+```
+
+### Permission Patterns
+
+The `onlyAllow` and `deny` arrays accept pattern strings. Wildcards (`*`) are supported.
+
+| Pattern | What It Controls | Example |
+|---------|-----------------|---------|
+| `account(<name>)` | Which Snowflake accounts are allowed | `account(mycompany-*)` |
+| `read` | File read operations | `read` |
+| `write` | File write operations | `write` |
+| `bash(<pattern>)` | Which shell commands are allowed | `bash(git:*)` |
+| `snowflake_sql_execute` | SQL execution tool | `snowflake_sql_execute` |
+| `mcp(<url-pattern>)` | Which MCP servers can be connected | `mcp(https://*.company.com/*)` |
+| `skill(bundled:<name>)` | Specific bundled skills | `skill(bundled:data-governance)` |
+| `skill(profile:<name>)` | Profile-sourced skills | `skill(profile:corporate)` |
 ```
 
 ## Exercise 1: Create a Test managed-settings.json

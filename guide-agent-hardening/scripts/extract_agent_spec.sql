@@ -3,7 +3,7 @@
 -- =============================================================================
 -- Author: SE Community
 -- Last Updated: 2026-03-02
--- Expires: 2026-05-22
+-- Expires: 2026-07-05
 -- Purpose: Reliably extract agent specs for comparison and version control
 --
 -- DESCRIBE AGENT Output Columns (per Snowflake docs):

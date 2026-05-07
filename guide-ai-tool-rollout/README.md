@@ -1,5 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
+![Expires](https://img.shields.io/badge/Expires-2026--07--05-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Govern AI Coding Tools
@@ -7,6 +8,7 @@
 A hands-on workshop teaching teams to govern AI coding tools like Cortex Code, Cursor, and Claude Code. Six steps, 75 minutes, and you walk out with a complete governance stack: org-level MDM policy, user-level standards, project-level guardrails, a red-team exercise, and a distribution playbook.
 
 **Author:** SE Community
+**Created:** 2026-04-28 | **Expires:** 2026-07-05 | **Status:** ACTIVE
 **Time:** ~75 minutes | **Steps:** 6 | **Result:** Complete governance stack + distribution playbook
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.

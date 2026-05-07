@@ -90,6 +90,12 @@ For each gap identified:
 - Add the specific failure case as a constraint
 - Consider adding a project-specific skill
 
+**If you need programmatic enforcement:**
+- Use [hooks](https://docs.snowflake.com/en/user-guide/cortex-code/extensibility) (PreToolUse event) to block specific tool calls with custom logic
+- Hooks can run shell scripts or LLM-evaluated prompts to validate actions before execution
+- Configure in `.cortex/settings.json` or `~/.snowflake/cortex/hooks.json`
+- Example: a PreToolUse hook that blocks `snowflake_sql_execute` when DDL is detected
+
 **If compaction recovery failed:**
 - Add explicit recovery instructions to team-standards skill
 - Consider shorter sessions for critical work

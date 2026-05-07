@@ -181,6 +181,16 @@ For each layer, decide the best distribution method for your organization:
 | Org policy | MDM, Ansible, Chef, manual | | |
 | User standards | curl, ZIP, git, shared drive | | |
 | Project config | Git, ZIP, wiki, stage | | |
+| Team experience | Profiles (bundled skills + settings) | | |
+
+### Profile-Based Distribution (Advanced)
+
+For teams needing curated experiences, Cortex Code Profiles bundle skills + settings into named configurations:
+
+- Set `defaults.profileName` in managed-settings.json to activate a profile for all users
+- Profiles can further restrict (but never expand) managed-settings permissions
+- Profiles sit at priority level 2 (below managed restrictions, above project settings)
+- See [Cortex Code Extensibility](https://docs.snowflake.com/en/user-guide/cortex-code/extensibility) for profile publishing
 
 ## Exercise 3: Define Ownership
 

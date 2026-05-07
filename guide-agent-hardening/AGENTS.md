@@ -11,7 +11,7 @@ Operational patterns for running Cortex Agents in production: monitoring, access
 ## Content Principles
 
 - Extract patterns already proven in demos (not theoretical)
-- SQL examples sourced from demo-agent-multicontext, demo-cortex-teams-agent, tool-ai-spend-controls
+- SQL examples sourced from tool-ai-spend-controls and Snowflake documentation
 - Six-part progression: content safety, access control, authentication, network security, monitoring, cost controls
 - Every recommendation maps to a working example in a related project
 
@@ -27,9 +27,8 @@ Operational patterns for running Cortex Agents in production: monitoring, access
 
 ## Related Projects
 
-- [`demo-campaign-engine`](../demo-campaign-engine/) -- Build an agent from scratch with GUIDED_BUILD workshop
-- [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Agent with Cortex Guard and security integration
-- [`demo-agent-multicontext`](../demo-agent-multicontext/) -- Row Access Policies and observability patterns
 - [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Cost governance with budgets, alerts, runaway detection
-- [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods
-- [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant architecture with Azure AD OAuth + RAPs
+- [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant agent patterns: session variables, isolation gotchas, API reference
+- [`guide-mcp-auth`](../guide-mcp-auth/) -- MCP server auth for all AI clients
+- [`guide-connecting-claude-snowflake`](../guide-connecting-claude-snowflake/) -- Claude-specific auth paths
+- [`guide-ai-tool-rollout`](../guide-ai-tool-rollout/) -- AI coding tool governance workshop

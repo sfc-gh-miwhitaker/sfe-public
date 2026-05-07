@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2026--05--22-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--07--05-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Agent Governance Playbook
@@ -10,7 +10,7 @@ Inspired by the question every team asks after building their first agent: *"How
 Operational patterns for running Cortex Agents responsibly: content safety with Cortex Guard, RBAC with dedicated roles and Row Access Policies, three authentication methods, network security, observability via CORTEX_AGENT_USAGE_HISTORY, and cost controls with per-user budgets and runaway detection. Everything comes from patterns proven in the demos and tools in this repository.
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-03-23 | **Expires:** 2026-05-22 | **Status:** ACTIVE
+**Created:** 2026-03-23 | **Expires:** 2026-07-05 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
@@ -20,7 +20,7 @@ Operational patterns for running Cortex Agents responsibly: content safety with 
 
 ## Who This Is For
 
-Teams that have built a Cortex Agent (or plan to) and need to answer: *"How do we run this safely in production?"* You should already be familiar with agent basics -- if not, start with the [Campaign Engine Workshop](../demo-campaign-engine/GUIDED_BUILD.md) to build one first.
+Teams that have built a Cortex Agent (or plan to) and need to answer: *"How do we run this safely in production?"* You should already be familiar with agent basics -- if not, start with [BUILD AGENTS](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-intelligence/build-agents) to build one first.
 
 ---
 
@@ -69,15 +69,42 @@ Six parts, each with SQL you can copy into Snowsight:
 
 ## Part 1: Content Safety -- Cortex Guard
 
+### Per-Call Content Filtering (AI_COMPLETE)
+
 Cortex Guard filters harmful content before it reaches users. Enable it by setting `guardrails: true` in AI_COMPLETE options.
 
 ```sql
 SELECT AI_COMPLETE(
-    'mistral-large2',
+    'claude-sonnet-4-6',
     PROMPT('You are a helpful assistant.', :user_input),
     {'guardrails': true, 'temperature': 0.7, 'max_tokens': 500}
 )::STRING;
 ```
+
+### Account-Level Cortex AI Guardrails (GA)
+
+Cortex AI Guardrails provide centralized prompt injection and jailbreak detection. Unlike the per-call `guardrails: true` flag, these apply automatically at the account level for Cortex Code:
+
+```sql
+ALTER ACCOUNT SET AI_SETTINGS = $$
+  guardrails:
+    advanced_prompt_injection:
+      - enabled: true
+$$;
+
+-- Verify settings
+SHOW PARAMETERS LIKE 'AI_SETTINGS' IN ACCOUNT;
+```
+
+| Feature | `guardrails: true` (AI_COMPLETE) | Cortex AI Guardrails (AI_SETTINGS) |
+|---------|----------------------------------|-------------------------------------|
+| Scope | Per-call opt-in | Account-wide |
+| Target | Content safety (harmful output) | Prompt injection + jailbreak |
+| Applies to | AI_COMPLETE calls | Cortex Code |
+| Requires | Enterprise Edition | Enterprise Edition + Cross-region |
+| Cost | Per input token scanned | Per input token scanned |
+
+### Agent Orchestration Budgets
 
 For agents created with `CREATE AGENT`, set orchestration budgets in the YAML:
 
@@ -125,7 +152,7 @@ CREATE OR REPLACE ROW ACCESS POLICY tenant_isolation_policy
 | Key-Pair JWT | Service accounts in production | `Authorization: Bearer <jwt>` + `X-Snowflake-Authorization-Token-Type: KEYPAIR_JWT` |
 | OAuth | End-user SSO (Azure AD, Okta) | `Authorization: Bearer <oauth_token>` |
 
-See [guide-api-agent-context](../guide-api-agent-context/) for working code examples of all three methods.
+See [Cortex Agents REST API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-rest-api) and [guide-agent-multi-tenant](../guide-agent-multi-tenant/) for working code examples of all three methods.
 
 ---
 
@@ -164,6 +191,28 @@ ORDER BY h.token_credits DESC;
 > [!IMPORTANT]
 > This view covers requests made through the Cortex Agents Run API only. Requests originating from **Snowflake Intelligence** are tracked separately in `SNOWFLAKE.ACCOUNT_USAGE.SNOWFLAKE_INTELLIGENCE_USAGE_HISTORY`.
 
+### Agent Evaluations
+
+Cortex Agent Evaluations measure agent performance with ground truth datasets and LLM judges:
+
+- **answer_correctness** -- how closely actual responses match expected output
+- **logical_consistency** -- consistency across planning and tool calls (reference-free)
+- **custom metrics** -- define your own scoring criteria via LLM prompts
+
+Run evaluations via Snowsight (AI & ML > Agents > Evaluations tab) or SQL:
+
+```sql
+CALL EXECUTE_AI_EVALUATION(
+  'START',
+  OBJECT_CONSTRUCT('run_name', 'governance-baseline'),
+  '@my_stage/evaluation_config.yaml'
+);
+```
+
+Use evaluations to establish governance baselines: run before and after changes to agent specs, RAPs, or semantic views to detect regressions in answer quality or tool behavior.
+
+See [Cortex Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations) for the full YAML specification.
+
 ---
 
 ## Part 6: Cost Controls
@@ -201,6 +250,7 @@ ALTER WAREHOUSE SFE_MY_AGENT_WH SET
 | Category | Check | Reference |
 |---|---|---|
 | **Content Safety** | Cortex Guard enabled on AI_COMPLETE calls | Part 1 |
+| **Content Safety** | Cortex AI Guardrails enabled (account-level prompt injection defense) | Part 1 |
 | **Content Safety** | Orchestration budget set in agent YAML | Part 1 |
 | **Access Control** | Dedicated role for agent consumers (not PUBLIC) | Part 2 |
 | **Access Control** | Row Access Policies for multi-tenant data | Part 2 |
@@ -209,7 +259,7 @@ ALTER WAREHOUSE SFE_MY_AGENT_WH SET
 | **Authentication** | PAT rotation automated if PATs are used | Part 3 |
 | **Network** | Network policy restricts agent API access | Part 4 |
 | **Monitoring** | CORTEX_AGENT_USAGE_HISTORY queries scheduled | Part 5 |
-| **Monitoring** | Cost views deployed from tool-ai-spend-controls | Part 5 |
+| **Monitoring** | Agent Evaluations baseline run completed | Part 5 |
 | **Cost Controls** | Per-user budgets configured | Part 6 |
 | **Cost Controls** | Warehouse timeout set | Part 6 |
 | **Audit** | QUERY_HISTORY retention policy reviewed | Part 5 |
@@ -259,18 +309,21 @@ diff agent_spec_v1.yaml agent_spec_v2.yaml
 
 ## Related Projects
 
-- [`demo-campaign-engine`](../demo-campaign-engine/) -- Build an agent from scratch with GUIDED_BUILD workshop
-- [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Agent deployed to Teams with Cortex Guard and security integration
-- [`demo-agent-multicontext`](../demo-agent-multicontext/) -- Per-request context injection with Row Access Policies and observability
 - [`tool-ai-spend-controls`](../tool-ai-spend-controls/) -- Cost governance platform with budgets, alerts, and runaway detection
-- [`guide-api-agent-context`](../guide-api-agent-context/) -- Agent Run API with three auth methods
 - [`guide-agent-multi-tenant`](../guide-agent-multi-tenant/) -- Multi-tenant agent patterns: session variables, isolation gotchas, API reference
+- [`guide-mcp-auth`](../guide-mcp-auth/) -- MCP server auth for all AI clients
+- [`guide-connecting-claude-snowflake`](../guide-connecting-claude-snowflake/) -- Claude-specific auth paths
+- [`guide-ai-tool-rollout`](../guide-ai-tool-rollout/) -- AI coding tool governance workshop
 
 ## References
 
 - [Cortex Agents Overview](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents)
 - [CREATE AGENT](https://docs.snowflake.com/en/sql-reference/sql/create-agent)
+- [Cortex Agents REST API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-rest-api)
+- [Cortex AI Guardrails](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-ai-guardrails)
+- [Cortex Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations)
 - [CORTEX_AGENT_USAGE_HISTORY](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_agent_usage_history)
+- [User Access and Settings for Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-intelligence/deploy-agents)
 - [AI_COMPLETE (Prompt object)](https://docs.snowflake.com/en/sql-reference/functions/ai_complete-prompt-object)
 - [CREATE ROW ACCESS POLICY](https://docs.snowflake.com/en/sql-reference/sql/create-row-access-policy)
 - [Resource Budgets for Cortex Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-resource-budgets)
