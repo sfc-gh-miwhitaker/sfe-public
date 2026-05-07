@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-14-blue)
+![Projects](https://img.shields.io/badge/Projects-13-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -37,7 +37,6 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 
 | Directory | Description | Features |
 |---|---|---|
-| [tool-ai-spend-controls](tool-ai-spend-controls/) | Control Cortex AI Function spend — monitoring, alerts, per-user limits, runaway detection | Notebooks, Streamlit, ACCOUNT_USAGE, Alerts, Tasks |
 | [tool-code-spend-controls](tool-code-spend-controls/) | Control Cortex Code spend — budgets, per-user limits, RBAC, scenario runbooks | Notebooks, Worksheets, ACCOUNT_USAGE, Budgets |
 
 ### Guides and References
@@ -65,7 +64,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 |---|---|---|---|
 | **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, harden for production, and connect via MCP | guide-agent-hardening → guide-mcp-auth | [guide-agent-hardening](guide-agent-hardening/) |
 | **AI Governance** | Roll out AI coding tools across your organization | guide-agent-skills → guide-ai-tool-rollout | [guide-agent-skills](guide-agent-skills/) |
-| **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | tool-ai-spend-controls → tool-code-spend-controls → guide-query-tuning | [tool-ai-spend-controls](tool-ai-spend-controls/) |
+| **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | tool-code-spend-controls → guide-query-tuning | [tool-code-spend-controls](tool-code-spend-controls/) |
 | **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-data-quality-governance | [guide-data-quality-governance](guide-data-quality-governance/) |
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | guide-external-access-playbook | [guide-external-access-playbook](guide-external-access-playbook/) |
 | **Document AI** | Extract data from PDFs, score confidence, route for review | demo-ap-invoice | [demo-ap-invoice](demo-ap-invoice/) |
