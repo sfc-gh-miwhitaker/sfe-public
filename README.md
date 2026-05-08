@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-13-blue)
+![Projects](https://img.shields.io/badge/Projects-12-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -27,7 +27,6 @@ Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
 
 | Directory | Description | Features |
 |---|---|---|
-| [demo-ap-invoice](demo-ap-invoice/) | AP invoice pipeline: PDF extraction, vendor matching, auto-approval scoring, review queue | AI_EXTRACT, Streamlit, Cortex Analyst, Tasks |
 | [demo-coco-governance-github](demo-coco-governance-github/) | GitHub-powered project standards that Cortex Code reads in CLI and Snowsight | AGENTS.md, Git Integration, Deploy Scripts |
 | [glaze-and-classify](https://github.com/sfc-gh-miwhitaker/glaze-and-classify) | Multi-method product classification showdown (SQL, Cortex AI, SPCS Vision) | AI_COMPLETE, SPCS, Semantic Views, Intelligence Agents |
 
