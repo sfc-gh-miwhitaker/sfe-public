@@ -49,7 +49,7 @@ INSERT INTO ROUTES (ROUTE_ID, ROUTE_NAME, VEHICLE_ID, DAY_OF_WEEK, STOP_COUNT, E
     ('R-008', 'East Atlanta Mixed',    'V-009', 'FRIDAY',    4, 26.3);
 
 INSERT INTO GPS_TELEMETRY (VEHICLE_ID, TIMESTAMP, LATITUDE, LONGITUDE, SPEED_MPH, HEADING, ENGINE_STATUS)
-SELECT v.VEHICLE_ID, t.TS, t.LAT, t.LNG, t.SPD, t.HDG, t.ENG
+SELECT t.VEHICLE_ID, t.TS, t.LAT, t.LNG, t.SPD, t.HDG, t.ENG
 FROM (VALUES
     ('V-001','2026-04-15 06:00:00'::TIMESTAMP_NTZ, 33.7490,-84.3880, 0.0,   0.0,'ON'),
     ('V-001','2026-04-15 06:05:00'::TIMESTAMP_NTZ, 33.7520,-84.3865,18.3,  15.0,'ON'),
@@ -136,13 +136,10 @@ FROM (VALUES
     ('V-005','2026-04-15 07:30:00'::TIMESTAMP_NTZ, 33.7725,-84.3790,22.0, 100.0,'ON'),
     ('V-005','2026-04-15 07:35:00'::TIMESTAMP_NTZ, 33.7725,-84.3710,24.0,  95.0,'ON'),
     ('V-005','2026-04-15 07:40:00'::TIMESTAMP_NTZ, 33.7725,-84.3655, 0.0,   0.0,'IDLE')
-) AS t(VEHICLE_ID, TS, LAT, LNG, SPD, HDG, ENG)
-CROSS JOIN (SELECT 1) AS v(VEHICLE_ID)
-WHERE 1=1;
+) AS t(VEHICLE_ID, TS, LAT, LNG, SPD, HDG, ENG);
 
-DELETE FROM GPS_TELEMETRY WHERE 1=0;
 INSERT INTO GPS_TELEMETRY (VEHICLE_ID, TIMESTAMP, LATITUDE, LONGITUDE, SPEED_MPH, HEADING, ENGINE_STATUS)
-SELECT col1, col2, col3, col4, col5, col6, col7 FROM VALUES
+SELECT t.$1, t.$2, t.$3, t.$4, t.$5, t.$6, t.$7 FROM VALUES
     ('V-004','2026-04-15 06:00:00'::TIMESTAMP_NTZ, 33.7490,-84.3880, 0.0,   0.0,'ON'),
     ('V-004','2026-04-15 06:05:00'::TIMESTAMP_NTZ, 33.7540,-84.3900,18.0, 330.0,'ON'),
     ('V-004','2026-04-15 06:10:00'::TIMESTAMP_NTZ, 33.7600,-84.3910,22.0, 340.0,'ON'),
@@ -162,58 +159,50 @@ SELECT col1, col2, col3, col4, col5, col6, col7 FROM VALUES
     ('V-004','2026-04-15 07:35:00'::TIMESTAMP_NTZ, 33.9700,-84.3500,28.0,  12.0,'ON'),
     ('V-004','2026-04-15 07:40:00'::TIMESTAMP_NTZ, 33.9900,-84.3500,30.0,  15.0,'ON'),
     ('V-004','2026-04-15 07:45:00'::TIMESTAMP_NTZ, 34.0100,-84.3510,28.0,  10.0,'ON'),
-    ('V-004','2026-04-15 07:50:00'::TIMESTAMP_NTZ, 34.0232,-84.3516, 0.0,   0.0,'IDLE');
+    ('V-004','2026-04-15 07:50:00'::TIMESTAMP_NTZ, 34.0232,-84.3516, 0.0,   0.0,'IDLE')
+AS t;
 
-INSERT INTO GARMENTS (GARMENT_ID, RFID_TAG, GARMENT_TYPE, SIZE, COLOR, CUSTOMER_ID, ASSIGNED_DATE, STATUS, WASH_COUNT)
-SELECT 'G-' || LPAD(seq4()::VARCHAR, 4, '0'),
-       'RFID-' || LPAD(UNIFORM(100000, 999999, RANDOM())::VARCHAR, 6, '0') || '-' || LPAD(seq4()::VARCHAR, 4, '0'),
-       t.GARMENT_TYPE, t.SIZE, t.COLOR, t.CUSTOMER_ID,
-       DATEADD('day', -UNIFORM(30, 365, RANDOM()), '2026-04-15'::DATE),
-       t.STATUS, t.WASH_COUNT
-FROM (VALUES
-    ('Scrubs Top',     'M',  'Ceil Blue',  'C-001', 'IN_SERVICE', 45),
-    ('Scrubs Top',     'L',  'Ceil Blue',  'C-001', 'IN_SERVICE', 38),
-    ('Scrubs Bottom',  'M',  'Ceil Blue',  'C-001', 'IN_SERVICE', 44),
-    ('Lab Coat',       'L',  'White',      'C-001', 'IN_SERVICE', 22),
-    ('Lab Coat',       'M',  'White',      'C-003', 'IN_SERVICE', 31),
-    ('Scrubs Top',     'S',  'Navy',       'C-003', 'IN_SERVICE', 52),
-    ('Scrubs Bottom',  'S',  'Navy',       'C-003', 'IN_SERVICE', 51),
-    ('Scrubs Top',     'XL', 'Ceil Blue',  'C-008', 'IN_SERVICE', 28),
-    ('Scrubs Bottom',  'XL', 'Ceil Blue',  'C-008', 'IN_SERVICE', 27),
-    ('Lab Coat',       'XL', 'White',      'C-008', 'IN_SERVICE', 15),
-    ('Patient Gown',   'OS', 'Blue Print', 'C-008', 'IN_SERVICE', 60),
-    ('Patient Gown',   'OS', 'Blue Print', 'C-013', 'IN_SERVICE', 72),
-    ('Chef Coat',      'L',  'White',      'C-004', 'IN_SERVICE', 36),
-    ('Chef Coat',      'M',  'White',      'C-007', 'IN_SERVICE', 40),
-    ('Apron',          'OS', 'Black',      'C-004', 'IN_SERVICE', 55),
-    ('Apron',          'OS', 'Black',      'C-007', 'IN_SERVICE', 48),
-    ('Apron',          'OS', 'White',      'C-014', 'IN_SERVICE', 33),
-    ('Table Linen',    'OS', 'White',      'C-002', 'IN_SERVICE', 80),
-    ('Table Linen',    'OS', 'White',      'C-005', 'IN_SERVICE', 65),
-    ('Napkin Set',     'OS', 'White',      'C-002', 'IN_SERVICE', 90),
-    ('Bed Sheet',      'King','White',     'C-002', 'IN_SERVICE', 75),
-    ('Bed Sheet',      'Queen','White',    'C-005', 'IN_SERVICE', 70),
-    ('Bath Towel',     'OS', 'White',      'C-005', 'IN_SERVICE', 85),
-    ('Bath Towel',     'OS', 'White',      'C-016', 'IN_SERVICE', 62),
-    ('Pool Towel',     'OS', 'White',      'C-012', 'IN_SERVICE', 50),
-    ('Shop Towel',     'OS', 'Red',        'C-006', 'IN_SERVICE', 95),
-    ('Shop Towel',     'OS', 'Red',        'C-019', 'IN_SERVICE', 88),
-    ('Coverall',       'L',  'Navy',       'C-009', 'IN_SERVICE', 42),
-    ('Coverall',       'XL', 'Navy',       'C-015', 'IN_SERVICE', 35),
-    ('Hi-Vis Vest',    'L',  'Orange',     'C-009', 'IN_SERVICE', 20),
-    ('Floor Mat',      'OS', 'Black',      'C-010', 'IN_SERVICE', 100),
-    ('Floor Mat',      'OS', 'Black',      'C-011', 'IN_SERVICE', 90),
-    ('Massage Sheet',  'OS', 'White',      'C-010', 'IN_SERVICE', 55),
-    ('Dental Bib',     'OS', 'Blue',       'C-011', 'IN_SERVICE', 120),
-    ('Scrubs Top',     'M',  'Wine',       'C-017', 'IN_SERVICE', 18),
-    ('Scrubs Bottom',  'M',  'Wine',       'C-017', 'IN_SERVICE', 17),
-    ('Lab Coat',       'S',  'White',      'C-001', 'LOST',       30),
-    ('Scrubs Top',     'L',  'Navy',       'C-003', 'LOST',       48),
-    ('Chef Coat',      'L',  'White',      'C-007', 'RETIRED',    110),
-    ('Table Linen',    'OS', 'White',      'C-020', 'IN_SERVICE', 40)
-) AS t(GARMENT_TYPE, SIZE, COLOR, CUSTOMER_ID, STATUS, WASH_COUNT),
-TABLE(GENERATOR(ROWCOUNT => 40)) AS g
-WHERE g.seq4() < 40;
+INSERT INTO GARMENTS (GARMENT_ID, RFID_TAG, GARMENT_TYPE, SIZE, COLOR, CUSTOMER_ID, ASSIGNED_DATE, STATUS, WASH_COUNT) VALUES
+    ('G-0000','RFID-482190-0000','Scrubs Top',    'M', 'Ceil Blue', 'C-001','2025-08-10','IN_SERVICE', 45),
+    ('G-0001','RFID-733291-0001','Scrubs Top',    'L', 'Ceil Blue', 'C-001','2025-09-15','IN_SERVICE', 38),
+    ('G-0002','RFID-129543-0002','Scrubs Bottom', 'M', 'Ceil Blue', 'C-001','2025-08-12','IN_SERVICE', 44),
+    ('G-0003','RFID-550812-0003','Lab Coat',      'L', 'White',     'C-001','2025-11-20','IN_SERVICE', 22),
+    ('G-0004','RFID-336614-0004','Lab Coat',      'M', 'White',     'C-003','2025-10-05','IN_SERVICE', 31),
+    ('G-0005','RFID-914251-0005','Scrubs Top',    'S', 'Navy',      'C-003','2025-06-18','IN_SERVICE', 52),
+    ('G-0006','RFID-205762-0006','Scrubs Bottom', 'S', 'Navy',      'C-003','2025-06-20','IN_SERVICE', 51),
+    ('G-0007','RFID-689173-0007','Scrubs Top',    'XL','Ceil Blue', 'C-008','2025-10-30','IN_SERVICE', 28),
+    ('G-0008','RFID-802484-0008','Scrubs Bottom', 'XL','Ceil Blue', 'C-008','2025-10-30','IN_SERVICE', 27),
+    ('G-0009','RFID-447795-0009','Lab Coat',      'XL','White',     'C-008','2026-01-14','IN_SERVICE', 15),
+    ('G-0010','RFID-113806-0010','Patient Gown',  'OS','Blue Print','C-008','2025-05-01','IN_SERVICE', 60),
+    ('G-0011','RFID-556217-0011','Patient Gown',  'OS','Blue Print','C-013','2025-03-20','IN_SERVICE', 72),
+    ('G-0012','RFID-990628-0012','Chef Coat',     'L', 'White',     'C-004','2025-09-01','IN_SERVICE', 36),
+    ('G-0013','RFID-234039-0013','Chef Coat',     'M', 'White',     'C-007','2025-08-15','IN_SERVICE', 40),
+    ('G-0014','RFID-678040-0014','Apron',         'OS','Black',     'C-004','2025-05-10','IN_SERVICE', 55),
+    ('G-0015','RFID-112051-0015','Apron',         'OS','Black',     'C-007','2025-06-25','IN_SERVICE', 48),
+    ('G-0016','RFID-345062-0016','Apron',         'OS','White',     'C-014','2025-10-01','IN_SERVICE', 33),
+    ('G-0017','RFID-789073-0017','Table Linen',   'OS','White',     'C-002','2025-02-15','IN_SERVICE', 80),
+    ('G-0018','RFID-123084-0018','Table Linen',   'OS','White',     'C-005','2025-04-20','IN_SERVICE', 65),
+    ('G-0019','RFID-567095-0019','Napkin Set',    'OS','White',     'C-002','2025-01-10','IN_SERVICE', 90),
+    ('G-0020','RFID-901006-0020','Bed Sheet',     'King','White',   'C-002','2025-03-05','IN_SERVICE', 75),
+    ('G-0021','RFID-234117-0021','Bed Sheet',     'Queen','White',  'C-005','2025-04-01','IN_SERVICE', 70),
+    ('G-0022','RFID-678128-0022','Bath Towel',    'OS','White',     'C-005','2025-02-28','IN_SERVICE', 85),
+    ('G-0023','RFID-012139-0023','Bath Towel',    'OS','White',     'C-016','2025-05-15','IN_SERVICE', 62),
+    ('G-0024','RFID-456040-0024','Pool Towel',    'OS','White',     'C-012','2025-06-01','IN_SERVICE', 50),
+    ('G-0025','RFID-890151-0025','Shop Towel',    'OS','Red',       'C-006','2025-01-20','IN_SERVICE', 95),
+    ('G-0026','RFID-223162-0026','Shop Towel',    'OS','Red',       'C-019','2025-02-10','IN_SERVICE', 88),
+    ('G-0027','RFID-567173-0027','Coverall',      'L', 'Navy',      'C-009','2025-08-05','IN_SERVICE', 42),
+    ('G-0028','RFID-901184-0028','Coverall',      'XL','Navy',      'C-015','2025-09-20','IN_SERVICE', 35),
+    ('G-0029','RFID-345195-0029','Hi-Vis Vest',   'L', 'Orange',    'C-009','2025-12-10','IN_SERVICE', 20),
+    ('G-0030','RFID-789006-0030','Floor Mat',     'OS','Black',     'C-010','2025-01-05','IN_SERVICE',100),
+    ('G-0031','RFID-112017-0031','Floor Mat',     'OS','Black',     'C-011','2025-02-01','IN_SERVICE', 90),
+    ('G-0032','RFID-456028-0032','Massage Sheet', 'OS','White',     'C-010','2025-05-20','IN_SERVICE', 55),
+    ('G-0033','RFID-890039-0033','Dental Bib',    'OS','Blue',      'C-011','2024-12-15','IN_SERVICE',120),
+    ('G-0034','RFID-223040-0034','Scrubs Top',    'M', 'Wine',      'C-017','2026-01-20','IN_SERVICE', 18),
+    ('G-0035','RFID-567051-0035','Scrubs Bottom', 'M', 'Wine',      'C-017','2026-01-20','IN_SERVICE', 17),
+    ('G-0036','RFID-901062-0036','Lab Coat',      'S', 'White',     'C-001','2025-09-10','LOST',       30),
+    ('G-0037','RFID-345073-0037','Scrubs Top',    'L', 'Navy',      'C-003','2025-06-25','LOST',       48),
+    ('G-0038','RFID-789084-0038','Chef Coat',     'L', 'White',     'C-007','2024-10-01','RETIRED',   110),
+    ('G-0039','RFID-112095-0039','Table Linen',   'OS','White',     'C-020','2025-08-30','IN_SERVICE', 40);
 
 INSERT INTO GARMENT_EVENTS (GARMENT_ID, EVENT_TYPE, EVENT_TIMESTAMP, LOCATION, SCANNER_ID, NOTES)
 SELECT ge.GARMENT_ID, ge.EVENT_TYPE, ge.EVENT_TIMESTAMP, ge.LOCATION, ge.SCANNER_ID, ge.NOTES
