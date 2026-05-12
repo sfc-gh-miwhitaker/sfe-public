@@ -2,21 +2,28 @@ USE DATABASE SNOWFLAKE_EXAMPLE;
 USE SCHEMA IOT_LIFECYCLE;
 USE WAREHOUSE SFE_IOT_LIFECYCLE_WH;
 
-CREATE IMAGE REPOSITORY IF NOT EXISTS IOT_IMAGE_REPO
-  COMMENT = 'DEMO: Container images for IoT fleet dashboard (Expires: 2026-06-11)';
-
-CREATE COMPUTE POOL IF NOT EXISTS IOT_FLEET_POOL
-  MIN_NODES = 1
-  MAX_NODES = 1
-  INSTANCE_FAMILY = CPU_X64_XS
-  AUTO_SUSPEND_SECS = 300
-  AUTO_RESUME = TRUE
-  COMMENT = 'DEMO: Compute pool for fleet dashboard SPCS service (Expires: 2026-06-11)';
-
 CREATE SERVICE IF NOT EXISTS FLEET_DASHBOARD_SERVICE
   IN COMPUTE POOL IOT_FLEET_POOL
-  FROM @SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-iot-lifecycle/app
-  SPECIFICATION_FILE = 'service_spec.yaml'
+  FROM SPECIFICATION $$
+  spec:
+    containers:
+    - name: fleet-dashboard
+      image: /snowflake_example/iot_lifecycle/iot_image_repo/fleet-dashboard:latest
+      readinessProbe:
+        port: 8000
+        path: /api/vehicles
+      resources:
+        requests:
+          memory: 512M
+          cpu: 0.5
+        limits:
+          memory: 1G
+          cpu: 1.0
+    endpoints:
+    - name: dashboard
+      port: 8000
+      public: true
+  $$
   MIN_INSTANCES = 1
   MAX_INSTANCES = 1
   QUERY_WAREHOUSE = SFE_IOT_LIFECYCLE_WH
@@ -26,5 +33,4 @@ GRANT USAGE ON COMPUTE POOL IOT_FLEET_POOL TO ROLE PUBLIC;
 GRANT SERVICE ROLE FLEET_DASHBOARD_SERVICE!all_endpoints_usage TO ROLE PUBLIC;
 
 SELECT SYSTEM$GET_SERVICE_STATUS('FLEET_DASHBOARD_SERVICE') AS service_status;
-
 SHOW ENDPOINTS IN SERVICE FLEET_DASHBOARD_SERVICE;

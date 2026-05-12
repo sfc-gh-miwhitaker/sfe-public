@@ -66,9 +66,10 @@ EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/mai
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-iot-lifecycle/sql/03_transformations/02_create_stream_and_task.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-iot-lifecycle/sql/04_cortex/01_create_semantic_view.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-iot-lifecycle/sql/04_cortex/02_create_agent.sql';
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-iot-lifecycle/sql/05_streamlit/01_create_dashboard.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-iot-lifecycle/sql/05_spcs/01_create_infra.sql';
 
 SELECT
-    'IoT Lifecycle demo deployed successfully!' AS status,
-    CURRENT_TIMESTAMP()                         AS completed_at,
-    $DEMO_EXPIRES                               AS expires;
+    'IoT Lifecycle data + agent deployed. SPCS infra ready.' AS status,
+    'NEXT: Build & push image, then run deploy_service.sql'  AS next_step,
+    CURRENT_TIMESTAMP()                                      AS completed_at,
+    $DEMO_EXPIRES                                            AS expires;

@@ -42,27 +42,42 @@ End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fiction
 
 ## Quick Start
 
-### Deploy Data + Agent (Snowsight)
+### Step 1: Deploy data + agent (Snowsight)
 
-1. Copy `deploy_all.sql` into a Snowsight worksheet
-2. Click **Run All**
-3. The CFO Agent is available in Snowflake Intelligence
+1. Open Snowsight, create a new SQL worksheet
+2. Paste the contents of `deploy_all.sql`
+3. Click **Run All**
+4. This creates all tables, views, the CFO Agent, image repo, and compute pool
+5. The final output confirms success and tells you to proceed to Step 2
 
-### Deploy Fleet Dashboard (SPCS)
+### Step 2: Build & push the container (terminal)
 
 ```bash
-cd demo-iot-lifecycle/app
-
-# Build and push container image
-docker build -t fleet-dashboard .
-docker tag fleet-dashboard <account>.registry.snowflakecomputing.com/snowflake_example/iot_lifecycle/iot_image_repo/fleet-dashboard:latest
-docker push <account>.registry.snowflakecomputing.com/snowflake_example/iot_lifecycle/iot_image_repo/fleet-dashboard:latest
-
-# Service is created by deploy_all.sql -- get the URL:
-SHOW ENDPOINTS IN SERVICE SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.FLEET_DASHBOARD_SERVICE;
+cd demo-iot-lifecycle
+./build_and_push.sh
 ```
 
-### Local Development
+The script will:
+- Ask you to run one query in Snowsight to get your registry URL (it tells you exactly which query)
+- Build the container image for linux/amd64
+- Log you into your Snowflake registry (uses your Snowflake username/password)
+- Push the image
+
+> **Requires:** [Podman](https://podman.io/getting-started/installation) installed. No Docker license needed.
+
+### Step 3: Start the service (Snowsight)
+
+1. Open a new SQL worksheet
+2. Paste the contents of `deploy_service.sql`
+3. Click **Run All**
+4. The last query output shows your dashboard URL in the `ingress_url` column
+5. Open that URL in your browser -- takes ~60 seconds on first launch
+
+### Using the CFO Agent
+
+The CFO Assistant is automatically available in **Snowflake Intelligence** (the sidebar panel in Snowsight). No extra steps needed -- just open it and ask financial questions.
+
+### Local Development (optional)
 
 ```bash
 cd demo-iot-lifecycle/app/frontend
