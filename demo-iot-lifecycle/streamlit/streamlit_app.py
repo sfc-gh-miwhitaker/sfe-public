@@ -1,6 +1,7 @@
 import streamlit as st
 import pydeck as pdk
-import json
+import pandas as pd
+import time
 from snowflake.snowpark.context import get_active_session
 
 st.set_page_config(layout="wide")
@@ -17,14 +18,6 @@ tab_map, tab_iot, tab_cfo = st.tabs(["Fleet Map", "IoT Dashboard", "CFO Chat"])
 with tab_map:
     st.header("Fleet Tracker -- Metro Textile Services")
 
-    vehicles_df = session.sql("""
-        SELECT VEHICLE_ID, DRIVER_NAME, VEHICLE_TYPE, HOME_DEPOT, VEHICLE_STATUS,
-               CURRENT_LAT, CURRENT_LNG, CURRENT_SPEED, ENGINE_STATUS,
-               ASSIGNED_ROUTE, MOVEMENT_STATUS, LAST_PING
-        FROM SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.V_FLEET_STATUS
-        WHERE CURRENT_LAT IS NOT NULL
-    """).to_pandas()
-
     customers_df = session.sql("""
         SELECT CUSTOMER_ID, CUSTOMER_NAME, INDUSTRY, CITY,
                LATITUDE, LONGITUDE, MONTHLY_VALUE
@@ -32,90 +25,125 @@ with tab_map:
     """).to_pandas()
 
     telemetry_df = session.sql("""
-        SELECT VEHICLE_ID, TIMESTAMP, LATITUDE, LONGITUDE, SPEED_MPH
+        SELECT VEHICLE_ID, TIMESTAMP, LATITUDE, LONGITUDE, SPEED_MPH, ENGINE_STATUS
         FROM SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.GPS_TELEMETRY
-        ORDER BY VEHICLE_ID, TIMESTAMP
+        ORDER BY TIMESTAMP
     """).to_pandas()
 
+    telemetry_df["TIMESTAMP"] = pd.to_datetime(telemetry_df["TIMESTAMP"])
+    all_timestamps = sorted(telemetry_df["TIMESTAMP"].unique())
+
+    st.sidebar.markdown("### Playback Controls")
+    auto_play = st.sidebar.button("Play Route Animation", type="primary")
+    speed = st.sidebar.slider("Playback speed (seconds per frame)", 0.5, 3.0, 1.0, 0.5)
+
+    time_idx = st.sidebar.slider(
+        "Timeline",
+        min_value=0,
+        max_value=len(all_timestamps) - 1,
+        value=len(all_timestamps) - 1,
+        format=f"Step %d of {len(all_timestamps)}",
+        key="time_slider",
+    )
+
+    current_time = all_timestamps[time_idx]
+    st.sidebar.caption(f"Showing positions at: **{pd.Timestamp(current_time).strftime('%H:%M')}**")
+
+    def get_positions_at_time(ts):
+        mask = telemetry_df["TIMESTAMP"] <= ts
+        latest = telemetry_df[mask].groupby("VEHICLE_ID").tail(1).copy()
+        colors = []
+        statuses = []
+        for _, row in latest.iterrows():
+            if row["ENGINE_STATUS"] == "IDLE" and row["SPEED_MPH"] == 0:
+                colors.append([255, 200, 0, 220])
+                statuses.append("AT_STOP")
+            elif row["SPEED_MPH"] > 0:
+                colors.append([0, 200, 80, 220])
+                statuses.append("IN_TRANSIT")
+            else:
+                colors.append([200, 60, 60, 220])
+                statuses.append("PARKED")
+        latest["COLOR"] = colors
+        latest["STATUS"] = statuses
+        return latest
+
+    def get_trails_at_time(ts):
+        mask = telemetry_df["TIMESTAMP"] <= ts
+        trails = []
+        for vid in telemetry_df["VEHICLE_ID"].unique():
+            vdata = telemetry_df[mask & (telemetry_df["VEHICLE_ID"] == vid)].sort_values("TIMESTAMP")
+            if len(vdata) > 1:
+                path_coords = [[row["LONGITUDE"], row["LATITUDE"]] for _, row in vdata.iterrows()]
+                trails.append({"path": path_coords, "name": vid})
+        return trails
+
+    def render_map(positions_df, trails):
+        vehicle_layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=positions_df,
+            get_position=["LONGITUDE", "LATITUDE"],
+            get_fill_color="COLOR",
+            get_radius=350,
+            pickable=True,
+            auto_highlight=True,
+        )
+        customer_layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=customers_df,
+            get_position=["LONGITUDE", "LATITUDE"],
+            get_fill_color=[65, 105, 225, 140],
+            get_radius=180,
+            pickable=True,
+        )
+        depot_layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=[{"LATITUDE": DEPOT_LAT, "LONGITUDE": DEPOT_LNG, "name": "Atlanta Central Depot"}],
+            get_position=["LONGITUDE", "LATITUDE"],
+            get_fill_color=[220, 20, 60, 220],
+            get_radius=500,
+            pickable=True,
+        )
+        path_layer = pdk.Layer(
+            "PathLayer",
+            data=trails,
+            get_path="path",
+            get_color=[100, 100, 255, 100],
+            width_min_pixels=2,
+        )
+        view_state = pdk.ViewState(latitude=33.82, longitude=-84.38, zoom=10, pitch=0)
+        return pdk.Deck(
+            layers=[path_layer, customer_layer, depot_layer, vehicle_layer],
+            initial_view_state=view_state,
+            tooltip={"text": "{VEHICLE_ID}\nSpeed: {SPEED_MPH} mph\nStatus: {STATUS}"},
+        )
+
+    positions = get_positions_at_time(current_time)
+    trails = get_trails_at_time(current_time)
+
     col_k1, col_k2, col_k3, col_k4 = st.columns(4)
-    active_count = len(vehicles_df[vehicles_df["VEHICLE_STATUS"] == "ACTIVE"])
-    in_transit = len(vehicles_df[vehicles_df["MOVEMENT_STATUS"] == "IN_TRANSIT"])
-    at_stop = len(vehicles_df[vehicles_df["MOVEMENT_STATUS"] == "AT_STOP"])
-    avg_speed = vehicles_df["CURRENT_SPEED"].mean()
-    col_k1.metric("Vehicles Active", active_count)
+    in_transit = len(positions[positions["STATUS"] == "IN_TRANSIT"])
+    at_stop = len(positions[positions["STATUS"] == "AT_STOP"])
+    parked = len(positions[positions["STATUS"] == "PARKED"])
+    avg_speed = positions["SPEED_MPH"].mean()
+    col_k1.metric("Vehicles Tracked", len(positions))
     col_k2.metric("In Transit", in_transit)
     col_k3.metric("At Customer Stop", at_stop)
-    col_k4.metric("Avg Speed (mph)", f"{avg_speed:.1f}" if avg_speed else "0.0")
+    col_k4.metric("Avg Speed (mph)", f"{avg_speed:.1f}" if pd.notna(avg_speed) else "0.0")
 
-    def get_vehicle_color(status):
-        if status == "IN_TRANSIT":
-            return [0, 200, 80, 200]
-        elif status == "AT_STOP":
-            return [255, 200, 0, 200]
-        return [200, 60, 60, 200]
+    map_placeholder = st.empty()
 
-    vehicles_df["COLOR"] = vehicles_df["MOVEMENT_STATUS"].apply(get_vehicle_color)
-
-    paths = []
-    for vid in telemetry_df["VEHICLE_ID"].unique():
-        vdata = telemetry_df[telemetry_df["VEHICLE_ID"] == vid].sort_values("TIMESTAMP")
-        path_coords = [[row["LONGITUDE"], row["LATITUDE"]] for _, row in vdata.iterrows()]
-        if len(path_coords) > 1:
-            paths.append({"path": path_coords, "name": vid})
-
-    vehicle_layer = pdk.Layer(
-        "ScatterplotLayer",
-        data=vehicles_df,
-        get_position=["CURRENT_LNG", "CURRENT_LAT"],
-        get_fill_color="COLOR",
-        get_radius=300,
-        pickable=True,
-        auto_highlight=True,
-    )
-
-    customer_layer = pdk.Layer(
-        "ScatterplotLayer",
-        data=customers_df,
-        get_position=["LONGITUDE", "LATITUDE"],
-        get_fill_color=[65, 105, 225, 160],
-        get_radius=180,
-        pickable=True,
-    )
-
-    depot_layer = pdk.Layer(
-        "ScatterplotLayer",
-        data=[{"lat": DEPOT_LAT, "lng": DEPOT_LNG, "name": "Atlanta Central Depot"}],
-        get_position=["lng", "lat"],
-        get_fill_color=[220, 20, 60, 220],
-        get_radius=500,
-        pickable=True,
-    )
-
-    path_layer = pdk.Layer(
-        "PathLayer",
-        data=paths,
-        get_path="path",
-        get_color=[100, 100, 255, 120],
-        width_min_pixels=2,
-        pickable=True,
-    )
-
-    view_state = pdk.ViewState(
-        latitude=33.82,
-        longitude=-84.38,
-        zoom=10,
-        pitch=0,
-    )
-
-    deck = pdk.Deck(
-        layers=[path_layer, customer_layer, depot_layer, vehicle_layer],
-        initial_view_state=view_state,
-        tooltip={
-            "text": "{DRIVER_NAME}\n{VEHICLE_ID} - {MOVEMENT_STATUS}\nSpeed: {CURRENT_SPEED} mph\nRoute: {ASSIGNED_ROUTE}"
-        },
-    )
-
-    st.pydeck_chart(deck, use_container_width=True)
+    if auto_play:
+        for i in range(len(all_timestamps)):
+            ts = all_timestamps[i]
+            pos = get_positions_at_time(ts)
+            trl = get_trails_at_time(ts)
+            deck = render_map(pos, trl)
+            map_placeholder.pydeck_chart(deck, use_container_width=True)
+            time.sleep(speed)
+    else:
+        deck = render_map(positions, trails)
+        map_placeholder.pydeck_chart(deck, use_container_width=True)
 
     col_legend1, col_legend2, col_legend3, col_legend4 = st.columns(4)
     col_legend1.markdown(":green_circle: **In Transit**")
@@ -123,9 +151,11 @@ with tab_map:
     col_legend3.markdown(":red_circle: **Depot / Parked**")
     col_legend4.markdown(":blue_circle: **Customer Locations**")
 
-    with st.expander("Vehicle Detail Table"):
+    with st.expander("GPS Telemetry Log"):
+        display_df = telemetry_df[telemetry_df["TIMESTAMP"] <= current_time].sort_values("TIMESTAMP", ascending=False).head(20)
+        display_df["TIME"] = display_df["TIMESTAMP"].dt.strftime("%H:%M")
         st.dataframe(
-            vehicles_df[["VEHICLE_ID", "DRIVER_NAME", "ASSIGNED_ROUTE", "MOVEMENT_STATUS", "CURRENT_SPEED", "LAST_PING"]],
+            display_df[["VEHICLE_ID", "TIME", "LATITUDE", "LONGITUDE", "SPEED_MPH", "ENGINE_STATUS"]],
             use_container_width=True,
             hide_index=True,
         )
@@ -137,9 +167,9 @@ with tab_iot:
     st.header("Garment Lifecycle -- RFID Tracking")
 
     lifecycle_df = session.sql("""
-        SELECT GARMENT_STATUS, COUNT(*) AS CNT
+        SELECT STATUS AS GARMENT_STATUS, COUNT(*) AS CNT
         FROM SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.GARMENTS
-        GROUP BY GARMENT_STATUS
+        GROUP BY STATUS
         ORDER BY CNT DESC
     """).to_pandas()
 
@@ -151,8 +181,8 @@ with tab_iot:
     """).to_pandas()
 
     col_g1, col_g2, col_g3 = st.columns(3)
-    total_garments = session.sql("SELECT COUNT(*) AS C FROM SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.GARMENTS").to_pandas()["C"][0]
-    lost_garments = session.sql("SELECT COUNT(*) AS C FROM SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.GARMENTS WHERE STATUS = 'LOST'").to_pandas()["C"][0]
+    total_garments = int(session.sql("SELECT COUNT(*) AS C FROM SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.GARMENTS").to_pandas()["C"][0])
+    lost_garments = int(session.sql("SELECT COUNT(*) AS C FROM SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.GARMENTS WHERE STATUS = 'LOST'").to_pandas()["C"][0])
     total_events = session.sql("SELECT COUNT(*) AS C FROM SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.GARMENT_EVENTS").to_pandas()["C"][0]
     col_g1.metric("Total Garments", f"{total_garments:,}")
     col_g2.metric("Lost Garments", lost_garments)
