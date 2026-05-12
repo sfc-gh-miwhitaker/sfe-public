@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-11-blue)
+![Projects](https://img.shields.io/badge/Projects-12-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -28,6 +28,7 @@ Full demonstration projects with `deploy_all.sql` and `teardown_all.sql`.
 | Directory | Description | Features |
 |---|---|---|
 | [demo-coco-governance-github](demo-coco-governance-github/) | GitHub-powered project standards that Cortex Code reads in CLI and Snowsight | AGENTS.md, Git Integration, Deploy Scripts |
+| [demo-iot-lifecycle](demo-iot-lifecycle/) | IoT lifecycle: fleet map (pydeck), RFID garment tracking, CFO financial agent | Streamlit, pydeck, Semantic Views, Cortex Agent, Streams |
 | [glaze-and-classify](https://github.com/sfc-gh-miwhitaker/glaze-and-classify) | Multi-method product classification showdown (SQL, Cortex AI, SPCS Vision) | AI_COMPLETE, SPCS, Semantic Views, Intelligence Agents |
 
 ### Deployable Tools
