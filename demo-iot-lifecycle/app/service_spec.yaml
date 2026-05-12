@@ -1,0 +1,20 @@
+spec:
+  containers:
+  - name: fleet-dashboard
+    image: /snowflake_example/iot_lifecycle/iot_image_repo/fleet-dashboard:latest
+    env:
+      SNOWFLAKE_CONNECTION_NAME: default
+    readinessProbe:
+      port: 8000
+      path: /api/vehicles
+    resources:
+      requests:
+        memory: 512M
+        cpu: 0.5
+      limits:
+        memory: 1G
+        cpu: 1.0
+  endpoints:
+  - name: dashboard
+    port: 8000
+    public: true
