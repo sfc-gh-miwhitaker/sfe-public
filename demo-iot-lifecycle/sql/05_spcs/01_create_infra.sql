@@ -13,8 +13,23 @@ CREATE COMPUTE POOL IF NOT EXISTS IOT_FLEET_POOL
   AUTO_RESUME = TRUE
   COMMENT = 'DEMO: Compute pool for fleet dashboard SPCS service (Expires: 2026-06-11)';
 
+CREATE OR REPLACE NETWORK RULE OSM_TILES_RULE
+  MODE = EGRESS
+  TYPE = HOST_PORT
+  VALUE_LIST = ('tile.openstreetmap.org:443')
+  COMMENT = 'DEMO: Allow browser to load OSM map tiles (Expires: 2026-06-11)';
+
+USE ROLE ACCOUNTADMIN;
+CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION OSM_TILES_ACCESS
+  ALLOWED_NETWORK_RULES = (SNOWFLAKE_EXAMPLE.IOT_LIFECYCLE.OSM_TILES_RULE)
+  ENABLED = TRUE
+  COMMENT = 'DEMO: EAI for OSM map tiles -- adds domain to SPCS CSP header (Expires: 2026-06-11)';
+
+GRANT USAGE ON INTEGRATION OSM_TILES_ACCESS TO ROLE SYSADMIN;
+USE ROLE SYSADMIN;
+
 SHOW IMAGE REPOSITORIES LIKE 'IOT_IMAGE_REPO';
 
 SELECT
-    'Image repo and compute pool ready.' AS status,
+    'Image repo, compute pool, and map tile EAI ready.' AS status,
     'Next: Build and push image, then run deploy_service.sql' AS next_step;
