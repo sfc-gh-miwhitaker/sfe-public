@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import FleetMap from './components/FleetMap';
 import KpiBar from './components/KpiBar';
 import GarmentPage from './components/GarmentPage';
+import Toast from './components/Toast';
 
 export interface Position {
   vehicle_id: string;
@@ -56,28 +57,60 @@ function App() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [simulating, setSimulating] = useState(false);
+  const [toasts, setToasts] = useState<string[]>([]);
+  const prevPositionsRef = useRef<Position[]>([]);
+
+  const addToast = useCallback((msg: string) => {
+    setToasts(prev => [...prev.slice(-4), msg]);
+    setTimeout(() => setToasts(prev => prev.slice(1)), 4000);
+  }, []);
 
   const fetchPositions = useCallback(async () => {
     try {
       const res = await fetch('/api/positions');
-      const data = await res.json();
+      const data: Position[] = await res.json();
+
+      const prev = prevPositionsRef.current;
+      if (prev.length > 0) {
+        for (const pos of data) {
+          const old = prev.find(p => p.vehicle_id === pos.vehicle_id);
+          if (old && (old.latitude !== pos.latitude || old.longitude !== pos.longitude)) {
+            if (pos.engine_status === 'IDLE') {
+              addToast(`${pos.vehicle_id} arrived at stop`);
+            } else {
+              addToast(`${pos.vehicle_id} moving — ${pos.speed_mph} mph`);
+            }
+          }
+        }
+      }
+      prevPositionsRef.current = data;
+
       setPositions(data);
       setLastUpdated(new Date());
     } catch (e) {
       console.error('Failed to fetch positions', e);
     }
-  }, []);
+  }, [addToast]);
 
   useEffect(() => {
     fetch('/api/customers').then(r => r.json()).then(setCustomers);
+    fetch('/api/simulate/status').then(r => r.json()).then(d => setSimulating(d.running));
     fetchPositions().then(() => setLoading(false));
   }, [fetchPositions]);
 
   useEffect(() => {
-    if (page !== 'fleet') return;
     const interval = setInterval(fetchPositions, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [fetchPositions, page]);
+  }, [fetchPositions]);
+
+  const toggleSimulation = async () => {
+    const endpoint = simulating ? '/api/simulate/stop' : '/api/simulate/start';
+    const res = await fetch(endpoint);
+    const data = await res.json();
+    setSimulating(data.status === 'started' || data.status === 'already_running');
+    if (!simulating) addToast('Simulation started — vehicles en route');
+  };
 
   if (loading) {
     return (
@@ -98,12 +131,22 @@ function App() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={toggleSimulation}
+            className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
+              simulating
+                ? 'bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30'
+                : 'bg-green-600/20 text-green-400 border border-green-500/30 hover:bg-green-600/30'
+            }`}
+          >
+            {simulating ? 'Stop Simulation' : 'Start Simulation'}
+          </button>
           {lastUpdated && (
             <span className="text-xs text-gray-500">
-              Updated {lastUpdated.toLocaleTimeString()}
+              {lastUpdated.toLocaleTimeString()}
             </span>
           )}
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <div className={`w-2 h-2 rounded-full ${simulating ? 'bg-green-500 animate-pulse' : 'bg-gray-600'}`} />
         </div>
       </header>
 
@@ -116,7 +159,9 @@ function App() {
         </>
       )}
 
-      {page === 'garments' && <GarmentPage />}
+      {page === 'garments' && <GarmentPage onToast={addToast} />}
+
+      <Toast messages={toasts} />
     </div>
   );
 }

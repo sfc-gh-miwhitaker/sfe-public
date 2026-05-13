@@ -1,9 +1,45 @@
 import os
+import threading
+import time
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import snowflake.connector
 
 app = FastAPI()
+
+ROUTE_WAYPOINTS = [
+    (33.7490, -84.3880, 0.0, 'IDLE'),
+    (33.7530, -84.3865, 22.0, 'ON'),
+    (33.7580, -84.3850, 26.0, 'ON'),
+    (33.7640, -84.3845, 30.0, 'ON'),
+    (33.7720, -84.3843, 28.0, 'ON'),
+    (33.7800, -84.3842, 25.0, 'ON'),
+    (33.7860, -84.3843, 18.0, 'ON'),
+    (33.7896, -84.3843, 0.0, 'IDLE'),
+    (33.7860, -84.3845, 20.0, 'ON'),
+    (33.7800, -84.3848, 24.0, 'ON'),
+    (33.7750, -84.3850, 26.0, 'ON'),
+    (33.7710, -84.3850, 0.0, 'IDLE'),
+    (33.7680, -84.3820, 18.0, 'ON'),
+    (33.7620, -84.3790, 22.0, 'ON'),
+    (33.7556, -84.3818, 0.0, 'IDLE'),
+    (33.7530, -84.3840, 16.0, 'ON'),
+    (33.7500, -84.3860, 20.0, 'ON'),
+    (33.7490, -84.3880, 0.0, 'IDLE'),
+]
+
+GARMENT_LIFECYCLE = [
+    ('CHECK_IN', 'Receiving Dock', 'SC-001', 'Soiled pickup from customer'),
+    ('WASH',     'Wash Line 2',    'SC-003', 'Standard wash cycle'),
+    ('DRY',      'Dryer Bay 1',    'SC-004', '45 min high heat'),
+    ('FOLD',     'Finishing Area',  'SC-005', 'QC passed'),
+    ('DISPATCH', 'Loading Dock',    'SC-006', 'Loaded on V-001'),
+    ('DELIVER',  'Customer Dock',   'SC-007', 'Delivered successfully'),
+]
+
+GARMENT_IDS = [f'G-{i:04d}' for i in range(40)]
+
+simulator_state = {"running": False, "thread": None}
 
 
 def get_login_token():
@@ -28,6 +64,68 @@ def get_connection():
         schema='IOT_LIFECYCLE',
         warehouse='SFE_IOT_LIFECYCLE_WH',
     )
+
+
+def run_simulator():
+    route_idx = 0
+    garment_idx = 0
+    lifecycle_idx = 0
+    tick = 0
+
+    while simulator_state["running"]:
+        try:
+            conn = get_connection()
+            cur = conn.cursor()
+
+            lat, lng, speed, engine = ROUTE_WAYPOINTS[route_idx % len(ROUTE_WAYPOINTS)]
+            cur.execute(
+                "INSERT INTO GPS_TELEMETRY (VEHICLE_ID, TIMESTAMP, LATITUDE, LONGITUDE, SPEED_MPH, ENGINE_STATUS) "
+                "VALUES (%s, CURRENT_TIMESTAMP(), %s, %s, %s, %s)",
+                ('V-001', lat, lng, speed, engine)
+            )
+            route_idx += 1
+
+            if tick % 3 == 0:
+                event_type, location, scanner, notes = GARMENT_LIFECYCLE[lifecycle_idx % len(GARMENT_LIFECYCLE)]
+                garment_id = GARMENT_IDS[garment_idx % len(GARMENT_IDS)]
+                cur.execute(
+                    "INSERT INTO GARMENT_EVENTS (GARMENT_ID, EVENT_TYPE, EVENT_TIMESTAMP, LOCATION, SCANNER_ID, NOTES) "
+                    "VALUES (%s, %s, CURRENT_TIMESTAMP(), %s, %s, %s)",
+                    (garment_id, event_type, location, scanner, notes)
+                )
+                lifecycle_idx += 1
+                if lifecycle_idx % len(GARMENT_LIFECYCLE) == 0:
+                    garment_idx += 1
+
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"Simulator error: {e}")
+
+        tick += 1
+        time.sleep(3)
+
+
+@app.get("/api/simulate/start")
+def start_simulation():
+    if simulator_state["running"]:
+        return {"status": "already_running"}
+    simulator_state["running"] = True
+    t = threading.Thread(target=run_simulator, daemon=True)
+    t.start()
+    simulator_state["thread"] = t
+    return {"status": "started"}
+
+
+@app.get("/api/simulate/stop")
+def stop_simulation():
+    simulator_state["running"] = False
+    return {"status": "stopped"}
+
+
+@app.get("/api/simulate/status")
+def simulation_status():
+    return {"running": simulator_state["running"]}
 
 
 @app.get("/api/positions")
@@ -134,6 +232,32 @@ def get_garments():
         }
         for r in rows
     ]
+
+
+@app.get("/api/garment-pipeline")
+def get_garment_pipeline():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        WITH latest_events AS (
+            SELECT GARMENT_ID, EVENT_TYPE
+            FROM GARMENT_EVENTS
+            QUALIFY ROW_NUMBER() OVER (PARTITION BY GARMENT_ID ORDER BY EVENT_TIMESTAMP DESC) = 1
+        )
+        SELECT
+            COALESCE(le.EVENT_TYPE, 'CHECK_IN') AS STAGE,
+            COUNT(*) AS CNT
+        FROM GARMENTS g
+        LEFT JOIN latest_events le ON g.GARMENT_ID = le.GARMENT_ID
+        WHERE g.STATUS = 'IN_SERVICE'
+        GROUP BY COALESCE(le.EVENT_TYPE, 'CHECK_IN')
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    stage_order = ['CHECK_IN', 'WASH', 'DRY', 'FOLD', 'DISPATCH', 'DELIVER']
+    counts = {r[0]: int(r[1]) for r in rows}
+    return [{"stage": s, "count": counts.get(s, 0)} for s in stage_order]
 
 
 @app.get("/api/garment-events")
