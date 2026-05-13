@@ -1,7 +1,7 @@
 /*******************************************************************************
  * DEMO METADATA (Machine-readable - Do not modify format)
  * PROJECT_NAME: IoT Lifecycle Demo -- Agentic Operations Engine
- * AUTHOR: SE Community
+ * AUTHOR: Pair-programmed by SE Community + Cortex Code
  * CREATED: 2026-05-12
  * EXPIRES: 2026-06-11
  * GITHUB_REPO: https://github.com/sfc-gh-miwhitaker/sfe-public

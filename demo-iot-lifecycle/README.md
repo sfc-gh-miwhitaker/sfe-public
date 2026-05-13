@@ -3,6 +3,8 @@
 
 # IoT Lifecycle Demo — Agentic Operations Engine
 
+> Pair-programmed by SE Community + Cortex Code | Expires: 2026-06-11
+
 End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fictional uniform rental and linen supply company operating in the Atlanta, GA metro area. Pivots from "cloud data warehouse" to **Agentic Operations Engine** — garments flowing through a lifecycle loop with zombie detection, retention alerts for route drivers, route efficiency analysis, and dual AI agents (CFO + Operations) powered by Snowflake Intelligence.
 
 ## Screenshots
