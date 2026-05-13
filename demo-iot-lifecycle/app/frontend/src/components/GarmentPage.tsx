@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Garment, GarmentEvent, RetentionAlert } from '../App';
+import type { Garment, GarmentEvent, RetentionAlert, ZombieSummary } from '../App';
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -62,18 +62,22 @@ export default function GarmentPage({ onToast }: { onToast: (msg: string) => voi
   const [pulsingStage, setPulsingStage] = useState<string | null>(null);
   const prevEventCountRef = useRef(0);
 
+  const [zombieSummary, setZombieSummary] = useState<ZombieSummary>({ zombie_count: 0, total_exposure_usd: 0, avg_days_stalled: 0 });
+
   const fetchData = useCallback(async () => {
     try {
-      const [gRes, eRes, pRes, aRes] = await Promise.all([
+      const [gRes, eRes, pRes, aRes, zRes] = await Promise.all([
         fetch('/api/garments'),
         fetch('/api/garment-events'),
         fetch('/api/garment-pipeline'),
         fetch('/api/retention-alerts'),
+        fetch('/api/zombie-summary'),
       ]);
       const newGarments = await gRes.json();
       const newEvents: GarmentEvent[] = await eRes.json();
       const newPipeline: PipelineData = await pRes.json();
       const newAlerts: RetentionAlert[] = await aRes.json();
+      const newZombieSummary: ZombieSummary = await zRes.json();
 
       if (prevEventCountRef.current > 0 && newEvents.length > 0) {
         const newCount = newEvents[0].event_id;
@@ -92,6 +96,7 @@ export default function GarmentPage({ onToast }: { onToast: (msg: string) => voi
       setEvents(newEvents);
       setPipeline(newPipeline);
       setAlerts(newAlerts);
+      setZombieSummary(newZombieSummary);
     } catch (e) {
       console.error('Failed to fetch garment data', e);
     }
@@ -116,11 +121,9 @@ export default function GarmentPage({ onToast }: { onToast: (msg: string) => voi
 
   const totalGarments = garments.length;
   const inService = garments.filter(g => g.status === 'IN_SERVICE').length;
-  const zombieCount = garments.filter(g => g.lifecycle_state === 'ZOMBIE').length;
+  const zombieCount = zombieSummary.zombie_count;
   const nearRetirement = garments.filter(g => g.wash_cycle_pct >= 90).length;
-  const totalExposure = garments
-    .filter(g => g.lifecycle_state === 'ZOMBIE')
-    .reduce((sum, g) => sum + g.replacement_cost, 0);
+  const totalExposure = zombieSummary.total_exposure_usd;
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">

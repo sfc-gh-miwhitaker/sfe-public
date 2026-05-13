@@ -242,7 +242,7 @@ CREATE OR REPLACE SEMANTIC VIEW SV_IOT_OPERATIONS
     customers.csat_score AS customers.CSAT_SCORE
       COMMENT = 'Customer satisfaction score (1.0-5.0 scale)',
 
-    customers.return_rate AS customers.RETURN_RATE_PCT
+    customers.return_rate_pct AS customers.RETURN_RATE_PCT
       COMMENT = 'Percentage of garments returned on schedule (higher is better)',
 
     customers.dispute_count AS customers.INVOICE_DISPUTE_COUNT

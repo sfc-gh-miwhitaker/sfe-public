@@ -11,9 +11,17 @@ End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fiction
 |-----------|---------------------------|
 | ![Fleet Map](images/fleet-map.png) | ![Garment Pipeline](images/garment-pipeline.png) |
 
-**Fleet Map** — Live vehicle positions on an OpenStreetMap Atlanta base layer (deck.gl ScatterplotLayer). Customer dots are color-coded by risk band: red = zombie cluster, yellow = elevated risk, green = golden customer. KPI bar shows fleet status + zombie count + financial exposure in real time.
+**Fleet Map** — Live vehicle positions on an OpenStreetMap Atlanta base layer (deck.gl ScatterplotLayer). Customer dots are color-coded by risk band: red = zombie cluster, yellow = elevated risk, green = golden customer. KPI bar shows fleet metrics, zombie garment count (169), and financial exposure ($1,048). "Ask Agent" button links to Snowflake Intelligence.
 
-**Garment Pipeline** — Visual Customer Loop (CLEAN_OUT → AT_CUSTOMER → SOILED_RETURN) with animated zombie badge, factory pipeline (CHECK_IN → WASH → DRY → FOLD → DISPATCH → DELIVER), retention alerts panel with driver talking points, and inventory table showing lifecycle state, days-at-location, and wash-cycle-% of useful life.
+**Garment Pipeline** — Customer Loop (CLEAN OUT → AT CUSTOMER → SOILED RETURN) with animated "126 ZOMBIES" badge, factory pipeline (CHECK IN → WASH → DRY → FOLD → DISPATCH → DELIVER), Retention Alerts panel with $ save values and driver talking points, and inventory table with lifecycle state color-coding (ZOMBIE in red, AT_CUSTOMER in amber, IN_PLANT in blue), days-at-location highlights (>14d red), and Life % column.
+
+| CFO Agent | Operations Agent |
+|-----------|-----------------|
+| ![CFO Agent](images/cfo-agent.png) | ![Operations Agent](images/operations-agent.png) |
+
+**CFO Agent** — Snowflake Intelligence answering "Identifying Most Profitable Customers" with healthcare invoice breakdown by payment status (PAID vs PENDING), stacked bar chart, and narrative analysis showing 82.4% collection rate.
+
+**Operations Agent** — Snowflake Intelligence answering "What are the top 3 silent operational leaks right now?" with zombie cluster table (Peachtree General 120 zombies/$660, Dunwoody Hilton 26/$263, Smyrna Collision 19/$66.50), key observations, and recovery recommendations.
 
 ## What It Does
 
