@@ -9,7 +9,7 @@ End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fiction
 
 | Fleet Map | Garment Lifecycle Pipeline |
 |-----------|---------------------------|
-| ![Fleet Map](images/fleet-map.png) | ![Garment Pipeline](images/garment-pipeline.png) |
+| ![Fleet Map](images/fleet.png) | ![Garment Pipeline](images/garment-pipeline.png) |
 
 **Fleet Map** — Live vehicle positions on an OpenStreetMap Atlanta base layer (deck.gl ScatterplotLayer). Customer dots are color-coded by risk band: red = zombie cluster, yellow = elevated risk, green = golden customer. KPI bar shows fleet metrics, zombie garment count (169), and financial exposure ($1,048). "Ask Agent" button links to Snowflake Intelligence.
 
