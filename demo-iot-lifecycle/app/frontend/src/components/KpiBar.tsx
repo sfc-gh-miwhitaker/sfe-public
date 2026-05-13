@@ -1,22 +1,22 @@
-import type { TelemetryPoint } from '../App';
+import type { Position } from '../App';
 
 interface Props {
-  activeVehicles: number;
+  positions: Position[];
   totalCustomers: number;
-  currentPositions: TelemetryPoint[];
 }
 
-export default function KpiBar({ activeVehicles, totalCustomers, currentPositions }: Props) {
-  const inTransit = currentPositions.filter(p => p.speed_mph > 0).length;
-  const atStop = currentPositions.filter(p => p.engine_status === 'IDLE').length;
-  const avgSpeed = currentPositions.length > 0
-    ? (currentPositions.reduce((sum, p) => sum + p.speed_mph, 0) / currentPositions.length).toFixed(1)
+export default function KpiBar({ positions, totalCustomers }: Props) {
+  const total = positions.length;
+  const inTransit = positions.filter(p => p.speed_mph > 0).length;
+  const atStop = positions.filter(p => p.engine_status === 'IDLE' && p.speed_mph === 0).length;
+  const avgSpeed = total > 0
+    ? (positions.reduce((sum, p) => sum + p.speed_mph, 0) / total).toFixed(1)
     : '0.0';
 
   return (
-    <div className="flex items-center gap-6 px-6 py-2 bg-gray-900/80 border-b border-gray-800">
-      <Kpi label="Vehicles Active" value={activeVehicles} color="text-green-400" />
-      <Kpi label="In Transit" value={inTransit} color="text-emerald-400" />
+    <div className="flex items-center gap-8 px-6 py-2.5 bg-gray-900/80 border-b border-gray-800">
+      <Kpi label="Vehicles" value={total} color="text-white" />
+      <Kpi label="In Transit" value={inTransit} color="text-green-400" />
       <Kpi label="At Stop" value={atStop} color="text-yellow-400" />
       <Kpi label="Avg Speed" value={`${avgSpeed} mph`} color="text-blue-400" />
       <Kpi label="Customers" value={totalCustomers} color="text-indigo-400" />

@@ -58,12 +58,16 @@ cd demo-iot-lifecycle
 ```
 
 The script will:
-- Ask you to run one query in Snowsight to get your registry URL (it tells you exactly which query)
+- Build the React frontend natively (Node.js)
+- Auto-detect your registry URL from Snowflake (via Snow CLI)
 - Build the container image for linux/amd64
-- Log you into your Snowflake registry (uses your Snowflake username/password)
+- Authenticate to the registry via Snow CLI (key-pair, SSO, or PAT -- whatever your connection uses)
 - Push the image
 
-> **Requires:** [Podman](https://podman.io/getting-started/installation) installed. No Docker license needed.
+> **Requires:**
+> - [Podman](https://podman.io/getting-started/installation) (no Docker license needed)
+> - [Snow CLI](https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation) with a configured connection (`snow connection add`)
+> - [Node.js](https://nodejs.org/) for the frontend build
 
 ### Step 3: Start the service (Snowsight)
 

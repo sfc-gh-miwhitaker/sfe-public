@@ -1,14 +1,18 @@
 /*******************************************************************************
- * DEPLOY SERVICE -- Creates the SPCS service from your pushed container image
+ * DEPLOY SERVICE (Step 3 of 3)
  *
- * Run this AFTER:
- *   1. deploy_all.sql completed (data + image repo + compute pool ready)
- *   2. ./build_and_push.sh completed (image pushed to registry)
+ * Creates the SPCS service from the container image you pushed in Step 2.
  *
- * After this script finishes:
- *   - The SHOW ENDPOINTS output at the bottom gives you the dashboard URL
- *   - Open that URL in your browser (you'll authenticate with Snowflake)
- *   - The service takes ~60 seconds to become READY on first start
+ * Prerequisites (must be done BEFORE running this):
+ *   Step 1: deploy_all.sql in Snowsight (creates data, agent, image repo, compute pool)
+ *   Step 2: ./build_and_push.sh in terminal (builds React app, pushes image via Snow CLI)
+ *
+ * What happens when you Run All:
+ *   - Creates the FLEET_DASHBOARD_SERVICE on the IOT_FLEET_POOL compute pool
+ *   - Grants public access so anyone in your account can view the dashboard
+ *   - The last query shows your dashboard URL in the "ingress_url" column
+ *   - Open that URL in your browser -- Snowflake handles authentication
+ *   - First start takes ~60 seconds while the container spins up
  ******************************************************************************/
 
 USE ROLE SYSADMIN;
