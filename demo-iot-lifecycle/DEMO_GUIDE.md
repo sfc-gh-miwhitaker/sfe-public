@@ -1,55 +1,127 @@
-# Demo Guide -- IoT Lifecycle
+# Demo Guide -- IoT Lifecycle: Agentic Operations Engine
 
-## Opening (30 seconds)
+## The Narrative
 
-Open the dashboard URL in your browser. You'll see an Atlanta street map with colored dots -- that's your fleet.
+Metro Textile Services has billions of data points flowing through Snowflake: RFID garment scans, GPS telemetry, invoices, customer satisfaction scores. Today this data feeds dashboards that show what happened. This demo pivots to showing **what should happen next** -- Snowflake as an Agentic Operations Engine.
 
-> "This is our operations center. Every vehicle, every garment, every RFID scan -- live from Snowflake."
+---
 
-## Act 1: Fleet in Motion (60 seconds)
+## Phase 1: Executive Vision -- The Hook (90 seconds)
 
-Click **Start Simulation** in the top-right corner.
+### Setup
+Open the dashboard URL. You'll see the Atlanta metro map with color-coded customer dots.
 
-Watch V-001 start moving across the map. Toast notifications pop in the corner as it reaches each stop:
-- "V-001 moving -- 26 mph"
-- "V-001 arrived at stop"
+### The Reveal
 
-> "These GPS pings are flowing into Snowflake every 3 seconds. The dashboard polls and updates -- no refresh needed. This is the same pattern that would connect to a real telematics provider."
+> "This is our operations center. Notice the colors -- red dots are customers with **zombie garments**. Those are items we delivered that haven't come back in over 14 days."
 
-Hover over any dot to see the vehicle details. Blue dots are customers. The red dot is our central depot.
+Hover over a red dot (Peachtree General Hospital):
+> "120 towels stalled here for over 2 weeks. That's $660 in replacement cost just... sitting there."
 
-## Act 2: Garment Lifecycle (60 seconds)
+Point to the KPI bar showing **Zombie Garments** and **Financial Exposure**:
+> "Across our network right now: [zombie count] garments are unaccounted for. That's [$X] in inventory at risk."
 
-Click the **Garments** tab.
+### Snowflake Intelligence
 
-With the simulation still running, watch the Event Feed on the right. Events appear every few seconds:
-- CHECK_IN at Receiving Dock
-- WASH at Wash Line 2
-- DRY at Dryer Bay 1
-- FOLD at Finishing Area
-- DISPATCH at Loading Dock
-- DELIVER at Customer Dock
+Open Snowflake Intelligence. Select **Operations Agent**.
 
-> "Every garment has an RFID tag. Every touch point scans it. We're watching a scrub set move through the entire laundry lifecycle in real-time."
+Ask: **"What are the top 3 silent operational leaks right now?"**
 
-Point to the inventory table on the left -- color-coded status badges, wash counts, hours since last scan.
+> "The agent cross-references RFID lifecycle state, days-at-location, customer satisfaction scores, and replacement costs. It doesn't just show you a number -- it tells you where the bleeding is and how much it costs."
 
-> "If something goes missing, we know immediately. Two garments are already flagged LOST."
+---
 
-## Act 3: CFO Intelligence (60 seconds)
+## Phase 2: Agentic Lifecycle -- The Core (90 seconds)
 
-Open Snowflake Intelligence (sidebar in Snowsight).
+### Click the Garments Tab
 
-Ask: **"What is our P&L for the last quarter?"**
+Point to the **Customer Loop** strip at the top:
+> "This is the garment loop: Clean Out, At Customer, Soiled Return. A healthy garment cycles through every 5-7 days. The zombie badge tells us how many have broken the loop."
 
-Then: **"Which customers are most profitable?"**
+Point to the **Retention Alerts** panel on the right:
+> "These are auto-generated alerts for our route drivers. Each one includes the customer, how many tags are missing, the dollar value we save by recovering them, and a conversational talking point the driver can use."
 
-Then: **"Where are we vs budget this month?"**
+Read one alert:
+> "'Hi -- we noticed 120 towels from your last few deliveries haven't made it back. They're likely in a storage closet. If we recover them today, that's $660 in avoided replacement charges.' This is what agentic operations looks like -- the system tells your people what to do next."
 
-> "The CFO doesn't need to write SQL. They don't need to wait for a report. They ask a question and get an answer -- backed by the same data platform running the operations."
+### Ask the Operations Agent
+
+Ask: **"Draft a retention alert for our highest-risk customer"**
+
+> "It generates the alert with financial context, customer-specific details, and even a driver script. No human had to compile this."
+
+Ask: **"Which garments are approaching retirement?"**
+
+> "40 scrubs at Grady Memorial are at 110+ wash cycles out of 120. If they disappear now instead of coming back for replacement, that's $668 unrecoverable."
+
+---
+
+## Phase 3: Real-Time Map -- The Wow Factor (60 seconds)
+
+### Switch Back to Fleet Tab
+
+Click **Start Simulation**. Vehicles begin moving.
+
+> "Now watch the map come alive. Every GPS ping, every 3 seconds, written to Snowflake and reflected here. But the real power is the overlay."
+
+Point to the risk-banded dots:
+- **Red** = zombie cluster (C-001, C-016, C-019)
+- **Yellow** = elevated risk (C-008, C-013)
+- **Green** = golden customer (C-007, 99.8% return rate)
+
+> "When a driver reaches a red dot, their route app shows the retention alert we saw earlier. They don't just deliver -- they recover."
+
+### Route Efficiency
+
+Ask the Operations Agent: **"Which routes have fuel cost anomalies?"**
+
+> "Route R-006 West Metro Industrial is running 15% above benchmark on fuel. The agent correlates stop inefficiency with mileage data to suggest merging two stops."
+
+---
 
 ## Closing (30 seconds)
 
 Click **Stop Simulation**.
 
-> "What you just saw: real-time fleet tracking, RFID lifecycle management, and AI-powered financial analysis. Three surfaces, one platform. Every INSERT, every scan, every question -- all powered by Snowflake."
+> "What you just saw: the data isn't just in Snowflake -- it's working. Zombie detection, retention alerts, route optimization, financial exposure calculations. Every recovered garment saves $16.92. Every alert the driver follows reduces churn and carbon footprint. This isn't a dashboard that tells you what happened yesterday. This is an operations engine that tells your people what to do *right now*."
+
+---
+
+## Built-In Anomalies Cheat Sheet
+
+| Customer | Anomaly | Zombie Count | Exposure |
+|----------|---------|:---:|---:|
+| C-001 Peachtree General Hospital | 120 towels stalled >14 days | 120 | $660 |
+| C-008 Emory University Hospital | 4 items (scrubs + lab coat) stalled 16-18 days | 4 | ~$59 |
+| C-013 Grady Memorial Hospital | 40 scrubs at 110-118 wash cycles (near 120 retirement) | 0* | $668* |
+| C-016 Dunwoody Hilton | 25 linens stalled (rising loss + CSAT drop) | 25 | ~$238 |
+| C-019 Smyrna Collision Center | 18 shop towels stalled (rising loss + disputes) | 18 | ~$63 |
+| R-006 West Metro Industrial | +15% fuel variance vs benchmark route | -- | Route cost |
+| C-007 Georgia Tech Dining | **Golden customer** -- 99.8% return rate | 0 | $0 |
+
+*C-013's risk is retirement, not zombie -- items are at customer but approaching end-of-life.
+
+---
+
+## Key Talking Points
+
+- "You already have this data in Snowflake. Today it powers dashboards. Tomorrow it powers autonomous operations."
+- "This agent doesn't just report what happened -- it tells your drivers what to do next."
+- "Every recovered garment saves $16.92 in replacement AND reduces your carbon footprint."
+- "Your team already started experimenting with Cortex. This demo extends what they started into production-grade agentic workflows."
+
+---
+
+## Prompt Templates for Live Demo
+
+### Executive Vision
+> "Analyze our current RFID data across the Atlanta metro area. Identify the top 3 silent operational leaks -- garments stalled at customer sites beyond our 14-day threshold. Calculate the immediate replacement cost impact."
+
+### Agentic Lifecycle
+> "Monitor the garment loop. Identify zombie garments not returned within 3 cycles. For the highest-risk customer, draft a Retention Alert that includes the Customer ID, missing RFID tags, financial save value, and a suggested talking point for the driver."
+
+### Route Optimization
+> "Analyze route-level fuel costs and flag any routes where variance exceeds 15% above the benchmark. Suggest stops that could be merged for efficiency."
+
+### Combined Demo Boss Question
+> "Give me a full operations status: How many zombie garments total, which customers have the highest financial exposure, any routes eroding profitability, and draft a recovery action plan for our top-risk site."

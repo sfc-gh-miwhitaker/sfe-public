@@ -1,13 +1,13 @@
 /*******************************************************************************
  * DEMO METADATA (Machine-readable - Do not modify format)
- * PROJECT_NAME: IoT Lifecycle Demo -- Fleet Map, RFID Tracking & CFO Agent
+ * PROJECT_NAME: IoT Lifecycle Demo -- Agentic Operations Engine
  * AUTHOR: SE Community
  * CREATED: 2026-05-12
  * EXPIRES: 2026-06-11
  * GITHUB_REPO: https://github.com/sfc-gh-miwhitaker/sfe-public
- * PURPOSE: End-to-end IoT lifecycle demo with real-time fleet map (pydeck),
- *          RFID garment tracking, and a CFO-facing Cortex Agent for financial
- *          analysis -- all powered by synthetic data.
+ * PURPOSE: End-to-end IoT lifecycle demo with zombie garment detection,
+ *          retention alerts, route efficiency analysis, real-time fleet map,
+ *          and dual Cortex Agents (CFO + Operations) -- all synthetic data.
  *
  * DEPLOYMENT INSTRUCTIONS:
  * 1. Open Snowsight (https://app.snowflake.com)
@@ -69,7 +69,7 @@ EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/mai
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-iot-lifecycle/sql/05_spcs/01_create_infra.sql';
 
 SELECT
-    'IoT Lifecycle data + agent deployed. SPCS infra ready.' AS status,
+    'IoT Lifecycle data + agents (CFO + Operations) deployed. SPCS infra ready.' AS status,
     'NEXT: Build & push image, then run deploy_service.sql'  AS next_step,
     CURRENT_TIMESTAMP()                                      AS completed_at,
     $DEMO_EXPIRES                                            AS expires;

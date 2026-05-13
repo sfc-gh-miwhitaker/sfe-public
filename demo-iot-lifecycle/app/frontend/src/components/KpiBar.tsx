@@ -1,11 +1,12 @@
-import type { Position } from '../App';
+import type { Position, ZombieSummary } from '../App';
 
 interface Props {
   positions: Position[];
   totalCustomers: number;
+  zombieSummary: ZombieSummary;
 }
 
-export default function KpiBar({ positions, totalCustomers }: Props) {
+export default function KpiBar({ positions, totalCustomers, zombieSummary }: Props) {
   const total = positions.length;
   const inTransit = positions.filter(p => p.speed_mph > 0).length;
   const atStop = positions.filter(p => p.engine_status === 'IDLE' && p.speed_mph === 0).length;
@@ -20,6 +21,9 @@ export default function KpiBar({ positions, totalCustomers }: Props) {
       <Kpi label="At Stop" value={atStop} color="text-yellow-400" />
       <Kpi label="Avg Speed" value={`${avgSpeed} mph`} color="text-blue-400" />
       <Kpi label="Customers" value={totalCustomers} color="text-indigo-400" />
+      <div className="w-px h-6 bg-gray-700" />
+      <Kpi label="Zombie Garments" value={zombieSummary.zombie_count} color="text-red-400" />
+      <Kpi label="Exposure" value={`$${zombieSummary.total_exposure_usd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} color="text-red-400" />
     </div>
   );
 }

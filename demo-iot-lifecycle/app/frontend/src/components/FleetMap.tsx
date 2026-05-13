@@ -25,10 +25,30 @@ function getVehicleColor(p: Position): [number, number, number, number] {
   return [200, 60, 60, 240];
 }
 
+function getCustomerColor(c: Customer): [number, number, number, number] {
+  switch (c.risk_band) {
+    case 'RED': return [220, 38, 38, 220];
+    case 'YELLOW': return [245, 158, 11, 200];
+    case 'GREEN': return [34, 197, 94, 200];
+    default: return [65, 105, 225, 140];
+  }
+}
+
+function getCustomerRadius(c: Customer): number {
+  if (c.risk_band === 'RED') return 300;
+  if (c.risk_band === 'YELLOW') return 220;
+  return 150;
+}
+
 export default function FleetMap({ positions, customers }: Props) {
   const vehicleData = useMemo(
     () => positions.map(p => ({ ...p, color: getVehicleColor(p) })),
     [positions]
+  );
+
+  const customerData = useMemo(
+    () => customers.map(c => ({ ...c, color: getCustomerColor(c), radius: getCustomerRadius(c) })),
+    [customers]
   );
 
   const layers = useMemo(() => [
@@ -49,12 +69,15 @@ export default function FleetMap({ positions, customers }: Props) {
     }),
     new ScatterplotLayer({
       id: 'customers',
-      data: customers,
-      getPosition: (d: Customer) => [d.longitude, d.latitude],
-      getFillColor: [65, 105, 225, 140],
-      getRadius: 150,
+      data: customerData,
+      getPosition: (d: any) => [d.longitude, d.latitude],
+      getFillColor: (d: any) => d.color,
+      getRadius: (d: any) => d.radius,
       radiusMinPixels: 4,
       pickable: true,
+      stroked: true,
+      getLineColor: (d: any) => d.risk_band === 'RED' ? [255, 255, 255, 180] : [0, 0, 0, 0],
+      lineWidthMinPixels: 1,
     }),
     new ScatterplotLayer({
       id: 'depot',
@@ -79,7 +102,7 @@ export default function FleetMap({ positions, customers }: Props) {
         getPosition: 1000,
       },
     }),
-  ], [vehicleData, customers]);
+  ], [vehicleData, customerData]);
 
   return (
     <DeckGL
@@ -89,7 +112,9 @@ export default function FleetMap({ positions, customers }: Props) {
       getTooltip={({ object }: any) => {
         if (!object) return null;
         if ('customer_name' in object) {
-          return { text: `${object.customer_name}\n${object.industry}` };
+          const riskLabel = object.risk_band !== 'NORMAL' ? ` [${object.risk_band}]` : '';
+          const zombieInfo = object.zombie_count > 0 ? `\nZombies: ${object.zombie_count} ($${object.financial_exposure_usd.toFixed(0)} exposure)` : '';
+          return { text: `${object.customer_name}${riskLabel}\n${object.industry}${zombieInfo}` };
         }
         if ('vehicle_id' in object) {
           return { text: `${object.vehicle_id}\n${object.speed_mph} mph • ${object.engine_status}\n${object.timestamp}` };

@@ -1,9 +1,9 @@
 ![Status](https://img.shields.io/badge/Status-Active-success)
 ![Expires](https://img.shields.io/badge/Expires-2026--06--11-yellow)
 
-# IoT Lifecycle Demo — Animated Fleet Map, RFID Tracking & CFO Agent
+# IoT Lifecycle Demo — Agentic Operations Engine
 
-End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fictional uniform rental and linen supply company operating in the Atlanta, GA metro area. Runs entirely on Snowpark Container Services with a live simulator, real-time garment pipeline, and a natural-language CFO Agent powered by Snowflake Intelligence.
+End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fictional uniform rental and linen supply company operating in the Atlanta, GA metro area. Pivots from "cloud data warehouse" to **Agentic Operations Engine** — garments flowing through a lifecycle loop with zombie detection, retention alerts for route drivers, route efficiency analysis, and dual AI agents (CFO + Operations) powered by Snowflake Intelligence.
 
 ## Screenshots
 
@@ -11,18 +11,21 @@ End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fiction
 |-----------|---------------------------|
 | ![Fleet Map](images/fleet-map.png) | ![Garment Pipeline](images/garment-pipeline.png) |
 
-**Fleet Map** — Live vehicle positions on an OpenStreetMap Atlanta base layer (deck.gl ScatterplotLayer). Orange = idle at stop, red/yellow pulse = active vehicle. Blue dots = customer locations. KPI bar shows fleet status in real time.
+**Fleet Map** — Live vehicle positions on an OpenStreetMap Atlanta base layer (deck.gl ScatterplotLayer). Customer dots are color-coded by risk band: red = zombie cluster, yellow = elevated risk, green = golden customer. KPI bar shows fleet status + zombie count + financial exposure in real time.
 
-**Garment Pipeline** — Visual lifecycle flow showing garment counts at each processing stage (CHECK_IN → WASH → DRY → FOLD → DISPATCH → DELIVER). Inventory table with 40 tracked garments, and a live event feed with color-coded stage transitions.
+**Garment Pipeline** — Visual Customer Loop (CLEAN_OUT → AT_CUSTOMER → SOILED_RETURN) with animated zombie badge, factory pipeline (CHECK_IN → WASH → DRY → FOLD → DISPATCH → DELIVER), retention alerts panel with driver talking points, and inventory table showing lifecycle state, days-at-location, and wash-cycle-% of useful life.
 
 ## What It Does
 
 | Component | Feature | Tech |
 |-----------|---------|------|
-| **Fleet Dashboard** | Live vehicle simulation on dark Atlanta map with real-time position updates | React, deck.gl ScatterplotLayer + TileLayer, SPCS |
-| **Garment Pipeline** | RFID lifecycle tracking with visual stage pipeline, inventory table, live event feed | React, FastAPI polling, QUALIFY deduplication |
-| **Live Simulator** | Background thread cycling 40 garments through 6 stages + moving 5 vehicles along routes | FastAPI BackgroundTasks, Snowflake connector |
+| **Fleet Dashboard** | Live vehicle simulation with risk-banded customer dots (red/yellow/green) | React, deck.gl ScatterplotLayer + TileLayer, SPCS |
+| **Garment Pipeline** | RFID lifecycle with Customer Loop, zombie badge, retention alerts, factory pipeline | React, FastAPI polling, QUALIFY deduplication |
+| **Zombie Detection** | 120+ towels stalled at C-001, scrubs near retirement at C-013, route fuel anomaly R-006 | Seeded anomalies in synthetic data |
+| **Retention Alerts** | Auto-generated driver talking points with customer ID, missing tags, $ save value | V_RETENTION_ALERTS view, Operations Agent |
+| **Live Simulator** | Background thread cycling garments through 9-stage loop + moving vehicles | FastAPI BackgroundTasks, Snowflake connector |
 | **CFO Agent** | Natural language financial Q&A (Snowflake Intelligence) | Semantic View, Cortex Agent |
+| **Operations Agent** | Zombie detection, retention alerts, route efficiency, risk correlation | Semantic View, Cortex Agent |
 
 ## Architecture
 
@@ -31,15 +34,17 @@ End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fiction
 │  React Frontend (Vite + deck.gl + Tailwind)     │
 │  • ScatterplotLayer: vehicles + customers       │
 │  • TileLayer: OpenStreetMap base map            │
-│  • Garment Pipeline: stage counts + event feed  │
+│  • Customer Loop + zombie badge + retention alerts│
 │  • 5-second polling for live updates            │
 ├─────────────────────────────────────────────────┤
 │  FastAPI Backend (Python)                       │
 │  • /api/positions → simulated GPS coords        │
 │  • /api/garments → V_GARMENT_LIFECYCLE view     │
-│  • /api/garment-pipeline → stage aggregation    │
+│  • /api/garment-pipeline → loop + factory counts │
+│  • /api/zombie-summary → zombie KPIs            │
+│  • /api/retention-alerts → driver alerts         │
 │  • /api/garment-events → latest 50 events       │
-│  • /api/customers, /api/vehicles                │
+│  • /api/customers → risk-banded with exposure    │
 │  • Background simulator thread                  │
 ├─────────────────────────────────────────────────┤
 │  Snowpark Container Services (SPCS)             │
@@ -50,9 +55,9 @@ End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fiction
          ↕
 ┌─────────────────────────────────────────────────┐
 │  Snowflake Data Layer                           │
-│  • 11 tables (fleet, garments, events, finance) │
-│  • 6 analytics views (QUALIFY deduplication)    │
-│  • Semantic view + Cortex Agent (Intelligence)  │
+│  • 13 tables (fleet, garments, costs, alerts)   │
+│  • 10 analytics views (zombie, risk, retention) │
+│  • 2 Semantic views + 2 Cortex Agents           │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -103,10 +108,16 @@ The script will:
 
 ### Using the CFO Agent
 
-The CFO Assistant is automatically available in **Snowflake Intelligence** (the sidebar panel in Snowsight). Ask financial questions like:
-- "What is our revenue by customer?"
-- "Which customers have the highest garment loss rate?"
-- "Show me monthly invoice trends"
+Both agents are available in **Snowflake Intelligence** (the sidebar panel in Snowsight).
+
+**CFO Assistant** — Ask financial questions:
+- "What is our P&L for the last quarter?"
+- "How much margin is at risk from unreturned garments?"
+
+**Operations Agent** — Ask operational questions:
+- "What are the top 3 silent operational leaks right now?"
+- "Draft a retention alert for our highest-risk customer"
+- "Which routes have fuel cost anomalies?"
 
 ### Local Development (optional)
 
@@ -130,10 +141,10 @@ SNOWFLAKE_CONNECTION_NAME=default uvicorn main:app --reload
 | Compute Pool | `IOT_FLEET_POOL` | CPU_X64_XS for SPCS |
 | Service | `FLEET_DASHBOARD_SERVICE` | React dashboard container |
 | Image Repo | `IOT_IMAGE_REPO` | Container registry |
-| Tables | 11 TRANSIENT | Fleet, garments, events, invoices, financials |
-| Views | 6 | Fleet status, garment lifecycle, financials |
-| Semantic View | `SV_IOT_FINANCIAL` | CFO Agent structured data |
-| Agent | `CFO_ASSISTANT` | Snowflake Intelligence |
+| Tables | 13 TRANSIENT | Fleet, garments, events, costs, alerts, invoices, financials |
+| Views | 10 | Zombie, customer risk, route efficiency, retirement, retention, financials |
+| Semantic Views | `SV_IOT_FINANCIAL`, `SV_IOT_OPERATIONS` | CFO + Operations structured data |
+| Agents | `CFO_ASSISTANT`, `OPERATIONS_AGENT` | Snowflake Intelligence |
 | EAI | `OSM_TILES_ACCESS` | OpenStreetMap tile loading |
 
 ## Key Design Patterns

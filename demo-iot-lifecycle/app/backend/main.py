@@ -29,12 +29,15 @@ ROUTE_WAYPOINTS = [
 ]
 
 GARMENT_LIFECYCLE = [
-    ('CHECK_IN', 'Receiving Dock', 'SC-001', 'Soiled pickup from customer'),
-    ('WASH',     'Wash Line 2',    'SC-003', 'Standard wash cycle'),
-    ('DRY',      'Dryer Bay 1',    'SC-004', '45 min high heat'),
-    ('FOLD',     'Finishing Area',  'SC-005', 'QC passed'),
-    ('DISPATCH', 'Loading Dock',    'SC-006', 'Loaded on V-001'),
-    ('DELIVER',  'Customer Dock',   'SC-007', 'Delivered successfully'),
+    ('SOILED_RETURN', 'Receiving Dock', 'SC-001', 'Soiled pickup from customer'),
+    ('CHECK_IN',      'Receiving Dock', 'SC-001', 'Sorted for wash'),
+    ('WASH',          'Wash Line 2',    'SC-003', 'Standard wash cycle'),
+    ('DRY',           'Dryer Bay 1',    'SC-004', '45 min high heat'),
+    ('FOLD',          'Finishing Area',  'SC-005', 'QC passed'),
+    ('DISPATCH',      'Loading Dock',    'SC-006', 'Loaded on V-001'),
+    ('CLEAN_OUT',     'Loading Dock',    'SC-006', 'Scanned onto truck'),
+    ('DELIVER',       'Customer Dock',   'SC-007', 'Delivered successfully'),
+    ('AT_CUSTOMER',   'Customer Site',   'SC-007', 'At customer site'),
 ]
 
 GARMENT_IDS = [f'G-{i:04d}' for i in range(40)]
@@ -158,8 +161,10 @@ def get_customers():
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
-        SELECT CUSTOMER_ID, CUSTOMER_NAME, INDUSTRY, LATITUDE, LONGITUDE
-        FROM CUSTOMERS
+        SELECT c.CUSTOMER_ID, c.CUSTOMER_NAME, c.INDUSTRY, c.LATITUDE, c.LONGITUDE,
+               cr.RISK_BAND, cr.ZOMBIE_COUNT, cr.FINANCIAL_EXPOSURE_USD
+        FROM CUSTOMERS c
+        LEFT JOIN V_CUSTOMER_RISK cr ON c.CUSTOMER_ID = cr.CUSTOMER_ID
     """)
     rows = cur.fetchall()
     cur.close()
@@ -171,6 +176,9 @@ def get_customers():
             "industry": r[2],
             "latitude": r[3],
             "longitude": r[4],
+            "risk_band": r[5] or 'NORMAL',
+            "zombie_count": int(r[6]) if r[6] else 0,
+            "financial_exposure_usd": float(r[7]) if r[7] else 0.0,
         }
         for r in rows
     ]
@@ -208,9 +216,11 @@ def get_garments():
         SELECT GARMENT_ID, RFID_TAG, GARMENT_TYPE, SIZE, COLOR,
                CUSTOMER_ID, GARMENT_STATUS, WASH_COUNT,
                LAST_EVENT, LAST_EVENT_TIME, HOURS_SINCE_LAST_EVENT,
-               CUSTOMER_NAME
+               CUSTOMER_NAME, LIFECYCLE_STATE, DAYS_AT_LOCATION,
+               REPLACEMENT_COST, USEFUL_LIFE_CYCLES, WASH_CYCLE_PCT_OF_LIFE
         FROM V_GARMENT_LIFECYCLE
         ORDER BY GARMENT_ID
+        LIMIT 200
     """)
     rows = cur.fetchall()
     cur.close()
@@ -229,6 +239,11 @@ def get_garments():
             "last_event_time": str(r[9]) if r[9] else None,
             "hours_since_last_event": int(r[10]) if r[10] else None,
             "customer_name": r[11],
+            "lifecycle_state": r[12],
+            "days_at_location": int(r[13]) if r[13] else 0,
+            "replacement_cost": float(r[14]) if r[14] else 0.0,
+            "useful_life_cycles": int(r[15]) if r[15] else 100,
+            "wash_cycle_pct": float(r[16]) if r[16] else 0.0,
         }
         for r in rows
     ]
@@ -256,8 +271,67 @@ def get_garment_pipeline():
     cur.close()
     conn.close()
     stage_order = ['CHECK_IN', 'WASH', 'DRY', 'FOLD', 'DISPATCH', 'DELIVER']
+    loop_order = ['CLEAN_OUT', 'AT_CUSTOMER', 'SOILED_RETURN']
     counts = {r[0]: int(r[1]) for r in rows}
-    return [{"stage": s, "count": counts.get(s, 0)} for s in stage_order]
+    return {
+        "factory": [{"stage": s, "count": counts.get(s, 0)} for s in stage_order],
+        "loop": [{"stage": s, "count": counts.get(s, 0)} for s in loop_order],
+    }
+
+
+@app.get("/api/zombie-summary")
+def get_zombie_summary():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT COUNT(*) AS ZOMBIE_COUNT,
+               COALESCE(SUM(REPLACEMENT_COST), 0) AS TOTAL_EXPOSURE,
+               COALESCE(AVG(DAYS_AT_LOCATION), 0) AS AVG_DAYS_STALLED
+        FROM GARMENTS
+        WHERE LIFECYCLE_STATE = 'ZOMBIE'
+    """)
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return {
+        "zombie_count": int(row[0]),
+        "total_exposure_usd": float(row[1]),
+        "avg_days_stalled": float(row[2]),
+    }
+
+
+@app.get("/api/retention-alerts")
+def get_retention_alerts():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT ALERT_ID, CUSTOMER_ID, CUSTOMER_NAME, INDUSTRY, ROUTE_NAME,
+               DRIVER_NAME, ALERT_DATE, MISSING_TAG_COUNT, FINANCIAL_SAVE_USD,
+               DRIVER_TALKING_POINT, ALERT_STATUS, CSAT_SCORE
+        FROM V_RETENTION_ALERTS
+        WHERE ALERT_STATUS = 'PENDING'
+        ORDER BY FINANCIAL_SAVE_USD DESC
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return [
+        {
+            "alert_id": r[0],
+            "customer_id": r[1],
+            "customer_name": r[2],
+            "industry": r[3],
+            "route_name": r[4],
+            "driver_name": r[5],
+            "alert_date": str(r[6]),
+            "missing_tag_count": int(r[7]),
+            "financial_save_usd": float(r[8]),
+            "driver_talking_point": r[9],
+            "alert_status": r[10],
+            "csat_score": float(r[11]) if r[11] else None,
+        }
+        for r in rows
+    ]
 
 
 @app.get("/api/garment-events")

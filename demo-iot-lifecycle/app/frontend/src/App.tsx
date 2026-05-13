@@ -19,6 +19,9 @@ export interface Customer {
   industry: string;
   latitude: number;
   longitude: number;
+  risk_band: string;
+  zombie_count: number;
+  financial_exposure_usd: number;
 }
 
 export interface Garment {
@@ -34,6 +37,11 @@ export interface Garment {
   last_event_time: string | null;
   hours_since_last_event: number | null;
   customer_name: string | null;
+  lifecycle_state: string;
+  days_at_location: number;
+  replacement_cost: number;
+  useful_life_cycles: number;
+  wash_cycle_pct: number;
 }
 
 export interface GarmentEvent {
@@ -47,6 +55,27 @@ export interface GarmentEvent {
   notes: string;
 }
 
+export interface RetentionAlert {
+  alert_id: string;
+  customer_id: string;
+  customer_name: string;
+  industry: string;
+  route_name: string | null;
+  driver_name: string | null;
+  alert_date: string;
+  missing_tag_count: number;
+  financial_save_usd: number;
+  driver_talking_point: string;
+  alert_status: string;
+  csat_score: number | null;
+}
+
+export interface ZombieSummary {
+  zombie_count: number;
+  total_exposure_usd: number;
+  avg_days_stalled: number;
+}
+
 type Page = 'fleet' | 'garments';
 
 const POLL_INTERVAL_MS = 3000;
@@ -55,6 +84,7 @@ function App() {
   const [page, setPage] = useState<Page>('fleet');
   const [positions, setPositions] = useState<Position[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [zombieSummary, setZombieSummary] = useState<ZombieSummary>({ zombie_count: 0, total_exposure_usd: 0, avg_days_stalled: 0 });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [simulating, setSimulating] = useState(false);
@@ -94,9 +124,12 @@ function App() {
   }, [addToast]);
 
   useEffect(() => {
-    fetch('/api/customers').then(r => r.json()).then(setCustomers);
-    fetch('/api/simulate/status').then(r => r.json()).then(d => setSimulating(d.running));
-    fetchPositions().then(() => setLoading(false));
+    Promise.all([
+      fetch('/api/customers').then(r => r.json()).then(setCustomers),
+      fetch('/api/zombie-summary').then(r => r.json()).then(setZombieSummary),
+      fetch('/api/simulate/status').then(r => r.json()).then(d => setSimulating(d.running)),
+      fetchPositions(),
+    ]).then(() => setLoading(false));
   }, [fetchPositions]);
 
   useEffect(() => {
@@ -131,6 +164,14 @@ function App() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <a
+            href="https://app.snowflake.com/intelligence"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded text-xs font-medium bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/30 transition-all"
+          >
+            Ask Agent
+          </a>
           <button
             onClick={toggleSimulation}
             className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
@@ -152,7 +193,7 @@ function App() {
 
       {page === 'fleet' && (
         <>
-          <KpiBar positions={positions} totalCustomers={customers.length} />
+          <KpiBar positions={positions} totalCustomers={customers.length} zombieSummary={zombieSummary} />
           <div className="flex-1 relative">
             <FleetMap positions={positions} customers={customers} />
           </div>
