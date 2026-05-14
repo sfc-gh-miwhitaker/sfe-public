@@ -56,6 +56,7 @@ End-to-end IoT lifecycle demonstration for **Metro Textile Services**, a fiction
 │  • /api/garment-events → latest 50 events       │
 │  • /api/customers → risk-banded with exposure    │
 │  • Background simulator thread                  │
+│  (Production: Snowpipe Streaming replaces this) │
 ├─────────────────────────────────────────────────┤
 │  Snowpark Container Services (SPCS)             │
 │  • CPU_X64_XS compute pool                      │
@@ -166,6 +167,7 @@ SNOWFLAKE_CONNECTION_NAME=default uvicorn main:app --reload
 | EAI + Network Rule | Service spec | Allow outbound HTTPS to `tile.openstreetmap.org` for map tiles |
 | Background thread | FastAPI `on_event("startup")` | Simulate live IoT data without external scheduler |
 | Polling (5s) | React `useEffect` | Real-time feel without WebSocket complexity |
+| Snowpipe Streaming | [docs/04-STREAMING-INGEST.md](docs/04-STREAMING-INGEST.md) | Production IoT ingest path -- REST API for edge devices, SDK for aggregators |
 
 ## Cleanup
 

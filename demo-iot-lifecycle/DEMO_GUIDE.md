@@ -64,6 +64,8 @@ Click **Start Simulation**. Vehicles begin moving.
 
 > "Now watch the map come alive. Every GPS ping, every 3 seconds, written to Snowflake and reflected here. But the real power is the overlay."
 
+> **Production Note:** In a real deployment, GPS devices would stream telemetry directly to Snowflake via the Snowpipe Streaming REST API -- no intermediate files or message queues. RFID scanners at each plant zone would feed a Python aggregator using the Snowpipe Streaming SDK. Data becomes queryable in ~5 seconds with exactly-once delivery. See `docs/04-STREAMING-INGEST.md` for the full walk-through.
+
 Point to the risk-banded dots:
 - **Red** = zombie cluster (C-001, C-016, C-019)
 - **Yellow** = elevated risk (C-008, C-013)

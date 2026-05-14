@@ -16,6 +16,15 @@ Synthetic data flows from 13 TRANSIENT tables into 10 analytics views. Two seman
 
 ```mermaid
 flowchart LR
+  subgraph streaming [Snowpipe Streaming Ingest - Production Path]
+    RESTAPI["REST API\n(Edge/GPS Devices)"]
+    PythonSDK["Python SDK\n(RFID Aggregator)"]
+    PipeGPS["PIPE:\nGPS_TELEMETRY"]
+    PipeEvents["PIPE:\nGARMENT_EVENTS"]
+    RESTAPI --> PipeGPS
+    PythonSDK --> PipeEvents
+  end
+
   subgraph synthetic [Synthetic Data - 13 TRANSIENT Tables]
     Fleet[FLEET_VEHICLES]
     GPS[GPS_TELEMETRY]
@@ -62,6 +71,9 @@ flowchart LR
     Browser[Browser]
     SI[Snowflake Intelligence]
   end
+
+  PipeGPS --> GPS
+  PipeEvents --> Events
 
   Fleet --> VFleet
   GPS --> VFleet
