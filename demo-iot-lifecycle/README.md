@@ -167,7 +167,7 @@ SNOWFLAKE_CONNECTION_NAME=default uvicorn main:app --reload
 | EAI + Network Rule | Service spec | Allow outbound HTTPS to `tile.openstreetmap.org` for map tiles |
 | Background thread | FastAPI `on_event("startup")` | Simulate live IoT data without external scheduler |
 | Polling (5s) | React `useEffect` | Real-time feel without WebSocket complexity |
-| Snowpipe Streaming | [docs/04-STREAMING-INGEST.md](docs/04-STREAMING-INGEST.md) | Production IoT ingest path -- REST API for edge devices, SDK for aggregators |
+| Snowpipe Streaming | [guide-snowpipe-streaming-iot](../guide-snowpipe-streaming-iot/) | Production IoT ingest path -- REST API for edge devices, SDK for aggregators (local pointer in [docs/04-STREAMING-INGEST.md](docs/04-STREAMING-INGEST.md)) |
 
 ## Cleanup
 
