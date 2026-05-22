@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-11-blue)
+![Projects](https://img.shields.io/badge/Projects-8-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -45,13 +45,10 @@ Documentation, patterns, and examples (no deploy/teardown).
 
 | Directory | Description | Features |
 |---|---|---|
-| [guide-agent-skills](guide-agent-skills/) | Agent skills as resource management: context budget mental model | Skills, Context Management |
 | [guide-ai-tool-rollout](guide-ai-tool-rollout/) | Roll out AI coding tools enterprise-wide: MDM, Snowflake standards, red-team, distribution | managed-settings.json, MDM, Dual-Surface |
 | [guide-agent-hardening](guide-agent-hardening/) | Harden Cortex Agents for production: monitoring, RBAC, guardrails, cost controls, config diff | Cortex Guard, CORTEX_AGENT_USAGE_HISTORY, Row Access Policies, DESC AGENT |
 | [guide-mcp-auth](guide-mcp-auth/) | MCP server authentication walkthrough: PAT, OAuth + PKCE, RBAC, multi-tenant, enterprise IdP | Snowflake MCP, OAuth, PAT, RBAC |
 | [guide-connecting-claude-snowflake](guide-connecting-claude-snowflake/) | Connect Claude to Snowflake: MCP OAuth, Entra ID External OAuth, and Cortex Code plugin with profiles and experience shaping | MCP, External OAuth, Entra ID, Cortex Code Plugin, Profiles |
-| [guide-data-quality-governance](guide-data-quality-governance/) | Data quality governance: DMFs, tagging, masking, anomaly detection | Data Metric Functions, Tags, Masking Policies |
-| [guide-external-access-playbook](guide-external-access-playbook/) | External access patterns: network rules, EAI, secrets, OAuth | External Access Integration, Network Rules, Secrets |
 
 
 ## Learning Journeys
@@ -61,7 +58,7 @@ Not sure where to start? Each journey connects 3-5 projects into a story: unders
 | Journey | Story | Path | Start Here |
 |---|---|---|---|
 | **Agents** | Learn the Cortex Agent API with per-request context injection, then deploy to Teams, harden for production, and connect via MCP | guide-agent-hardening → guide-mcp-auth | [guide-agent-hardening](guide-agent-hardening/) |
-| **AI Governance** | Roll out AI coding tools across your organization | guide-agent-skills → guide-ai-tool-rollout | [guide-agent-skills](guide-agent-skills/) |
+| **AI Governance** | Roll out AI coding tools across your organization | guide-ai-tool-rollout | [guide-ai-tool-rollout](guide-ai-tool-rollout/) |
 | **FinOps** | Understand Cortex billing, control AI and Code spend, tune warehouse queries | tool-code-spend-controls | [tool-code-spend-controls](tool-code-spend-controls/) |
 | **Data Quality** | Load data, build a pipeline, add quality gates and governance | guide-data-quality-governance | [guide-data-quality-governance](guide-data-quality-governance/) |
 | **External Access** | Call external APIs from Snowflake, manage secrets, harden for production | guide-external-access-playbook | [guide-external-access-playbook](guide-external-access-playbook/) |
