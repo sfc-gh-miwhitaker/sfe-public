@@ -23,7 +23,8 @@ CREATE OR REPLACE AGENT MY_DB.MY_SCHEMA.MY_AGENT
     orchestration: auto
 
   instructions:
-    system: "You are a data analytics assistant. Answer questions about the data."
+    response: "You are a data analytics assistant. Answer questions concisely using the semantic view."
+    orchestration: "Use the analyst tool for any data question grounded in the semantic view."
 
   tools:
     - tool_spec:

@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2026--06--05-orange)
+![Expires](https://img.shields.io/badge/Expires-2026--12--31-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Connecting Claude to Snowflake: MCP, OAuth, and Cortex Code
@@ -8,7 +8,7 @@
 Three paths to connect Claude products to Snowflake data — from a 5-minute plugin install to full enterprise OAuth with Entra ID. Each path serves a different surface, governance model, and level of experience customization.
 
 **Audience:** SEs walking customers through setup + customer IT admins configuring independently
-**Created:** 2026-05-06 | **Expires:** 2026-06-05 | **Status:** ACTIVE
+**Created:** 2026-05-06 | **Expires:** 2026-12-31 | **Status:** ACTIVE
 
 > **No support provided.** This content is for reference only. Review and validate before applying to any production workflow.
 
