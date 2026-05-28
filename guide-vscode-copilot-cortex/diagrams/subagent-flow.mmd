@@ -1,0 +1,12 @@
+flowchart TB
+    User["User in GitHub Copilot CLI<br/>(gh copilot)"]
+    Skill["subagent-cortex-code skill<br/>~/.agents/skills/cortex-code/"]
+    Router["Routing layer<br/>Snowflake intent?"]
+    Approve["Approval mode<br/>prompt / auto / envelope_only"]
+    CoCo["cortex -p '...'<br/>headless invocation"]
+    SF["Snowflake account"]
+    Other["Stays with Copilot CLI"]
+
+    User --> Skill --> Router
+    Router -->|"yes"| Approve --> CoCo --> SF
+    Router -->|"no"| Other

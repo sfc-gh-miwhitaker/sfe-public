@@ -1,0 +1,18 @@
+flowchart LR
+    Dev["Developer<br/>VS Code Copilot Chat"]
+    JSON[".vscode/mcp.json"]
+    Auth["OAuth (recommended)<br/>or PAT bearer"]
+    Endpoint["api/v2/databases/{db}/<br/>schemas/{schema}/<br/>mcp-servers/{name}"]
+    Server["MCP SERVER object"]
+    SearchTool["CORTEX_SEARCH_SERVICE_QUERY"]
+    AnalystTool["CORTEX_ANALYST_MESSAGE"]
+    AgentTool["CORTEX_AGENT_RUN"]
+    SQLTool["SYSTEM_EXECUTE_SQL"]
+    UDFTool["GENERIC (UDF / SP)"]
+
+    Dev --> JSON --> Auth --> Endpoint --> Server
+    Server --> SearchTool
+    Server --> AnalystTool
+    Server --> AgentTool
+    Server --> SQLTool
+    Server --> UDFTool

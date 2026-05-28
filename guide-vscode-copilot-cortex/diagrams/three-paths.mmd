@@ -1,0 +1,29 @@
+flowchart LR
+    User["VS Code window"]
+    Chat["GitHub Copilot Chat<br/>(Agent mode)"]
+    CLI["GitHub Copilot CLI<br/>(terminal)"]
+    Term["Integrated terminal"]
+    User --> Chat
+    User --> CLI
+    User --> Term
+
+    subgraph P1 ["Path 1 - MCP tools (Copilot Chat)"]
+        MCP[".vscode/mcp.json<br/>OAuth or PAT"]
+        MCPSrv["Snowflake-managed<br/>MCP server"]
+        Tools["Cortex Search<br/>Cortex Analyst<br/>Cortex Agents<br/>SQL exec / UDFs"]
+        MCP --> MCPSrv --> Tools
+    end
+
+    subgraph P2 ["Path 2 - Subagent skill (Copilot CLI)"]
+        Skill["subagent-cortex-code<br/>npx skills add"]
+        CoCo["Cortex Code CLI<br/>(local subprocess)"]
+        Skill --> CoCo
+    end
+
+    subgraph P3 ["Path 3 - CoCo CLI in terminal"]
+        Term2["Cortex Code CLI<br/>full skill graph"]
+    end
+
+    Chat --> P1
+    CLI --> P2
+    Term --> P3
