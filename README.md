@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-13-blue)
+![Projects](https://img.shields.io/badge/Projects-12-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -37,7 +37,6 @@ Focused utilities with `deploy_all.sql` (or `deploy.sql`) and matching teardown.
 
 | Directory | Description | Features |
 |---|---|---|
-| [tool-code-spend-controls](tool-code-spend-controls/) | Control Cortex Code spend — budgets, per-user limits, RBAC, scenario runbooks | Notebooks, Worksheets, ACCOUNT_USAGE, Budgets |
 
 ### Guides and References
 
