@@ -5,74 +5,22 @@
 
 # Connecting Claude to Snowflake: Context Over Connection
 
-The problem was never the connection. It was the missing **context** — and the wrong **direction** of data flow.
+There are several ways to put Claude in front of Snowflake data. This guide helps you pick the right one for your users, then walks you through it — and shows the small, shared foundation that makes answers accurate no matter which one you choose.
 
-This guide was rebuilt after **Snowflake Summit 26 (June 1-4, 2026)**, which reframed the entire question. Wiring a generic chat agent to Snowflake through an MCP pipe and asking it to write SQL is the slowest, most expensive, *least accurate* way to put Claude in front of enterprise data. Snowflake's own benchmarks make the case in two numbers.
+> **Just need to wire up Claude Desktop?** Jump straight to [Claude Desktop setup](governed-mcp.md#claude-desktop-setup).
 
 **Audience:** SEs walking customers through setup + customer IT admins configuring independently
 **Created:** 2026-05-06 | **Major revision:** 2026-06-15 (post-Summit 26) | **Expires:** 2026-12-31 | **Status:** ACTIVE
 
-> **No support provided.** This content is for reference only. Review and validate before applying to any production workflow. Several capabilities referenced here (CoCo Desktop, Natoma MCP gateway, Semantic Studio, Advanced Semantics) were announced at Summit 26 as preview or forward-looking — confirm GA status for your account before relying on them.
+> **No support provided.** Reference only; validate before production. This guide spans features at different maturity. Several — **CoCo Desktop, the Natoma MCP gateway, Semantic Studio** — are in **public preview, which is fair game to use**: go ahead and try them, just know they're pre-GA and may change. Each is labeled where it appears.
 
 ---
 
-## The Two Numbers
+## Start Here: Which Surface Fits Your User?
 
-| Metric | Generic agent over a pipe | Data-native + governed context | Source |
-|---|---|---|---|
-| **Accuracy** on hard structured-data questions | ~24% | **~86%** (with Cortex Sense context) | Snowflake Summit 26 benchmark |
-| **Token + time cost** (vs CoCo on equivalent work) | +51% tokens, +8% time, *lower* pass rate (65.1%) | CoCo: 72.1% on ADE-Bench | [Snowflake CoCo blog](https://www.snowflake.com/en/blog/snowflake-coco-ai-coding-agent-modern-data-stack/) |
+Decide by *who the user is*, not by protocol. Pick a row; the rest of the guide details it.
 
-Raw natural-language-to-SQL through an MCP tunnel — no grounding, regenerated every turn, the human never sees the query — answers roughly **one in four** hard questions correctly while burning **more** tokens and warehouse credits than the alternative. That is the anti-pattern this guide now steers you away from.
-
----
-
-## What Changed at Summit 26
-
-New here? Five names appear throughout this guide. Read this table once and you're oriented — each row includes a plain-English "think of it as" so you don't need to have attended Summit.
-
-| Old name (pre-Summit) | New name / model | Think of it as | Maturity |
-|---|---|---|---|
-| Snowflake Intelligence | **Snowflake CoWork** | The chat experience for business users, built into Snowflake | GA |
-| Cortex Code (a plugin) | **CoCo** | A data-aware coding agent (like Claude Code, but it knows your Snowflake) | CLI GA; Desktop GA soon |
-| *(absent)* | **Cortex Sense** | The service that feeds your business definitions to an agent at the moment it answers | GA |
-| *(absent)* | **Horizon Context** | Where your governed business definitions live (semantic views, metrics, lineage) | GA; Semantic Studio in preview |
-| Hand-rolled per-app OAuth | **Natoma MCP gateway** | One governed front door for agent tool-calls, instead of wiring OAuth per app | Announced (preview) |
-| "Connect Claude in from outside" | **Claude inside Cortex AI** | Claude models run *inside* Snowflake and power CoWork + CoCo ($200M Anthropic deal) | GA |
-
-> The CLI binary is still invoked as `cortex` and config still lives in `~/.snowflake/cortex/`. "CoCo" is the product brand for what was Cortex Code. Features marked *preview* / *announced* were disclosed at Summit 26 — confirm GA status for your account before relying on them.
-
----
-
-## The Shift: Bring the Model to the Data
-
-```mermaid
-flowchart LR
-    subgraph legacy [Legacy anti-pattern]
-        direction TB
-        L1["Generic agent + chat tunnel"] --> L2["Raw NL to SQL, no context"]
-        L2 --> L3["~24% accuracy, 2x tokens, uncontrolled cost"]
-    end
-
-    subgraph rev [Summit 26 model]
-        direction TB
-        R1["Model at the data: Claude inside Cortex AI -> CoWork / CoCo"]
-        R2["Grounded in governed context: Horizon Context + Cortex Sense -> ~86%"]
-        R3["Tool-calls governed centrally: Natoma MCP gateway"]
-    end
-
-    legacy -.->|"revolution, not evolution"| rev
-```
-
-Three principles replace "pick a connection method":
-
-1. **Run the intelligence next to the data.** Claude now runs *inside* Snowflake Cortex AI, powering CoWork and CoCo. No data egress, governed by your existing RBAC, inference inside the Snowflake perimeter.
-2. **Ground every agent in governed context.** Horizon Context defines the truth; Cortex Sense delivers it at query time. This is the mechanism behind the 24% -> 86% jump.
-3. **Govern tool access centrally.** The Natoma MCP gateway enforces identity, policy, and audit per tool-call — replacing fragile per-app OAuth plumbing.
-
----
-
-## Which Surface? (Decision by User, Not by Protocol)
+> New to the names below? **CoWork** (formerly Snowflake Intelligence) and **CoCo** (formerly Cortex Code) are defined in plain terms in the table under [Why This Guide Routes You This Way](#why-this-guide-routes-you-this-way).
 
 ```mermaid
 flowchart TD
@@ -86,11 +34,11 @@ flowchart TD
     CD -->|"Yes (recommended)"| Delegate["Claude Desktop delegates to CoCo: cortex mcp serve"]
     CD -->|"No, need native connector"| Legacy["Legacy: MCP + Cortex Agent"]
 
-    CoWork --> CtxNote["Grounded by Horizon Context + Cortex Sense"]
+    CoWork --> CtxNote["All share one foundation: a semantic view + a few verified answers"]
     CoCo --> CtxNote
     Gov --> CtxNote
     Delegate --> CtxNote
-    Legacy --> Fix["Required first: semantic view + verified queries + eval gate"]
+    Legacy --> CtxNote
 ```
 
 | Criteria | CoWork | CoCo | Governed MCP (Natoma) | Legacy MCP text-to-SQL |
@@ -102,17 +50,51 @@ flowchart TD
 | **Governance** | RBAC + Horizon Context | RBAC + envelopes + audit | Identity/policy/audit per call | RBAC + Semantic View + tool list |
 | **Guide** | [context-layer.md](context-layer.md) | [coco.md](coco.md) | [governed-mcp.md](governed-mcp.md) | [governed-mcp.md](governed-mcp.md) (legacy section) |
 
-> **One foundation, many surfaces.** Whichever column you choose, the work that makes answers accurate is the same: describe your data in business terms and save a few real questions with their correct answers (see [The Context Layer](context-layer.md)). The columns above only differ in *what sits on top*. So pick the surface that fits your users — you're not signing up for different homework by choosing one over another, and the foundation keeps getting easier as Snowflake automates more of it.
+> **One foundation, many surfaces.** Whichever column you choose, the work that makes answers accurate is the same: describe your data in business terms and save a few real questions with their correct answers (see [The Context Layer](context-layer.md)). The columns differ only in *what sits on top*. Pick the surface that fits your users — you're not signing up for different homework by choosing one over another, and the foundation keeps getting easier as Snowflake automates more of it.
 
----
-
-## Detailed Guides
+### The guides
 
 | | |
 |---|---|
-| **[The Context Layer](context-layer.md)** | The foundation **every** path shares — and it's the same work whether you pick Claude Desktop, CoCo, or CoWork, so starting with Claude Desktop costs you nothing extra. In plain terms: describe your data in business terms, save a few real questions with their correct answers, and check it. Build it once; every surface gets more accurate. |
+| **[Claude Desktop & Governed MCP](governed-mcp.md)** | **Setting up Claude Desktop? Start here.** The recommended delegate-to-CoCo path (works today, no semantic view required to begin), the Natoma MCP gateway, and — for native-connector cases — the legacy Snowflake OAuth / Entra ID External OAuth setup. |
 | **[CoCo: The Data-Native Developer Surface](coco.md)** | CoCo Desktop, Cloud Agents (Snowsight), CLI, Agent SDK, MCP server + ACP, Skills Catalog. How Claude Desktop / Claude Code delegate to CoCo via `cortex mcp serve`. Connection auth, security envelopes, profiles, and the ADE-Bench efficiency story. |
-| **[Claude Desktop & Governed MCP](governed-mcp.md)** | **Setting up Claude Desktop?** Start here for the steps. Covers the recommended delegate-to-CoCo path, the Natoma MCP gateway, Claude-inside-Cortex, and — for native-connector cases — the legacy Snowflake OAuth / Entra ID External OAuth setup. |
+| **[The Context Layer](context-layer.md)** | The shared foundation, in plain terms: describe your data, save a few real questions with their correct answers, check it. Points you to Snowflake's own learning resources for going deeper. |
+
+---
+
+## Why This Guide Routes You This Way
+
+You don't need this section to follow the steps above — it's the rationale, in case you want to understand (or explain to a stakeholder) why the surfaces and the foundation matter.
+
+### What changed at Summit 26
+
+Five names appear throughout this guide. Read this table once and you're oriented — each row includes a plain-English "think of it as."
+
+| Old name (pre-Summit) | New name / model | Think of it as | Maturity |
+|---|---|---|---|
+| Snowflake Intelligence | **Snowflake CoWork** | The chat experience for business users, built into Snowflake | GA |
+| Cortex Code (a plugin) | **CoCo** | A data-aware coding agent (like Claude Code, but it knows your Snowflake) | CLI GA; Desktop in public preview |
+| *(absent)* | **Cortex Sense** | The service that feeds your business definitions to an agent at the moment it answers | GA |
+| *(absent)* | **Horizon Context** | Where your governed business definitions live (semantic views, metrics, lineage) | GA; Semantic Studio in public preview |
+| Hand-rolled per-app OAuth | **Natoma MCP gateway** | One governed front door for agent tool-calls, instead of wiring OAuth per app | Public preview |
+| "Connect Claude in from outside" | **Claude inside Cortex AI** | Claude models run *inside* Snowflake and power CoWork + CoCo ($200M Anthropic deal) | GA |
+
+> The CLI binary is still invoked as `cortex` and config still lives in `~/.snowflake/cortex/`. "CoCo" is the product brand for what was Cortex Code. Public-preview features are usable today — labeled so you know what's pre-GA.
+
+### The two numbers
+
+| Metric | Generic agent over a pipe | Data-native + governed context | Source |
+|---|---|---|---|
+| **Accuracy** on hard structured-data questions | ~24% | **~86%** (with Cortex Sense context) | Snowflake Summit 26 benchmark |
+| **Token + time cost** (vs CoCo on equivalent work) | +51% tokens, +8% time, *lower* pass rate (65.1%) | CoCo: 72.1% on ADE-Bench | [Snowflake CoCo blog](https://www.snowflake.com/en/blog/snowflake-coco-ai-coding-agent-modern-data-stack/) |
+
+Raw natural-language-to-SQL through an MCP tunnel — no grounding, regenerated every turn, the human never sees the query — answers roughly **one in four** hard questions correctly while burning **more** tokens and warehouse credits than the alternative. That's why this guide leads with the foundation and prefers data-native surfaces.
+
+### Three principles
+
+1. **Run the intelligence next to the data.** Claude now runs *inside* Snowflake Cortex AI, powering CoWork and CoCo. No data egress, governed by your existing RBAC, inference inside the Snowflake perimeter.
+2. **Ground every agent in governed context.** Horizon Context defines the truth; Cortex Sense delivers it at query time. This is the mechanism behind the 24% -> 86% jump.
+3. **Govern tool access centrally.** The Natoma MCP gateway enforces identity, policy, and audit per tool-call — replacing fragile per-app OAuth plumbing.
 
 ---
 

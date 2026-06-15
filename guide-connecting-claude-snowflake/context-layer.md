@@ -81,27 +81,40 @@ You don't have to write it from scratch. **Semantic View Autopilot** can draft o
 
 ### 2. Add a few real questions with their correct answers
 
-Pick the 10-30 questions your analysts actually ask and pair each with the SQL that gives the right answer. When someone asks a matching question, the agent returns *your verified answer* instead of improvising. This is the single biggest accuracy win, and it's the part you most control.
+Pick the 10-30 questions your analysts actually ask and pair each with the SQL that gives the right answer (Snowflake calls these *verified queries* — literally a question plus the query you trust). When someone asks a matching question, the agent returns *your verified answer* instead of improvising. This is the single biggest accuracy win, and it's the part you most control.
 
-```yaml
-# A "verified query" is just a question + the SQL you know is correct.
-verified_queries:
-  - name: "California profit last month"
-    question: "What was the profit from California last month?"
-    sql: "SELECT SUM(profit) FROM sales WHERE state = 'CA' AND ..."
-```
-
-You don't have to write the SQL by hand: the open-source [semantic-model-generator](https://github.com/Snowflake-Labs/semantic-model-generator) app lets you ask a question, check the answer, and click **Save as verified query**. Snowsight also *suggests* verified queries based on what people actually ask. One thing to keep in mind: use specific dates ("Q1 2025") rather than "last quarter" so the saved answer stays correct over time.
+You don't have to write the SQL by hand: the open-source [semantic-model-generator](https://github.com/Snowflake-Labs/semantic-model-generator) app lets you ask a question, check the answer, and click **Save as verified query**, and Snowsight *suggests* verified queries based on what people actually ask. One tip: use specific dates ("Q1 2025") rather than "last quarter" so the saved answer stays correct over time.
 
 ### 3. Check it answers your real questions
 
 Before you let analysts loose, confirm it gets your real questions right. In Snowsight: **AI & ML » Cortex Analyst »** pick your semantic view **» Evaluations**. It runs your questions, shows an accuracy score, and points out any it got wrong so you can fix the description or add a verified query. Fix, re-check, repeat until you're comfortable — then connect.
 
-> **Going deeper (optional):** evaluations and view optimization can also be driven from SQL/CI (`EXECUTE_AI_EVALUATION`) and there are a couple of authoring details (logical column names, the required role grants) that matter at scale. None of it is needed to get started — see the [Verified Query Repository](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/verified-query-repository) and [evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst-evaluations) docs when you're ready.
-
 ### Then connect
 
 Now point Claude Desktop, CoCo, or CoWork at it. Whatever accuracy you saw in step 3 is what your users get — because every path reads the same description and the same verified answers. And this only gets easier over time: the platform is moving toward grounding agents automatically (Semantic View Autopilot drafting views, Cortex Sense assembling context at query time), so the foundation you build today keeps paying off with less effort tomorrow.
+
+---
+
+## Where to Learn This Properly
+
+Semantic modeling is a real discipline — it can become its own deep specialty, and we're not going to re-teach it here. The good news: you don't need to master it to start. Begin small (one subject area, a simple star schema, ~3 tables), lean on your data team, and use Snowflake's own resources to go as deep as you need.
+
+**Start here (hands-on):**
+
+- [Getting Started with Cortex Analyst](https://www.snowflake.com/en/developers/guides/getting-started-with-cortex-analyst/) — guided quickstart, end to end
+- [Getting Started with Snowflake Semantic Views](https://www.snowflake.com/en/developers/guides/snowflake-semantic-view/) — build one on sample data
+
+**Build and refine:**
+
+- [Overview of semantic views](https://docs.snowflake.com/en/user-guide/views-semantic/overview) and [Best practices](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-dev)
+- [Create & manage semantic views in Snowsight](https://docs.snowflake.com/en/user-guide/views-semantic/ui) (point-and-click) or [with SQL](https://docs.snowflake.com/en/sql-reference/sql/create-semantic-view)
+- [Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot) — draft a view automatically from your BI sources
+
+**Make it accurate and keep it accurate:**
+
+- [Verified Query Repository](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/verified-query-repository) — save question-and-answer pairs
+- [Cortex Analyst evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst-evaluations) — score accuracy, catch regressions (UI and `EXECUTE_AI_EVALUATION` for CI)
+- [Optimize a view from verified queries](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/analyst-optimization)
 
 ---
 
@@ -120,12 +133,9 @@ Context is the work. Everything downstream — which surface, which auth, which 
 
 ## References
 
+Hands-on learning links are in [Where to Learn This Properly](#where-to-learn-this-properly) above. Background on the concepts:
+
 - [Snowflake Horizon Context: The Governed Context Layer for AI, BI and Apps](https://www.snowflake.com/en/blog/horizon-context-governed-context/)
 - [Horizon Context | Governed Semantic Layer & Data Catalog](https://www.snowflake.com/en/product/features/horizon-context/)
 - [Open Semantic Interchange (OSI)](https://open-semantic-interchange.org/)
-- [Cortex Analyst Verified Query Repository (VQR)](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/verified-query-repository)
-- [Cortex Analyst Evaluations (`EXECUTE_AI_EVALUATION`)](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst-evaluations)
-- [Optimize a semantic view with verified queries](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/analyst-optimization)
-- [Verified query suggestions](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/verified-query-suggestions)
-- [Cortex Analyst & Semantic Views](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/semantic-model-spec)
 - [Snowflake CoWork (formerly Snowflake Intelligence)](https://www.snowflake.com/en/product/snowflake-cowork/)

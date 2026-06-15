@@ -4,6 +4,8 @@
 
 > **See also:** [The Context Layer](context-layer.md) for the grounding that makes any agent accurate, and [Governed MCP](governed-mcp.md) for the Claude Desktop / legacy paths.
 
+> **Here from Claude Desktop setup (Option C)?** You only need three things on this page: [Install the CLI](#install-the-cli), [Authentication](#authentication), and [Claude Code <-> CoCo delegation](#claude-code---coco-delegation-not-text-to-sql) (plus [Testing](#testing) to verify). The rest — Agent SDK, profiles, envelopes, Cloud Agents — is for teams building *on* CoCo and can wait.
+
 ---
 
 ## Why a Data-Native Agent Wins (Accuracy *and* Cost)
@@ -87,8 +89,11 @@ cortex connections list # Must show an active Snowflake connection
 If not installed:
 
 ```bash
+# macOS / Linux
 curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
 ```
+
+> **Windows:** the shell installer above is for macOS/Linux. On Windows, follow the platform-specific install steps in the [Cortex Code CLI docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli) (or use WSL). Verify with `cortex --version` once installed.
 
 ---
 

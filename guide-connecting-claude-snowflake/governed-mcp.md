@@ -87,9 +87,44 @@ The best way to satisfy "use Claude Desktop" *and* get accurate answers is **not
 }
 ```
 
-Add that to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) after installing the CoCo CLI and configuring a connection. Claude Desktop then exposes data-native tools (`cortex_code_agent`, `cortex_analyst_query`, catalog search) instead of one blind text-to-SQL tool. Full details — including how it beats raw text-to-SQL on both accuracy and cost — are in **[coco.md](coco.md#claude-code---coco-delegation-not-text-to-sql)**.
+Add that to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) after installing the CoCo CLI and configuring a connection. Claude Desktop then exposes data-native tools (`cortex_code_agent`, `cortex_analyst_query`, catalog search) instead of one blind text-to-SQL tool.
 
-> Choose Options A/B below only if you specifically need Claude Desktop's *native Snowflake connector* (e.g., a non-developer who can't install the CoCo CLI). Otherwise Option C is simpler and more accurate.
+> This uses the CoCo **CLI** (`cortex mcp serve`), which is **GA** — not the CoCo Desktop app. You only need the command-line tool installed.
+
+### Option C, end to end
+
+1. **Install the CoCo CLI and set up a connection** (one-time). See [coco.md → Install the CLI](coco.md#install-the-cli) and [Authentication](coco.md#authentication). Confirm it works:
+
+   ```bash
+   cortex connections list      # should show your connection
+   ```
+
+2. **Confirm the server starts** before wiring Claude Desktop:
+
+   ```bash
+   cortex mcp serve -c my_connection --bypass
+   ```
+
+   It should start and wait (it communicates over stdio). Press Ctrl-C — Claude Desktop will launch it for you once configured.
+
+3. **Add the JSON above** to `claude_desktop_config.json`, then fully quit and reopen Claude Desktop.
+
+4. **Verify inside Claude Desktop.** Open a new chat and click the tools/MCP icon — you should see the `cortex-code` server listed with tools like `cortex_code_agent` and `cortex_analyst_query`. Then test with a prompt:
+
+   > *"Using Snowflake, how many tables are in my MY_DB.MY_SCHEMA schema?"*
+
+   Claude Desktop should call a `cortex-code` tool and answer from your live account. If you see no tools, check the gotchas below.
+
+> **You don't need a semantic view to start here.** `cortex_code_agent` explores your schema directly, so you can connect Claude Desktop today and see it working. Building the foundation in [The Context Layer](context-layer.md#the-one-thing-every-path-shares) is what makes the `cortex_analyst_query` (natural-language-to-answer) experience accurate for business users — do it next, not first.
+
+| If this happens | Likely cause | Fix |
+|---|---|---|
+| No tools appear in Claude Desktop | Config not picked up | Fully quit and reopen Claude Desktop; check the JSON is valid |
+| "cortex: command not found" in logs | CLI not on PATH for the GUI app | Use the full path to `cortex` in the `command` field |
+| Tools appear but every call asks for approval | Missing `--bypass` | Add `--bypass` so Claude Desktop manages confirmations |
+| Auth/browser prompt loops | Connection not established | Run `cortex connections list`; re-auth per [coco.md](coco.md#authentication) |
+
+> Choose Options A/B below only if you specifically need Claude Desktop's *native Snowflake connector* (e.g., a non-developer who can't install the CoCo CLI). Otherwise Option C is simpler and more accurate. Background on why delegation beats raw text-to-SQL on accuracy and cost: [coco.md](coco.md#claude-code---coco-delegation-not-text-to-sql).
 
 ## Legacy MCP Path: Options A & B
 
