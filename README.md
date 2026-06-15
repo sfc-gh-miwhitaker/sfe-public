@@ -13,7 +13,7 @@ Snowflake guides for connecting AI coding assistants to Snowflake. Every project
 
 | Directory | Description | Features |
 |---|---|---|
-| [guide-connecting-claude-snowflake](guide-connecting-claude-snowflake/) | Connect Claude to Snowflake: MCP OAuth, Entra ID External OAuth, and Cortex Code plugin with profiles and experience shaping | MCP, External OAuth, Entra ID, Cortex Code Plugin, Profiles |
+| [guide-connecting-claude-snowflake](guide-connecting-claude-snowflake/) | Post-Summit-26 guide to putting Claude in front of Snowflake: context over connection. Why raw text-to-SQL is ~24% accurate, how Horizon Context + Cortex Sense reach ~86%, CoWork/CoCo surfaces, Natoma governed MCP gateway; legacy OAuth/Entra MCP demoted | CoWork, CoCo, Cortex Sense, Horizon Context, Natoma, governed MCP |
 | [guide-vscode-copilot-cortex](guide-vscode-copilot-cortex/) | Connect VS Code GitHub Copilot to Snowflake Cortex: managed MCP for Copilot Chat, subagent skill for Copilot CLI, Cortex Code CLI in the integrated terminal | Snowflake MCP, OAuth, PAT, subagent-cortex-code, Cortex Code CLI |
 
 ## Quick Start
