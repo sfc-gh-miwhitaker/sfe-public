@@ -17,7 +17,7 @@ Reference implementation for automated data quality monitoring and reporting usi
 ## Key Patterns
 - Data Metric Functions (DMF) for automated quality checks
 - Scheduled quality monitoring with TRIGGER_ON_CHANGES
-- Dynamic Tables for quality trend aggregation
+- Streams + Task for incremental quality metric computation
 - Streamlit dashboard for visual quality reporting
 - Object tagging (DATA_DOMAIN, DATA_SENSITIVITY, DATA_QUALITY_TIER)
 - Tag-based masking policy on CONFIDENTIAL columns
@@ -33,7 +33,7 @@ Reference implementation for automated data quality monitoring and reporting usi
 - Follow SFE naming conventions (SFE_ prefix for account-level objects)
 - Use QUALIFY instead of subqueries for window function filtering
 - Keep deploy_all.sql as the single entry point
-- All new objects need COMMENT = 'DEMO: ... (Expires: 2026-05-01)'
+- All new objects need COMMENT = 'DEMO: ... (Expires: 2026-11-06)'
 - DMF schedule uses TRIGGER_ON_CHANGES (not cron)
 - Allow 10 min after deploy for first DMF run to populate metrics
 - Tags: DATA_DOMAIN, DATA_SENSITIVITY, DATA_QUALITY_TIER (with ALLOWED_VALUES)

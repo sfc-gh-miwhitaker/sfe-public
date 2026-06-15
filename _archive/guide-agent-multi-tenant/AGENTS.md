@@ -1,29 +1,59 @@
-# Multi-Tenant Cortex Agent with Azure AD
+# Multi-Tenant Cortex Agent — Project Instructions
 
-Guide for building a multi-tenant customer-facing application using the Snowflake Agent
-Run API with Azure AD OAuth and Row Access Policies for per-customer data isolation.
+## Architecture
 
-## Project Structure
-- `agent_run_multitenant.md` -- Complete implementation guide (~2000 lines)
-- `diagrams.md` -- 12 Mermaid architecture diagrams
+Documentation-only reference guide (no deploy scripts, no Snowflake objects to create).
 
-## Content Principles
-- Reference architecture, not a deployable demo (no SQL scripts or deploy files)
-- React + Node.js + Azure AD + Snowflake Agent API stack
-- Production-grade patterns: rate limiting, audit logging, error handling
-- Row Access Policies enforce tenant isolation via JWT claims
+Single-file guide focused on need-to-knows and gotchas for API-driven multi-tenant agent applications. The gotchas table (Part 3) is the centerpiece.
+
+## Conventions
+
+- Placeholder syntax: `<UPPERCASE_WITH_UNDERSCORES>` for values the reader must replace
+- Shell variables: `${ACCOUNT}`, `${DB}`, `${SCHEMA}`, `${AGENT}`, `${TOKEN}`
+- SQL uses `ACCOUNTADMIN` for RAP creation, a dedicated `agent_service_role` for runtime
+- Pattern A (session variables) is the recommended default for API-driven use cases
+- All curl examples use the "with agent object" endpoint unless noted
+
+## Key Patterns
+
+```bash
+# Pattern A: Session variables (recommended)
+curl -X POST "https://${ACCOUNT}.snowflakecomputing.com/api/v2/databases/${DB}/schemas/${SCHEMA}/agents/${AGENT}:run" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -d '{"messages":[...],"variables":{"tenant_id":{"value":"X","type":"string","is_immutable_session_attribute":true}}}'
+
+# SQL: RAP referencing session variable
+SYS_CONTEXT('SNOWFLAKE$SESSION_ATTRIBUTES', 'tenant_id')
+
+# SQL: Per-tenant monitoring
+SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY;
+```
+
+## Critical Gotchas to Maintain
+
+These are the validated findings that make this guide valuable. Do not remove without re-verification:
+
+1. DEFAULT_ROLE cannot be overridden via API
+2. Code execution tool uses OWNER's privileges
+3. SYS_CONTEXT returns NULL if variable not set
+4. Mapping table must be in same database for RAP
+5. Sample values NOT masked in semantic views
+6. Budget enforcement latency up to 8 hours
+7. Thread state persists (tenant isolation risk)
+8. 15-minute timeout per request
+9. Rate limit headers NOT returned
 
 ## When Helping with This Project
-- This is a guide, not a demo -- no deploy_all.sql, no expiration, no Snowflake objects
-- Architecture: React → Azure AD (OAuth) → Node.js backend → Snowflake (RAP enforced)
-- Customer isolation uses JWT `customer_id` claim mapped to Row Access Policy
-- Two authentication paths: Azure AD OAuth for customers, PAT for internal testing
-- Agent calls use the "without agent object" inline-config approach
-- Diagrams use Mermaid syntax -- follow conventions in diagrams.md
-- The guide covers both happy path and error handling patterns
-- For key-pair JWT auth as an alternative to Azure AD OAuth or PAT, see [`guide-api-agent-context/migrate_pat_to_keypair_jwt.md`](../guide-api-agent-context/migrate_pat_to_keypair_jwt.md)
+
+- This is a reference guide — no deploy_all.sql, no app scaffold
+- All SQL/curl/Python snippets are embedded in README.md
+- Session variables pattern is the default recommendation
+- Don't claim code_execution tool is safe for multi-tenant — it uses OWNER's role
+- Don't claim budget enforcement is real-time — latency is 2-8 hours
 
 ## Related Projects
-- [`guide-api-agent-context`](../guide-api-agent-context/) -- API code snippets (PAT, OAuth, Key-Pair JWT) and migration recipes
-- [`demo-agent-multicontext`](../demo-agent-multicontext/) -- runnable demo with per-request context injection
-- [`demo-cortex-teams-agent`](../demo-cortex-teams-agent/) -- Teams / M365 Copilot integration
+
+- [`guide-agent-hardening`](../guide-agent-hardening/) — Full governance playbook (6 pillars)
+- [`guide-mcp-auth`](../guide-mcp-auth/) — MCP auth for all AI clients + multi-tenant in Part 4
+- [`guide-connecting-claude-snowflake`](../guide-connecting-claude-snowflake/) — Claude-specific auth paths
+- [`guide-external-access-playbook`](../guide-external-access-playbook/) — Network rules, secrets, OAuth
