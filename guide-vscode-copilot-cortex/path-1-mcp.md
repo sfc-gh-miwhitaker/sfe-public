@@ -15,7 +15,9 @@ GA on Snowflake: November 4, 2025. GA on VS Code: requires VS Code 1.99 or later
 - You want Copilot to call Cortex Analyst for text-to-SQL against a semantic view.
 - You want Copilot to invoke a Cortex Agent or run controlled SQL execution as a tool.
 
-If you only need natural-language Snowflake help in your editor and don't need Copilot itself to call Snowflake tools, **Path 3** (Cortex Code CLI in the terminal) is faster to set up and gives you the full CoCo skill graph.
+If you only need natural-language Snowflake help in your editor and don't need Copilot itself to call Snowflake tools, **Path 3** (CoCo CLI in the terminal) is faster to set up and gives you the full CoCo skill graph.
+
+> **Accuracy depends on the semantic view, not the connection.** The `CORTEX_ANALYST_MESSAGE` tool turns natural language into SQL using the **semantic view** you point it at — so its accuracy is set by how well that view describes your data, plus any **verified queries** you've saved. Wiring up the MCP server is the quick part; a good semantic view is what makes the answers trustworthy. It's the same foundation every path in this guide shares — see [Where to learn the semantic-view foundation](README.md#where-to-learn-the-semantic-view-foundation). You don't need it to test the connection, but you do need it before business users rely on the results.
 
 ## Prerequisites
 
@@ -24,7 +26,7 @@ If you only need natural-language Snowflake help in your editor and don't need C
 | **Snowflake** | Account with Cortex Agents enabled. Role with `CREATE MCP SERVER` in your target schema, plus the privileges below. Hostnames in the account URL must use **hyphens, not underscores** — Snowflake's MCP server has connection issues with underscored hostnames. |
 | **Snowflake — auth** | Either an OAuth security integration (recommended) or a Programmatic Access Token (PAT) with the least-privileged role. |
 | **VS Code** | Version 1.99 or later, with the GitHub Copilot Chat extension installed and signed in. Agent mode is required. |
-| **Copilot policy** | If you are on Copilot Business or Copilot Enterprise, your admin must enable the **MCP servers in Copilot** policy. Copilot Free / Pro / Pro+ users do not need this. |
+| **Copilot policy** | If you are on Copilot Business or Copilot Enterprise, your admin must enable the **MCP servers in Copilot** policy (check your GitHub organization's Copilot settings, or ask your GitHub admin). Copilot Free / Pro / Pro+ users do not need this. |
 
 Required Snowflake privileges on the MCP server's underlying tools:
 
@@ -43,6 +45,8 @@ Required Snowflake privileges on the MCP server's underlying tools:
 ## Step 1: Create the MCP server
 
 In a Snowsight worksheet, in the database and schema where the server should live:
+
+> **Want to test on day one?** You don't need a Cortex Search service or a semantic view to get started — include just the `run_select` (`SYSTEM_EXECUTE_SQL`) tool block below and you can wire up and verify the connection immediately. Add the `product_search` and `revenue_analyst` tools once those objects exist (see [the shared foundation](README.md#where-to-learn-the-semantic-view-foundation)).
 
 ```sql
 CREATE OR REPLACE MCP SERVER my_mcp
@@ -147,7 +151,13 @@ Replace `<org-account>` with the hyphenated account identifier from:
 SELECT CURRENT_ORGANIZATION_NAME() || '-' || CURRENT_ACCOUNT_NAME();
 ```
 
-In your repo (or in your user-level VS Code settings), create `.vscode/mcp.json`:
+In your repo, create `.vscode/mcp.json` (workspace config). For secrets, see the note below.
+
+> **Keep secrets out of git.** The OAuth config below contains a `client_secret`. Two safe options:
+> - **Don't commit the workspace file:** add `.vscode/mcp.json` to your `.gitignore`.
+> - **Use your user profile instead of the repo:** run **MCP: Open User Configuration** from the Command Palette (Cmd/Ctrl+Shift+P) to edit the user-profile `mcp.json`, which lives outside any repo and applies across all your workspaces.
+>
+> Better yet, the PAT option (Option B) avoids on-disk secrets entirely by prompting for the token at runtime via VS Code's `inputs` mechanism. VS Code's own MCP docs recommend not hardcoding secrets — prefer the input prompt or your user profile over a committed secret.
 
 ### Option A — OAuth config
 
@@ -292,7 +302,7 @@ A single MCP server caps at 50 tools. Split into multiple servers if you need mo
 ## References
 
 - [Snowflake-managed MCP server (docs)](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp)
-- [Snowflake Intelligence — integrate tools and data](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-intelligence/integrate-tools)
+- [Integrate tools and data (Snowflake CoWork)](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-intelligence/integrate-tools)
 - [GA release notes — Nov 4, 2025](https://docs.snowflake.com/en/release-notes/2025/other/2025-11-04-cortex-agents-mcp)
 - [GitHub Copilot Chat: extending with MCP](https://docs.github.com/en/copilot/customizing-copilot/extending-copilot-chat-with-mcp)
 - [VS Code: MCP servers](https://code.visualstudio.com/docs/copilot/customization/mcp-servers)

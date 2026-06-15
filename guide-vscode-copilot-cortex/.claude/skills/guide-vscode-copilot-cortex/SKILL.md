@@ -1,13 +1,13 @@
 ---
 name: guide-vscode-copilot-cortex
-description: "Use when a user asks how to connect VS Code with GitHub Copilot to Snowflake Cortex. Covers only generally available Snowflake and Visual Studio Code components. The skill does not document, recommend, or speculate about any unreleased product.""
+description: "Use when a user asks how to connect VS Code with GitHub Copilot (Chat or CLI) to Snowflake Cortex. Covers three paths: Snowflake-managed MCP for Copilot Chat, the subagent-cortex-code skill for the GitHub Copilot CLI, and the CoCo CLI (formerly Cortex Code) in the integrated terminal. Post-Summit-26 naming (CoCo, CoWork). Keywords: VS Code, GitHub Copilot, MCP server, OAuth, PAT, subagent, CoCo, Cortex Code, semantic view, verified queries, Cortex Analyst accuracy."
 ---
 
 # guide-vscode-copilot-cortex
 
 ## Purpose
 
-Help a customer engineer or SE pick and execute one of three generally available paths to connect VS Code's GitHub Copilot surfaces to Snowflake Cortex. The guide is strictly limited to components with public, independently verified documentation. Do not extend it with unreleased product references.
+Help a customer engineer or SE pick and execute one of three paths to connect VS Code's GitHub Copilot surfaces to Snowflake Cortex. Cite only publicly, independently verified documentation (fetch each URL anonymously; confirm 200 + content + customer-facing domain). Preview capabilities may be named only with a verified customer-facing citation and an explicit maturity label; never speculate about unreleased products.
 
 ## Architecture
 
@@ -15,9 +15,9 @@ Documentation-only guide. No deploy scripts. The three paths target different su
 
 - Path 1 → GitHub Copilot Chat (the sidebar extension, Agent mode) ← Snowflake-managed MCP
 - Path 2 → GitHub Copilot CLI (`gh copilot` in a terminal pane, a sibling product to Copilot Chat) ← `subagent-cortex-code` skill
-- Path 3 → any VS Code terminal pane ← Cortex Code CLI
+- Path 3 → any VS Code terminal pane ← CoCo CLI (formerly Cortex Code)
 
-GitHub Copilot Chat and GitHub Copilot CLI are different products. The guide is explicit about this distinction in the README, in `path-2-subagent-skill.md`, and in the FAQ.
+GitHub Copilot Chat and GitHub Copilot CLI are different products. The guide is explicit about this distinction in the README, in `path-2-subagent-skill.md`, and in the FAQ. The shared accuracy foundation across all three paths is a semantic view + verified queries (point to authoritative learning, do not re-teach).
 
 ## Key files
 
@@ -26,7 +26,7 @@ GitHub Copilot Chat and GitHub Copilot CLI are different products. The guide is 
 | `README.md` | Landing page. Three-path diagram, decision tree, comparison table, prerequisites, FAQ. |
 | `path-1-mcp.md` | Snowflake-managed MCP for Copilot Chat. SQL for `CREATE MCP SERVER`, OAuth security integration with `OAUTH_ALTERNATE_REDIRECT_URIS`, PAT fallback, `.vscode/mcp.json` for both auth options, verification queries against `ACCOUNT_USAGE.QUERY_HISTORY`. |
 | `path-2-subagent-skill.md` | `subagent-cortex-code` for the GitHub Copilot CLI. Honest framing of which Copilot product is being extended. `npx skills add` install, security envelopes (RO / RW / RESEARCH / DEPLOY), routing scope, uninstall. |
-| `path-3-coco-cli-terminal.md` | Cortex Code CLI in a VS Code terminal pane. Install, authenticate, run, useful commands, optional `cortexcode-tool` wrapper. |
+| `path-3-coco-cli-terminal.md` | CoCo CLI (formerly Cortex Code) in a VS Code terminal pane. Install (macOS/Linux/WSL + Windows native), authenticate, run, useful commands, optional `cortexcode-tool` wrapper. |
 | `AGENTS.md` | Layer-3 project conventions, gotchas, SE-only context flag. |
 | `diagrams/` | Mermaid sources mirrored from the diagrams in the rendered docs. |
 
@@ -43,9 +43,9 @@ The guide references these object types as part of Path 1 setup, but does not sh
 
 ### How to add a new path doc when a new GA component ships
 
-When a Snowflake-on-VS-Code surface goes GA and earns public corporate documentation, add it as a new path:
+When a Snowflake-on-VS-Code surface earns public, verifiable documentation, add it as a new path:
 
-1. Confirm the surface is generally available on Snowflake's side (release notes / public docs page) and on the client side (Microsoft's published Visual Studio Code stable channel docs).
+1. Confirm the surface's docs are public and customer-facing on both sides (Snowflake release notes / docs; Microsoft's published VS Code docs). Fetch the URLs anonymously. Label maturity (GA vs preview) honestly.
 2. Create `path-N-<short-name>.md` matching the existing path-doc structure:
    - One-paragraph "what this is" intro that names the exact Copilot product being extended (Chat vs. CLI matters).
    - "When to use this path vs. the others" comparison.
@@ -59,7 +59,7 @@ When a Snowflake-on-VS-Code surface goes GA and earns public corporate documenta
    - Update the three-path mermaid diagram and the decision tree.
 4. Update `AGENTS.md` if a new gotcha is cross-cutting.
 5. Update this SKILL.md `Key files` table.
-6. If the component is not generally available, do not document it in this guide.
+6. If a component's documentation cannot be verified by anonymous fetch, do not document it in this guide.
 
 ## Gotchas
 

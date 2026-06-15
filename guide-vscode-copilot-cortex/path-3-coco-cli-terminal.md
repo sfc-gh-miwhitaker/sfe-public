@@ -1,16 +1,16 @@
-# Path 3 — Cortex Code CLI in the VS Code integrated terminal
+# Path 3 — CoCo CLI in the VS Code integrated terminal
 
-The shortest path. Run the full Cortex Code CLI inside VS Code's terminal pane. Not "Copilot Chat", but Copilot Chat keeps working in the sidebar — you get both.
+The shortest path. Run the full CoCo CLI (formerly Cortex Code) inside VS Code's terminal pane. Not "Copilot Chat", but Copilot Chat keeps working in the sidebar — you get both.
 
 ## What this path is
 
-Cortex Code CLI is a generally available agentic terminal tool for Snowflake. It carries 30+ bundled Snowflake skills (Streamlit, notebooks, warehouses, dynamic tables, semantic views, Cortex Search, Cortex Agents, lineage, data quality, governance, and more), can call MCP servers, and supports custom skills, subagents, and hooks. Inside VS Code, you run it from the integrated terminal and treat it as a peer to Copilot.
+CoCo (formerly Cortex Code) is a generally available agentic terminal CLI for Snowflake. It carries 30+ bundled Snowflake skills (Streamlit, notebooks, warehouses, dynamic tables, semantic views, Cortex Search, Cortex Agents, lineage, data quality, governance, and more), can call MCP servers, and supports custom skills, subagents, and hooks. Inside VS Code, you run it from the integrated terminal and treat it as a peer to Copilot. Because it reads your schema, RBAC, and context before it acts, it's data-native — the foundation that makes its answers accurate is built into the platform, not bolted on per connection.
 
 ## When to use this path
 
-- You want the full Cortex Code experience without configuring an MCP server.
+- You want the full CoCo experience without configuring an MCP server.
 - Your team is mixed — some on Copilot Chat, some on Cursor, some on Claude Code — and you want one consistent Snowflake tool across all of them.
-- You want to use Cortex Code's bundled skills directly (`/skill list` shows them).
+- You want to use CoCo's bundled skills directly (`/skill list` shows them).
 - You want fast experimentation: no security integration, no PAT to wire into JSON, no waiting on Snowflake admins.
 
 ## Prerequisites
@@ -21,7 +21,17 @@ Cortex Code CLI is a generally available agentic terminal tool for Snowflake. It
 
 ## Step 1: Install the CLI
 
-Follow the [Cortex Code CLI install instructions](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli) for your platform. The CLI is GA.
+The CoCo CLI is GA for macOS, Linux, WSL, and Windows native. Full instructions: [Cortex Code CLI install docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli).
+
+```bash
+# macOS / Linux / WSL
+curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
+```
+
+```powershell
+# Windows native (PowerShell)
+irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
+```
 
 Verify:
 
@@ -66,9 +76,9 @@ The CLI starts a session with all bundled skills available. You can now ask it a
 | `/agents` (or `Ctrl-B`) | View running background subagents |
 | `/feedback` | Submit feedback |
 
-## Connecting Cortex Code CLI to MCP servers
+## Connecting the CoCo CLI to MCP servers
 
-Cortex Code CLI can also act as an MCP client. If you have a Snowflake-managed MCP server (Path 1), or any other MCP server, you can wire it into the CLI:
+The CoCo CLI can also act as an MCP client. If you have a Snowflake-managed MCP server (Path 1), or any other MCP server, you can wire it into the CLI:
 
 ```bash
 cortex mcp add snowflake-cortex \
@@ -99,7 +109,7 @@ cortexcode-tool --version
 cortexcode-tool "How many databases do I have in Snowflake?" --envelope RO
 ```
 
-This is useful when you want the full Cortex Code experience with the same security envelopes the subagent skill applies (RO / RW / RESEARCH / DEPLOY), without going through a coding agent intermediary. It's bonus on top of the plain `cortex` CLI, not a replacement.
+This is useful when you want the full CoCo experience with the same security envelopes the subagent skill applies (RO / RW / RESEARCH / DEPLOY), without going through a coding agent intermediary. It's bonus on top of the plain `cortex` CLI, not a replacement.
 
 ## Troubleshooting
 

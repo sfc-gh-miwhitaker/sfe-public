@@ -1,6 +1,6 @@
 # Path 2 — `subagent-cortex-code` skill in GitHub Copilot CLI
 
-The Snowflake-Labs `subagent-cortex-code` skill teaches a coding agent to detect Snowflake-shaped prompts and shell out to the local Cortex Code CLI for Snowflake-specific work. Inference stays on the agent's normal model.
+The Snowflake-Labs `subagent-cortex-code` skill teaches a coding agent to detect Snowflake-shaped prompts and shell out to the local CoCo CLI (formerly Cortex Code) for Snowflake-specific work. Inference stays on the agent's normal model.
 
 ## What this path is — and what it is not
 
@@ -11,18 +11,18 @@ The repository's GitHub Copilot install path targets the **GitHub Copilot CLI** 
 | GitHub Copilot CLI (`gh copilot`) | Terminal-based Copilot, reads the universal `~/.agents/skills/` directory | Yes — `npx skills add` installs here |
 | GitHub Copilot Chat extension (in VS Code) | Sidebar chat in VS Code with Agent mode | Not directly — extend with MCP (Path 1) or run the CLI in a terminal pane |
 
-If the customer asks for "Cortex Code-style intelligence inside the GitHub Copilot CLI", this is the right path. If they want it inside VS Code's Copilot Chat sidebar, they should use **Path 1** (MCP) or **Path 3** (Cortex Code CLI in the integrated terminal).
+If the customer asks for "CoCo-style intelligence inside the GitHub Copilot CLI", this is the right path. If they want it inside VS Code's Copilot Chat sidebar, they should use **Path 1** (MCP) or **Path 3** (CoCo CLI in the integrated terminal).
 
-You can run all of this side-by-side: GitHub Copilot CLI in one terminal pane, Copilot Chat in the sidebar, Cortex Code CLI in another pane.
+You can run all of this side-by-side: GitHub Copilot CLI in one terminal pane, Copilot Chat in the sidebar, CoCo CLI in another pane.
 
 ## When to use this path
 
-- Engineers who already use the GitHub Copilot CLI and want Snowflake operations to route to Cortex Code CLI automatically.
+- Engineers who already use the GitHub Copilot CLI and want Snowflake operations to route to the CoCo CLI automatically.
 - Teams who want a low-friction install (`npx skills add ...`) that also reaches 40+ other coding agents in one command.
 
 ## Prerequisites
 
-- **Cortex Code CLI** installed and authenticated. Verify:
+- **CoCo CLI** (formerly Cortex Code) installed and authenticated. Verify:
   ```bash
   which cortex
   cortex connections list   # must show an active connection
@@ -48,7 +48,7 @@ ls ~/.agents/skills/cortex-code/SKILL.md
 
 ## Step 2 (optional): Configure a security mode
 
-Cortex Code routing has three approval modes — `prompt` (default, asks before each route), `auto` (no prompt, audit-logged), and `envelope_only` (no prompt within an allowed envelope).
+CoCo routing has three approval modes — `prompt` (default, asks before each route), `auto` (no prompt, audit-logged), and `envelope_only` (no prompt within an allowed envelope).
 
 ```bash
 cp ~/.agents/skills/cortex-code/config.yaml.example \
@@ -88,7 +88,7 @@ To explicitly invoke the skill regardless of routing:
 
 The skill is intentionally narrow:
 
-| Routes to Cortex Code | Stays with the Copilot agent |
+| Routes to CoCo | Stays with the Copilot agent |
 |---|---|
 | Snowflake databases, warehouses, schemas, tables | Local file operations |
 | SQL written for Snowflake | General programming (Python, JS, etc.) |
@@ -97,12 +97,12 @@ The skill is intentionally narrow:
 | Data governance, RBAC, network policies in Snowflake | Git, GitHub, version control |
 | Anything where the user explicitly says "Cortex" or "Snowflake" | Infrastructure unrelated to Snowflake |
 
-This is by design. Routing everything would let the skill capture intent it cannot satisfy. The skill discovers Cortex Code's bundled skills at session start (via `cortex skill list`) and uses their trigger patterns to boost its routing scores, so it stays current as new Cortex Code skills ship.
+This is by design. Routing everything would let the skill capture intent it cannot satisfy. The skill discovers CoCo's bundled skills at session start (via `cortex skill list`) and uses their trigger patterns to boost its routing scores, so it stays current as new CoCo skills ship.
 
 ## Important caveats
 
-- **The skill exposes the prompt surface, not Cortex Code's first-class tools.** Built-in Cortex Code capabilities like `system-create-semantic-view` are not made available to Copilot directly — Copilot calls `cortex -p "..."`, which then internally chooses skills and tools. This is good enough for natural-language Snowflake operations and bad if you need fine-grained tool-by-tool control. For tool-level control, use Path 1 (MCP).
-- **Sessions are independent.** The skill maintains its own Cortex Code session per request. Long multi-turn conversations don't persist across `cortex -p` invocations the way they do inside the Cortex Code CLI itself.
+- **The skill exposes the prompt surface, not CoCo's first-class tools.** Built-in CoCo capabilities like `system-create-semantic-view` are not made available to Copilot directly — Copilot calls `cortex -p "..."`, which then internally chooses skills and tools. This is good enough for natural-language Snowflake operations and bad if you need fine-grained tool-by-tool control. For tool-level control, use Path 1 (MCP).
+- **Sessions are independent.** The skill maintains its own CoCo session per request. Long multi-turn conversations don't persist across `cortex -p` invocations the way they do inside the CoCo CLI itself.
 - **Audit logs land locally** at the path the skill's `config.yaml` points at. Inspect them for compliance review; they use HMAC-signed JSONL with hash chaining.
 - **License is not Apache 2.0.** The repo is shipped under the Snowflake Skills License. Read it before redistributing.
 
@@ -136,7 +136,7 @@ Restart the Copilot CLI session.
 
 ### "Cortex CLI not found" when the skill tries to route
 
-The skill shells out to `cortex -p "..."`. That requires the Cortex Code CLI to be installed and on PATH:
+The skill shells out to `cortex -p "..."`. That requires the CoCo CLI to be installed and on PATH:
 
 ```bash
 which cortex

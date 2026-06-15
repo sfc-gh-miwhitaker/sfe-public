@@ -16,12 +16,12 @@ flowchart LR
 
     subgraph P2 ["Path 2 - Subagent skill (Copilot CLI)"]
         Skill["subagent-cortex-code<br/>npx skills add"]
-        CoCo["Cortex Code CLI<br/>(local subprocess)"]
+        CoCo["CoCo CLI<br/>(local subprocess)"]
         Skill --> CoCo
     end
 
     subgraph P3 ["Path 3 - CoCo CLI in terminal"]
-        Term2["Cortex Code CLI<br/>full skill graph"]
+        Term2["CoCo CLI<br/>full skill graph"]
     end
 
     Chat --> P1
