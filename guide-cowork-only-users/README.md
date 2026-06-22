@@ -13,6 +13,8 @@ Pair-programmed by SE Community + Cortex Code
 
 > **No support provided.** Reference only; validate before production.
 
+> **`SNOWFLAKE_INTELLIGENCE` in SQL is correct, not outdated.** The product was renamed from "Snowflake Intelligence" to "Snowflake CoWork" but the SQL DDL identifiers have not been updated to match. Every occurrence of `SNOWFLAKE_INTELLIGENCE` in this guide — in `ALLOWED_INTERFACES`, `CREATE SNOWFLAKE INTELLIGENCE`, `GRANT USAGE ON SNOWFLAKE INTELLIGENCE`, etc. — is the current required syntax as of the documentation date.
+
 ---
 
 ## Quick Start
@@ -43,26 +45,31 @@ Jump to:
 
 ## How CoWork Access Works
 
-Snowflake ships two Cortex access roles:
+> **There is no native "CoWork-only" user type.** This is a three-part workaround: a restricted database role, a per-user interface lock, and a curated agent list. Each part is independently revocable and must be maintained separately. If any one of them is missing or reverted, users get more access than intended — silently.
 
-| Database Role | What it unlocks |
-|---|---|
-| `SNOWFLAKE.CORTEX_USER` | All Cortex features (LLM functions, Cortex Analyst, CoWork, etc.) — granted to PUBLIC by default |
-| `SNOWFLAKE.CORTEX_AGENT_USER` | Cortex Agents API only — the API that powers CoWork |
-
-For CoWork-only users, grant `CORTEX_AGENT_USER`. Do not grant `CORTEX_USER`.
+Grant `SNOWFLAKE.CORTEX_AGENT_USER` (Cortex Agents API only). Do **not** grant `SNOWFLAKE.CORTEX_USER` — that opens the full Cortex feature set. See [Cortex privilege breakdown](https://docs.snowflake.com/en/user-guide/snowflake-cortex/llm-functions#required-privileges) for the full role comparison.
 
 ### Optional: revoke broad Cortex access from all users
 
-By default, `CORTEX_USER` is granted to the `PUBLIC` role, which means every user in the account has access to all Cortex features. If you want strict control over who can use Cortex at all:
+By default, `CORTEX_USER` is granted to the `PUBLIC` role, which means every user in the account has access to all Cortex features. If you want strict control over who can use Cortex at all, three statements are required — revoking only one leaves the others in place:
 
 ```sql
 -- Revoke all-users Cortex access (optional — test in non-prod first)
 USE ROLE ACCOUNTADMIN;
+
+-- 1. Revoke the database role that gates Cortex features
 REVOKE DATABASE ROLE SNOWFLAKE.CORTEX_USER FROM ROLE PUBLIC;
+
+-- 2. Revoke imported privileges on the SNOWFLAKE database
+--    (required alongside the database role revocation)
+REVOKE IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE FROM ROLE PUBLIC;
+
+-- 3. Revoke the account-level AI function privilege
+--    (controls access to SNOWFLAKE.CORTEX.COMPLETE, AI_CLASSIFY, etc.)
+REVOKE USE AI FUNCTIONS ON ACCOUNT FROM ROLE PUBLIC;
 ```
 
-> **Before revoking from PUBLIC:** Check whether any existing notebooks, worksheets, or stored procedures call Cortex functions (`SNOWFLAKE.CORTEX.COMPLETE`, etc.). Those will break for users who no longer have `CORTEX_USER`.
+> **Before revoking from PUBLIC:** Check whether any existing notebooks, worksheets, or stored procedures call Cortex functions (`SNOWFLAKE.CORTEX.COMPLETE`, `AI_CLASSIFY`, etc.). All three revocations together lock down Cortex access completely for non-explicitly-granted roles.
 
 ---
 
@@ -129,12 +136,13 @@ GRANT DATABASE ROLE SNOWFLAKE.CORTEX_AGENT_USER TO ROLE COWORK_USER;
 -- CoWork object: lets users see the curated agent list
 GRANT USAGE ON SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT TO ROLE COWORK_USER;
 
--- Agent access: one GRANT per agent the users will see
--- Repeat this line for each agent
+-- Agent access: all three grants are required for each agent
+-- (Snowflake resolves agent permissions from the user's default role,
+-- which must have USAGE on the database and schema, not just the agent)
+GRANT USAGE ON DATABASE <db> TO ROLE COWORK_USER;
+GRANT USAGE ON SCHEMA <db>.<schema> TO ROLE COWORK_USER;
 GRANT USAGE ON AGENT <db>.<schema>.<agent_name> TO ROLE COWORK_USER;
 ```
-
-Reference file: [`sql/setup_role.sql`](sql/setup_role.sql)
 
 ---
 
@@ -164,8 +172,6 @@ ALTER USER alice SET ALLOWED_INTERFACES = (SNOWFLAKE_INTELLIGENCE);
 > **Default warehouse is required.** Without one, CoWork errors when agent tools try to run queries. The user never sees or picks the warehouse — it runs in the background.
 
 Send users to: **https://ai.snowflake.com**
-
-Reference file: [`sql/provision_user.sql`](sql/provision_user.sql)
 
 ---
 
@@ -231,8 +237,6 @@ BEGIN
 END;
 ```
 
-Reference file: [`sql/provision_bulk.sql`](sql/provision_bulk.sql)
-
 ---
 
 ## Step 5: Verification Checklist
@@ -240,7 +244,8 @@ Reference file: [`sql/provision_bulk.sql`](sql/provision_bulk.sql)
 ```sql
 -- Role has the correct grants
 SHOW GRANTS TO ROLE COWORK_USER;
--- Expected: CORTEX_AGENT_USER database role, USAGE on SNOWFLAKE INTELLIGENCE, USAGE on agent(s)
+-- Expected: CORTEX_AGENT_USER database role, USAGE on SNOWFLAKE INTELLIGENCE,
+--           USAGE on database, schema, and agent(s)
 
 -- User settings
 DESCRIBE USER alice;
@@ -256,8 +261,6 @@ SHOW GRANTS ON SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT;
 ```
 
 **End-to-end test:** Log in as a provisioned user at `https://ai.snowflake.com`. They should see the CoWork interface with the agents you granted. Navigating directly to Snowsight (`https://<account>.snowflakecomputing.com`) should be blocked.
-
-Reference file: [`sql/verify.sql`](sql/verify.sql)
 
 ---
 
@@ -285,8 +288,6 @@ USE ROLE ACCOUNTADMIN;
 DROP ROLE COWORK_USER;  -- revokes from all members automatically
 ```
 
-Reference file: [`sql/revoke_access.sql`](sql/revoke_access.sql)
-
 ---
 
 ## Gotchas
@@ -297,7 +298,8 @@ Reference file: [`sql/revoke_access.sql`](sql/revoke_access.sql)
 | CoWork object doesn't exist | Users see no agents (or all agents, depending on timing) | `CREATE SNOWFLAKE INTELLIGENCE IF NOT EXISTS SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT` |
 | Agent not added to CoWork object | Users with correct role still see no agents in the list | `ALTER SNOWFLAKE INTELLIGENCE ... ADD AGENT <db.schema.agent>` |
 | `ALLOWED_INTERFACES` not set | Users can reach Snowsight and run SQL — not actually CoWork-only | `ALTER USER <name> SET ALLOWED_INTERFACES = (SNOWFLAKE_INTELLIGENCE)` |
-| `CORTEX_USER` still on PUBLIC | Other users retain full Cortex access outside CoWork | Revoke from PUBLIC if strict isolation is required |
+| `CORTEX_USER` still on PUBLIC | Other users retain full Cortex access outside CoWork | Three revocations required — see [Optional: revoke section](#optional-revoke-broad-cortex-access-from-all-users) |
+| Partial PUBLIC revocation | `CORTEX_USER` revoked but `IMPORTED PRIVILEGES` or `USE AI FUNCTIONS` still granted — Cortex access remains | All three revocations must be applied together |
 | Bulk script run twice | Idempotent: `CREATE USER IF NOT EXISTS` and `GRANT ROLE` skip duplicates | Safe to re-run |
 | SSO account + PASSWORD set | May conflict with IdP auth flow | For SSO accounts, omit `PASSWORD` entirely in `CREATE USER` |
 

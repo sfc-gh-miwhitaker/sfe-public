@@ -28,13 +28,18 @@ GRANT DATABASE ROLE SNOWFLAKE.CORTEX_AGENT_USER TO ROLE COWORK_USER;
 GRANT USAGE ON SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT
   TO ROLE COWORK_USER;
 
--- Agent access: one grant per agent (must match what was added to CoWork object)
-GRANT USAGE ON AGENT <db>.<schema>.<agent_name> TO ROLE COWORK_USER;
+-- Agent access: all three grants are required per agent
+-- Users' default role must have USAGE on the database and schema, not just the agent object
+GRANT USAGE ON DATABASE <db> TO ROLE COWORK_USER;
+GRANT USAGE ON SCHEMA <db>.<schema> TO ROLE COWORK_USER;
+GRANT USAGE ON AGENT <db>.<schema>.<agent_name> TO ROLE COWORK_USER;   -- replace with actual agent path
 
 -- ─── 3. Optional: tighten Cortex access account-wide ─────────────────────
 -- By default CORTEX_USER is on PUBLIC, giving all users full Cortex access.
--- Uncomment only if you want strict isolation. Test in non-prod first.
+-- All three statements are needed to fully revoke. Test in non-prod first.
 -- REVOKE DATABASE ROLE SNOWFLAKE.CORTEX_USER FROM ROLE PUBLIC;
+-- REVOKE IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE FROM ROLE PUBLIC;
+-- REVOKE USE AI FUNCTIONS ON ACCOUNT FROM ROLE PUBLIC;
 
 -- ─── 4. Verify ────────────────────────────────────────────────────────────
 SHOW GRANTS TO ROLE COWORK_USER;
