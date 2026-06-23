@@ -30,7 +30,21 @@ else
   echo "[ok] pre-commit installed ($(pre-commit --version))"
 fi
 
-# -- 2. Write the global dispatcher hook --------------------------------------
+# -- 2. Ensure gitleaks is installed ------------------------------------------
+# The pre-commit config uses language: system for gitleaks to avoid Python SSL
+# download failures. gitleaks must be on PATH before hooks run.
+if command -v gitleaks &>/dev/null; then
+  echo "[ok] gitleaks $(gitleaks version) already installed"
+elif command -v brew &>/dev/null; then
+  echo "Installing gitleaks via Homebrew..."
+  brew install gitleaks
+  echo "[ok] gitleaks installed ($(gitleaks version))"
+else
+  echo "[warn] gitleaks not found and brew is not available."
+  echo "       Install manually: https://github.com/gitleaks/gitleaks#installing"
+fi
+
+# -- 3. Write the global dispatcher hook --------------------------------------
 HOOKS_DIR="${HOME}/.config/git/hooks"
 mkdir -p "${HOOKS_DIR}"
 
@@ -56,7 +70,7 @@ HOOK
 chmod +x "${HOOKS_DIR}/pre-commit"
 echo "[ok] Hook written to ${HOOKS_DIR}/pre-commit"
 
-# -- 3. Register the hooks directory with git globally ------------------------
+# -- 4. Register the hooks directory with git globally ------------------------
 git config --global core.hooksPath "${HOOKS_DIR}"
 echo "[ok] git config --global core.hooksPath ${HOOKS_DIR}"
 

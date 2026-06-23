@@ -26,12 +26,10 @@ repos:
         args: ["--baseline", ".secrets.baseline"]
         exclude: package-lock\.json|\.secrets\.baseline$
 
-  # gitleaks: second scanner; catches patterns detect-secrets misses
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.21.2
-    hooks:
-      - id: gitleaks
-
+  # gitleaks: rule-based scanner using the system binary (avoids Python SSL
+  # download issues). Requires: brew install gitleaks  OR  setup-dev.sh
+  # NOTE: do NOT use the remote repo: https://github.com/gitleaks/gitleaks
+  # entry — pre-commit's Python download hits SSL cert failures on macOS.
   # -- Standard hygiene -------------------------------------------------------
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -53,6 +51,13 @@ repos:
 
   - repo: local
     hooks:
+      # gitleaks — system binary (see note above)
+      - id: gitleaks
+        name: Detect secrets with gitleaks
+        entry: gitleaks protect --staged --redact
+        language: system
+        pass_filenames: false
+
       # Block .env files — use .env.example templates instead
       - id: block-env-files
         name: Block .env files (secrets)
