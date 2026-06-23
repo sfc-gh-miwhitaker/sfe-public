@@ -47,15 +47,17 @@ This repository implements multiple layers of secret detection:
 
 ### Setup for New Contributors
 
+Run once on your machine — covers this repo and every other git repository you work in:
+
 ```bash
-# Install pre-commit (one-time)
-pip install pre-commit
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/setup-dev.sh)
+```
 
-# Activate hooks in your local clone
-cd sfe-public
-pre-commit install
+This installs `pre-commit` and sets `git config --global core.hooksPath` so the hooks run automatically on every commit in any repo with a `.pre-commit-config.yaml`. No per-repo `pre-commit install` is needed after this.
 
-# Verify hooks are working
+To verify the hooks are active:
+
+```bash
 pre-commit run --all-files
 ```
 

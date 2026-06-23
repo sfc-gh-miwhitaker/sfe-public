@@ -1,16 +1,24 @@
 # =============================================================================
-# Root pre-commit config for the sfe-public mono-repo.
-# Runs detect-secrets, gitleaks, and policy checks across ALL sub-projects.
+# SFE pre-commit standard configuration
 #
-# Setup:  bash shared/setup-dev.sh  (installs pre-commit + gitleaks, sets core.hooksPath)
-# Manual: pre-commit run --all-files
+# Copy this file to .pre-commit-config.yaml in any repository, then generate
+# the secrets baseline:
+#
+#   cp shared/pre-commit-config-template.yaml .pre-commit-config.yaml
+#   detect-secrets scan > .secrets.baseline
+#   git add .pre-commit-config.yaml .secrets.baseline
+#   git commit -m "chore: add SFE pre-commit standard"
+#
+# One-time machine setup (if not already done):
+#   bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/setup-dev.sh)
+#
+# Manual run:  pre-commit run --all-files
 # =============================================================================
 
 repos:
-  # -- Secret detection (two independent scanners for defense-in-depth) --
-  # detect-secrets: keyword/pattern scanner with a false-positive baseline
-  # gitleaks: rule-based scanner (system binary — see local hooks below)
+  # -- Secret detection (two independent scanners for defense-in-depth) -------
 
+  # detect-secrets: keyword and pattern-based scanner with a false-positive baseline
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:
@@ -18,35 +26,34 @@ repos:
         args: ["--baseline", ".secrets.baseline"]
         exclude: package-lock\.json|\.secrets\.baseline$
 
-  # -- Standard hygiene hooks --
+  # gitleaks: second scanner; catches patterns detect-secrets misses
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  # -- Standard hygiene -------------------------------------------------------
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: \.md$
+        exclude: \.md$          # markdown uses trailing spaces for line breaks
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files
-        args: ["--maxkb=5000"]
+        args: ["--maxkb=5000"]  # block files > 5 MB
       - id: check-merge-conflict
-      - id: detect-private-key
+      - id: detect-private-key  # blocks PEM/key file content
       - id: check-case-conflict
       - id: check-symlinks
 
-  # -- Repo-specific policy checks --
+  # -- Policy checks (Snowflake / SFE specific) --------------------------------
 
   - repo: local
     hooks:
-      # gitleaks uses the system binary (brew install gitleaks) to avoid
-      # Python SSL issues when pre-commit tries to download its own copy.
-      - id: gitleaks
-        name: Detect secrets with gitleaks
-        entry: gitleaks protect --staged --redact
-        language: system
-        pass_filenames: false
-
+      # Block .env files — use .env.example templates instead
       - id: block-env-files
         name: Block .env files (secrets)
         entry: >-
@@ -54,6 +61,7 @@ repos:
         language: system
         pass_filenames: false
 
+      # Block private key files by extension
       - id: block-private-keys
         name: Block private key files
         entry: >-
@@ -61,6 +69,7 @@ repos:
         language: system
         pass_filenames: false
 
+      # Block IDE state files that contain local paths
       - id: block-cursor-state
         name: Block .cursor/ state files
         entry: >-
@@ -68,6 +77,7 @@ repos:
         language: system
         pass_filenames: false
 
+      # Block builddemo state files that embed local usernames and paths
       - id: block-builddemo-state
         name: Block .builddemo-state.json (contains local paths)
         entry: >-
@@ -75,6 +85,8 @@ repos:
         language: system
         pass_filenames: false
 
+      # Scan staged diffs for hardcoded password assignments
+      # Exclusions: placeholders, env var references, obvious fakes
       - id: scan-hardcoded-passwords
         name: Scan for hardcoded password assignments
         entry: >-
@@ -82,6 +94,7 @@ repos:
         language: system
         pass_filenames: false
 
+      # Block real Snowflake account identifiers (format: orgname-accountname.snowflakecomputing.com)
       - id: scan-snowflake-accounts
         name: Scan for Snowflake account identifiers
         entry: >-

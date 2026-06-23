@@ -8,7 +8,7 @@ USE ROLE USERADMIN;  -- USERADMIN can create/alter users; ACCOUNTADMIN also work
 
 -- ─── 1. Create the user ────────────────────────────────────────────────────
 -- SSO/SAML accounts: omit PASSWORD entirely; set MUST_CHANGE_PASSWORD = FALSE
--- Password auth: add PASSWORD = 'TempPass1!' and MUST_CHANGE_PASSWORD = TRUE
+-- Password auth: add PASSWORD = '<your_temp_password>' and MUST_CHANGE_PASSWORD = TRUE
 CREATE USER IF NOT EXISTS alice
   LOGIN_NAME            = 'alice@yourcompany.com'   -- IdP login identifier
   DISPLAY_NAME          = 'Alice Smith'

@@ -17,6 +17,22 @@ Snowflake guides for connecting AI coding assistants to Snowflake. Every project
 | [guide-cowork-only-users](guide-cowork-only-users/) | Admin runbook for provisioning users with access to only Snowflake CoWork — no Snowsight, no SQL worksheets. Covers `CORTEX_AGENT_USER` role, `ALLOWED_INTERFACES`, CoWork object setup, single user and bulk provisioning scripts, verification, and access removal | CoWork, RBAC, ALLOWED_INTERFACES, bulk provisioning |
 | [guide-vscode-copilot-cortex](guide-vscode-copilot-cortex/) | Connect VS Code GitHub Copilot to Snowflake Cortex: managed MCP for Copilot Chat, subagent skill for Copilot CLI, and the CoCo CLI (formerly Cortex Code) in the integrated terminal. Post-Summit-26, with the shared semantic-view accuracy foundation | Snowflake MCP, OAuth, PAT, subagent-cortex-code, CoCo CLI |
 
+## First-Time Setup
+
+Run once on your machine. Configures pre-commit to run automatically on every commit in **every git repository** that has a `.pre-commit-config.yaml` — no per-repo setup required after this.
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/setup-dev.sh)
+```
+
+What it does: installs `pre-commit` (if missing) and sets `git config --global core.hooksPath` to a dispatcher that runs pre-commit in any repo with a config file. Idempotent — safe to re-run.
+
+To add this protection to a repo that does not yet have a config, copy the standard template:
+```bash
+cp shared/pre-commit-config-template.yaml /path/to/repo/.pre-commit-config.yaml
+cd /path/to/repo && detect-secrets scan > .secrets.baseline
+```
+
 ## Quick Start
 
 ### Develop with AI Assistance
