@@ -39,7 +39,7 @@ When an agent genuinely must reach Snowflake data *or act on external tools* (em
 | **Centralized MCP gateway** | One governed entry point for agent tool-calls instead of per-app OAuth wiring |
 | **Identity, policy, audit per tool-call** | Verifies who requested an action, what permissions apply, whether to allow it |
 | **Non-human identity governance** | Manages credentials for agents/service identities, not just humans |
-| **100+ prebuilt MCP servers** | Verified library so teams connect tools without hand-building servers |
+| **Prebuilt MCP connectors** | Verified connectors for Atlassian, GitHub, Glean, Linear, Salesforce, Google Workspace — plus custom connector support |
 
 The payoff: users can send emails, summarize Slack, or open Jira tickets from within CoWork or CoCo — every action from a governed environment with enterprise security, permissions, observability, and policy enforcement built in. This replaces the per-app OAuth plumbing in the legacy section below.
 
@@ -143,9 +143,6 @@ CREATE OR REPLACE AGENT MY_DB.MY_SCHEMA.MY_AGENT
   COMMENT = 'Cortex Agent for MCP access'
   FROM SPECIFICATION
   $$
-  models:
-    orchestration: auto
-
   instructions:
     response: "You are a data analytics assistant. Answer questions concisely using the semantic view."
     orchestration: "Use the analyst tool for any data question grounded in the semantic view."
@@ -212,11 +209,14 @@ CREATE OR REPLACE SECURITY INTEGRATION claude_mcp_oauth
   OAUTH_CLIENT = CUSTOM
   ENABLED = TRUE
   OAUTH_CLIENT_TYPE = 'CONFIDENTIAL'
-  OAUTH_REDIRECT_URI = 'https://claude.ai/api/mcp/auth_callback'
-  OAUTH_USE_SECONDARY_ROLES = IMPLICIT;
+  OAUTH_REDIRECT_URI = 'https://claude.ai/api/mcp/auth_callback';
 ```
 
-> **Critical:** `OAUTH_USE_SECONDARY_ROLES = IMPLICIT` is required. Other values cause opaque connection failures with no useful error message.
+> **Role note:** MCP OAuth sessions use each user's `DEFAULT_ROLE` — secondary roles are not supported. Set each user's default role to the one that has USAGE on the MCP server and its tools, and ensure each user has a `DEFAULT_WAREHOUSE` set:
+> ```sql
+> ALTER USER <username> SET DEFAULT_ROLE = '<mcp_access_role>' DEFAULT_WAREHOUSE = '<warehouse_name>';
+> ```
+> Claude requests the `session:role:all` scope, which may display "secondary roles = ALL" on the consent screen — this is cosmetic only; Snowflake enforces the integration setting regardless.
 
 ### Step 2: Retrieve Client Credentials
 
@@ -231,7 +231,7 @@ Copy the `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET` from the output.
 1. Open Claude Desktop, go to **Settings / Connectors**
 2. Add the **Snowflake** connector
 3. Enter:
-   - **MCP Server URL:** `https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/mcp/servers/<DB>.<SCHEMA>.<MCP_SERVER_NAME>/sse`
+   - **MCP Server URL:** `https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/databases/<DB>/schemas/<SCHEMA>/mcp-servers/<MCP_SERVER_NAME>`
    - **Client ID** and **Client Secret** from Step 2
 4. Click **Connect** — you'll be redirected to Snowflake's OAuth consent screen
 5. After authorization, enable the agent/tool usage toggle on the connector
@@ -402,7 +402,7 @@ curl -s -X POST \
 
 | Issue | Cause | Fix |
 |---|---|---|
-| Connection fails silently (Option A) | `OAUTH_USE_SECONDARY_ROLES` not `IMPLICIT` | Set to `IMPLICIT` |
+| Session uses wrong role (Option A) | User's `DEFAULT_ROLE` lacks USAGE on MCP server/tools | `ALTER USER ... SET DEFAULT_ROLE = '<mcp_role>' DEFAULT_WAREHOUSE = '<wh>'` |
 | "does not exist or not authorized" | Role lacks USAGE on MCP server | `GRANT USAGE ON MCP SERVER ... TO ROLE ...` |
 | URL connection failure / TLS error | Underscores in org/account name | Replace `_` with `-` in hostname |
 | Token validation fails (Option B) | Issuer URL trailing slash mismatch | Exact match required |
@@ -417,7 +417,7 @@ curl -s -X POST \
 
 | Use case | URL pattern |
 |---|---|
-| Claude Desktop native connector (SSE) | `https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/mcp/servers/<DB>.<SCHEMA>.<SERVER_NAME>/sse` |
+| Claude Desktop (native Snowflake connector) | `https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/databases/<DB>/schemas/<SCHEMA>/mcp-servers/<SERVER_NAME>` |
 | REST / curl / JSON config (JSON-RPC) | `https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/databases/<DB>/schemas/<SCHEMA>/mcp-servers/<SERVER_NAME>` |
 
 **Hostname rule:** always hyphens, never underscores.

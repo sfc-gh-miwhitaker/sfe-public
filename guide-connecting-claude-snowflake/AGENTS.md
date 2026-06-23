@@ -51,7 +51,7 @@ SELECT CURRENT_ORGANIZATION_NAME() || '-' || CURRENT_ACCOUNT_NAME();
 
 ## Critical Gotchas
 
-- Legacy A/B: `OAUTH_USE_SECONDARY_ROLES = IMPLICIT` required; hostnames use hyphens not underscores
+- Legacy A: MCP OAuth sessions use `DEFAULT_ROLE` only — secondary roles not supported; set `DEFAULT_ROLE` and `DEFAULT_WAREHOUSE` per user; hostnames use hyphens not underscores
 - Legacy B: issuer URL trailing slash must match exactly; HTTP 200 doesn't mean success (check JSON-RPC `error`)
 - Snowflake MCP does NOT support DCR — `mcp-remote` auto-OAuth fails
 - Any MCP text-to-SQL path inherits the ~24% ceiling without semantic views + verified queries

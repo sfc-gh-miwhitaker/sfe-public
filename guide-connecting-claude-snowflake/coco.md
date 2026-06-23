@@ -161,7 +161,7 @@ The CoCo Agent SDK packages the production agent loop as an installable library 
 
 ```python
 import asyncio
-from cortex_code_agent_sdk import query
+from cortex_code_agent_sdk import query, AssistantMessage, CortexCodeAgentOptions
 
 async def main():
     async for message in query(
@@ -170,12 +170,12 @@ async def main():
         - Null rate for each column
         - Top 5 customers by order volume
         Summarize findings in plain English.""",
-        options={"cwd": ".", "connection": "my-connection"},
+        options=CortexCodeAgentOptions(cwd=".", connection="my-connection"),
     ):
-        if message["type"] == "assistant":
-            for block in message["content"]:
-                if block["type"] == "text":
-                    print(block["text"], end="", flush=True)
+        if isinstance(message, AssistantMessage):
+            for block in message.content:
+                if hasattr(block, "text"):
+                    print(block.text, end="", flush=True)
 
 asyncio.run(main())
 ```
@@ -217,24 +217,17 @@ Same RBAC model as Snowflake data governance — only roles with READ on the sta
 
 ## Security Envelopes and Approval Modes
 
-Each request is wrapped in a security envelope controlling what CoCo can do:
+Each request operates in one of three permission modes that control whether CoCo pauses for approval before acting:
 
-| Envelope | Allows | Blocks |
-|---|---|---|
-| **RO** | Queries, reads, exploration | Edit, Write, destructive Bash |
-| **RW** | Data modifications, DDL | Destructive shell patterns |
-| **RESEARCH** | Read access + web tools | Write operations |
-| **DEPLOY** | Deployment operations | Destructive Bash (requires confirmation) |
+| Mode | CLI indicator | Slash command | Behavior |
+|---|---|---|---|
+| **Default (Confirm)** | Blue ⏵⏵ | — | Prompts before potentially dangerous tool calls |
+| **Plan** | Orange ⏸ | `/plan` | Read-only; presents plan before any side effect |
+| **Bypass** | Red >> | `/bypass` | Auto-approves all tool calls; use only in trusted environments |
 
-| Approval mode | Behavior |
-|---|---|
-| `prompt` (default) | Shows predicted tools, asks user to approve |
-| `auto` | Auto-approves with mandatory audit logging |
-| `envelope_only` | Auto-approves, no tool prediction (faster) |
+> Press **Shift-Tab** in the CLI to cycle among modes. In MCP server mode, `--bypass` is the recommended flag so the calling client manages its own confirmation flow.
 
-For enterprise-wide enforcement, admins deploy organization policy that overrides user-level config (e.g., forcing `prompt` mode even if a user sets `auto`). See [managed settings](https://docs.snowflake.com/en/user-guide/cortex-code/managed-settings).
-
-> Verify the current envelope and approval-mode names against the [security docs](https://docs.snowflake.com/en/user-guide/cortex-code/security) for your CLI version — these have evolved across releases.
+> Verify the current mode names against the [security docs](https://docs.snowflake.com/en/user-guide/cortex-code/security) for your CLI version — these have evolved across releases.
 
 ---
 
