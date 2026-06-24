@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-4-blue)
+![Projects](https://img.shields.io/badge/Projects-5-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -17,6 +17,12 @@ Snowflake guides for connecting AI coding assistants to Snowflake. Every project
 | [guide-cowork-only-users](guide-cowork-only-users/) | Admin runbook for provisioning users with access to only Snowflake CoWork — no Snowsight, no SQL worksheets. Covers `CORTEX_AGENT_USER` role, `ALLOWED_INTERFACES`, CoWork object setup, single user and bulk provisioning scripts, verification, and access removal | CoWork, RBAC, ALLOWED_INTERFACES, bulk provisioning |
 | [guide-cortex-ai-cost-controls](guide-cortex-ai-cost-controls/) | Narrative guide to monitoring and enforcing Cortex AI spend. Teaches the mental model (see, attribute, limit, protect), then provides copy-paste SQL for all 14 usage views, tag-based attribution, per-user enforcement (native + DIY), runaway query protection, and account budgets | Cortex AI, cost monitoring, ACCOUNT_USAGE, tag attribution, budget enforcement, runaway query protection |
 | [guide-vscode-copilot-cortex](guide-vscode-copilot-cortex/) | Connect VS Code GitHub Copilot to Snowflake Cortex: managed MCP for Copilot Chat, subagent skill for Copilot CLI, and the CoCo CLI (formerly Cortex Code) in the integrated terminal. Post-Summit-26, with the shared semantic-view accuracy foundation | Snowflake MCP, OAuth, PAT, subagent-cortex-code, CoCo CLI |
+
+### Demos
+
+| Directory | Description | Features |
+|---|---|---|
+| [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) | Deployable Streamlit-in-Snowflake dashboard companion to guide-cortex-ai-cost-controls. Reads LIVE `SNOWFLAKE.ACCOUNT_USAGE` to show AI spend, attribute by cost center, manage per-user AI Function limits (simulate-only), catch runaway queries, and flag anomalies across five pages | Streamlit-in-Snowflake, Cortex AI, ACCOUNT_USAGE, simulate-only enforcement, runaway protection, budgets |
 
 ## First-Time Setup
 

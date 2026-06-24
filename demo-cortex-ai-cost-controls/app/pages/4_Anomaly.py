@@ -48,19 +48,23 @@ else:
 
 st.markdown("---")
 
-# ── Account budget context (built-in account root budget) ────────────────────
-st.subheader("Account budget")
+# ── Custom AI budget context ─────────────────────────────────────────────────
+st.subheader("AI budget")
 try:
-    hist = session.sql(
-        "SELECT * FROM TABLE(SNOWFLAKE.LOCAL.ACCOUNT_ROOT_BUDGET!GET_SPENDING_HISTORY()) "
-        "ORDER BY 1 DESC LIMIT 14"
-    ).to_pandas()
+    limit_df = session.sql(f"CALL {SCHEMA}.AI_BUDGET!GET_SPENDING_LIMIT()").to_pandas()
+    monthly_limit = float(limit_df.iloc[0, 0]) if not limit_df.empty else None
+    if monthly_limit is not None:
+        st.metric("Monthly spending limit (credits)", f"{monthly_limit:,.0f}")
+    hist = session.sql(f"CALL {SCHEMA}.AI_BUDGET!GET_SPENDING_HISTORY()").to_pandas()
     if hist.empty:
-        st.caption("Account budget has no spending history yet.")
+        st.caption(
+            "AI_BUDGET has no spending history yet. Link resources or tags to the budget "
+            "to track AI workload spend against the limit (see the guide)."
+        )
     else:
         st.dataframe(hist, use_container_width=True, hide_index=True)
 except Exception as exc:  # noqa: BLE001 — budget read is best-effort
-    st.caption(f"Account budget history unavailable from this role: {exc}")
+    st.caption(f"AI_BUDGET not available (deploy step may have been skipped): {exc}")
 
 st.markdown("**Programmatic alert pattern** (deploy as a scheduled alert):")
 st.code(

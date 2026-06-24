@@ -34,48 +34,55 @@ WITH ai_functions AS (
     WHERE h.start_time >= DATEADD('day', -90, CURRENT_DATE())
 ),
 agents AS (
-    SELECT DATE(start_time), 'Cortex Agents', user_name, token_credits
+    SELECT DATE(start_time) AS usage_day, 'Cortex Agents' AS service,
+           user_name AS user_name, token_credits AS credits
     FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY
     WHERE start_time >= DATEADD('day', -90, CURRENT_DATE())
 ),
 analyst AS (
-    SELECT DATE(start_time), 'Cortex Analyst', username, credits
+    SELECT DATE(start_time) AS usage_day, 'Cortex Analyst' AS service,
+           username AS user_name, credits AS credits
     FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_ANALYST_USAGE_HISTORY
     WHERE start_time >= DATEADD('day', -90, CURRENT_DATE())
 ),
 intelligence AS (
-    SELECT DATE(start_time), 'Snowflake Intelligence', user_name, token_credits
+    SELECT DATE(start_time) AS usage_day, 'Snowflake Intelligence' AS service,
+           user_name AS user_name, token_credits AS credits
     FROM SNOWFLAKE.ACCOUNT_USAGE.SNOWFLAKE_INTELLIGENCE_USAGE_HISTORY
     WHERE start_time >= DATEADD('day', -90, CURRENT_DATE())
 ),
 coco_cli AS (
-    SELECT DATE(usage_time), 'CoCo CLI', user_name, token_credits
+    SELECT DATE(usage_time) AS usage_day, 'CoCo CLI' AS service,
+           user_name AS user_name, token_credits AS credits
     FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
     WHERE usage_time >= DATEADD('day', -90, CURRENT_DATE())
 ),
 coco_snowsight AS (
-    SELECT DATE(usage_time), 'CoCo Snowsight', user_name, token_credits
+    SELECT DATE(usage_time) AS usage_day, 'CoCo Snowsight' AS service,
+           user_name AS user_name, token_credits AS credits
     FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
     WHERE usage_time >= DATEADD('day', -90, CURRENT_DATE())
 ),
 search AS (
-    SELECT DATE(usage_date), 'Cortex Search', CAST(NULL AS VARCHAR), credits
+    SELECT DATE(usage_date) AS usage_day, 'Cortex Search' AS service,
+           CAST(NULL AS VARCHAR) AS user_name, credits AS credits
     FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_SEARCH_DAILY_USAGE_HISTORY
     WHERE usage_date >= DATEADD('day', -90, CURRENT_DATE())
 ),
 document_ai AS (
-    SELECT DATE(start_time), 'Document AI', CAST(NULL AS VARCHAR), credits_used
+    SELECT DATE(start_time) AS usage_day, 'Document AI' AS service,
+           CAST(NULL AS VARCHAR) AS user_name, credits_used AS credits
     FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_DOCUMENT_PROCESSING_USAGE_HISTORY
     WHERE start_time >= DATEADD('day', -90, CURRENT_DATE())
 )
 SELECT usage_day, service, user_name, credits FROM ai_functions
-UNION ALL SELECT * FROM agents
-UNION ALL SELECT * FROM analyst
-UNION ALL SELECT * FROM intelligence
-UNION ALL SELECT * FROM coco_cli
-UNION ALL SELECT * FROM coco_snowsight
-UNION ALL SELECT * FROM search
-UNION ALL SELECT * FROM document_ai;
+UNION ALL SELECT usage_day, service, user_name, credits FROM agents
+UNION ALL SELECT usage_day, service, user_name, credits FROM analyst
+UNION ALL SELECT usage_day, service, user_name, credits FROM intelligence
+UNION ALL SELECT usage_day, service, user_name, credits FROM coco_cli
+UNION ALL SELECT usage_day, service, user_name, credits FROM coco_snowsight
+UNION ALL SELECT usage_day, service, user_name, credits FROM search
+UNION ALL SELECT usage_day, service, user_name, credits FROM document_ai;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- V_AI_SPEND_DAILY — top-line AI_SERVICES daily spend from METERING_DAILY_HISTORY
