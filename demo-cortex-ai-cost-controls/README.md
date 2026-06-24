@@ -13,7 +13,7 @@ An operational Streamlit-in-Snowflake dashboard that makes good on the companion
 by cost center, manages per-user limits, watches for runaway queries, and flags
 anomalies — across five pages.
 
-![The Overview page of the Cortex AI Cost Controls dashboard, showing total AI credits, daily spend trend, credits by service, and top users](docs/images/dashboard-overview.png)
+![The Overview page of the Cortex AI Cost Controls dashboard, showing total AI credits, daily spend trend, credits by service, and top users](docs/images/streamlit-screenshot.png)
 
 *The Overview page — live AI spend, daily trend, per-service and per-user breakdown.*
 
