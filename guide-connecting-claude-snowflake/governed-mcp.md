@@ -89,13 +89,28 @@ The best way to satisfy "use Claude Desktop" *and* get accurate answers is **not
 
 Add that to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) after installing the CoCo CLI and configuring a connection. Claude Desktop then exposes data-native tools (`cortex_code_agent`, `cortex_analyst_query`, catalog search) instead of one blind text-to-SQL tool.
 
-> This uses the CoCo **CLI** (`cortex mcp serve`), which is **GA** — not the CoCo Desktop app. You only need the command-line tool installed.
+> This uses the CoCo **CLI** (`cortex mcp serve`) — not the CoCo Desktop app. You only need the command-line tool installed.
+>
+> [!IMPORTANT]
+> **`cortex mcp serve` is currently `beta`-channel only — it is NOT in the current `stable` release.** A default CLI install gives you stable, where the command fails with `Unknown arguments: serve`. Install from beta first:
+> ```bash
+> # macOS / Linux / WSL
+> CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
+> ```
+> ```powershell
+> # Windows native (PowerShell)
+> $env:CORTEX_CHANNEL="beta"; irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
+> ```
+> Then confirm with `cortex mcp serve --help`. See [coco.md → Install the CLI](coco.md#install-the-cli) for commands to confirm the current stable vs. beta version.
 
 ### Option C, end to end
 
-1. **Install the CoCo CLI and set up a connection** (one-time). See [coco.md → Install the CLI](coco.md#install-the-cli) and [Authentication](coco.md#authentication). Confirm it works:
+1. **Install the CoCo CLI and set up a connection** (one-time). See [coco.md → Install the CLI](coco.md#install-the-cli) and [Authentication](coco.md#authentication). **Install from the `beta` channel** — `cortex mcp serve` is not in stable yet:
 
    ```bash
+   # macOS / Linux / WSL — Windows: $env:CORTEX_CHANNEL="beta"; irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
+   CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
+   cortex mcp serve --help      # confirm 'serve' exists (beta only)
    cortex connections list      # should show your connection
    ```
 
@@ -119,6 +134,7 @@ Add that to `~/Library/Application Support/Claude/claude_desktop_config.json` (m
 
 | If this happens | Likely cause | Fix |
 |---|---|---|
+| `Unknown arguments: serve` when starting the server | On `stable` channel — `serve` is beta-only, not yet in stable | Reinstall from beta: `CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh`; confirm with `cortex mcp serve --help` |
 | No tools appear in Claude Desktop | Config not picked up | Fully quit and reopen Claude Desktop; check the JSON is valid |
 | "cortex: command not found" in logs | CLI not on PATH for the GUI app | Use the full path to `cortex` in the `command` field |
 | Tools appear but every call asks for approval | Missing `--bypass` | Add `--bypass` so Claude Desktop manages confirmations |
