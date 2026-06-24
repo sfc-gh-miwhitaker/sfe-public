@@ -24,8 +24,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run pre-commit (detect-secrets + gitleaks + policy hooks)
+      - name: Run pre-commit (detect-secrets + policy hooks)
         uses: pre-commit/action@v3.0.1
+        env:
+          # gitleaks uses language: system (requires the brew binary locally).
+          # Skip it here — the dedicated gitleaks-full-history job below
+          # covers every push and PR using the official gitleaks action.
+          SKIP: gitleaks
 
   gitleaks-full-history:
     name: Gitleaks Full History Scan
