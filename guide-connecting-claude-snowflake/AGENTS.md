@@ -58,9 +58,3 @@ SELECT CURRENT_ORGANIZATION_NAME() || '-' || CURRENT_ACCOUNT_NAME();
 - CoCo SSO: `externalbrowser` needs existing Snowflake SSO; skills need stage READ grant
 - CoCo `cortex mcp serve` needs `--bypass` so the calling client manages confirmations
 - CoCo `cortex mcp serve` only registers when a Snowflake connection exists in `~/.snowflake/connections.toml` — NOT channel/version gated. `serve` missing / `Unknown arguments: serve` = no connection configured; fix with `cortex connections add` (verified by clean-room test 2026-06-25)
-
-## Related Projects
-
-- [`guide-mcp-auth`](../guide-mcp-auth/) — Comprehensive MCP auth for all AI clients
-- [`guide-agent-hardening`](../guide-agent-hardening/) — Agent governance playbook
-- [`guide-external-access-playbook`](../guide-external-access-playbook/) — External access patterns
