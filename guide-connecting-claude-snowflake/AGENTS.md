@@ -57,7 +57,7 @@ SELECT CURRENT_ORGANIZATION_NAME() || '-' || CURRENT_ACCOUNT_NAME();
 - Any MCP text-to-SQL path inherits the ~24% ceiling without semantic views + verified queries
 - CoCo SSO: `externalbrowser` needs existing Snowflake SSO; skills need stage READ grant
 - CoCo `cortex mcp serve` needs `--bypass` so the calling client manages confirmations
-- CoCo `cortex mcp serve` is BETA-channel only (not in current stable); install via `CORTEX_CHANNEL=beta`. `Unknown arguments: serve` = on stable
+- CoCo `cortex mcp serve` only registers when a Snowflake connection exists in `~/.snowflake/connections.toml` — NOT channel/version gated. `serve` missing / `Unknown arguments: serve` = no connection configured; fix with `cortex connections add` (verified by clean-room test 2026-06-25)
 
 ## Related Projects
 

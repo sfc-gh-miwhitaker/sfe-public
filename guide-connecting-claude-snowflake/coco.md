@@ -7,16 +7,13 @@
 > **Here from Claude Desktop setup (Option C)?** You only need three things on this page: [Install the CLI](#install-the-cli), [Authentication](#authentication), and [Claude Code <-> CoCo delegation](#claude-code---coco-delegation-not-text-to-sql) (plus [Testing](#testing) to verify). The rest — Agent SDK, profiles, envelopes, Cloud Agents — is for teams building *on* CoCo and can wait.
 
 > [!IMPORTANT]
-> **`cortex mcp serve` (MCP server mode) ships only in the `beta` channel today — it is NOT in the current `stable` release.** If you install with the default script you'll get stable, and `cortex mcp serve -c ... --bypass` fails with `Unknown arguments: serve`. To use server mode you must install from beta:
+> **`cortex mcp serve` (MCP server mode) only appears once a Snowflake connection is configured.** The CLI registers the `serve` subcommand from `~/.snowflake/connections.toml` — with no connection it is hidden, and `cortex mcp serve -c ... --bypass` silently falls through to the generic `cortex mcp` help (older builds print `Unknown arguments: serve`). This is **not** channel- or version-gated. Configure a connection first:
 > ```bash
-> # macOS / Linux / WSL
-> CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
+> cortex connections list          # any connection? if not:
+> cortex connections add           # ...add or authenticate one
+> cortex mcp serve --help          # 'serve' now appears
 > ```
-> ```powershell
-> # Windows native (PowerShell)
-> $env:CORTEX_CHANNEL="beta"; irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
-> ```
-> Then confirm with `cortex mcp serve --help`. See [Install the CLI](#install-the-cli) for commands to confirm which version each channel currently points to.
+> See [Authentication](#authentication) for connection setup.
 
 ---
 
@@ -60,7 +57,7 @@ flowchart TD
 | **Cloud Agents** | Full agentic runtime inside Snowsight — each session spins up an isolated Snowflake-managed container (shell, Python, dbt builds, web search) with no local setup | GA soon |
 | **CoCo CLI** | The `cortex` command-line agent; config in `~/.snowflake/cortex/` | GA |
 | **CoCo Agent SDK** | Installable library (TypeScript + Python) exposing the same agent loop, tools, and SQL execution CoCo uses in production | New |
-| **MCP server + ACP** | CoCo runs as an MCP server or Agent Client Protocol endpoint so other agents can delegate to it | **Beta channel only** (`cortex mcp serve`) — not yet in `stable` |
+| **MCP server + ACP** | CoCo runs as an MCP server or Agent Client Protocol endpoint so other agents can delegate to it | GA (`cortex mcp serve` — appears once a connection is configured) |
 | **Skills Catalog** | Discover, share, and reuse workflows across teams | Public preview |
 
 ---
@@ -110,31 +107,23 @@ curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
 irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
 ```
 
-> [!WARNING]
-> **MCP server mode (`cortex mcp serve`) requires the `beta` channel.** The default install above gives you `stable`, which does **not** include `serve`. For Claude Desktop / Cursor delegation (Option C), install beta instead:
+> [!IMPORTANT]
+> **MCP server mode (`cortex mcp serve`) needs a configured Snowflake connection, not a special channel.** The default install above is all you need. The `serve` subcommand only *registers* once `~/.snowflake/connections.toml` has a connection — with none, `cortex mcp serve` falls through to the generic `cortex mcp` help and looks missing. Set up a connection (see [Authentication](#authentication)), then:
 >
 > ```bash
-> # macOS / Linux / WSL — BETA channel (needed for `cortex mcp serve`)
-> CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
-> ```
->
-> ```powershell
-> # Windows native (PowerShell) — BETA channel
-> $env:CORTEX_CHANNEL="beta"; irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
+> cortex connections list      # confirm a connection exists
+> cortex mcp serve --help      # 'serve' now appears (with -c/--bypass/-m/-w)
 > ```
 
-**Confirm which version each channel currently points to** (these advance over time):
+**Confirm what you have installed** (optional — versions advance over time):
 
 ```bash
-# Latest stable and beta versions, straight from Snowflake's distribution endpoint
+# Latest published version, straight from Snowflake's distribution endpoint
 curl -fsSL https://sfc-repo.snowflakecomputing.com/cortex-code-cli/a4643c4278/stable_version.txt
-curl -fsSL https://sfc-repo.snowflakecomputing.com/cortex-code-cli/a4643c4278/beta_version.txt
 cortex --version   # what you have installed
 ```
 
-> The `beta` version is ahead of `stable`. `cortex mcp serve` is available on beta but not stable; the surest test is `cortex mcp serve --help` (see [the gotcha below](#common-gotchas)). Once `serve` appears in the stable version, the beta requirement no longer applies.
-
-> **Windows:** use the PowerShell (`install.ps1`) commands above for native Windows, or the `curl` commands under WSL. Set the channel with `$env:CORTEX_CHANNEL="beta"` (PowerShell) before running the installer. See the [Cortex Code CLI docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli) for details. Verify with `cortex --version` once installed.
+> **Windows:** use the PowerShell (`install.ps1`) commands above for native Windows, or the `curl` commands under WSL. See the [Cortex Code CLI docs](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli) for details. Verify with `cortex --version` once installed.
 
 ---
 
@@ -145,7 +134,7 @@ The most important integration for this guide: instead of pointing Claude at a r
 Run CoCo as an MCP server:
 
 > [!IMPORTANT]
-> `cortex mcp serve` is **beta-channel only** right now (not in `stable`). If you get `Unknown arguments: serve`, you're on stable — reinstall from beta first: `CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh`. See [Install the CLI](#install-the-cli).
+> If `cortex mcp serve` looks missing (it falls through to the generic `cortex mcp` help, or prints `Unknown arguments: serve`), you have **no Snowflake connection configured** — `serve` only registers when `~/.snowflake/connections.toml` has one. Run `cortex connections add` (or authenticate), then retry. Not a channel/version issue. See [Authentication](#authentication).
 
 ```bash
 cortex mcp serve -c my_connection --bypass
@@ -296,7 +285,7 @@ cortex                       # opens browser for Entra/Okta auth
 cortex connections list      # confirm active connection
 
 # Verify MCP server mode (Claude/Cursor delegation)
-# NOTE: requires beta channel — `serve` is not in the current stable release
+# NOTE: `serve` only appears once a connection is configured (cortex connections list)
 cortex mcp serve --help                      # confirm 'serve' exists
 cortex mcp serve -c my_connection --bypass   # then call from the client
 
@@ -310,7 +299,7 @@ cortex mcp serve -c my_connection --bypass   # then call from the client
 
 | Issue | Cause | Fix |
 |---|---|---|
-| `Unknown arguments: serve` (or `serve` missing from `cortex mcp --help`) | On `stable` channel — `cortex mcp serve` is beta-only, not yet in stable | Reinstall from beta: `CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh`; verify with `cortex mcp serve --help` |
+| `Unknown arguments: serve` (or `serve` missing from `cortex mcp --help`) | No Snowflake connection configured — `serve` only registers when `~/.snowflake/connections.toml` has one (not a channel/version issue) | `cortex connections add` (or authenticate), then verify with `cortex mcp serve --help` |
 | `cortex` not found | CLI not installed | Run the install script; `which cortex` |
 | Browser SSO not opening | Wrong authenticator | Set `authenticator = "externalbrowser"` in connections.toml |
 | Skills not loading | Stage READ grant missing | `GRANT READ ON STAGE ... TO ROLE ...` |

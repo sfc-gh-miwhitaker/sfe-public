@@ -31,7 +31,7 @@ flowchart TD
     Q1 -->|"External agent must reach Snowflake"| Gov["Governed MCP via Natoma gateway"]
     Q1 -->|"Must use Claude Desktop today"| CD{"Can install the cortex CLI?"}
 
-    CD -->|"Yes (recommended)"| Delegate["Claude Desktop delegates to CoCo: cortex mcp serve (beta channel)"]
+    CD -->|"Yes (recommended)"| Delegate["Claude Desktop delegates to CoCo: cortex mcp serve"]
     CD -->|"No, need native connector"| Legacy["Legacy: MCP + Cortex Agent"]
 
     CoWork --> CtxNote["All share one foundation: a semantic view + a few verified answers"]

@@ -92,26 +92,23 @@ Add that to `~/Library/Application Support/Claude/claude_desktop_config.json` (m
 > This uses the CoCo **CLI** (`cortex mcp serve`) — not the CoCo Desktop app. You only need the command-line tool installed.
 >
 > [!IMPORTANT]
-> **`cortex mcp serve` is currently `beta`-channel only — it is NOT in the current `stable` release.** A default CLI install gives you stable, where the command fails with `Unknown arguments: serve`. Install from beta first:
+> **`cortex mcp serve` only appears once you have a Snowflake connection configured.** The CLI registers the `serve` subcommand based on `~/.snowflake/connections.toml` — with no connection it is hidden, and `cortex mcp serve` silently falls through to the generic `cortex mcp` help (so it looks like the command is missing). This is **not** channel- or version-specific. Configure a connection first:
 > ```bash
-> # macOS / Linux / WSL
-> CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
+> cortex connections list          # any connection? if not, add one:
+> cortex connections add           # ...or authenticate an existing one
+> cortex mcp serve --help          # 'serve' now appears, with -c/--bypass/-m/-w
 > ```
-> ```powershell
-> # Windows native (PowerShell)
-> $env:CORTEX_CHANNEL="beta"; irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
-> ```
-> Then confirm with `cortex mcp serve --help`. See [coco.md → Install the CLI](coco.md#install-the-cli) for commands to confirm the current stable vs. beta version.
+> See [coco.md → Authentication](coco.md#authentication) for connection setup.
 
 ### Option C, end to end
 
-1. **Install the CoCo CLI and set up a connection** (one-time). See [coco.md → Install the CLI](coco.md#install-the-cli) and [Authentication](coco.md#authentication). **Install from the `beta` channel** — `cortex mcp serve` is not in stable yet:
+1. **Install the CoCo CLI and set up a connection** (one-time). See [coco.md → Install the CLI](coco.md#install-the-cli) and [Authentication](coco.md#authentication). The default install is fine — but you must configure a connection, because `cortex mcp serve` only registers once `~/.snowflake/connections.toml` has one:
 
    ```bash
-   # macOS / Linux / WSL — Windows: $env:CORTEX_CHANNEL="beta"; irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
-   CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
-   cortex mcp serve --help      # confirm 'serve' exists (beta only)
-   cortex connections list      # should show your connection
+   # macOS / Linux / WSL — Windows: irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
+   curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
+   cortex connections list      # must show a connection (add/authenticate if empty)
+   cortex mcp serve --help      # 'serve' appears once a connection exists
    ```
 
 2. **Confirm the server starts** before wiring Claude Desktop:
@@ -134,7 +131,7 @@ Add that to `~/Library/Application Support/Claude/claude_desktop_config.json` (m
 
 | If this happens | Likely cause | Fix |
 |---|---|---|
-| `Unknown arguments: serve` when starting the server | On `stable` channel — `serve` is beta-only, not yet in stable | Reinstall from beta: `CORTEX_CHANNEL=beta curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh`; confirm with `cortex mcp serve --help` |
+| `serve` missing / `Unknown arguments: serve` / falls through to generic `cortex mcp` help | No Snowflake connection configured — `serve` only registers when `~/.snowflake/connections.toml` has one (not a channel/version issue) | `cortex connections add` (or authenticate), then `cortex mcp serve --help` |
 | No tools appear in Claude Desktop | Config not picked up | Fully quit and reopen Claude Desktop; check the JSON is valid |
 | "cortex: command not found" in logs | CLI not on PATH for the GUI app | Use the full path to `cortex` in the `command` field |
 | Tools appear but every call asks for approval | Missing `--bypass` | Add `--bypass` so Claude Desktop manages confirmations |
