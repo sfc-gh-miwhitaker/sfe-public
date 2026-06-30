@@ -3,14 +3,21 @@
 
 # Working Spec: Same-Account Agent → Agent
 
-A copy-and-adapt walkthrough for the most common case — one Cortex Agent delegating to another **in the same account**. No Native App, no inter-app handshake, no RCR. These are GA primitives you can drop into a worksheet for a customer demo.
+A copy-and-adapt walkthrough for the most common case — one AI agent handing part of a question to another, where **both live in the same Snowflake account**. No installed apps, no cross-app permission setup. Everything here is production-ready (GA) and pastes straight into a Snowflake SQL worksheet (the query editor in Snowflake's web interface).
 
-> **Snippets are illustrative.** Object names, the semantic view, and the warehouse are placeholders. Substitute your own and confirm the agent-spec fields against the [current Run API schema](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-run) before a customer-facing run — the agent spec is evolving.
+> **New to Snowflake?** A quick reminder of the pieces below (full definitions in the [main guide's glossary](README.md#new-to-snowflake-read-these-words-once)):
+> - **Agent** = an AI assistant that answers by calling tools. **Tool** = one capability it can call.
+> - **Stored procedure** = a block of code saved in Snowflake that you run by name.
+> - **`EXECUTE AS OWNER`** = that code runs with its creator's permissions, so callers don't each need their own.
+> - **`DATA_AGENT_RUN`** = the built-in function that runs a named agent.
+> - **Semantic view** = a business-friendly map of your tables. **Warehouse** = the compute that runs it all.
+
+> **The code is illustrative.** The names, the semantic view, and the warehouse are placeholders — swap in your own. Snowflake's agent format is still evolving, so check the field names against the [current Run API reference](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-run) before a real run.
 
 ## The shape
 
 ```
-Parent agent  ──(generic/procedure tool)──▶  Wrapper proc (EXECUTE AS OWNER)
+Parent agent  ──(calls a tool that is really a saved procedure)──▶  Wrapper procedure (EXECUTE AS OWNER)
                                                    │
                                                    ▼
                                      DATA_AGENT_RUN('DB.SCHEMA.CHILD_AGENT', …)
@@ -19,7 +26,7 @@ Parent agent  ──(generic/procedure tool)──▶  Wrapper proc (EXECUTE AS 
                                           Child agent runs its own tools
 ```
 
-The parent never "knows" it's calling an agent. It sees a tool that takes a `message` string and returns text. The wrapper procedure is the only glue.
+The parent agent never "knows" it's calling another agent. It just sees a tool that takes a `message` (text in) and returns text (the answer out). The small wrapper procedure in the middle is the only glue holding it together.
 
 ## Step 1 — Child agent
 
@@ -50,7 +57,7 @@ CREATE OR REPLACE AGENT my_db.my_schema.market_agent
 
 ## Step 2 — Wrapper procedure (the glue)
 
-`EXECUTE AS OWNER` so the parent agent doesn't need direct grants on the child. It builds the Run API request body and calls `DATA_AGENT_RUN`.
+`EXECUTE AS OWNER` means the procedure runs with *its creator's* permissions, so the parent agent doesn't need its own access to the child. The procedure builds the request and calls `DATA_AGENT_RUN`.
 
 ```sql
 CREATE OR REPLACE PROCEDURE my_db.my_schema.run_market_agent(message STRING)
@@ -81,11 +88,11 @@ def run(session, message):
 $$;
 ```
 
-`DATA_AGENT_RUN` returns **non-streaming JSON** (the `stream` field is ignored). The proc returns that JSON string straight to the parent; the orchestration model reads it.
+`DATA_AGENT_RUN` returns the whole answer at once as JSON text (it never streams word-by-word). The procedure hands that text straight back to the parent agent, which reads it.
 
 ## Step 3 — Parent agent exposes the wrapper as a tool
 
-The child agent appears as a `generic` tool spec with a matching `procedure` resource. The `tool_spec.name` and the `tool_resources` key must match exactly.
+The parent lists the wrapper procedure as one of its tools. The tool's `name` (here `MarketAgent`) and its matching entry under `tool_resources` must be spelled *exactly* the same, or the tool silently won't fire.
 
 ```sql
 CREATE OR REPLACE AGENT my_db.my_schema.portfolio_agent
@@ -136,18 +143,18 @@ SELECT TRY_PARSE_JSON(
 ) AS resp;
 ```
 
-`create_thread_if_not_present = TRUE` (the 3rd arg) auto-creates a thread and returns its `thread_id` for follow-ups. The parent's orchestration model decides to call `MarketAgent`, the wrapper runs the child, and the child's answer flows back up.
+Passing `TRUE` as the third argument tells Snowflake to start a fresh conversation and return its ID (`thread_id`) so you can ask follow-up questions in the same thread. Behind the scenes: the parent agent decides to call `MarketAgent`, the wrapper procedure runs the child agent, and the child's answer flows back up to the parent.
 
 ## Gotchas
 
 | Issue | Fix |
 |---|---|
-| **Name mismatch** | `tool_spec.name`, the `tool_resources` key, and the `input_schema` property the parent passes must all line up. A typo means the tool silently never fires. |
-| **Single-quote escaping** | The request body is a JSON string inside a SQL string. Escape `'` → `''` (the wrapper does this). Cleaner alternative: parameterize and avoid string-building entirely. |
-| **Non-streaming only** | Both `DATA_AGENT_RUN` and `AGENT_RUN` ignore `stream` and return one JSON blob. For a token-by-token UX, call the **streaming REST API** instead of the SQL wrapper. |
-| **Don't reach for `AGENT_RUN` here** | `AGENT_RUN` (no agent object) is for ad-hoc inline configs. For agent→agent you want the **named** child via `DATA_AGENT_RUN`. |
-| **Need deterministic chaining?** | The parent's decision to call the child is LLM-driven. If you need guaranteed ordering/retries, drive `DATA_AGENT_RUN` from a **Task or stored procedure**, not from agent delegation. |
-| **Cross-account / cross-app?** | This same-account pattern has no RCR. The moment the agents live in different Native Apps, you're in [inter-app territory](README.md#3-inter-app-agents-preview--open-all-accounts): RCR, `GRANT CALLER`, and caller-grants-don't-chain apply. |
+| **Name mismatch** | The tool's `name`, its `tool_resources` key, and the input field the parent fills in must all match exactly. A typo means the tool silently never runs. |
+| **Single-quote escaping** | The request is JSON text placed inside SQL text, so any `'` must be doubled to `''` (the wrapper does this for you). Cleaner option: pass values as parameters instead of building the string by hand. |
+| **No word-by-word streaming** | Both `DATA_AGENT_RUN` and `AGENT_RUN` return the full answer in one piece. If your app needs the answer to appear as it's typed, call Snowflake's Cortex Agents web API directly instead of these SQL functions. |
+| **Don't reach for `AGENT_RUN` here** | `AGENT_RUN` is for one-off agents you define inline. For one agent calling another, use the *named*, saved child via `DATA_AGENT_RUN`. |
+| **Need predictable, repeatable behavior?** | Whether the parent calls the child is decided by an AI model, so it isn't guaranteed. If you need reliable ordering or automatic retries, run `DATA_AGENT_RUN` from a scheduled **Task** or a stored procedure instead of letting one agent freely call another. |
+| **Different accounts or installed apps?** | This same-account pattern needs no special permission setup. The moment the two agents live in separate installed apps, you enter [installed-app territory](README.md#3-agents-in-two-different-installed-apps-preview--available-to-all-accounts) — where Restricted Caller's Rights, `GRANT CALLER`, and the "permissions don't pass down the chain" rule all apply. |
 
 ## References
 

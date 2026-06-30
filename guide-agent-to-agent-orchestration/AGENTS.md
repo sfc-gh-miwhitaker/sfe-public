@@ -24,6 +24,7 @@ Two self-contained docs:
 
 ## Conventions
 
+- **Audience is new to Snowflake** — no jargon without definition. Every Snowflake/AI term gets defined once in the README glossary ("New to Snowflake? Read these words once"); the hands-on doc links back to it. New terms → add a glossary row, don't just use them inline.
 - Placeholder syntax: `<UPPERCASE_WITH_UNDERSCORES>` or `MY_DB.MY_SCHEMA.*` for values the reader replaces.
 - Label maturity honestly per layer (GA vs Preview). The created-date verification note in the README header is load-bearing — keep it.
 - Each doc self-contained; cross-links use relative markdown links.

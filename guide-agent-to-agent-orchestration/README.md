@@ -5,16 +5,46 @@
 
 # Agent-to-Agent Orchestration on Snowflake
 
-One agent calling another is not one feature — it's four different mechanisms with different maturity, security models, and failure modes. This guide tells you which one you actually need, hands you a working same-account pattern, and is honest about what isn't native yet.
+An **agent** is an AI assistant that lives in Snowflake and answers questions by reasoning and calling **tools** (run a query, search documents, call a function). **"Agent-to-agent"** simply means one agent handing part of a job to another agent — and **"orchestration"** is the behind-the-scenes coordination that makes that happen.
 
-**Audience:** SEs framing the agentic story for customers + builders wiring agents together
+There are four ways to wire one agent to another. They differ in how mature they are, how they handle security, and how they can fail. This guide picks the right one for your situation, gives you a working example, and is honest about what Snowflake can't do yet.
+
+**Audience:** anyone new to Snowflake who needs to understand or set up agents calling agents — whether you're explaining it to a customer or building it yourself. No prior Snowflake knowledge assumed.
 **Created:** 2026-06-30 | **Expires:** 2026-12-31 | **Status:** ACTIVE
 
 Pair-programmed by SE Community + Cortex Code
 
-> **No support provided.** Reference only; validate before production. This is a **fast-moving, mostly-preview area** — inter-app agents and the Natoma/MCP gateway are pre-GA and the syntax will drift. Every claim here was checked against Snowflake docs on the created date; re-verify before quoting maturity to a customer. Maturity is labeled per layer.
+> **No support provided.** Reference only; test before you rely on it in production. This is a **fast-moving area**, and some features here are **pre-release** (Snowflake calls this "Preview") — the exact commands may change. Every claim was checked against Snowflake's official docs on the created date above; re-verify before quoting it to anyone. Each section says how mature its feature is.
 
-> **The one-line answer.** Snowflake does **not** ship a proprietary agent-to-agent bus. It makes the child agent look like a *tool* — either a SQL wrapper procedure (`DATA_AGENT_RUN`) or an MCP server — and lets the parent agent's normal plan→act loop call it. "Agent → agent" and "agent → system" converge on the same two primitives.
+## New to Snowflake? Read these words once
+
+This vocabulary shows up throughout the guide. Skim the table once and the rest reads easily — you don't need to memorize it.
+
+| Term | In plain words |
+|---|---|
+| **Snowflake account** | Your company's Snowflake environment — its data, its compute, and its users. |
+| **Cortex Agent** | An AI assistant inside Snowflake that answers questions by reasoning and calling tools. |
+| **Tool** | One capability an agent can call — run a query, search documents, run a function. The agent decides when to use each one. |
+| **Orchestration** | The agent's loop of choosing which tools to use, and in what order, to answer a question. |
+| **Cortex Analyst** | A tool that turns a plain-English question into a database query. |
+| **Cortex Search** | A tool that searches documents and other free-form text. |
+| **Semantic view** | A business-friendly description of your tables (their names, key numbers, and how they connect) so the AI asks for the right thing. |
+| **Stored procedure** | A block of code saved inside Snowflake that you run by name, like a function. |
+| **Owner's rights** (`EXECUTE AS OWNER`) | The saved code runs with *its creator's* permissions, not the permissions of whoever calls it. |
+| **Warehouse** | Snowflake's compute engine. Agents and queries need one to actually run. |
+| **`DATA_AGENT_RUN`** | A built-in Snowflake function that runs a named agent from SQL. |
+| **Native App** | A packaged application installed from the Snowflake Marketplace that runs inside your own account. |
+| **Restricted Caller's Rights (RCR)** | A safety rule for installed apps: the app gets **no** access to your data unless you explicitly grant it — and only exactly what you grant. |
+| **`GRANT CALLER`** | The command an admin runs to give an installed app one of those explicit permissions. |
+| **MCP** (Model Context Protocol) | An open industry standard that lets AI agents and tools talk to each other — and to outside systems — through one consistent interface. |
+| **MCP server** | An endpoint that offers tools over MCP, so any MCP-aware app (Claude, ChatGPT, or another agent) can use them. |
+| **SPCS** (Snowpark Container Services) | Snowflake's way to run your own containerized code inside Snowflake. |
+| **CoWork** | Snowflake's chat experience for business users; it coordinates agents for you, with no wiring. |
+| **Cortex Sense** | The service that hands your business definitions to an agent at the moment it answers. |
+| **Google A2A** | Google's "Agent2Agent" — a *different*, non-Snowflake standard for agents to talk across vendors. |
+| **GA / Preview** | Maturity labels. **GA** (Generally Available) = production-ready. **Preview** = early access, may still change. |
+
+> **The one-line answer.** Snowflake has **no special "agent bus."** To make one agent call another, you make the second agent look like a **tool** that the first one can call — either through a small saved procedure (using the `DATA_AGENT_RUN` function) or through an **MCP server**. That's the whole trick. "One agent calling another" and "an agent calling an outside system" turn out to be the same move.
 
 ---
 
@@ -39,51 +69,53 @@ flowchart TD
 
 | Need | Use | Maturity |
 |---|---|---|
-| One agent delegates to another, **same account** | `generic`/`procedure` tool → owner's-rights wrapper proc → `DATA_AGENT_RUN` | **GA** primitives ([walkthrough](same-account-agent-to-agent.md)) |
+| One agent hands work to another, **in the same account** | A small saved procedure (using `DATA_AGENT_RUN`) exposed as a tool | **GA** building blocks ([walkthrough](same-account-agent-to-agent.md)) |
 | Agents across **Native Apps / data products** | Inter-app agents: RCR + `GRANT CALLER` | **Preview (Open)** — all accounts |
 | Agent reaches an **external system**, or exposes itself | MCP: `CREATE MCP SERVER` / `CREATE CUSTOM MCP SERVER` / MCP connectors | **GA** (managed server) |
 | End user **"just ask, it coordinates"** | Snowflake CoWork + Cortex Sense | **GA** |
 | Interop with **non-Snowflake** agent frameworks | MCP today; Google A2A **only via custom bridge** | No native A2A |
 
-> **One agent delegates to another, same account** is the only row most customer demos need. Start there — the [working spec](same-account-agent-to-agent.md) drops straight into a worksheet.
+> **The first row (same account) is the only one most demos need.** Start there — the [working example](same-account-agent-to-agent.md) drops straight into a Snowflake SQL worksheet.
 
 ---
 
 ## The Layers, From Inside One Agent to Across Vendors
 
-Each layer below is "make another agent look like a tool." Read only the rows you'll act on.
+Every layer below is the same idea — *make another agent look like a tool.* Read only the ones you'll actually use.
 
-### 1. Single-agent loop (GA) — the substrate
+### 1. A single agent on its own (GA) — the foundation
 
-A Cortex Agent already runs its own LLM-driven **plan → use tools → reflect** loop inside one `agent:run`. This isn't agent-to-agent, but everything else is just making *another* agent show up as a tool inside this loop. If you understand the agent's tool list, you understand orchestration.
+A Cortex Agent already runs its own loop: **plan → use a tool → look at the result → repeat** until it can answer. This isn't agent-to-agent yet, but it's the base everything builds on — every other layer just makes *another* agent show up as one more tool inside this loop. Understand an agent's list of tools and you understand orchestration.
 
-### 2. Agent calls agent, same account (GA primitives) — the real mechanism
+### 2. One agent calls another, same account (GA) — the real mechanism
 
-The actual plumbing for one agent invoking another:
+The actual plumbing for one agent calling another:
 
 1. Wrap a call to `SNOWFLAKE.CORTEX.DATA_AGENT_RUN('DB.SCHEMA.CHILD_AGENT', '<json>')` in an `EXECUTE AS OWNER` stored procedure.
 2. Expose that procedure to the parent agent as a tool (`tool_spec` `type: generic`, with a `tool_resources` entry of `type: procedure`).
 
 The parent treats the child as just another callable tool. This is the building block the Native App pattern formalizes. **Full working spec: [same-account-agent-to-agent.md](same-account-agent-to-agent.md).**
 
-> **`DATA_AGENT_RUN` vs `AGENT_RUN` — don't confuse them.** `DATA_AGENT_RUN('db.schema.agent', …)` runs a **named agent object**. `AGENT_RUN(…)` runs an **objectless** agent whose tools/model you pass inline. For agent-to-agent you almost always want `DATA_AGENT_RUN` (the child is a real, governed object). Both are GA "utility wrappers around the Cortex Agents Run API." For app integrations Snowflake recommends the **streaming REST API** over either SQL wrapper — the SQL functions always return non-streaming JSON.
+> **Two similarly named functions — don't mix them up.** `DATA_AGENT_RUN('db.schema.agent', …)` runs an agent you've already created and saved (a *named* agent). `AGENT_RUN(…)` runs a throwaway agent you define right inside the call (nothing saved). For one agent calling another, you almost always want `DATA_AGENT_RUN`, because the agent being called is a real, saved, permission-controlled object. Both are production-ready (GA) shortcuts that wrap Snowflake's underlying Cortex Agents web API. If you're building an app that needs to show the answer appear word-by-word, Snowflake suggests calling that web API directly instead — these SQL functions always return the whole answer in one piece.
 
-### 3. Inter-app agents (Preview — Open, all accounts) — the official cross-boundary story
+### 3. Agents in two different installed apps (Preview — available to all accounts)
 
-A client app's agent can call another app's agent (agent-to-agent) or use another app's MCP server (agent-to-MCP). The security model is the part that bites you:
+When the two agents live in *separate* installed apps (Native Apps), one app's agent can call the other app's agent, or use the other app's MCP server. The security model is the part that bites you.
+
+> In this section, **"consumer"** = the account (or its admin) that *installed* the app; **"provider"** = whoever published it.
 
 | What | Rule |
 |---|---|
 | Rights model | App agents run under **Restricted Caller's Rights (RCR)** — default **no access** to consumer data |
 | Cross-app access | Requires explicit **`GRANT CALLER`** from the consumer admin (database/schema/object scope) |
-| Enforcement date | **June 5, 2026** for Native App Cortex Agents — *this is now in effect*. Versions published before the cutoff are grandfathered under the old Caller's Rights model |
+| Enforcement date | **June 5, 2026** for Native App Cortex Agents — *this is now in effect*. Apps published before that date keep working under the older, looser rules (they're "grandfathered") |
 | MCP-in-app limit | App-created **managed** MCP servers are restricted to **app-owned tools** — no `SYSTEM_EXECUTE_SQL`, no cross-app tools |
 
-> **Design-review landmine: caller grants do NOT chain.** When a parent agent calls a child agent's owner's-rights wrapper procedure, the wrapper **resets the caller context**. Each RCR agent's caller-grant requirement is evaluated *independently* — the child agent's access to consumer data depends on grants made directly to *its own* app, not on what the parent app was granted. Teams routinely assume grants flow through the chain. They don't. Flag this in any inter-app design.
+> **Design-review landmine: permissions don't pass down the chain.** Plain version: if agent A calls agent B, the data access you granted to **A does not flow to B** — you must grant B its own access directly. The technical reason: the call hops through a saved procedure that runs with *its own* identity (owner's rights), which resets who's asking. So each agent's permission requirement (RCR) is checked on its own. Teams routinely assume a grant to the first app covers the whole chain. It doesn't. Call this out in any cross-app design.
 
-### 4. MCP as the interop fabric (GA) — the strategic direction
+### 4. MCP — the shared connector (GA) — how agents reach other systems and each other
 
-Snowflake leans on **MCP**, not a proprietary bus, for cross-system orchestration:
+Snowflake leans on the **MCP** open standard, not a private Snowflake-only mechanism, to connect across systems:
 
 | Object | What it wraps | When |
 |---|---|---|
@@ -93,31 +125,31 @@ Snowflake leans on **MCP**, not a proprietary bus, for cross-system orchestratio
 
 Because an agent can be *wrapped as* an MCP tool **and** *consume* MCP tools, "agent → agent" and "agent → system" collapse into one pattern. Any MCP-compatible client — Claude, ChatGPT, Cursor, or another Cortex agent — can call a Snowflake agent through the managed endpoint.
 
-> **New gotcha the layer adds: max recursion depth = 10.** An external client → Cortex Agent (via MCP) → another MCP server → back into a Cortex Agent is a circular path. Snowflake hard-caps recursion at **10 invocations** to stop unbounded, expensive loops. Design tool graphs so they don't cycle.
+> **A gotcha this layer adds: loops are capped at 10 hops.** If an outside app calls a Snowflake agent, which calls another MCP server, which calls back into an agent… you can accidentally create an endless circle that burns compute and money. Snowflake stops any such chain at **10 calls deep**. Make sure your tools don't end up calling each other in a circle.
 
-### 5. CoWork (GA) — the productized end-user layer
+### 5. CoWork (GA) — what business users actually see
 
-**Snowflake CoWork** is the packaged experience: a personal agent that uses multi-agent orchestration + **Cortex Sense** to decompose a request and coordinate specialist agents behind the scenes — no manual agent selection. App-created agents and managed MCP tools surface here automatically. This is the "we orchestrate for you" answer for knowledge workers; layers 2–4 are the builder plumbing underneath it.
+**Snowflake CoWork** is the finished product for non-technical users: a personal assistant that quietly breaks a request into pieces and coordinates the right specialist agents behind the scenes (using **Cortex Sense** for business context) — the user never picks an agent or sees any wiring. Agents and MCP tools you've set up show up here automatically. This is the "Snowflake coordinates it for you" answer for business users; layers 2–4 are the plumbing underneath that makes it work.
 
 ---
 
-## What Is NOT Native Yet (Be Honest With Customers)
+## What Is NOT Possible on Snowflake Alone Yet (Be Honest)
 
 | Gap | Reality |
 |---|---|
-| **Google A2A protocol** | No native Cortex A2A endpoint. Snowflake doesn't *expose* A2A. Bridging exists only via custom patterns — wrap a Cortex agent behind an A2A Agent Card server, or point Microsoft AI Foundry's A2A tool at a Cortex endpoint. Foundry can *consume*; Snowflake won't *serve* A2A. |
-| **The `AGENT_RUN()` "no tool execution" claim** | A practitioner write-up reported child agents invoked through the SQL `AGENT_RUN()` path "show intent to query but never execute tools." This is **not** a documented limitation — treat it as a thing to **validate in a POC**, not a fact. The supported, working path is the **wrapper-procedure + `DATA_AGENT_RUN`** pattern in this guide. |
-| **Deterministic chaining** | The managed agent loop is LLM-driven and can be non-deterministic. When you need failures to surface predictably (retries, ordering, idempotency), orchestrate with **Tasks / stored procedures** calling `DATA_AGENT_RUN`, not agent-to-agent delegation. |
-| **Code-first multi-agent control** | If a customer wants explicit routing instead of the managed loop, point them at the Snowflake-Labs **`orchestration-framework`** (Agent Gateway) OSS project. |
+| **Google's A2A protocol** | Snowflake has no built-in way to *speak* Google's "Agent2Agent" protocol. You can still bridge it with custom code — wrap a Snowflake agent so it looks like an A2A agent to the outside world, or point Microsoft AI Foundry's A2A feature at Snowflake. Foundry can *call into* Snowflake; Snowflake won't *answer* A2A on its own. |
+| **The `AGENT_RUN()` "no tool execution" claim** | One practitioner's write-up reported that agents called through the `AGENT_RUN()` path "show intent to query but never actually run their tools." This is **not** something Snowflake documents — treat it as something to **test in a small proof-of-concept**, not a confirmed fact. The path proven to work is the saved-procedure + `DATA_AGENT_RUN` pattern in this guide. |
+| **Guaranteed step-by-step reliability** | An agent's decisions are driven by an AI model, so they aren't perfectly repeatable. When you need predictable behavior (automatic retries, guaranteed ordering, never running the same step twice), drive `DATA_AGENT_RUN` from a scheduled **Task** or a stored procedure instead of letting one agent freely delegate to another. |
+| **Hand-coded control over routing** | If you want to write the routing logic yourself instead of trusting the AI to coordinate, look at Snowflake-Labs' open-source **`orchestration-framework`** (Agent Gateway) project. |
 
 ---
 
-## How to Frame It in a Customer Meeting
+## How to Explain This in One Minute
 
-1. **There's no agent bus — there's a tool list.** Every path makes the child agent a callable tool. This is simpler than customers expect and reuses the governance they already have.
-2. **Same account? It's GA today.** `DATA_AGENT_RUN` in an owner's-rights proc, exposed as a tool. Demo-ready now — see the [working spec](same-account-agent-to-agent.md).
-3. **Across apps/vendors? It's MCP + RCR, and it's mostly preview.** Lead with the security model (RCR, `GRANT CALLER`, grants-don't-chain) because that's where designs go wrong, not the syntax.
-4. **End users? CoWork hides all of it.** The plumbing above is for builders; business users get CoWork + Cortex Sense.
+1. **There's no "agent network" — just a list of tools.** Every approach makes the second agent look like one more tool the first can call. It's simpler than people expect, and it reuses the permissions you already have.
+2. **Same account? It works in production today.** Save a small procedure that calls `DATA_AGENT_RUN`, then list it as a tool. Ready to demo now — see the [working example](same-account-agent-to-agent.md).
+3. **Across separate apps or vendors? Lead with security, not syntax.** The whole thing hinges on permissions — who's allowed to touch what, and the fact that those permissions don't pass down the chain (see layer 3). That's where designs go wrong.
+4. **Business users see none of this.** CoWork hides all the plumbing; people just ask their question.
 
 ---
 
