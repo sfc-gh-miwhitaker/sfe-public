@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-6-blue)
+![Projects](https://img.shields.io/badge/Projects-7-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -14,6 +14,7 @@ Snowflake guides for connecting AI coding assistants to Snowflake. Every project
 | Directory | Description | Features |
 |---|---|---|
 | [guide-agent-to-agent-orchestration](guide-agent-to-agent-orchestration/) | Which mechanism to use when one Cortex Agent calls another: same-account wrapper + `DATA_AGENT_RUN`, inter-app agents (RCR + `GRANT CALLER`), MCP as the interop fabric, CoWork. Honest about what isn't native (no Google A2A). Includes a working same-account agent→agent spec and the caller-grants-don't-chain gotcha | Cortex Agents, DATA_AGENT_RUN, inter-app agents, RCR, MCP, CoWork |
+| [guide-cortex-agent-versioning](guide-cortex-agent-versioning/) | How to version Cortex Agents with GitHub: the commit-based model (`LIVE` → `VERSION$N` → alias → default), iterate-in-Snowflake vs Git-driven compared, native Git import (`ADD VERSION FROM @repo/...`), promote/rollback, and example CI/CD. Ships a runnable ORDERS agent and the COMMIT-destroys-LIVE gotcha | Cortex Agents, agent versioning, GitHub, Git integration, CI/CD, promote/rollback |
 | [guide-connecting-claude-snowflake](guide-connecting-claude-snowflake/) | Post-Summit-26 guide to putting Claude in front of Snowflake: context over connection. Why raw text-to-SQL is ~24% accurate, how Horizon Context + Cortex Sense reach ~86%, CoWork/CoCo surfaces, Natoma governed MCP gateway; legacy OAuth/Entra MCP demoted | CoWork, CoCo, Cortex Sense, Horizon Context, Natoma, governed MCP |
 | [guide-cowork-only-users](guide-cowork-only-users/) | Admin runbook for provisioning users with access to only Snowflake CoWork — no Snowsight, no SQL worksheets. Covers `CORTEX_AGENT_USER` role, `ALLOWED_INTERFACES`, CoWork object setup, single user and bulk provisioning scripts, verification, and access removal | CoWork, RBAC, ALLOWED_INTERFACES, bulk provisioning |
 | [guide-cortex-ai-cost-controls](guide-cortex-ai-cost-controls/) | Narrative guide to monitoring and enforcing Cortex AI spend. Teaches the mental model (see, attribute, limit, protect), then provides copy-paste SQL for all 14 usage views, tag-based attribution, per-user enforcement (native + DIY), runaway query protection, and account budgets | Cortex AI, cost monitoring, ACCOUNT_USAGE, tag attribution, budget enforcement, runaway query protection |

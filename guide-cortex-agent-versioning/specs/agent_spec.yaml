@@ -1,0 +1,41 @@
+# =============================================================================
+# agent_spec.yaml — The source-of-truth agent specification
+# Pair-programmed by SE Community + Cortex Code
+#
+# In the Git-driven model, THIS FILE is the truth. You edit it, open a PR,
+# review the diff, merge, and let Snowflake import it as a new immutable
+# version (see ../sql/04_git_driven_import.sql and ../github-actions/).
+#
+# The file name MUST be exactly agent_spec.yaml — Snowflake copies only that
+# file from the stage when creating a version FROM @repo/... .
+#
+# NOTE ON FULLY-QUALIFIED NAMES: tool_resources must reference the semantic
+# view in the target account. Keep it fully qualified so imports are portable.
+# =============================================================================
+
+models:
+  # 'auto' lets Snowflake choose an available model (portable across regions).
+  # Pin a specific model name only when you have a concrete reason to.
+  orchestration: auto
+
+orchestration:
+  budget:
+    seconds: 30
+    tokens: 16000
+
+instructions:
+  response: "Answer in one sentence. Lead with the number, then the region."
+  orchestration: "Always call query_orders before answering. Never guess."
+  sample_questions:
+    - question: "What is total revenue by region?"
+    - question: "Which region had the highest revenue?"
+
+tools:
+  - tool_spec:
+      type: cortex_analyst_text_to_sql
+      name: query_orders
+      description: "Query the ORDERS semantic view for revenue and counts."
+
+tool_resources:
+  query_orders:
+    semantic_view: AGENT_VERSIONING_DEMO.DEMO.ORDERS_SV

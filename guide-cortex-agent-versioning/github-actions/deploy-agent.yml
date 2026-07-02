@@ -1,0 +1,102 @@
+# =============================================================================
+# deploy-agent.yml — EXAMPLE GitHub Actions workflow (reference, not wired)
+# Pair-programmed by SE Community + Cortex Code
+#
+# WHAT THIS SHOWS: the Git-driven promotion pattern as CI/CD. On a release tag,
+# Snowflake fetches the merged spec from this repo and creates a new immutable
+# agent version, then repoints the `production` alias and default at it.
+#
+# HOW TO USE: copy this file to `.github/workflows/deploy-agent.yml` in your
+# repo, set the repository secrets listed below, and adjust names/paths.
+# It is intentionally NOT placed under .github/workflows/ in this guide so it
+# does not run inside the monorepo.
+#
+# AUTH MODEL: Snowflake CLI key-pair auth. The GitHub runner authenticates to
+# Snowflake with a service user + private key. Store the private key and
+# account details as GitHub Actions secrets — never in the repo.
+#
+# Required repository secrets:
+#   SNOWFLAKE_ACCOUNT        e.g. myorg-myaccount
+#   SNOWFLAKE_USER           service user with MODIFY on the agent
+#   SNOWFLAKE_PRIVATE_KEY    PEM contents of the key-pair private key
+#   SNOWFLAKE_ROLE           role that owns / can modify the agent
+#   SNOWFLAKE_WAREHOUSE      warehouse for the session
+# =============================================================================
+
+name: Deploy Cortex Agent version
+
+on:
+  push:
+    tags:
+      - "agent-v*"        # e.g. push tag agent-v2.1 to release
+
+# Least privilege for the workflow token; Snowflake auth is via secrets.
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-agent-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AGENT_DB: AGENT_VERSIONING_DEMO
+      AGENT_SCHEMA: DEMO
+      AGENT_NAME: ORDERS_AGENT
+      GIT_REPO_OBJECT: agent_repo          # the GIT REPOSITORY created in 04
+      SPEC_PATH: specs                      # folder holding agent_spec.yaml
+    steps:
+      - name: Check out (spec lives here for review/diff)
+        uses: actions/checkout@v4
+
+      - name: Install Snowflake CLI
+        run: pip install --upgrade snowflake-cli-labs
+
+      - name: Configure Snowflake connection (key-pair auth)
+        run: |
+          mkdir -p ~/.snowflake
+          printf '%s' "${SNOWFLAKE_PRIVATE_KEY}" > ~/.snowflake/rsa_key.p8
+          cat > ~/.snowflake/config.toml <<'TOML'
+          [connections.ci]
+          account = "env:SNOWFLAKE_ACCOUNT"
+          user = "env:SNOWFLAKE_USER"
+          role = "env:SNOWFLAKE_ROLE"
+          warehouse = "env:SNOWFLAKE_WAREHOUSE"
+          authenticator = "SNOWFLAKE_JWT"
+          private_key_file = "~/.snowflake/rsa_key.p8"
+          TOML
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+
+      - name: Derive tag name
+        id: tag
+        run: echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch repo into Snowflake and import a version from this tag
+        run: |
+          snow sql -c ci -q "
+            ALTER GIT REPOSITORY ${AGENT_DB}.${AGENT_SCHEMA}.${GIT_REPO_OBJECT} FETCH;
+            ALTER AGENT ${AGENT_DB}.${AGENT_SCHEMA}.${AGENT_NAME}
+              ADD VERSION FROM @${GIT_REPO_OBJECT}/tags/${{ steps.tag.outputs.name }}/${SPEC_PATH}
+              COMMENT = 'CI import from tag ${{ steps.tag.outputs.name }}';
+          "
+
+      # Promotion is deliberately a SEPARATE, manual gate in many teams.
+      # Uncomment to auto-promote the newest committed version.
+      # DEFAULT_VERSION accepts the LAST shortcut, so unversioned callers can
+      # follow the newest commit without knowing its VERSION$N.
+      # - name: Promote latest to default
+      #   run: |
+      #     snow sql -c ci -q "
+      #       ALTER AGENT ${AGENT_DB}.${AGENT_SCHEMA}.${AGENT_NAME}
+      #         SET DEFAULT_VERSION = LAST;
+      #     "
+      # NOTE: to move the `production` ALIAS you need the concrete VERSION$N
+      # (SET ALIAS does not accept the LAST shortcut). Query it first, e.g.:
+      #   snow sql -c ci -q "SHOW VERSIONS IN AGENT ..." then MODIFY VERSION VERSION$N SET ALIAS = production;
