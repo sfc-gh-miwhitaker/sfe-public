@@ -111,6 +111,12 @@ Raw natural-language-to-SQL through an MCP tunnel — no grounding, regenerated 
 
 ---
 
+## Related guides
+
+- **[Redirect Claude Code Inference to Cortex](../guide-claude-code-cortex-redirect/README.md)** — Already have Claude Code deployed and want to route all its inference through Snowflake? That guide covers `ANTHROPIC_BASE_URL` setup, SDK patterns, and org-wide enforcement.
+
+---
+
 ## External References
 
 - [Snowflake CoCo: AI Coding Agent for the Modern Data Stack](https://www.snowflake.com/en/blog/snowflake-coco-ai-coding-agent-modern-data-stack/)
