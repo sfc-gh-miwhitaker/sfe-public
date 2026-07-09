@@ -72,15 +72,43 @@ export ANTHROPIC_AUTH_TOKEN="<your-snowflake-pat>"
 
 Then `source ~/.zshrc` or open a new terminal.
 
-**Fish shell:**
+**bash (Linux):**
 
-```fish
-# Add to ~/.config/fish/config.fish
-set -x ANTHROPIC_BASE_URL "https://<account-identifier>.snowflakecomputing.com/api/v2/cortex"
-set -x ANTHROPIC_AUTH_TOKEN "<your-snowflake-pat>"
-# Optional: pin to a specific Cortex model
-# set -x ANTHROPIC_MODEL "claude-sonnet-4-6"
+```bash
+# Add to ~/.bashrc or ~/.bash_profile
+export ANTHROPIC_BASE_URL="https://<account-identifier>.snowflakecomputing.com/api/v2/cortex"
+export ANTHROPIC_AUTH_TOKEN="<your-snowflake-pat>"
+# export ANTHROPIC_MODEL="claude-sonnet-4-6"
 ```
+
+**Windows — PowerShell:**
+
+Set for the current session:
+
+```powershell
+$env:ANTHROPIC_BASE_URL  = "https://<account-identifier>.snowflakecomputing.com/api/v2/cortex"
+$env:ANTHROPIC_AUTH_TOKEN = "<your-snowflake-pat>"
+```
+
+To persist across sessions, add the same lines to your PowerShell profile (`$PROFILE` — typically `~\Documents\PowerShell\Microsoft.PowerShell_profile.ps1`). Create the file if it doesn't exist:
+
+```powershell
+New-Item -Path $PROFILE -ItemType File -Force  # skip if profile already exists
+notepad $PROFILE                                # add the $env: lines above, save
+```
+
+To set machine-wide persistent env vars instead (requires admin):
+
+```powershell
+[System.Environment]::SetEnvironmentVariable("ANTHROPIC_BASE_URL",  "https://<account-identifier>.snowflakecomputing.com/api/v2/cortex", "User")
+[System.Environment]::SetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN", "<your-snowflake-pat>", "User")
+```
+
+Or use the GUI: **System Properties → Advanced → Environment Variables → User variables**.
+
+**Windows — WSL (Windows Subsystem for Linux):**
+
+If you run Claude Code inside WSL, use the bash/zsh instructions above within your WSL shell. Note that env vars set in Windows (PowerShell / System Properties) are NOT automatically available inside WSL — set them in your WSL shell profile (`~/.bashrc` or `~/.zshrc`).
 
 ---
 
