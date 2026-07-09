@@ -3,9 +3,8 @@ name: guide-claude-code-cortex-redirect
 description: >
   Redirect Claude Code CLI and Anthropic SDK inference to Snowflake Cortex.
   Load for: Claude Code cortex redirect, ANTHROPIC_BASE_URL Snowflake, SDK proxy
-  Cortex API, cortex REST API redirect, route claude code through snowflake.
-metadata:
-  type: project
+  Cortex API, cortex REST API redirect, route claude code through snowflake,
+  apiKeyHelper snowflake, cortex authentication.
 ---
 
 # guide-claude-code-cortex-redirect
@@ -74,4 +73,6 @@ Role required: Default role must have `SNOWFLAKE.CORTEX_USER` (public by default
 - `claude-haiku-4-5` IS available in the REST API (GA). Confusion comes from some regional AI_COMPLETE availability tables; it is present in the REST API billing table.
 - `claude-opus-4-8`, `claude-fable-5`, `claude-sonnet-5` are available via REST API but are Preview — not suitable for production workloads per Snowflake Preview Terms.
 - `claude-opus-4-7` is also Preview in the REST API.
+- `ANTHROPIC_AUTH_TOKEN` takes higher priority than `apiKeyHelper` in Claude Code's auth chain. Don't set both.
 - Authoritative model list: Snowflake Service Consumption Table Table 6(b) (Cortex Inference with Prompt Caching), effective July 1, 2026.
+- REST API costs are AI Credits (dollars per million tokens), not warehouse credits. No native resource monitor applies.
