@@ -66,7 +66,8 @@ To make the redirect permanent for your shell session:
 # Add to ~/.zshrc
 export ANTHROPIC_BASE_URL="https://<account-identifier>.snowflakecomputing.com/api/v2/cortex"
 export ANTHROPIC_AUTH_TOKEN="<your-snowflake-pat>"
-export ANTHROPIC_MODEL="claude-sonnet-4-6"
+# Optional: pin to a specific Cortex model (Claude Code's default passes through otherwise)
+# export ANTHROPIC_MODEL="claude-sonnet-4-6"
 ```
 
 Then `source ~/.zshrc` or open a new terminal.
@@ -77,7 +78,8 @@ Then `source ~/.zshrc` or open a new terminal.
 # Add to ~/.config/fish/config.fish
 set -x ANTHROPIC_BASE_URL "https://<account-identifier>.snowflakecomputing.com/api/v2/cortex"
 set -x ANTHROPIC_AUTH_TOKEN "<your-snowflake-pat>"
-set -x ANTHROPIC_MODEL "claude-sonnet-4-6"
+# Optional: pin to a specific Cortex model
+# set -x ANTHROPIC_MODEL "claude-sonnet-4-6"
 ```
 
 ---
@@ -90,11 +92,12 @@ Claude Code also accepts env vars in its `settings.json`. This scopes the redire
 {
   "env": {
     "ANTHROPIC_BASE_URL": "https://<account-identifier>.snowflakecomputing.com/api/v2/cortex",
-    "ANTHROPIC_AUTH_TOKEN": "<your-snowflake-pat>",
-    "ANTHROPIC_MODEL": "claude-sonnet-4-6"
+    "ANTHROPIC_AUTH_TOKEN": "<your-snowflake-pat>"
   }
 }
 ```
+
+To pin a specific Cortex model, add `"ANTHROPIC_MODEL": "claude-sonnet-4-6"` to the `env` block.
 
 Location of `settings.json`:
 - macOS / Linux: `~/.claude/settings.json`
@@ -116,6 +119,7 @@ Push a snippet to each user's shell profile via MDM/config management (Ansible, 
 # /etc/profile.d/snowflake-cortex-redirect.sh  (Linux/macOS)
 export ANTHROPIC_BASE_URL="https://<account-identifier>.snowflakecomputing.com/api/v2/cortex"
 export ANTHROPIC_AUTH_TOKEN="<shared-service-account-pat>"
+# Pin the model org-wide to control cost and ensure a Cortex-compatible model is used
 export ANTHROPIC_MODEL="claude-sonnet-4-6"
 ```
 
@@ -136,6 +140,8 @@ Claude Code supports a managed settings file that takes precedence over user set
 }
 ```
 
+> Setting `ANTHROPIC_MODEL` in managed settings is a deliberate org-wide policy choice — it ensures all users run the same model regardless of what Claude Code would otherwise select, which matters for cost governance and ensuring only Cortex-available models are used.
+
 > **Do not put the PAT in managed-settings.json** — it would be readable by all local users. Instead, deploy the PAT via a secrets manager or OS credential store, and reference it via an environment variable that your deployment tooling injects at login.
 
 **Approach 3 — Docker / devcontainer**
@@ -147,8 +153,7 @@ Add to your `devcontainer.json` or `Dockerfile`:
 {
   "containerEnv": {
     "ANTHROPIC_BASE_URL": "https://<account-identifier>.snowflakecomputing.com/api/v2/cortex",
-    "ANTHROPIC_AUTH_TOKEN": "${localEnv:SNOWFLAKE_PAT}",
-    "ANTHROPIC_MODEL": "claude-sonnet-4-6"
+    "ANTHROPIC_AUTH_TOKEN": "${localEnv:SNOWFLAKE_PAT}"
   }
 }
 ```
@@ -209,7 +214,7 @@ Use bare model names — no date suffixes. Claude models available via the Corte
 
 > Preview features (footnote 5 in the pricing table) are not suitable for production workloads per Snowflake's Preview Terms. Use GA models for any customer-facing or business-critical workloads.
 
-> Claude Code uses `claude-sonnet-4-6` (or similar) by default. Setting `ANTHROPIC_MODEL` overrides this.
+> If `ANTHROPIC_MODEL` is not set, Claude Code picks its own default model and passes that name through to Cortex. This works as long as Claude Code's default is a model Cortex supports. Set `ANTHROPIC_MODEL` when you want to pin a specific model — for cost control, to use a preview model, or to ensure a Cortex-compatible model is always used regardless of Claude Code version.
 
 > **Region note:** Not all models are available in all Snowflake regions. If you hit a 400 "unknown model" error, check [model availability by region](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-rest-api#model-availability). Enable cross-region inference (AWS_GLOBAL or AZURE_GLOBAL) to access all models from any region.
 
