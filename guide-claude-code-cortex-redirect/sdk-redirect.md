@@ -2,6 +2,8 @@
 
 How to redirect `anthropic` and `openai` SDK clients to Snowflake Cortex instead of hitting Anthropic or OpenAI directly.
 
+> **Auth:** The examples use `SNOWFLAKE_PAT` as the bearer token. You can substitute a Snowflake OAuth access token or a Key-Pair JWT in its place — the `Authorization: Bearer` header format is identical. See [Authentication Options](authentication.md) for all options.
+
 > **Model selection:** Never hardcode a model string in your code. Read it from `ANTHROPIC_MODEL` (the same env var the CLI uses) so you can swap models without touching code. Set a sensible default for local dev — `claude-sonnet-4-6` is a good GA choice — but let the env override it.
 
 ---

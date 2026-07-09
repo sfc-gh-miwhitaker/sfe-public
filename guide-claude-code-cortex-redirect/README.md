@@ -61,6 +61,7 @@ Jump to the guide that matches your situation:
 | I need to... | Guide |
 |---|---|
 | Redirect `claude` CLI for my own machine | [Claude Code CLI redirect](claude-code-redirect.md) |
+| Choose the right auth method (PAT vs keychain vs JWT) | [Authentication Options](authentication.md) |
 | Redirect an Anthropic SDK Python/Node app | [SDK redirect patterns](sdk-redirect.md) |
 | Deploy the redirect policy across an org (IT admin) | [Org-wide enforcement](claude-code-redirect.md#org-wide-enforcement) |
 | Verify traffic is actually hitting Snowflake | [Verification](claude-code-redirect.md#verification) |

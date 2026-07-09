@@ -39,6 +39,7 @@ Two endpoint choices:
 | File | Role |
 |------|------|
 | `README.md` | Overview, routing decision, prerequisites |
+| `authentication.md` | All auth options: PAT, apiKeyHelper+Keychain, Key-Pair JWT, CI/CD, Claude Desktop OAuth |
 | `claude-code-redirect.md` | Claude Code CLI setup (env vars, settings.json) |
 | `sdk-redirect.md` | Python + Node SDK redirect patterns |
 | `AGENTS.md` | Project-specific AI tooling instructions |

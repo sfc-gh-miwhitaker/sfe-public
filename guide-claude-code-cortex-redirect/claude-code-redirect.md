@@ -6,18 +6,18 @@ Step-by-step setup to redirect all `claude` CLI inference to your Snowflake acco
 
 ---
 
-## Step 1: Get a Snowflake PAT
+## Step 1: Get a credential
 
-A Programmatic Access Token (PAT) is the simplest auth method. To create one:
+The simplest option is a Snowflake Programmatic Access Token (PAT). For more secure alternatives — OS credential store, key-pair JWT via `apiKeyHelper`, CI/CD, or Claude Desktop OAuth — see **[Authentication Options](authentication.md)**.
+
+**Quick start: create a PAT**
 
 1. Sign into Snowflake, click your username (top right) → **My Profile**
 2. Scroll to **Programmatic access tokens** → **Generate new token**
-3. Set a name (e.g., `claude-code-redirect`), choose an expiration, click **Generate**
+3. Set a name, restrict it to a role (recommended), set a short expiry (90 days), click **Generate**
 4. Copy the token — it is shown only once
 
-The token looks like a long alphanumeric string. Keep it out of shell history and files.
-
-> **OAuth alternative:** If your org already has an OAuth integration configured, you can use an OAuth access token in place of the PAT. The `Authorization: Bearer` header format is identical.
+> If you plan to use `apiKeyHelper` (so the token never sits in a config file), follow [Option 2 in the auth guide](authentication.md#option-2-apikeyhelper--os-credential-store) instead of Step 2 below.
 
 ---
 
