@@ -8,7 +8,13 @@ There's no native "CoWork-only" user type in Snowflake — this guide shows the 
 
 Imagine a building with a lobby concierge desk (CoWork) and a full machine shop in the back (Snowsight/SQL). You want some visitors to only talk to the concierge — ask questions, get answers — without ever wandering into the machine shop.
 
-There's no "lobby-only badge" you can buy. Instead, you do three things: give them a badge that only opens the concierge door (a restricted role), lock the machine shop entrance for their badge specifically (interface restriction), and tell the concierge which specialists they're allowed to ask (agent grants). If any one of these three is missing, the visitor silently gets more access than intended.
+There's no "lobby-only badge" you can buy. Instead you apply three locks:
+
+1. **Badge scope** — give them a badge that only opens the concierge door (a restricted role)
+2. **Door lock** — block the machine shop entrance for their badge specifically (interface restriction)
+3. **Specialist list** — tell the concierge which specialists they're allowed to ask (agent grants)
+
+If any one of these three is missing, the visitor silently gets more access than intended.
 
 ## The Cast (concept glossary)
 

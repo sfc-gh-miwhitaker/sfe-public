@@ -8,11 +8,9 @@ There are three ways to bring Snowflake AI into VS Code — a built-in panel, a 
 
 Imagine VS Code is your office desk. You want a Snowflake expert sitting next to you while you work. Three ways to get one:
 
-Path 1: The expert already works in your building (the Snowflake extension). You sign in once, click a button, and they pull up a chair. Two minutes, no approvals needed. They're a full CoCo agent — they know Snowflake deeply.
-
-Path 2: Your existing assistant (GitHub Copilot CLI) learns to recognize Snowflake questions and pages the expert when they come up. Five-minute setup. Non-Snowflake questions stay with your assistant.
-
-Path 3: Your IT department sets up a secure intercom (MCP server) between your desk and the Snowflake expert. Takes 30 minutes, needs admin approval, but every call is logged and governed. The expert can answer questions, run tools, and execute queries — all under your company's access controls.
+- **Path 1 (~2 min, no admin):** The expert already works in your building (the Snowflake extension). Sign in once, click a button, and they pull up a chair. Full CoCo agent — knows Snowflake deeply.
+- **Path 2 (~5 min, no admin):** Your existing assistant (Copilot CLI) learns to recognize Snowflake questions and pages the expert when they come up. Non-Snowflake questions stay with your assistant.
+- **Path 3 (~30 min, needs admin):** IT sets up a secure intercom (MCP server) between your desk and the expert. Every call is logged and governed under your company's access controls.
 
 ## The Cast (concept glossary)
 

@@ -12,7 +12,10 @@ You put a sticky note labeled "production" on the page your restaurant currently
 
 The catch: the moment you photocopy your working copy into the binder, the working copy on the counter disappears. You have to pull a fresh sheet from the binder to keep scribbling. Forget that step and you have no draft to work on.
 
-Two teams operate this differently. Solo cooks scribble on the counter and photocopy when ready. Restaurant chains keep the master recipe in a shared Google Doc (GitHub), and only add a page to the binder after the head chef approves the edit (pull request).
+Two teams operate this differently:
+
+- **Solo cooks** — scribble on the counter, photocopy when ready.
+- **Restaurant chains** — keep the master recipe in a shared Google Doc (GitHub), only add a page to the binder after the head chef approves the edit (pull request).
 
 ## The Cast (concept glossary)
 

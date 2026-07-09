@@ -10,7 +10,10 @@ Imagine a team of specialists at a help desk. Each person has their own phone ex
 
 That's agent-to-agent on Snowflake. Each agent has its own tools. To let Agent A call Agent B, you give Agent A a new tool that says "dial Agent B's extension and relay the answer back." The mechanism is a small saved function (`DATA_AGENT_RUN`) wrapped in a procedure. That's the whole trick.
 
-For agents that live in separate installed applications, the story adds a security desk: by default, App B's agent has zero access to your data unless the admin explicitly grants it. And those grants don't pass down the chain — if A can see your sales data and calls B, B still can't see it unless B was granted access independently.
+For agents in separate installed applications, the story adds a security desk:
+
+- By default, App B's agent has **zero** access to your data unless the admin explicitly grants it.
+- Those grants **don't pass down the chain** — if A can see your sales data and calls B, B still can't see it unless B was independently granted access.
 
 ## The Cast (concept glossary)
 

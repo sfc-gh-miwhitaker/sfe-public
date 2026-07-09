@@ -8,9 +8,12 @@ Before you can control Snowflake spending, you need four foundational capabiliti
 
 Think of your Snowflake account as a house with multiple utility meters.
 
-The **budget object** is like setting a monthly utility budget with your power company — they'll text you when you're on track to overshoot, but they won't cut your power. The **ACCOUNT_USAGE views** are like reading each meter (gas, electric, water) individually to see which one is driving the bill. **Resource monitors** are the actual circuit breakers — they can shut off a specific outlet (warehouse) when it hits a limit. And **AI_FUNCTIONS_USER RBAC** is the lock on the control panel — it decides who's even allowed to flip on the expensive new appliances (AI functions).
+- **Budget object** — like setting a monthly utility budget; the power company texts you when you're trending over, but won't cut your power.
+- **ACCOUNT_USAGE views** — like reading each meter (gas, electric, water) to see which one is driving the bill.
+- **Resource monitors** — the actual circuit breakers; they can shut off a specific outlet (warehouse) when it hits a limit.
+- **AI_FUNCTIONS_USER RBAC** — the lock on the control panel; decides who can flip on the expensive new appliances (AI functions).
 
-Most houses are running without three of these four. The one that's most commonly missing — the lock on the AI control panel — is the one that matters most as AI usage grows, because by default everyone in the building has a key.
+Most houses are running without three of these four. The one most commonly missing — the lock on the AI control panel — matters most as AI usage grows, because by default everyone in the building has a key.
 
 ## The Cast (concept glossary)
 

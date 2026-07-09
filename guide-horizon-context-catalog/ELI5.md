@@ -10,7 +10,9 @@ Imagine a hospital with thousands of patient files. The old filing system (tradi
 
 Now AI doctors (agents) are answering questions. They don't browse card indexes — they need the right context handed to them at the moment they're asked. So the hospital builds three new layers:
 
-Layer 1 (Horizon Catalog): the filing cabinets themselves — what files exist, who can access them, how they connect. Always existed. Layer 2 (Horizon Context): a service that also pulls records from partner clinics and labs into the same system, stitches them together, and notes which files are most trusted. Layer 3 (Cortex Sense): the system that, when an AI doctor gets a question, automatically hands them only the relevant files — without anyone having to tell it which ones to grab.
+1. **Horizon Catalog** — the filing cabinets themselves. What files exist, who can access them, how they connect. Always existed.
+2. **Horizon Context** — a service that pulls records from partner clinics and labs into the same system, stitches them together, and notes which files are most trusted.
+3. **Cortex Sense** — when an AI doctor gets a question, automatically hands them only the relevant files, without anyone having to say which ones to grab.
 
 The result: accuracy went from 24% to 86% on hard questions in Snowflake's internal testing.
 

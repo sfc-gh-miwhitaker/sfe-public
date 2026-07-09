@@ -8,9 +8,11 @@ There are several ways to put Claude (the AI) in front of your Snowflake data �
 
 Imagine your company's data lives in a bank vault. You want an AI assistant to answer questions about what's inside — but you don't want to hand over the vault keys and hope for the best.
 
-Option A: the bank hires its own staff member who already has security clearance and knows the vault layout (CoWork/CoCo — AI that runs inside Snowflake). Option B: an outside consultant gets a carefully scoped visitor badge that only works at specific desks (Governed MCP). Option C: you photocopy selected pages and slide them under the door (legacy MCP with no grounding).
+- **Option A:** The bank hires its own staff member who already has security clearance and knows the vault layout. (CoWork/CoCo — AI that runs inside Snowflake.)
+- **Option B:** An outside consultant gets a carefully scoped visitor badge that only works at specific desks. (Governed MCP.)
+- **Option C:** You photocopy selected pages and slide them under the door. (Legacy MCP with no grounding.)
 
-Option A answers about 86% of hard questions correctly. Option C answers about 24%. The difference is whether the AI has governed business context or is guessing blind.
+Option A answers about 86% of hard questions correctly. Option C answers about 24%. The difference is whether the AI gets governed business context or is guessing blind.
 
 All three options benefit from the same prep work: writing down what your data means in business terms (a "semantic view") and saving a few example questions with correct answers. Do that once and every option gets smarter.
 

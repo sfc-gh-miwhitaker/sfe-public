@@ -8,7 +8,13 @@ This guide shows you how to see, attribute, limit, and protect your Snowflake AI
 
 Think of your Snowflake account as a building with electricity running to every floor. AI features are new appliances you plugged in — some run all day, some only when someone flips the switch. Your electricity bill just tripled, and you need to figure out which floor is responsible.
 
-First you read the meters (usage views) to see the totals. Then you label each appliance (tags) so you know which team owns which cost. Next you install per-circuit breakers (user limits) so one team can't overload the building. Finally you add a main breaker (account budget) and a smart sensor (runaway query detection) for things that spike unexpectedly.
+You need to:
+
+1. **Read the meters** — see totals per floor (usage views)
+2. **Label each appliance** — know which team owns which cost (tags)
+3. **Install per-circuit breakers** — stop one team from overloading the building (user limits)
+4. **Add a main breaker** — cap total building draw (account budget)
+5. **Wire a smart sensor** — catch things that spike unexpectedly (runaway query detection)
 
 Snowflake's built-in AI coding tool (CoCo) has a simple on/off credit limit — one setting, done. Everything else requires you to build the enforcement yourself with scheduled checks and access revocations. The guide gives you the SQL for both.
 
