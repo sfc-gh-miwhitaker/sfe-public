@@ -70,4 +70,7 @@ Role required: Default role must have `SNOWFLAKE.CORTEX_USER` (public by default
   For Chat Completions use `…/api/v2/cortex/v1` (SDK appends `/chat/completions`).
 - Model names must be bare (no date suffixes): `claude-sonnet-4-6`, not `claude-sonnet-4-5-20250514`.
 - Claude Code Desktop VS Code extension does not yet support `ANTHROPIC_BASE_URL` (CLI only).
-- `claude-haiku` is absent from Cortex REST API Claude model lineup (use `claude-sonnet-4-6` instead).
+- `claude-haiku-4-5` IS available in the REST API (GA). Confusion comes from some regional AI_COMPLETE availability tables; it is present in the REST API billing table.
+- `claude-opus-4-8`, `claude-fable-5`, `claude-sonnet-5` are available via REST API but are Preview — not suitable for production workloads per Snowflake Preview Terms.
+- `claude-opus-4-7` is also Preview in the REST API.
+- Authoritative model list: Snowflake Service Consumption Table Table 6(b) (Cortex Inference with Prompt Caching), effective July 1, 2026.

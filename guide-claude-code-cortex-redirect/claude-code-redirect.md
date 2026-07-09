@@ -192,15 +192,22 @@ If your Claude Code inference arrived at Snowflake, you'll see rows here (note: 
 
 ## Available models
 
-Use bare model names — no date suffixes. As of July 2026:
+Use bare model names — no date suffixes. Claude models available via the Cortex REST API (from the [Snowflake Service Consumption Table](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf), effective July 1, 2026):
 
-| Model | Notes |
-|-------|-------|
-| `claude-sonnet-4-6` | Best for most Claude Code workloads — good balance of capability and speed |
-| `claude-opus-4-6` | Higher capability, higher cost — for complex reasoning tasks |
-| `claude-opus-4-7` | Flagship — agentic workflows, complex coding (preview in some regions) |
-| `claude-sonnet-4-5` | Previous generation sonnet, broadly available |
-| `claude-haiku-4-5` | Fast and cheap, best for simple tasks |
+| Model | Status | Input (credits/M tokens) | Output (credits/M tokens) | Notes |
+|-------|--------|--------------------------|---------------------------|-------|
+| `claude-sonnet-4-6` | GA | 1.50 | 7.50 | Best default for Claude Code |
+| `claude-opus-4-6` | GA | 2.50 | 12.50 | High capability, lower throughput |
+| `claude-sonnet-4-5` | GA | 1.50 | 7.50 | Previous generation sonnet |
+| `claude-haiku-4-5` | GA | 0.50 | 2.50 | Fastest and cheapest |
+| `claude-opus-4-5` | GA | 2.50 | 12.50 | Previous generation opus |
+| `claude-4-sonnet` | Legacy | 1.50 | 7.50 | Legacy alias, still available |
+| `claude-opus-4-7` | Preview | 2.50 | 12.50 | Higher capability; preview caveat |
+| `claude-opus-4-8` | Preview | 2.50 | 12.50 | Latest opus; preview caveat |
+| `claude-sonnet-5` | Preview | 1.00 | 5.00 | Promotional pricing through Sep 2026 |
+| `claude-fable-5` | Preview | 5.00 | 25.00 | Preview; use with caution in production |
+
+> Preview features (footnote 5 in the pricing table) are not suitable for production workloads per Snowflake's Preview Terms. Use GA models for any customer-facing or business-critical workloads.
 
 > Claude Code uses `claude-sonnet-4-6` (or similar) by default. Setting `ANTHROPIC_MODEL` overrides this.
 
