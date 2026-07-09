@@ -252,8 +252,6 @@ Use bare model names — no date suffixes. Claude models available via the Corte
 
 When inference goes through Snowflake, you get:
 
-**Audit trail:** Every request appears in `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_REST_API_USAGE_HISTORY` with model name, token counts, user ID, timestamp, and inference region. You can query, export, and alert on this data like any other Snowflake table.
-
 **RBAC access control:** Snowflake's `SNOWFLAKE.CORTEX_USER` database role controls who can call the API. To restrict access to specific users:
 
 ```sql
@@ -267,7 +265,34 @@ GRANT ROLE claude_code_users TO USER alice;
 
 `CORTEX_REST_API_USER` grants access to the REST API only, without enabling Cortex AI functions (CORTEX.COMPLETE, AI_EXTRACT, etc.).
 
-**Cost attribution:** Cortex inference costs appear on your Snowflake invoice alongside compute costs, making AI spend visible in the same budgeting process as warehouse spend. Use `CORTEX_REST_API_USAGE_HISTORY` to break down by user, model, or time window.
+**Cost visibility:** REST API costs are billed as AI Credits (dollars per million tokens) — not warehouse credits. No warehouse resource monitor applies. To see what the redirect is costing you today:
+
+```sql
+SELECT
+    model_name,
+    COUNT(*) AS requests,
+    SUM(tokens_granular:"input"::INT)      AS input_tokens,
+    SUM(tokens_granular:"output"::INT)     AS output_tokens,
+    SUM(tokens_granular:"cache_read_input"::INT) AS cached_tokens
+FROM snowflake.account_usage.cortex_rest_api_usage_history
+WHERE start_time >= CURRENT_DATE()
+GROUP BY model_name
+ORDER BY input_tokens DESC;
+```
+
+Cached tokens are billed at 10% of the input rate (when ≥1024 per request). Claude Code's agentic loop produces high cache hit rates, so most token volume is in `cache_read_input` — the cheapest category.
+
+**Enforcement options:** No native hard cap exists for raw REST API calls. Your options:
+
+- **Resource Budgets** — GA for Cortex Agents (tag-based, auto-revoke at threshold). Does not directly scope to raw REST API calls. See [Resource budgets for Cortex Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-resource-budgets).
+- **Snowflake ALERT + revoke** — query `CORTEX_REST_API_USAGE_HISTORY` on a schedule; when daily spend exceeds a threshold, revoke `CORTEX_REST_API_USER` from the user's role. The per-user enforcement pattern is documented in [Managing Cortex AI Function costs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management).
+- **Account-level Budget** — covers all Snowflake spend including AI Credits, but not scoped to REST API specifically. See [Custom budgets](https://docs.snowflake.com/en/user-guide/cost-management/budgets/budgets-custom).
+
+**For ongoing dashboarding and cost estimation**, Snowflake publishes three quickstart guides with complete Streamlit code:
+
+- [Cortex REST API Usage Monitor](https://www.snowflake.com/en/developers/guides/cortex-rest-api-usage/) — token volume tracking
+- [Cortex REST API Budget Monitors](https://www.snowflake.com/en/developers/guides/cortex-rest-api-budget-monitors/) — daily/weekly budget enforcement with rolling alerts
+- [Cortex REST API Billing & Cost Analysis](https://www.snowflake.com/en/developers/guides/cortex-rest-api-billing-cost/) — USD cost estimation using `TOKENS_GRANULAR`, prompt-caching discount logic, and per-model pricing
 
 **Data residency:** Requests to `/api/v2/cortex/v1/messages` are processed inside your Snowflake account's region. Your prompts and responses do not leave Snowflake's perimeter (subject to cross-region inference settings — see [model availability](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-rest-api#model-availability)).
 

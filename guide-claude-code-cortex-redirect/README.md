@@ -64,8 +64,8 @@ Jump to the guide that matches your situation:
 | Choose the right auth method (PAT vs keychain vs JWT) | [Authentication Options](authentication.md) |
 | Redirect an Anthropic SDK Python/Node app | [SDK redirect patterns](sdk-redirect.md) |
 | Deploy the redirect policy across an org (IT admin) | [Org-wide enforcement](claude-code-redirect.md#org-wide-enforcement) |
+| Monitor costs and set spending limits | [Governance](claude-code-redirect.md#governance) + Snowflake's [REST API cost guides](https://www.snowflake.com/en/developers/guides/cortex-rest-api-billing-cost/) |
 | Verify traffic is actually hitting Snowflake | [Verification](claude-code-redirect.md#verification) |
-| Understand what governance I get | [Governance](claude-code-redirect.md#governance) |
 
 ---
 
