@@ -2,6 +2,8 @@
 
 How to redirect `anthropic` and `openai` SDK clients to Snowflake Cortex instead of hitting Anthropic or OpenAI directly.
 
+> **Model selection:** Never hardcode a model string in your code. Read it from `ANTHROPIC_MODEL` (the same env var the CLI uses) so you can swap models without touching code. Set a sensible default for local dev — `claude-sonnet-4-6` is a good GA choice — but let the env override it.
+
 ---
 
 ## Choosing an endpoint
@@ -28,8 +30,9 @@ import os
 import httpx
 import anthropic
 
-PAT = os.environ["SNOWFLAKE_PAT"]
-ACCOUNT = os.environ["SNOWFLAKE_ACCOUNT"]  # e.g., "orgname-account"
+PAT     = os.environ["SNOWFLAKE_PAT"]
+ACCOUNT = os.environ["SNOWFLAKE_ACCOUNT"]   # e.g., "orgname-account"
+MODEL   = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 
 http_client = httpx.Client(
     headers={"Authorization": f"Bearer {PAT}"},
@@ -43,7 +46,7 @@ client = anthropic.Anthropic(
 )
 
 response = client.messages.create(
-    model="claude-sonnet-4-6",
+    model=MODEL,
     max_tokens=1024,
     messages=[{"role": "user", "content": "Explain Snowflake's zero-copy cloning in one paragraph."}],
 )
@@ -59,8 +62,9 @@ import os
 import httpx
 import anthropic
 
-PAT = os.environ["SNOWFLAKE_PAT"]
+PAT     = os.environ["SNOWFLAKE_PAT"]
 ACCOUNT = os.environ["SNOWFLAKE_ACCOUNT"]
+MODEL   = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 
 async def main():
     async with httpx.AsyncClient(headers={"Authorization": f"Bearer {PAT}"}) as http_client:
@@ -72,7 +76,7 @@ async def main():
         )
 
         response = await client.messages.create(
-            model="claude-sonnet-4-6",
+            model=MODEL,
             max_tokens=1024,
             messages=[{"role": "user", "content": "What is Snowflake Cortex?"}],
         )
@@ -86,7 +90,7 @@ asyncio.run(main())
 
 ```python
 with client.messages.stream(
-    model="claude-sonnet-4-6",
+    model=MODEL,
     max_tokens=1024,
     messages=[{"role": "user", "content": "Walk me through this codebase step by step."}],
 ) as stream:
@@ -101,8 +105,9 @@ with client.messages.stream(
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
 
-const PAT = process.env.SNOWFLAKE_PAT!;
+const PAT     = process.env.SNOWFLAKE_PAT!;
 const ACCOUNT = process.env.SNOWFLAKE_ACCOUNT!;
+const MODEL   = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
 
 const client = new Anthropic({
   apiKey: "placeholder",  // pragma: allowlist secret
@@ -113,7 +118,7 @@ const client = new Anthropic({
 });
 
 const response = await client.messages.create({
-  model: "claude-sonnet-4-6",
+  model: MODEL,
   max_tokens: 1024,
   messages: [{ role: "user", content: "Explain Snowflake's zero-copy cloning." }],
 });
@@ -125,7 +130,7 @@ console.log(response.content[0].text);
 
 ```typescript
 const stream = client.messages.stream({
-  model: "claude-sonnet-4-6",
+  model: MODEL,
   max_tokens: 1024,
   messages: [{ role: "user", content: "Walk me through this codebase." }],
 });
@@ -147,13 +152,15 @@ No auth header override needed — the OpenAI SDK sends `Authorization: Bearer` 
 import os
 from openai import OpenAI
 
+MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+
 client = OpenAI(
     api_key=os.environ["SNOWFLAKE_PAT"],
     base_url=f"https://{os.environ['SNOWFLAKE_ACCOUNT']}.snowflakecomputing.com/api/v2/cortex/v1",
 )
 
 response = client.chat.completions.create(
-    model="claude-sonnet-4-6",
+    model=MODEL,
     messages=[
         {"role": "system", "content": "You are a helpful data engineering assistant."},
         {"role": "user", "content": "Write a Snowflake dynamic table for daily sales aggregation."},
@@ -174,7 +181,7 @@ print(response.choices[0].message.content)
 
 ```python
 stream = client.chat.completions.create(
-    model="claude-sonnet-4-6",
+    model=MODEL,
     messages=[{"role": "user", "content": "Explain column masking policies."}],
     stream=True,
 )
@@ -189,13 +196,15 @@ for chunk in stream:
 ```typescript
 import OpenAI from "openai";
 
+const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
+
 const client = new OpenAI({
   apiKey: process.env.SNOWFLAKE_PAT!,
   baseURL: `https://${process.env.SNOWFLAKE_ACCOUNT}.snowflakecomputing.com/api/v2/cortex/v1`,
 });
 
 const response = await client.chat.completions.create({
-  model: "claude-sonnet-4-6",
+  model: MODEL,
   messages: [
     { role: "user", content: "Write a Snowflake stored procedure for data quality checks." },
   ],
@@ -206,25 +215,29 @@ console.log(response.choices[0].message.content);
 
 ---
 
-## Using environment variables with the Anthropic SDK
+## Full environment variable setup
 
-If you want to configure the SDK via environment variables (useful for twelve-factor apps), the Anthropic SDK reads `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`:
+Configure endpoint, auth, and model together — nothing hardcoded:
 
 ```bash
 export ANTHROPIC_BASE_URL="https://<account>.snowflakecomputing.com/api/v2/cortex"
 export ANTHROPIC_AUTH_TOKEN="<your-snowflake-pat>"
+export ANTHROPIC_MODEL="claude-sonnet-4-6"   # swap without touching code
 ```
 
-With these set, you can instantiate the client without explicit config:
+With these set, the SDK can be initialized without explicit config, and model selection is a deploy-time or shell decision rather than a code change:
 
 ```python
+import os
 import anthropic
+
+MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 
 # SDK reads ANTHROPIC_BASE_URL and ANTHROPIC_AUTH_TOKEN from env
 client = anthropic.Anthropic(api_key="placeholder")  # pragma: allowlist secret
 
 response = client.messages.create(
-    model="claude-sonnet-4-6",
+    model=MODEL,
     max_tokens=1024,
     messages=[{"role": "user", "content": "Hello"}],
 )
