@@ -2,29 +2,24 @@
   99_cleanup/teardown.sql
   Media Campaign Analytics — Drop All Project Objects
   Pair-programmed by SE Community + Cortex Code
+
+  Strategy: DROP SCHEMA CASCADE is nuclear for everything IN the schema
+  (agents, search services, tables, views, UDFs, etc.).
+  We only need explicit drops for objects OUTSIDE the project schema.
 ==============================================================================*/
 
 USE ROLE SYSADMIN;
 
--- Agent
-DROP AGENT IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.MEDIA_CAMPAIGN_AGENT;
+-- ── Objects OUTSIDE the project schema (need explicit drops) ─────────────────
 
--- Cortex Search Service
-DROP CORTEX SEARCH SERVICE IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.CAMPAIGN_DOCS_SEARCH;
-
--- Semantic view
+-- Semantic view lives in the shared SEMANTIC_MODELS schema
 DROP SEMANTIC VIEW IF EXISTS SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPAIGN_ANALYTICS;
 
--- Views and tables
-DROP VIEW   IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.V_CAMPAIGN_KPI;
-DROP TABLE  IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.DOC_CAMPAIGN_CONTENT;
-DROP TABLE  IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.FACT_DAILY_PERFORMANCE;
-DROP TABLE  IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.DIM_CAMPAIGN;
-DROP TABLE  IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.DIM_CHANNEL;
-DROP TABLE  IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.DIM_CLIENT;
+-- ── Nuclear: drop the project schema (kills everything inside it) ────────────
+-- This cascades: agents, search services, tables, views, UDFs, etc.
+DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS;
 
--- Project schema and warehouse
-DROP SCHEMA    IF EXISTS SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS;
+-- Warehouse is an account-level object
 DROP WAREHOUSE IF EXISTS SFE_MEDIA_CAMPAIGN_WH;
 
 -- NOTE: Do NOT drop the following shared infrastructure:
