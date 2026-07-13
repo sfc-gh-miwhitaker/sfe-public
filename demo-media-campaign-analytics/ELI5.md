@@ -2,39 +2,38 @@
 
 ## One-Sentence Version
 
-This demo creates a chatbot that answers plain-English questions about advertising campaign performance — no dashboards, no SQL required from the end user.
+Paste one file into Snowflake, wait 5 minutes, and your team can ask plain-English questions about ad campaign performance — no dashboards to build, no SQL to write.
 
 ## The Story (analogy-driven)
 
-Imagine you run an ad agency. Every morning, your team opens a dozen spreadsheets to answer the same questions: "How much did we spend on social this month?" "Which client is getting the best return?" "Are any campaigns blowing past their budget?"
+Imagine you hired a junior analyst who already knows your data model, never takes a day off, and answers in under 3 seconds. That's what this demo puts in front of a customer in a single meeting.
 
-Instead of those spreadsheets, you install a smart assistant that already understands your data model — channels, clients, campaigns, daily metrics. Anyone on the team can just type a question and get the answer with a chart. No training, no SQL knowledge, no waiting for an analyst to pull a report.
+You open a chat window in Snowflake, type "Which channel has the best ROAS this year?" and get back a number, a chart, and context — just like texting a colleague who happens to have perfect recall of every row in your database.
 
-That's what this demo builds: one SQL file creates the fake data (20 clients, 5 ad channels, 18 months of daily performance), teaches Snowflake what the metrics mean (ROAS, CTR, budget pacing), and wires up a chatbot that speaks those metrics fluently.
+The demo exists to create a reaction: *"Wait — we can just ask it questions? No BI tool? No ticket to the data team?"* That reaction is the point. Everything else (the schema, the semantic view, the agent spec) is scaffolding that makes the reaction happen reliably in a live setting.
 
 ## The Cast (concept glossary)
 
-- **Semantic View** — A metadata layer that tells the AI what your columns mean, how to compute ratios, and what questions are valid. It's the "dictionary" the chatbot studies before answering.
-- **Cortex Agent** — The chatbot itself. It takes a natural language question, uses the semantic view to write correct SQL, runs it, and returns the answer.
-- **Snowflake Intelligence** — The UI where the chatbot lives (AI & ML → Agents in Snowsight).
-- **Verified Queries** — Pre-approved question/answer pairs baked into the semantic view. They serve as training examples and starter prompts.
-- **ROAS** — Return on Ad Spend. Revenue ÷ Spend. The metric every media buyer cares about most.
-- **Connected TV** — An impression-only channel (no clicks). The demo handles this edge case so the chatbot doesn't show broken click rates for TV.
+- **Cortex Agent** — The chatbot. It takes a question, writes SQL behind the scenes, runs it, and returns the answer in plain English plus an optional chart.
+- **Semantic View** — The reason the chatbot writes *correct* SQL. It's a metadata layer that defines what "ROAS" means, what "this year" means, and which columns map to which business concepts.
+- **Snowflake Intelligence** — The chat UI where the agent lives. No code to write; it's built into Snowsight.
+- **Verified Queries** — Pre-tested question/answer pairs. They serve as starter prompts in the UI so the audience doesn't stare at a blank chat box.
 
-## What Changed
+## What This Demo Proves to a Customer
 
-- Before: Analysts write SQL or build dashboards. Each new question needs a new chart or a new query. Non-technical stakeholders wait.
-- After: Anyone with access types a question, gets an answer in seconds. New questions don't require new development.
+- Natural language → accurate answers over *their kind of data* (media/advertising KPIs)
+- No external tools, no Python, no API keys — everything runs inside Snowflake's perimeter
+- Deploy in one paste — the total cost of "trying it" is 5 minutes and an X-Small warehouse
+- Governed by default — same RBAC, same audit trail, same security boundary as their existing Snowflake data
 
 ## What to Watch Out For
 
-- This is synthetic data. Numbers change on every deploy because they're randomly generated. Don't hardcode expected values.
-- The demo uses a shared database (`SNOWFLAKE_EXAMPLE`). Multiple demos can coexist, but `CREATE OR REPLACE SCHEMA` will wipe a previous deploy of this specific demo.
-- Connected TV has zero clicks by design. If the chatbot returns NULL for CTR on CTV, that's correct, not broken.
-- The semantic view lives in a shared schema (`SEMANTIC_MODELS`), separate from the project schema. Teardown handles both.
+- This is synthetic data. The point is the *interaction pattern*, not the numbers. Don't let the audience fixate on whether the ROAS values are realistic.
+- Connected TV shows NULL for click metrics. That's intentional (impression-only channel) — demo it as a feature ("the agent knows CTV doesn't have clicks") not a bug.
+- If the audience asks "can it handle *our* data?" — the answer is yes, and the path is: point a semantic view at their tables, define their metrics, done. Same architecture, different data.
 
 ## The One Thing to Remember
 
-The magic is in the semantic view, not the agent. The agent is just a thin wrapper that points at the semantic view. If the answers are wrong, fix the semantic view's metric definitions and synonyms — not the agent spec.
+This demo sells the *experience*, not the architecture. The customer should walk away thinking "I want that for my team" — not "I understand how semantic views work." The technical depth comes later, after interest is established.
 
 > For the full technical details, see the source document.
