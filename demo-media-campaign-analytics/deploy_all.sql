@@ -18,9 +18,10 @@ WHAT GETS CREATED:
   Sem View:  SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPAIGN_ANALYTICS
   Agent:     SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.MEDIA_CAMPAIGN_AGENT
 
-DEMO:
-  Snowsight → AI & ML → Agents → MEDIA_CAMPAIGN_AGENT
-  Try: "Which channel has the highest ROAS this year?"
+AFTER DEPLOY:
+  1. Snowsight → AI & ML → Agents → MEDIA_CAMPAIGN_AGENT → "Add to CoWork"
+  2. Open CoWork, select Campaign Analytics agent
+  3. Try: "Which channel has the highest ROAS this year?"
 ==============================================================================*/
 
 -- ── 1. Expiration check ───────────────────────────────────────────────────────
@@ -607,8 +608,6 @@ CREATE OR REPLACE AGENT MEDIA_CAMPAIGN_AGENT
   PROFILE = '{"display_name": "Campaign Analytics", "avatar": "chart-bar", "color": "blue"}'
   FROM SPECIFICATION
   $$
-  models:
-    orchestration: claude-4-sonnet
 
   orchestration:
     budget:
