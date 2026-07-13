@@ -21,6 +21,26 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPA
       COMMENT = 'Daily paid media performance — one row per campaign per day, Jan 2025 to Jun 2026. Covers 20 fictional clients across 5 channels.'
   )
 
+  FACTS (
+    PRIVATE kpi.impressions AS impressions
+      COMMENT = 'Raw daily impression count',
+
+    PRIVATE kpi.clicks AS clicks
+      COMMENT = 'Raw daily click count (0 for Connected TV)',
+
+    PRIVATE kpi.conversions AS conversions
+      COMMENT = 'Raw daily conversion count',
+
+    PRIVATE kpi.spend AS spend
+      COMMENT = 'Raw daily media spend in USD',
+
+    PRIVATE kpi.revenue AS revenue
+      COMMENT = 'Raw daily attributed revenue in USD',
+
+    PRIVATE kpi.daily_budget_allocation AS daily_budget_allocation
+      COMMENT = 'Campaign total budget divided by campaign duration days'
+  )
+
   DIMENSIONS (
     -- Date
     kpi.perf_date AS perf_date
@@ -93,26 +113,6 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPA
       COMMENT = 'Broad channel category'
       SAMPLE_VALUES ('Digital', 'Video', 'Audio')
       IS_ENUM
-  )
-
-  FACTS (
-    PRIVATE kpi.impressions AS impressions
-      COMMENT = 'Raw daily impression count',
-
-    PRIVATE kpi.clicks AS clicks
-      COMMENT = 'Raw daily click count (0 for Connected TV)',
-
-    PRIVATE kpi.conversions AS conversions
-      COMMENT = 'Raw daily conversion count',
-
-    PRIVATE kpi.spend AS spend
-      COMMENT = 'Raw daily media spend in USD',
-
-    PRIVATE kpi.revenue AS revenue
-      COMMENT = 'Raw daily attributed revenue in USD',
-
-    PRIVATE kpi.daily_budget_allocation AS daily_budget_allocation
-      COMMENT = 'Campaign total budget divided by campaign duration days'
   )
 
   METRICS (
