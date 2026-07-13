@@ -363,69 +363,69 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPA
   )
 
   DIMENSIONS (
-    kpi.dim_date AS perf_date
+    kpi.perf_date AS perf_date
       WITH SYNONYMS = ('date', 'day', 'performance date')
       COMMENT = 'Calendar date of the performance record',
 
-    kpi.dim_month AS perf_month
+    kpi.perf_month AS perf_month
       WITH SYNONYMS = ('month', 'calendar month')
       COMMENT = 'Month of the performance record',
 
-    kpi.dim_quarter AS perf_quarter
+    kpi.perf_quarter AS perf_quarter
       WITH SYNONYMS = ('quarter', 'fiscal quarter', 'Q1', 'Q2', 'Q3', 'Q4')
       COMMENT = 'Quarter of the performance record',
 
-    kpi.dim_year AS perf_year
+    kpi.perf_year AS perf_year
       WITH SYNONYMS = ('year', 'annual')
       COMMENT = 'Calendar year of the performance record',
 
-    kpi.dim_campaign_name AS campaign_name
+    kpi.campaign_name AS campaign_name
       WITH SYNONYMS = ('campaign', 'ad campaign', 'campaign name')
       COMMENT = 'Name of the advertising campaign',
 
-    kpi.dim_objective AS objective
+    kpi.objective AS objective
       WITH SYNONYMS = ('campaign objective', 'goal', 'campaign goal', 'campaign type')
       COMMENT = 'Campaign objective'
       SAMPLE_VALUES ('Brand Awareness', 'Lead Generation', 'Direct Response', 'Retargeting')
       IS_ENUM,
 
-    kpi.dim_campaign_status AS campaign_status
+    kpi.campaign_status AS campaign_status
       WITH SYNONYMS = ('status', 'active', 'completed')
       COMMENT = 'Campaign lifecycle status'
       SAMPLE_VALUES ('Active', 'Completed')
       IS_ENUM,
 
-    kpi.dim_campaign_start AS campaign_start_date
+    kpi.campaign_start_date AS campaign_start_date
       WITH SYNONYMS = ('start date', 'launch date', 'flight start')
       COMMENT = 'Date the campaign began running',
 
-    kpi.dim_campaign_end AS campaign_end_date
+    kpi.campaign_end_date AS campaign_end_date
       WITH SYNONYMS = ('end date', 'flight end')
       COMMENT = 'Date the campaign stopped running',
 
-    kpi.dim_client_name AS client_name
+    kpi.client_name AS client_name
       WITH SYNONYMS = ('client', 'advertiser', 'account', 'brand')
       COMMENT = 'Name of the advertising client',
 
-    kpi.dim_vertical AS vertical
+    kpi.vertical AS vertical
       WITH SYNONYMS = ('industry', 'sector', 'vertical', 'category')
       COMMENT = 'Client industry vertical'
       SAMPLE_VALUES ('Retail', 'Finance', 'Healthcare', 'Technology', 'Consumer Goods')
       IS_ENUM,
 
-    kpi.dim_tier AS tier
+    kpi.tier AS tier
       WITH SYNONYMS = ('client tier', 'account tier', 'segment', 'size')
       COMMENT = 'Client tier by spend size'
       SAMPLE_VALUES ('Enterprise', 'Mid-Market', 'SMB')
       IS_ENUM,
 
-    kpi.dim_channel_name AS channel_name
+    kpi.channel_name AS channel_name
       WITH SYNONYMS = ('channel', 'media channel', 'media type', 'placement')
       COMMENT = 'Media channel where ads ran'
       SAMPLE_VALUES ('Paid Search', 'Social Media', 'Display', 'Connected TV', 'Streaming Audio')
       IS_ENUM,
 
-    kpi.dim_channel_type AS channel_type
+    kpi.channel_type AS channel_type
       WITH SYNONYMS = ('channel category', 'media category', 'medium')
       COMMENT = 'Broad channel category'
       SAMPLE_VALUES ('Digital', 'Video', 'Audio')
@@ -433,22 +433,22 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPA
   )
 
   FACTS (
-    PRIVATE kpi.f_impressions AS impressions
+    PRIVATE kpi.impressions AS impressions
       COMMENT = 'Raw daily impression count',
 
-    PRIVATE kpi.f_clicks AS clicks
+    PRIVATE kpi.clicks AS clicks
       COMMENT = 'Raw daily click count (0 for Connected TV)',
 
-    PRIVATE kpi.f_conversions AS conversions
+    PRIVATE kpi.conversions AS conversions
       COMMENT = 'Raw daily conversion count',
 
-    PRIVATE kpi.f_spend AS spend
+    PRIVATE kpi.spend AS spend
       COMMENT = 'Raw daily media spend in USD',
 
-    PRIVATE kpi.f_revenue AS revenue
+    PRIVATE kpi.revenue AS revenue
       COMMENT = 'Raw daily attributed revenue in USD',
 
-    PRIVATE kpi.f_daily_budget AS daily_budget_allocation
+    PRIVATE kpi.daily_budget_allocation AS daily_budget_allocation
       COMMENT = 'Campaign budget divided by campaign duration days'
   )
 
