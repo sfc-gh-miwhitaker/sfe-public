@@ -11,7 +11,13 @@ Cortex Agent demo showing natural language exploration of paid media campaign pe
 
 ## Architecture
 
-<!-- Completed at checkpoint 9 -->
+Four-table star schema → flattened KPI view → Semantic View → Cortex Agent → Snowflake Intelligence UI.
+
+- **Dim tables**: CLIENT (verticals/tiers), CHANNEL (5 media types), CAMPAIGN (budget/dates/objective)
+- **Fact table**: FACT_DAILY_PERFORMANCE — one row per campaign per day with impressions, clicks, conversions, spend, revenue
+- **View**: V_CAMPAIGN_KPI joins all four tables into a single wide row for the semantic layer
+- **Semantic View**: Defines 14 dimensions, 6 private facts, 8 public metrics (ROAS, CTR, CPM, CPC, CVR, budget utilization), plus AI_SQL_GENERATION guidance and 8 verified queries
+- **Agent**: MEDIA_CAMPAIGN_AGENT with cortex_analyst_text_to_sql + data_to_chart tools
 
 ## Key Files
 
@@ -37,8 +43,15 @@ Cortex Agent demo showing natural language exploration of paid media campaign pe
 
 ## Extension Playbook
 
-<!-- Completed at checkpoint 9 -->
+- **Add a client**: Insert into DIM_CLIENT, create campaigns in DIM_CAMPAIGN. Fact rows auto-populate on next deploy.
+- **Add a channel**: Insert into DIM_CHANNEL, update GENERATOR logic in load_sample_data, add channel-specific metric ranges in fact generation.
+- **Add a metric**: Add PRIVATE fact in semantic view, then a public metric expression. Update AI_SQL_GENERATION if the metric has edge cases.
+- **Add a verified query**: Append to AI_VERIFIED_QUERIES in the semantic view. Set ONBOARDING_QUESTION TRUE for max 4 sample questions shown in the agent UI.
 
 ## Gotchas
 
-<!-- Completed at checkpoint 9 -->
+- **Connected TV**: Zero clicks/conversions by design. All CTR/CVR/CPC metrics return NULL for CTV. Verified queries exclude CTV where appropriate using `channel_name != 'Connected TV'`.
+- **Budget utilization > 100%**: Expected for some campaigns — synthetic spend is randomized independently of budget.
+- **Semantic view schema**: Lives in `SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS` (shared schema), not the project schema. Teardown drops it explicitly.
+- **GENERATOR randomness**: Data changes on each deploy. Don't hardcode expected row counts or metric values in tests.
+- **deploy_all.sql uses `CREATE OR REPLACE SCHEMA`**: This is intentional — ensures a clean state. Don't change to `IF NOT EXISTS`.

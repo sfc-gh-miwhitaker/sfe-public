@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-10-blue)
+![Projects](https://img.shields.io/badge/Projects-11-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -29,6 +29,7 @@ Snowflake guides for connecting AI coding assistants to Snowflake. Every project
 | Directory | Description | Features |
 |---|---|---|
 | [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) | Deployable Streamlit-in-Snowflake dashboard companion to guide-cortex-ai-cost-controls. Reads LIVE `SNOWFLAKE.ACCOUNT_USAGE` to show AI spend, attribute by cost center, manage per-user AI Function limits (simulate-only), catch runaway queries, and flag anomalies across five pages | Streamlit-in-Snowflake, Cortex AI, ACCOUNT_USAGE, simulate-only enforcement, runaway protection, budgets |
+| [demo-media-campaign-analytics](demo-media-campaign-analytics/) | Cortex Agent demo for paid media performance analytics. Natural language over synthetic campaign KPIs (ROAS, CTR, CPM, CPC, CVR, budget pacing) across 20 clients and 5 channels. Deploys star schema, semantic view with 8 verified queries, and agent — UI is Snowflake Intelligence | Cortex Agent, Semantic View, Snowflake Intelligence, media analytics, verified queries |
 
 ## First-Time Setup
 
