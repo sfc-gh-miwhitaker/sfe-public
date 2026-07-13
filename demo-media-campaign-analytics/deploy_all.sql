@@ -13,8 +13,9 @@ WHAT GETS CREATED:
   Schema:    SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS
   Schema:    SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS (shared, if not exists)
   Warehouse: SFE_MEDIA_CAMPAIGN_WH
-  Tables:    DIM_CLIENT, DIM_CHANNEL, DIM_CAMPAIGN, FACT_DAILY_PERFORMANCE
+  Tables:    DIM_CLIENT, DIM_CHANNEL, DIM_CAMPAIGN, FACT_DAILY_PERFORMANCE, DOC_CAMPAIGN_CONTENT
   View:      V_CAMPAIGN_KPI
+  Search:    CAMPAIGN_DOCS_SEARCH (Cortex Search over campaign documents)
   Sem View:  SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPAIGN_ANALYTICS
   Agent:     SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.MEDIA_CAMPAIGN_AGENT
 
@@ -22,6 +23,8 @@ AFTER DEPLOY:
   1. Snowsight → AI & ML → Agents → MEDIA_CAMPAIGN_AGENT → "Add to CoWork"
   2. Open CoWork, select Campaign Analytics agent
   3. Try: "Which channel has the highest ROAS this year?"
+  4. Try: "What was the creative strategy for Client Alpha's social campaigns?"
+  5. Try: "Client Delta's CTV spend is high — why did we choose that channel?"
 ==============================================================================*/
 
 -- ── 1. Expiration check ───────────────────────────────────────────────────────
@@ -100,6 +103,16 @@ CREATE OR REPLACE TABLE FACT_DAILY_PERFORMANCE (
     REVENUE                 NUMBER(14,2)  NOT NULL,
     DAILY_BUDGET_ALLOCATION NUMBER(12,2)  NOT NULL
 ) COMMENT = 'DEMO: Daily campaign performance fact table — Jan 2025 to Jun 2026 (Expires: 2026-08-12)';
+
+CREATE OR REPLACE TABLE DOC_CAMPAIGN_CONTENT (
+    DOC_ID        NUMBER        NOT NULL PRIMARY KEY,
+    CLIENT_ID     NUMBER        NOT NULL,
+    CAMPAIGN_ID   NUMBER,
+    DOC_TYPE      VARCHAR(30)   NOT NULL,
+    TITLE         VARCHAR(200)  NOT NULL,
+    CONTENT       VARCHAR(4000) NOT NULL,
+    CREATED_DATE  DATE          NOT NULL
+) COMMENT = 'DEMO: Campaign documents for Cortex Search — briefs, copy, strategy notes (Expires: 2026-08-12)';
 
 -- ── 4. Dimension data ─────────────────────────────────────────────────────────
 INSERT INTO DIM_CLIENT (CLIENT_ID, CLIENT_NAME, VERTICAL, TIER, COMMENT) VALUES
@@ -255,6 +268,55 @@ SELECT
     ROUND((impressions / 1000.0) * cpm * roas_multiplier, 2)  AS revenue,
     ROUND(daily_budget_allocation, 2)                          AS daily_budget_allocation
 FROM with_metrics;
+
+-- ── 6b. Campaign documents (unstructured content for Cortex Search) ──────────
+INSERT INTO DOC_CAMPAIGN_CONTENT (DOC_ID, CLIENT_ID, CAMPAIGN_ID, DOC_TYPE, TITLE, CONTENT, CREATED_DATE)
+VALUES
+-- Client Notes (account-level context)
+(1, 1, NULL, 'Client Notes', 'Client Alpha — Account Overview',
+ 'Client Alpha is an Enterprise-tier retail brand with 400+ physical stores and a rapidly growing DTC e-commerce business. Primary KPI is blended ROAS across all channels. Their CMO is data-driven and expects weekly performance summaries with channel-level attribution. They have historically over-indexed on paid search and are open to diversifying into connected TV for brand awareness. Budget decisions are made quarterly with a 60-day planning horizon.', '2025-01-05'),
+(2, 2, NULL, 'Client Notes', 'Client Bravo — Account Overview',
+ 'Client Bravo is an Enterprise financial services firm focused on lead generation for wealth management products. Strict compliance requirements limit creative flexibility — all copy must pass legal review (5-day turnaround). They prioritize cost-per-lead over ROAS and measure success at the 90-day attribution window. Social media performance has been inconsistent; they prefer paid search and display retargeting. Budget is allocated monthly from a fixed annual plan.', '2025-01-08'),
+(3, 3, NULL, 'Client Notes', 'Client Charlie — Account Overview',
+ 'Client Charlie is an Enterprise healthcare brand marketing elective procedures and wellness services. HIPAA-adjacent content restrictions apply — no patient testimonials, no before/after imagery in certain channels. They measure success via consultation bookings (tracked as conversions). Connected TV has been their fastest-growing channel due to the ability to tell longer-form stories. They run seasonal campaigns aligned with insurance deductible resets (January, July).', '2025-01-10'),
+(4, 4, NULL, 'Client Notes', 'Client Delta — Account Overview',
+ 'Client Delta is an Enterprise B2B technology company selling cloud infrastructure. Long sales cycles (90-180 days) make direct-response attribution challenging. They invest heavily in brand awareness via connected TV and streaming audio to stay top-of-mind with IT decision-makers. Lead gen campaigns target technical content downloads (whitepapers, webinars). Their ICP is enterprise companies with 1000+ employees in manufacturing and logistics verticals.', '2025-01-12'),
+(5, 5, NULL, 'Client Notes', 'Client Echo — Account Overview',
+ 'Client Echo is an Enterprise CPG brand with a portfolio of household cleaning products. Highly seasonal business — peaks around spring cleaning (March-April) and back-to-school (August). Mass-reach channels (display, streaming audio) drive brand recall; paid search captures in-market shoppers. They A/B test creative aggressively and rotate copy every 2 weeks. ROAS targets are lower (2-3x) because they optimize for market share, not margin.', '2025-01-15'),
+-- Campaign Briefs
+(6, 1, 1, 'Campaign Brief', 'Client Alpha — Q1 Paid Search Lead Gen Brief',
+ 'Objective: Drive qualified traffic to spring collection landing pages. Target audience: Women 25-44 in top 50 DMAs with household income $75K+. KPIs: CTR > 4%, CPC < $2.50, ROAS > 4x. Messaging pillars: New arrivals, limited-time offers, free shipping over $99. Competitive context: Main competitor increasing search spend 20% this quarter. Budget: $120K over 90 days.', '2025-01-10'),
+(7, 1, 2, 'Campaign Brief', 'Client Alpha — Spring Social Awareness Brief',
+ 'Objective: Build brand awareness for the spring/summer 2025 collection among new-to-brand audiences. Target: Lookalike audiences built from top 10% LTV customers. Channels: Instagram Reels and TikTok. KPIs: Reach 2M unique users, video completion rate > 30%, brand lift +5pts. Creative direction: lifestyle-first, diverse casting, outdoor settings. No hard sell — focus on brand world. Budget: $85K.', '2025-01-20'),
+(8, 3, 31, 'Campaign Brief', 'Client Charlie — January Wellness Push Brief',
+ 'Objective: Capture demand from insurance deductible resets. Target: Adults 30-60 within 25-mile radius of clinic locations. Channels: Connected TV (30-second spots) + retargeting display. KPIs: Consultation bookings target 200 in Q1, cost per booking < $350. Creative: Doctor testimonials, patient journey stories (no identifiable patient info). Budget: $140K.', '2025-01-03'),
+(9, 4, 46, 'Campaign Brief', 'Client Delta — Cloud Infrastructure Awareness Brief',
+ 'Objective: Position Client Delta as the #1 choice for enterprise cloud migration. Target: CIOs and VP-level IT leaders at companies with 1000+ employees in manufacturing and logistics. Channels: Connected TV (premium business content — CNBC, Bloomberg). KPIs: Aided brand awareness +10pts, target 500K impressions among ICP. No direct-response expectation — pure top-of-funnel. Budget: $200K.', '2025-01-08'),
+(10, 5, 61, 'Campaign Brief', 'Client Echo — Spring Cleaning Campaign Brief',
+ 'Objective: Drive seasonal sales uplift for all-purpose cleaner and disinfectant lines. Target: Household decision-makers 25-54. Channels: Streaming audio (Spotify, iHeart) for frequency + display for reach. KPIs: Brand search lift > 15%, display CTR > 0.2%, ROAS > 2.5x. Creative: "Fresh Start" messaging — new year, new clean. Audio ads 30 seconds, casual conversational tone. Budget: $160K.', '2025-02-01'),
+-- Creative Copy
+(11, 1, 1, 'Creative Copy', 'Client Alpha — Paid Search Ad Copy Set A',
+ 'Headline 1: New Spring Styles Just Dropped | Free Shipping $99+ | Headline 2: Shop the Spring Collection — 400+ New Arrivals | Description: Discover the latest trends in women''s fashion. Free shipping on orders over $99. Easy 30-day returns. Shop now. | CTA: Shop Now | Notes: A/B test headline 1 vs headline 2 for CTR.', '2025-01-12'),
+(12, 1, 2, 'Creative Copy', 'Client Alpha — Social Video Script (Instagram Reels)',
+ 'Format: 15-second vertical video. Visual: Model walking through a sunlit garden, cuts between 3 outfits. Audio: Upbeat indie track. Text overlay: "Your spring uniform" (frame 1), "New drops weekly" (frame 2), brand logo (frame 3). CTA: Tap to explore. No price claims — awareness only. 3 versions with different model/outfit combinations for creative fatigue testing.', '2025-01-22'),
+(13, 3, 31, 'Creative Copy', 'Client Charlie — Connected TV Spot Script (30s)',
+ 'Title: "New Year, New You". Open: Wide shot of confident woman walking into modern clinic lobby. :05 — Doctor on camera: "Every January, people tell me they finally have the benefits to invest in themselves." :12 — Montage: consultation room, patient smiling at results. :18 — Doctor VO: "Whether it''s rejuvenation, wellness, or just feeling like yourself again — this is your year." :25 — Card: Clinic logo + URL. Compliance: No identifiable patient imagery.', '2025-01-03'),
+(14, 5, 61, 'Creative Copy', 'Client Echo — Streaming Audio Ad (30s)',
+ '"Hey — quick question. When was the last time you actually enjoyed cleaning? Yeah, us neither. But Client Echo all-purpose cleaner makes it weirdly satisfying. One spray, one wipe, done. No residue, no harsh smell, just... clean. Grab a bottle at Target or Walmart. Client Echo. A fresh start, every time." Tone: casual, friendly neighbor, NOT announcer.', '2025-02-03'),
+-- Channel Strategy
+(15, 1, 1, 'Channel Strategy', 'Client Alpha — Paid Search Strategy Rationale',
+ 'Paid search is Client Alpha''s highest-converting channel (ROAS 4-5x historically) because their customers actively search for fashion terms when ready to buy. We allocate 35% of total budget here. Strategy: defend branded terms (competitor conquesting has increased 20%), expand non-brand into "spring outfits" and "women''s workwear" categories. Key risk: rising CPCs in fashion vertical. Monthly budget pacing review on the 15th.', '2025-01-08'),
+(16, 3, 31, 'Channel Strategy', 'Client Charlie — Connected TV Strategy Rationale',
+ 'Connected TV is ideal for healthcare because it allows longer-form storytelling (15-30s) that builds trust — critical for elective procedures. Unlike display or search, CTV lets us show doctor testimonials in a premium, brand-safe environment. We target health-conscious audiences on Hulu, Peacock, and YouTube TV. No click attribution exists for CTV, so we measure via pre/post brand studies and consultation booking correlation.', '2025-01-05'),
+(17, 4, 46, 'Channel Strategy', 'Client Delta — Connected TV Strategy Rationale',
+ 'For a B2B company selling to CIOs, connected TV might seem unusual — but premium business content (CNBC, Bloomberg, WSJ) reaches exactly our ICP during market hours. CTV impressions among IT leaders are 3x cheaper than LinkedIn InMail and create top-of-funnel awareness that shortens sales cycles downstream. We pair CTV with display retargeting to re-engage viewers who visit the site after exposure.', '2025-01-09'),
+(18, 5, 61, 'Channel Strategy', 'Client Echo — Streaming Audio Strategy Rationale',
+ 'Streaming audio drives frequency at low cost for Echo''s spring cleaning campaign. Our target (household shoppers 25-54) over-indexes on music streaming during chores and commutes — exactly when cleaning products are top of mind. Audio CPMs are $10-20 vs $25-45 for CTV, allowing 3-4x more frequency within budget. Success metric: brand search lift measured via Google Trends correlation.', '2025-02-01'),
+-- Client retrospective notes
+(19, 1, NULL, 'Client Notes', 'Client Alpha — Q1 2025 Retrospective',
+ 'Q1 results: Total spend $250K, blended ROAS 4.2x (above 3.8x target). Paid search carried performance (ROAS 5.1x) while social awareness campaigns hit 2.1M unique reach. Display retargeting ROAS was 7.3x but volume-limited by site traffic. Action items for Q2: Increase social spend to feed retargeting pool, test connected TV for the first time with summer collection, explore streaming audio.', '2025-04-05'),
+(20, 4, NULL, 'Client Notes', 'Client Delta — Sales Cycle Attribution Analysis',
+ 'Analysis period: Jan–Jun 2025. Average sales cycle: 127 days. Connected TV impressions appear in 73% of winning deal journeys (vs 31% of lost deals). Streaming audio appears in 52% of wins. Key finding: deals exposed to both CTV + audio close 23% faster than single-channel exposure. The surround-sound strategy is working. Attribution window must remain at 90+ days for these results to surface.', '2025-07-10');
 
 -- ── 7. KPI view ───────────────────────────────────────────────────────────────
 CREATE OR REPLACE VIEW V_CAMPAIGN_KPI
@@ -600,40 +662,74 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPA
 
   COMMENT = 'DEMO: Paid media campaign analytics semantic view — 20 clients, 5 channels, 18 months. Expires: 2026-08-12';
 
+-- ── 8b. Cortex Search Service (document search) ─────────────────────────────
+CREATE OR REPLACE CORTEX SEARCH SERVICE CAMPAIGN_DOCS_SEARCH
+  ON content
+  ATTRIBUTES doc_type, client_name, channel_name, campaign_name
+  WAREHOUSE = SFE_MEDIA_CAMPAIGN_WH
+  TARGET_LAG = '1 minute'
+  COMMENT = 'DEMO: Campaign document search — briefs, copy, strategy notes, client context (Expires: 2026-08-12)'
+AS (
+  SELECT
+      d.doc_id,
+      d.doc_type,
+      d.title,
+      d.content,
+      cl.client_name,
+      COALESCE(ch.channel_name, 'N/A') AS channel_name,
+      COALESCE(c.campaign_name, 'N/A') AS campaign_name,
+      d.created_date
+  FROM DOC_CAMPAIGN_CONTENT d
+  JOIN DIM_CLIENT cl ON d.client_id = cl.client_id
+  LEFT JOIN DIM_CAMPAIGN c ON d.campaign_id = c.campaign_id
+  LEFT JOIN DIM_CHANNEL ch ON c.channel_id = ch.channel_id
+);
+
 -- ── 9. Agent ──────────────────────────────────────────────────────────────────
 USE SCHEMA SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS;
 
 CREATE OR REPLACE AGENT MEDIA_CAMPAIGN_AGENT
-  COMMENT = 'DEMO: Media campaign performance analytics agent — natural language over paid media KPIs. Expires: 2026-08-12'
+  COMMENT = 'DEMO: Media campaign analytics — structured KPIs + document search in one agent. Expires: 2026-08-12'
   PROFILE = '{"display_name": "Campaign Analytics", "avatar": "chart-bar", "color": "blue"}'
   FROM SPECIFICATION
   $$
 
   orchestration:
     budget:
-      seconds: 45
-      tokens: 32000
+      seconds: 60
+      tokens: 40000
 
   instructions:
     response: |
-      You are a media analytics assistant helping agency teams understand paid media performance.
-      Always show numbers in context — pair a metric with a comparison (vs last period, vs benchmark, vs budget).
+      You are a media analytics assistant helping agency teams understand paid media performance
+      and campaign strategy. You have access to both quantitative data (spend, ROAS, CTR, etc.)
+      and qualitative documents (campaign briefs, creative copy, channel strategies, client notes).
+
+      For numbers: always show context — pair a metric with a comparison (vs last period, vs benchmark, vs budget).
       Format currency as $X,XXX. Format percentages to 1 decimal place.
-      When a channel is Connected TV, note that CTR and CVR are not applicable (impression-only medium).
-      Keep responses concise — lead with the key number, follow with context.
+      When a channel is Connected TV, note that CTR and CVR metrics are not applicable (impression-only medium).
+
+      For documents: cite the document title and relevant excerpt. Summarize key points rather than dumping full text.
+
+      For hybrid questions (e.g., "ROAS dropped — what does the brief say about the strategy?"):
+      use both tools and synthesize the quantitative finding with the qualitative context.
+
+      Keep responses concise — lead with the answer, follow with supporting detail.
     orchestration: |
-      Use the CampaignAnalytics tool for all questions about campaign performance, spend, ROAS, CTR,
-      conversions, budgets, and channel comparisons. Use data_to_chart whenever the user asks for a chart,
-      trend, comparison across more than 3 items, or when the result is a ranking.
+      Route questions to the right tool:
+      - Quantitative (spend, ROAS, CTR, impressions, conversions, budgets, rankings, trends) → CampaignAnalytics
+      - Qualitative (strategy, briefs, creative copy, client context, "why", relationships, preferences) → CampaignDocs
+      - Mixed ("ROAS dropped — what does the brief say?") → use BOTH tools and synthesize
+      Use data_to_chart when the user asks for a chart, trend visualization, or when comparing 3+ items.
     sample_questions:
       - question: "Which channel has the highest ROAS this year?"
+      - question: "What was the creative strategy for Client Alpha's social campaigns?"
       - question: "Which active campaigns are pacing over budget?"
-      - question: "Compare click-through rates across channels this year"
+      - question: "Show me the ad copy for Client Echo's streaming audio campaign"
+      - question: "Client Bravo's ROAS dropped — what does their brief say about target audience?"
       - question: "What is total spend by channel for the last 30 days?"
-      - question: "Which clients have the highest ROAS this quarter?"
+      - question: "Why did we choose Connected TV for Client Charlie?"
       - question: "How has Connected TV spend trended by quarter?"
-      - question: "Break down total spend by campaign objective this year"
-      - question: "Show the bottom 5 campaigns by conversion rate"
 
   tools:
     - tool_spec:
@@ -641,10 +737,18 @@ CREATE OR REPLACE AGENT MEDIA_CAMPAIGN_AGENT
         name: "CampaignAnalytics"
         description: |
           Converts natural language questions about paid media performance into SQL and returns results.
-          Use for: spend, ROAS, CTR, CPM, CPC, CVR, conversions, impressions, budget pacing,
-          channel comparisons, client rankings, campaign performance, time-period comparisons,
-          and any KPI trending. Data covers 20 clients across 5 channels (Paid Search, Social Media,
-          Display, Connected TV, Streaming Audio) from January 2025 through June 2026.
+          Use for: spend, ROAS, CTR, CPM, CPC, CVR, conversions, impressions, budget pacing, channel comparisons,
+          client rankings, campaign performance, time-period comparisons (YoY, QoQ, MoM), and any KPI trending.
+          Data covers 20 clients across 5 channels (Paid Search, Social Media, Display, Connected TV,
+          Streaming Audio) from January 2025 through June 2026.
+    - tool_spec:
+        type: "cortex_search"
+        name: "CampaignDocs"
+        description: |
+          Searches campaign documents including briefs, creative copy, channel strategy rationale,
+          and client relationship notes. Use for questions about WHY a campaign exists, WHAT the
+          creative looks like, WHO the client is, and HOW channel decisions were made.
+          Document types: Campaign Brief, Creative Copy, Channel Strategy, Client Notes.
     - tool_spec:
         type: "data_to_chart"
         name: "data_to_chart"
@@ -656,6 +760,32 @@ CREATE OR REPLACE AGENT MEDIA_CAMPAIGN_AGENT
       execution_environment:
         type: warehouse
         warehouse: "SFE_MEDIA_CAMPAIGN_WH"
+    CampaignDocs:
+      name: "SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.CAMPAIGN_DOCS_SEARCH"
+      max_results: "5"
+      title_column: "TITLE"
+      id_column: "DOC_ID"
+      columns_and_descriptions:
+        content:
+          description: "Full document text — campaign briefs, creative copy, strategy rationale, client relationship context"
+          type: "string"
+          searchable: true
+          filterable: false
+        doc_type:
+          description: "Document category. Valid values: Campaign Brief, Creative Copy, Channel Strategy, Client Notes"
+          type: "string"
+          searchable: false
+          filterable: true
+        client_name:
+          description: "Client name the document relates to. Values: Client Alpha through Client Tango"
+          type: "string"
+          searchable: false
+          filterable: true
+        channel_name:
+          description: "Media channel. Valid values: Paid Search, Social Media, Display, Connected TV, Streaming Audio, N/A"
+          type: "string"
+          searchable: false
+          filterable: true
   $$;
 
 -- ── 10. Final validation (the only result shown in Run All) ───────────────────
@@ -664,4 +794,5 @@ SELECT
     (SELECT COUNT(*) FROM SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.DIM_CLIENT)             AS clients,
     (SELECT COUNT(*) FROM SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.DIM_CAMPAIGN)           AS campaigns,
     (SELECT COUNT(*) FROM SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.FACT_DAILY_PERFORMANCE) AS fact_rows,
+    (SELECT COUNT(*) FROM SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.DOC_CAMPAIGN_CONTENT)   AS documents,
     'Snowsight → AI & ML → Agents → MEDIA_CAMPAIGN_AGENT'                                    AS next_step;

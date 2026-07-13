@@ -12,20 +12,25 @@ Art-of-the-possible demo. The deliverable is a *reaction* — "I want that for m
 ```
 DIM_CLIENT / DIM_CHANNEL / DIM_CAMPAIGN / FACT_DAILY_PERFORMANCE
          ↓ (joined in)
-  V_CAMPAIGN_KPI
-         ↓ (semantic layer)
-  SV_MEDIA_CAMPAIGN_ANALYTICS
-         ↓ (agent)
-  MEDIA_CAMPAIGN_AGENT → Snowflake Intelligence UI
+  V_CAMPAIGN_KPI ─────────────────────→ SV_MEDIA_CAMPAIGN_ANALYTICS
+                                                   ↓
+DOC_CAMPAIGN_CONTENT ─→ CAMPAIGN_DOCS_SEARCH       ↓
+                              ↓                    ↓
+                      MEDIA_CAMPAIGN_AGENT (both tools)
+                              ↓
+                      Snowflake Intelligence UI
 ```
 
-The audience sees only the last step. Everything else is scaffolding.
+The audience sees only the last step. The agent has two tools:
+- **CampaignAnalytics** — structured KPIs via semantic view (spend, ROAS, CTR, etc.)
+- **CampaignDocs** — unstructured documents via Cortex Search (briefs, copy, strategy, client notes)
 
 ## Snowflake Environment
 
 - Database: `SNOWFLAKE_EXAMPLE`
 - Schema: `SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS`
 - Semantic View: `SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPAIGN_ANALYTICS`
+- Search Service: `SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.CAMPAIGN_DOCS_SEARCH`
 - Agent: `SNOWFLAKE_EXAMPLE.MEDIA_CAMPAIGN_ANALYTICS.MEDIA_CAMPAIGN_AGENT`
 - Warehouse: `SFE_MEDIA_CAMPAIGN_WH` (XSmall, auto-suspend 60s)
 
