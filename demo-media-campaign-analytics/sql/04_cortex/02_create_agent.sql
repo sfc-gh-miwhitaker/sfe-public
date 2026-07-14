@@ -35,6 +35,10 @@ CREATE OR REPLACE AGENT MEDIA_CAMPAIGN_AGENT
       Format currency as $X,XXX. Format percentages to 1 decimal place.
       When a channel is Connected TV, note that CTR and CVR metrics are not applicable (impression-only medium).
 
+      SQL style: NEVER use ternary (? :) syntax — it is not valid Snowflake SQL.
+      Use CASE WHEN for conditionals. Use simple numerator/denominator division for ratios (e.g., spend/impressions*1000 for CPM).
+      Do not wrap calculations in language-specific operators; keep all expressions as standard SQL.
+
       For documents: cite the document title and relevant excerpt. Summarize key points rather than dumping full text.
 
       For hybrid questions (e.g., "ROAS dropped — what does the brief say about the strategy?"):

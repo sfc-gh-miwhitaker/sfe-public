@@ -168,6 +168,8 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPA
       COMMENT = 'Budget Utilization % = Spend / Budget Allocation × 100. >100% = overspending.'
   )
 
+  COMMENT = 'DEMO: Paid media campaign analytics semantic view — 20 clients, 5 channels, 18 months. Expires: 2026-08-12'
+
   AI_SQL_GENERATION
     'Round all percentage metrics to 1 decimal place in output.
      When comparing time periods (e.g. "vs last quarter"), always show both periods.
@@ -337,6 +339,4 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_MEDIA_CAMPA
            GROUP BY c.objective
            ORDER BY total_spend DESC'
     )
-  )
-
-  COMMENT = 'DEMO: Paid media campaign analytics semantic view — 20 clients, 5 channels, 18 months. Expires: 2026-08-12';
+  );
