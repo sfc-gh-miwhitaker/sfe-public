@@ -45,6 +45,15 @@ CREATE OR REPLACE SECURITY INTEGRATION aad_provisioning
 
 
 -- ============================================================
+-- GENERATE SCIM TOKEN
+-- The Microsoft tutorial (Step 2) asks for a "Secret Token".
+-- Run this and copy the result — you'll paste it into Microsoft's setup.
+-- It won't be shown again after you close this result.
+-- ============================================================
+SELECT SYSTEM$GENERATE_SCIM_ACCESS_TOKEN('AAD_PROVISIONING');
+
+
+-- ============================================================
 -- VERIFY: Both integrations should appear in this list
 -- ============================================================
 SHOW INTEGRATIONS;

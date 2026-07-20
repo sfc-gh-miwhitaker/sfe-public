@@ -36,7 +36,7 @@ The trickiest part isn't the setup — it's making sure every Power BI user's Sn
 
 ## What the setup involves
 
-- **Snowflake (you):** Run two SQL blocks — one sets up the Microsoft trust, one sets up the automated user sync
+- **Snowflake (you):** Run two SQL blocks — one sets up the Microsoft trust, one sets up automated user sync — then generate a secret token you'll need for the next step
 - **Microsoft Entra (you or your IT team):** Follow one Microsoft tutorial to connect Entra to Snowflake
 - **Power BI (you):** Change two settings — one in Desktop when connecting, one in Service after publishing
 
