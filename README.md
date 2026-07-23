@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-11-blue)
+![Projects](https://img.shields.io/badge/Projects-10-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -21,7 +21,6 @@ Snowflake guides for connecting AI coding assistants to Snowflake. Every project
 | [guide-claude-code-cortex-redirect](guide-claude-code-cortex-redirect/) | How to redirect `claude` CLI and Anthropic/OpenAI SDK inference to Snowflake Cortex instead of Anthropic directly — so all inference runs inside the Snowflake perimeter, governed by RBAC and billed to Snowflake. Covers `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN` setup, per-user and org-wide enforcement, SDK patterns (Python + Node, Messages API + Chat Completions), verification via `CORTEX_REST_API_USAGE_HISTORY`, and auth gotchas | Cortex REST API, ANTHROPIC_BASE_URL, SDK redirect, Claude Code, inference governance |
 | [guide-connecting-claude-snowflake](guide-connecting-claude-snowflake/) | Post-Summit-26 guide to putting Claude in front of Snowflake: context over connection. Why raw text-to-SQL is ~24% accurate, how Horizon Context + Cortex Sense reach ~86%, CoWork/CoCo surfaces, Natoma governed MCP gateway; legacy OAuth/Entra MCP demoted | CoWork, CoCo, Cortex Sense, Horizon Context, Natoma, governed MCP |
 | [guide-snowflake-cost-visibility](guide-snowflake-cost-visibility/) | Foundational cost governance: Budget object (predictive spend alerts), METERING_DAILY_HISTORY attribution queries, Resource Monitors (warehouse guardrails), and AI_FUNCTIONS_USER RBAC for new BU governance. Companion to guide-cortex-ai-cost-controls | Budget object, ACCOUNT_USAGE, resource monitors, AI_FUNCTIONS_USER, RBAC, cost visibility |
-| [guide-cortex-ai-cost-controls](guide-cortex-ai-cost-controls/) | Narrative guide to monitoring and enforcing Cortex AI spend. Teaches the mental model (see, attribute, limit, protect), then provides copy-paste SQL for all 14 usage views, tag-based attribution, per-user enforcement (native + DIY), runaway query protection, and account budgets | Cortex AI, cost monitoring, ACCOUNT_USAGE, tag attribution, budget enforcement, runaway query protection |
 | [guide-vscode-copilot-cortex](guide-vscode-copilot-cortex/) | Connect VS Code GitHub Copilot to Snowflake Cortex: managed MCP for Copilot Chat, subagent skill for Copilot CLI, and the CoCo CLI (formerly Cortex Code) in the integrated terminal. Post-Summit-26, with the shared semantic-view accuracy foundation | Snowflake MCP, OAuth, PAT, subagent-cortex-code, CoCo CLI |
 
 ### Demos
