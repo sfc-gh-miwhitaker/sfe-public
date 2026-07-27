@@ -112,7 +112,6 @@ with right:
                 "TOTAL_SHARES": "Shares",
             }),
             use_container_width=True,
-            hide_index=True,
         )
 
 st.markdown("---")

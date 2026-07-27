@@ -138,7 +138,6 @@ if not shows.empty:
             "MOMENTUM_LABEL": "Status",
         }),
         use_container_width=True,
-        hide_index=True,
     )
 else:
     st.caption("No upcoming shows found.")

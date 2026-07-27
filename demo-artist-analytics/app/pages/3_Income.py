@@ -115,7 +115,6 @@ with right:
         st.dataframe(
             mix.rename(columns={"SOURCE": "Income Source", "AMOUNT": "Total ($)"}),
             use_container_width=True,
-            hide_index=True,
         )
 
 st.markdown("---")

@@ -108,7 +108,6 @@ with right:
                 "AVG_LISTENERS": "Avg Daily Listeners",
             }),
             use_container_width=True,
-            hide_index=True,
         )
 
 st.markdown("---")
