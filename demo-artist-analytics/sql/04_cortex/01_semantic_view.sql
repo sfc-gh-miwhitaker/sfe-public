@@ -217,6 +217,42 @@ CREATE OR REPLACE SEMANTIC VIEW SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_ARTIST_ANAL
       ONBOARDING_QUESTION FALSE
       VERIFIED_BY '(STEWARD = se_community)'
       SQL 'SELECT DATE_TRUNC(''week'', stream_date) AS week_start, SUM(streams) AS total_streams, SUM(listeners) AS total_listeners FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.FACT_DAILY_STREAMS WHERE stream_date >= DATEADD(''day'', -60, CURRENT_DATE()) GROUP BY DATE_TRUNC(''week'', stream_date) ORDER BY week_start'
+    ),
+    -- ── CoWork showcase queries ─────────────────────────────────────────────────
+    q_shows_needing_push AS (
+      QUESTION 'Which of my upcoming shows should I be worried about?'
+      VERIFIED_AT 1753394400
+      ONBOARDING_QUESTION TRUE
+      VERIFIED_BY '(STEWARD = se_community)'
+      SQL 'SELECT show_name, venue_city, show_date, days_until_show, momentum_score, momentum_label FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.V_SHOW_MOMENTUM WHERE momentum_label = ''Needs push — below baseline'' OR momentum_score < 100 ORDER BY momentum_score ASC NULLS LAST'
+    ),
+    q_income_mix_trend AS (
+      QUESTION 'Am I making more money from streaming or merch this month, and is that ratio changing?'
+      VERIFIED_AT 1753394400
+      ONBOARDING_QUESTION FALSE
+      VERIFIED_BY '(STEWARD = se_community)'
+      SQL 'SELECT DATE_TRUNC(''week'', income_date) AS week_start, ROUND(SUM(stream_royalties), 2) AS streaming_royalties, ROUND(SUM(merch_estimate), 2) AS merch_income, ROUND(SUM(stream_royalties) / NULLIF(SUM(stream_royalties) + SUM(merch_estimate), 0) * 100, 1) AS streaming_pct, ROUND(SUM(merch_estimate) / NULLIF(SUM(stream_royalties) + SUM(merch_estimate), 0) * 100, 1) AS merch_pct FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.FACT_INCOME WHERE income_date >= DATEADD(''day'', -30, CURRENT_DATE()) GROUP BY DATE_TRUNC(''week'', income_date) ORDER BY week_start'
+    ),
+    q_tiktok_to_streams AS (
+      QUESTION 'My TikTok went viral last week — did it actually move my streams?'
+      VERIFIED_AT 1753394400
+      ONBOARDING_QUESTION FALSE
+      VERIFIED_BY '(STEWARD = se_community)'
+      SQL 'SELECT s.metric_date AS date, s.engagements AS tiktok_engagements, s.shares AS tiktok_shares, st.total_streams FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.V_SOCIAL_KPI s JOIN (SELECT stream_date, SUM(streams) AS total_streams FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.V_STREAM_KPI GROUP BY stream_date) st ON st.stream_date = s.metric_date WHERE s.social_platform = ''TikTok'' AND s.metric_date >= DATEADD(''day'', -14, CURRENT_DATE()) ORDER BY s.metric_date'
+    ),
+    q_market_comparison AS (
+      QUESTION 'How does engagement in Chicago compare to Nashville at this point before their shows?'
+      VERIFIED_AT 1753394400
+      ONBOARDING_QUESTION FALSE
+      VERIFIED_BY '(STEWARD = se_community)'
+      SQL 'SELECT venue_city, show_name, show_date, days_until_show, baseline_daily_engagements, pre_show_daily_engagements, momentum_score, momentum_label FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.V_SHOW_MOMENTUM WHERE venue_city IN (''Chicago'', ''Nashville'') ORDER BY venue_city, show_date'
+    ),
+    q_best_income_day AS (
+      QUESTION 'What was my best single day of income in the last 90 days and what drove it?'
+      VERIFIED_AT 1753394400
+      ONBOARDING_QUESTION FALSE
+      VERIFIED_BY '(STEWARD = se_community)'
+      SQL 'SELECT income_date, ROUND(stream_royalties, 2) AS streaming_royalties, ROUND(merch_estimate, 2) AS merch_income, ROUND(sync_licensing, 2) AS sync_income, ROUND(total_income, 2) AS total_income, CASE WHEN sync_licensing > stream_royalties AND sync_licensing > merch_estimate THEN ''Sync placement day'' WHEN merch_estimate > stream_royalties THEN ''Merch spike (likely near a show)'' ELSE ''Strong streaming day'' END AS likely_driver FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.FACT_INCOME ORDER BY total_income DESC LIMIT 5'
     )
   );
 
