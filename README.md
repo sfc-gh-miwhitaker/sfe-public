@@ -28,7 +28,6 @@ Snowflake guides for connecting AI coding assistants to Snowflake. Every project
 
 | Directory | Description | Features |
 |---|---|---|
-| [demo-artist-analytics](demo-artist-analytics/) | Two-tier music artist analytics for a fictional indie pop artist: a Streamlit KPI dashboard (streams by platform, social impressions, income breakdown) as the basic tier, and a Cortex Agent in Snowflake Intelligence (CoWork) as the pro tier. Centerpiece: a momentum score that measures whether fan engagement in each show city is building or cooling in the 14 days before each concert | Cortex Agent, Semantic View, Streamlit-in-Snowflake, Snowflake Intelligence, music analytics, momentum score, social media |
 | [demo-media-campaign-analytics](demo-media-campaign-analytics/) | Cortex Agent demo for paid media analytics. One agent answers both quantitative questions (ROAS, CTR, budget pacing via semantic view) and qualitative questions (campaign briefs, creative copy, channel strategy via Cortex Search). 5-min deploy, zero external tools | Cortex Agent, Semantic View, Cortex Search, Snowflake Intelligence, media analytics, document search |
 
 ## First-Time Setup
