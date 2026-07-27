@@ -19,8 +19,8 @@ DROP AGENT IF EXISTS SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.ARTIST_ANALYTICS_AGENT;
 -- ── Semantic View ─────────────────────────────────────────────────────────────
 DROP SEMANTIC VIEW IF EXISTS SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_ARTIST_ANALYTICS;
 
--- ── Streamlit ─────────────────────────────────────────────────────────────────
-DROP STREAMLIT IF EXISTS SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.ARTIST_DASHBOARD;
+-- ── App Runtime (requires CLI: snow app teardown --connection <conn>) ────────
+-- Run separately if deployed: snow app teardown
 
 -- ── Schema (drops all tables and views in one step) ───────────────────────────
 DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS;

@@ -18,11 +18,10 @@ WHAT GETS CREATED:
   Views:     V_STREAM_KPI, V_SOCIAL_KPI, V_INCOME_KPI, V_SHOW_MOMENTUM
   Sem View:  SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_ARTIST_ANALYTICS
   Agent:     SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.ARTIST_ANALYTICS_AGENT
-  Streamlit: SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.ARTIST_DASHBOARD
 
 AFTER DEPLOY:
-  Basic tier:
-    Snowsight → Projects → Streamlit → ARTIST_DASHBOARD
+  Basic tier (App Runtime — deployed automatically via GitHub Actions):
+    Snowsight → Apps → ARTIST_ANALYTICS
 
   Pro tier (Snowflake Intelligence):
     Snowsight → AI & ML → Agents → ARTIST_ANALYTICS_AGENT → "Add to CoWork"
@@ -86,8 +85,6 @@ EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/mai
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-artist-analytics/sql/04_cortex/01_semantic_view.sql';
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-artist-analytics/sql/04_cortex/02_create_agent.sql';
 
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-artist-analytics/sql/05_streamlit/01_create_streamlit.sql';
-
 -- ── 5. Final validation ──────────────────────────────────────────────────────
 SELECT
     'Artist Analytics — Jade Hollow'                                          AS demo,
@@ -96,5 +93,5 @@ SELECT
     (SELECT COUNT(*) FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.FACT_SOCIAL_METRICS) AS social_rows,
     (SELECT COUNT(*) FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.FACT_INCOME)     AS income_rows,
     (SELECT COUNT(*) FROM SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS.V_SHOW_MOMENTUM) AS momentum_rows,
-    'Snowsight → Projects → Streamlit → ARTIST_DASHBOARD'                    AS basic_tier,
+    'Snowsight → Apps → ARTIST_ANALYTICS (deployed via CI/CD)'               AS basic_tier,
     'Snowsight → AI & ML → Agents → ARTIST_ANALYTICS_AGENT'                  AS pro_tier;

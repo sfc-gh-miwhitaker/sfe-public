@@ -1,0 +1,7 @@
+profile:
+  label: "Jade Hollow Analytics"
+  description: "Artist analytics dashboard — streaming performance, social engagement, income, and show momentum"
+  icon: icon.svg
+
+run:
+  command: ["node", ".next/standalone/server.js"]

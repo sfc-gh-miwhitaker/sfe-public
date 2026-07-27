@@ -7,7 +7,7 @@ description: "Artist Analytics demo for Jade Hollow — music streaming, social 
 
 ## Purpose
 
-Two-tier music artist analytics demo. Basic tier: Streamlit KPI dashboard (streams, social impressions, income). Pro tier: Snowflake Intelligence (CoWork) powered by a Cortex Agent over a semantic view, with momentum scores that show whether social engagement is building in each show city before the performance date.
+Two-tier music artist analytics demo. Basic tier: Snowflake App Runtime dashboard (dark-themed, branded, Recharts visualizations). Pro tier: Snowflake Intelligence (CoWork) powered by a Cortex Agent over a semantic view, with momentum scores that show whether social engagement is building in each show city before the performance date.
 
 Fictional artist: Jade Hollow (indie pop, Nashville, independent label).
 
@@ -15,24 +15,35 @@ Fictional artist: Jade Hollow (indie pop, Nashville, independent label).
 
 ```
 DIM tables → FACT tables → KPI views + V_SHOW_MOMENTUM → SV_ARTIST_ANALYTICS → ARTIST_ANALYTICS_AGENT → Intelligence
-                                                                                              ↓
-                                                                               ARTIST_DASHBOARD (Streamlit)
+                                                    ↓
+                                     App Runtime (Next.js on SPCS)
+                                     Deployed via GitHub Actions CI/CD
 ```
+
+## Deployment Model
+
+```
+Push to main → GitHub Actions → OIDC auth → snow app deploy → stable URL
+SE pastes deploy_all.sql → data + agent ready → app already live
+```
+
+No clone, no CLI, no npm required by the SE consuming the demo.
 
 ## Key Files
 
 | File | Role |
 |------|------|
-| `deploy_all.sql` | Single-entry deploy — paste into Snowsight, Run All |
+| `deploy_all.sql` | Data layer deploy — paste into Snowsight, Run All |
 | `teardown_all.sql` | Drops schema + warehouse, preserves SNOWFLAKE_EXAMPLE DB |
-| `sql/02_data/04_social.sql` | Contains the momentum boost multiplier (1.5× for cities within 14d of a show) |
+| `app-runtime/` | Next.js dashboard (App Runtime) |
+| `app-runtime/snowflake.yml` | Deployment manifest for `snow app deploy` |
+| `app-runtime/app.yml` | App metadata (label, description, icon) |
+| `sql/00_cicd/01_service_user.sql` | OIDC service user for GitHub Actions (run once) |
+| `sql/02_data/04_social.sql` | Contains the momentum boost multiplier (1.5x for cities within 14d) |
 | `sql/03_views/02_momentum_score.sql` | V_SHOW_MOMENTUM definition — the centerpiece metric |
-| `sql/04_cortex/01_semantic_view.sql` | SV_ARTIST_ANALYTICS — 4 logical tables (streams, social, income, shows) |
+| `sql/04_cortex/01_semantic_view.sql` | SV_ARTIST_ANALYTICS — 4 logical tables |
 | `sql/04_cortex/02_create_agent.sql` | ARTIST_ANALYTICS_AGENT with sample questions |
-| `app/streamlit_app.py` | Landing page with KPI tiles and upcoming shows table |
-| `app/pages/1_Streams.py` | Streaming trends by platform |
-| `app/pages/2_Social.py` | Social impressions and engagement rate |
-| `app/pages/3_Income.py` | Royalties, merch, sync income breakdown |
+| `.github/workflows/deploy-artist-analytics.yml` | CI/CD workflow — auto-deploys on push to main |
 
 ## Snowflake Objects
 
@@ -42,6 +53,8 @@ DIM tables → FACT tables → KPI views + V_SHOW_MOMENTUM → SV_ARTIST_ANALYTI
 | Schema | `SNOWFLAKE_EXAMPLE.ARTIST_ANALYTICS` |
 | Warehouse | `SFE_ARTIST_ANALYTICS_WH` |
 | Semantic View | `SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_ARTIST_ANALYTICS` |
+| Application Service | `ARTIST_ANALYTICS` |
+| Service User | `SFE_GITHUB_DEPLOY` (OIDC, for CI/CD) |
 
 ## Extension Playbook
 
@@ -57,7 +70,18 @@ DIM tables → FACT tables → KPI views + V_SHOW_MOMENTUM → SV_ARTIST_ANALYTI
 1. In `sql/02_data/03_streams.sql`: change `ROWCOUNT => 90` to the desired number of days
 2. In `sql/02_data/04_social.sql`: change `ROWCOUNT => 90` to match
 3. Re-run both scripts; then re-run `05_income.sql` (it reads from FACT_DAILY_STREAMS)
-4. Re-run `01_kpi_views.sql` (no change needed, but good hygiene)
+
+### How to modify the dashboard
+
+1. Edit files in `app-runtime/` (Next.js / React)
+2. Test locally: `cd app-runtime && npm run dev`
+3. Push to `main` — GitHub Actions auto-deploys within ~5 min
+
+### How to redeploy manually (fallback)
+
+```bash
+cd app-runtime && snow app deploy
+```
 
 ## Gotchas
 
@@ -66,4 +90,6 @@ DIM tables → FACT tables → KPI views + V_SHOW_MOMENTUM → SV_ARTIST_ANALYTI
 - **Social REGION must exactly match DIM_SHOW.VENUE_CITY** for the momentum join to produce results. A typo (e.g., "Los Angeles" vs "Los Angeles, CA") will silently produce NULL momentum scores.
 - **Semantic view DDL syntax:** `FACTS` and `DIMENSIONS` use `table_alias.column` prefixes. Derived view-level metrics have no table prefix. `AI_SQL_GENERATION '...'` replaces the YAML `custom_instructions` block.
 - **V_INCOME_KPI depends on FACT_INCOME, which depends on FACT_DAILY_STREAMS.** Always run `03_streams.sql` before `05_income.sql`.
-- **Streamlit uses warehouse runtime** (not container runtime). The `QUERY_WAREHOUSE` parameter sets the compute for both app code and SQL queries on the same XS warehouse.
+- **snowflake.yml must target a shared database** (not `USER$*`) for other SEs to access the deployed app. Requires App Runtime account administrator setup.
+- **CI/CD OIDC subject is branch-locked.** If you rename the repo or deploy from a different branch, update the service user's WORKLOAD_IDENTITY SUBJECT.
+- **Trial accounts don't support App Runtime.** Use a paid account.

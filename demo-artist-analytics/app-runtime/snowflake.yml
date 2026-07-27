@@ -1,0 +1,25 @@
+definition_version: "2"
+
+entities:
+  artist_analytics:
+    type: snowflake-app
+    identifier:
+      name: ARTIST_ANALYTICS
+      database: USER$MWHITAKER
+      schema: PUBLIC
+    artifacts:
+      - src: ./*
+        dest: ./
+        ignore:
+          - node_modules
+          - .env*
+          - __pycache__
+          - "*.pyc"
+          - .next
+          - .git
+          - output
+          - snowflake.log
+          - __tests__
+
+    query_warehouse: MW_TASK
+    code_workspace: USER$MWHITAKER.PUBLIC.SNOWFLAKE_APPS
