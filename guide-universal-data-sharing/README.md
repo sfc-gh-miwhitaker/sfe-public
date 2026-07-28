@@ -33,6 +33,7 @@ Pair-programmed by SE Community + Cortex Code
 | 1 | [Open Data Sharing](#1-open-data-sharing-public-preview) | Non-Snowflake consumers access shares via Iceberg REST APIs + PAT |
 | 2 | [Open Table Format Sharing](#2-open-table-format-sharing-ga) | Share Iceberg/Delta across clouds with auto-fulfillment (consumer has Snowflake) |
 | 3 | [Multi-Party Clean Rooms](#3-multi-party-clean-rooms--collaboration-api-ga) | Symmetric N-party collaboration replacing the old 2-party model |
+| ↳ | [Cross-Cloud Clean Rooms](#cross-cloud-clean-rooms-im-on-aws-my-partner-is-on-azure) | "I'm on AWS, my partner is on Azure" — solved |
 | 4 | [Universal Governance](#4-universal-governance--policies-follow-the-data) | Policies enforced on external engines via Scan Plan API |
 | 5 | [AI-Powered Sharing](#5-ai-powered-sharing--the-last-mile) | Auto-gen agents make shared data conversational for non-technical users |
 
@@ -75,6 +76,7 @@ flowchart TD
 | Run Spark + Snowflake and need consistent policies | Snowflake Connector for Apache Spark enforces Horizon policies today (GA). Scan Plan API coming for all engines. | [Section 4](#4-universal-governance--policies-follow-the-data) |
 | Business partners aren't technical enough for SQL | Auto-gen Agents create a conversational interface over any share — no SQL needed. | [Section 5](#5-ai-powered-sharing--the-last-mile) |
 | Currently using reader accounts | Open Data Sharing eliminates reader account maintenance. Partners use their own tools with a PAT. | [Section 1](#1-open-data-sharing-public-preview) |
+| Partners are on a different cloud (AWS vs Azure vs GCP) | Cross-Cloud Auto-Fulfillment handles this — no data movement required. Must be planned at collaboration creation time. | [Cross-Cloud Clean Rooms](#cross-cloud-clean-rooms-im-on-aws-my-partner-is-on-azure) |
 
 ---
 
@@ -268,6 +270,36 @@ $$, 'ANALYSIS_WH');
 
 </details>
 
+### Cross-Cloud Clean Rooms: "I'm on AWS, My Partner is on Azure"
+
+This was previously a hard blocker. It's now solved — with caveats.
+
+**The short answer:** Cross-cloud and cross-region clean rooms are fully supported. The platform handles data replication automatically. No one has to move their data.
+
+**How it works:**
+
+1. The collaboration must be **created as cross-cloud from the start** (you cannot convert a same-region collaboration later)
+2. Each collaborator in a different cloud/region enables **Cross-Cloud Auto-Fulfillment** on their account:
+
+```sql
+-- Run once per account (not per collaboration)
+CALL SAMOOHA_BY_SNOWFLAKE_LOCAL_DB.LIBRARY.ENABLE_GLOBAL_DATA_SHARING_FOR_ACCOUNT();
+```
+
+3. Once enabled, collaborators join normally — the platform replicates what's needed behind the scenes
+
+**What to know:**
+
+| Question | Answer |
+|---|---|
+| Does my data physically move? | Metadata and aggregated results replicate. Raw data stays in its home region. |
+| Who pays for replication? | The analysis runner bears compute costs. Cross-cloud replication costs apply per Snowflake's standard pricing. |
+| Can I add a cross-cloud partner after creation? | No. The collaboration must be set up for cross-cloud from day one. Plan ahead. |
+| Which clouds are supported? | AWS, Azure, and GCP in [supported regions](https://docs.snowflake.com/user-guide/cleanrooms/installing-dcr#label-dcr-supported-regions). |
+| What about government or VPS? | Not currently supported for Data Clean Rooms. |
+
+> **Key takeaway:** The old "you have to move your data to my cloud" blocker is gone. But you must plan for cross-cloud at collaboration creation time — it can't be added retroactively.
+
 ### Timeline
 
 > **Action required:** Legacy clean rooms cannot be created via UI after **Oct 2026**. Migration tool available now.
@@ -276,7 +308,7 @@ $$, 'ANALYSIS_WH');
 - **Oct 2026:** No new legacy clean rooms via UI
 - **Migration tool available** to convert existing legacy rooms
 
-> **Reference:** [Collaboration API Reference](https://docs.snowflake.com/en/user-guide/cleanrooms/v2/v2-api-reference) | [Migration Guide](https://docs.snowflake.com/en/user-guide/cleanrooms/getting-started)
+> **Reference:** [Collaboration API Reference](https://docs.snowflake.com/en/user-guide/cleanrooms/v2/v2-api-reference) | [Migration Guide](https://docs.snowflake.com/en/user-guide/cleanrooms/getting-started) | [Cross-Cloud Auto-Fulfillment](https://docs.snowflake.com/en/user-guide/cleanrooms/laf)
 
 ---
 
