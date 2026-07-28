@@ -11,7 +11,7 @@ But quietly, Snowflake shipped something that solves the longest-standing object
 
 The answer is no longer "create a reader account." It's a collection of capabilities that make Snowflake the collaboration hub regardless of what your partners run.
 
-**Audience:** Solutions Engineers, Data Architects, and anyone advising customers who share data with non-Snowflake partners.
+**Audience:** Data Architects, Data Engineers, and technical decision-makers evaluating how to share data with partners who don't use Snowflake.
 **Created:** 2026-07-28 | **Expires:** 2026-08-27 | **Status:** ACTIVE
 
 Pair-programmed by SE Community + Cortex Code
@@ -22,9 +22,9 @@ Pair-programmed by SE Community + Cortex Code
 
 ## Start Here
 
-**If a customer asks about sharing with non-Snowflake partners, jump to:**
-- [Quick Answers for Customer Objections](#quick-answers-for-customer-objections) — what to say in the meeting
-- [Decision Tree](#decision-tree) — which mechanism fits their scenario
+**Need to share data with a partner who doesn't use Snowflake?** Start with:
+- [Common Scenarios](#common-scenarios) — find your situation, get the answer
+- [Decision Tree](#decision-tree) — which mechanism fits
 
 **Then read the deep-dive for the relevant capability:**
 
@@ -66,17 +66,15 @@ flowchart TD
 
 ---
 
-## Quick Answers for Customer Objections
+## Common Scenarios
 
-> Use these in meetings. Each links to the deep-dive for follow-up questions.
-
-| Customer Says | You Say | Deep-Dive |
+| Your Situation | Solution | Details |
 |---|---|---|
-| "Our partners don't use Snowflake" | Open Data Sharing — any IRC-compatible engine connects with a PAT. No account needed. Governance preserved. | [Section 1](#1-open-data-sharing-public-preview) |
-| "We need 3+ parties in a clean room" | Collaboration API — fully symmetric, any party brings data or runs analysis. GA since April. | [Section 3](#3-multi-party-clean-rooms--collaboration-api-ga) |
-| "We run Spark + Snowflake and need consistent policies" | Snowflake Connector for Apache Spark enforces Horizon policies today (GA). Scan Plan API coming for all engines. | [Section 4](#4-universal-governance--policies-follow-the-data) |
-| "Our business partners aren't technical" | Auto-gen Agents create a conversational interface over any share — no SQL needed. | [Section 5](#5-ai-powered-sharing--the-last-mile) |
-| "We share with reader accounts — is there something better?" | Open Data Sharing eliminates reader account maintenance. Partners use their own tools. | [Section 1](#1-open-data-sharing-public-preview) |
+| Partners don't use Snowflake | Open Data Sharing — any IRC-compatible engine connects with a PAT. No account needed. Governance preserved. | [Section 1](#1-open-data-sharing-public-preview) |
+| Need 3+ parties in a clean room | Collaboration API — fully symmetric, any party brings data or runs analysis. GA since April. | [Section 3](#3-multi-party-clean-rooms--collaboration-api-ga) |
+| Run Spark + Snowflake and need consistent policies | Snowflake Connector for Apache Spark enforces Horizon policies today (GA). Scan Plan API coming for all engines. | [Section 4](#4-universal-governance--policies-follow-the-data) |
+| Business partners aren't technical enough for SQL | Auto-gen Agents create a conversational interface over any share — no SQL needed. | [Section 5](#5-ai-powered-sharing--the-last-mile) |
+| Currently using reader accounts | Open Data Sharing eliminates reader account maintenance. Partners use their own tools with a PAT. | [Section 1](#1-open-data-sharing-public-preview) |
 
 ---
 
