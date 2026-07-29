@@ -30,7 +30,7 @@ Pair-programmed by SE Community + Cortex Code
 
 | # | Section | One-Line Summary |
 |---|---------|-----------------|
-| 1 | [Open Data Sharing](#1-open-data-sharing-public-preview) | Non-Snowflake consumers access shares via Iceberg REST APIs + PAT |
+| 1 | [Open Data Sharing](#1-open-data-sharing-public-preview) | Non-Snowflake consumers access shares via Iceberg REST Catalog APIs + access token |
 | 2 | [Open Table Format Sharing](#2-open-table-format-sharing-ga) | Share Iceberg/Delta across clouds with auto-fulfillment (consumer has Snowflake) |
 | 3 | [Multi-Party Clean Rooms](#3-multi-party-clean-rooms--collaboration-api-ga) | Symmetric N-party collaboration replacing the old 2-party model |
 | ↳ | [Cross-Cloud Clean Rooms](#cross-cloud-clean-rooms-im-on-aws-my-partner-is-on-azure) | "I'm on AWS, my partner is on Azure" — solved |
@@ -38,7 +38,7 @@ Pair-programmed by SE Community + Cortex Code
 | 5 | [AI-Powered Sharing](#5-ai-powered-sharing--the-last-mile) | Auto-gen agents make shared data conversational for non-technical users |
 
 **Reference:**
-- [Feature Status Matrix](#feature-status-matrix-july-2026) — what's GA vs Preview
+- [Feature Status Matrix](#feature-status-matrix-july-2026) — what's generally available vs Preview
 - [Further Reading](#further-reading) — official docs links
 
 ---
@@ -52,18 +52,18 @@ flowchart TD
     HasSF -->|Yes| Traditional["Traditional Sharing\nor Listing"]
     HasSF -->|No| TechLevel{"Partner is\ntechnical?"}
     
-    TechLevel -->|"Yes (has Spark/Trino)"| OpenDS["Open Data Sharing\n(IRC + PAT)"]
+    TechLevel -->|"Yes (has Spark/Trino)"| OpenDS["Open Data Sharing\n(Iceberg REST Catalog + token)"]
     TechLevel -->|"No (business user)"| AgentShare["Agent Sharing\n(conversational)"]
     
     Start2["Privacy-preserving\ncollaboration"] --> NParties{"How many\nparties?"}
     NParties -->|"2+"| CollabAPI["Collaboration API\n(symmetric N-party)"]
     
     Start3["Multi-engine\ngovernance"] --> Today{"Need it\ntoday?"}
-    Today -->|"Yes (Spark)"| SparkConn["Spark Connector\n(GA)"]
+    Today -->|"Yes (Spark)"| SparkConn["Spark Connector\n(Generally Available)"]
     Today -->|"Can wait"| ScanPlan["Scan Plan API\n(Private Preview)"]
 ```
 
-**In plain text:** Snowflake consumer → traditional share. Technical non-Snowflake partner (Spark/Trino) → Open Data Sharing. Non-technical partner → Agent Sharing. Privacy-preserving multi-party → Collaboration API. Multi-engine policy enforcement on Spark → Spark Connector (GA today).
+**In plain text:** Snowflake consumer → traditional share. Technical non-Snowflake partner (Spark/Trino) → Open Data Sharing. Non-technical partner → Agent Sharing. Privacy-preserving multi-party → Collaboration API. Multi-engine policy enforcement on Spark → Spark Connector (generally available today).
 
 ---
 
@@ -71,11 +71,11 @@ flowchart TD
 
 | Your Situation | Solution | Details |
 |---|---|---|
-| Partners don't use Snowflake | Open Data Sharing — any IRC-compatible engine connects with a PAT. No account needed. Governance preserved. | [Section 1](#1-open-data-sharing-public-preview) |
-| Need 3+ parties in a clean room | Collaboration API — fully symmetric, any party brings data or runs analysis. GA since April. | [Section 3](#3-multi-party-clean-rooms--collaboration-api-ga) |
-| Run Spark + Snowflake and need consistent policies | Snowflake Connector for Apache Spark enforces Horizon policies today (GA). Scan Plan API coming for all engines. | [Section 4](#4-universal-governance--policies-follow-the-data) |
+| Partners don't use Snowflake | Open Data Sharing — any Iceberg REST Catalog-compatible engine connects with an access token. No account needed. Governance preserved. | [Section 1](#1-open-data-sharing-public-preview) |
+| Need 3+ parties in a clean room | Collaboration API — fully symmetric, any party brings data or runs analysis. Generally available since April. | [Section 3](#3-multi-party-clean-rooms--collaboration-api-ga) |
+| Run Spark + Snowflake and need consistent policies | Snowflake Connector for Apache Spark enforces Horizon policies today (generally available). Scan Plan API coming for all engines. | [Section 4](#4-universal-governance--policies-follow-the-data) |
 | Business partners aren't technical enough for SQL | Auto-gen Agents create a conversational interface over any share — no SQL needed. | [Section 5](#5-ai-powered-sharing--the-last-mile) |
-| Currently using reader accounts | Open Data Sharing eliminates reader account maintenance. Partners use their own tools with a PAT. | [Section 1](#1-open-data-sharing-public-preview) |
+| Currently using reader accounts | Open Data Sharing eliminates reader account maintenance. Partners use their own tools with an access token. | [Section 1](#1-open-data-sharing-public-preview) |
 | Partners are on a different cloud (AWS vs Azure vs GCP) | Cross-Cloud Auto-Fulfillment handles this — no data movement required. Must be planned at collaboration creation time. | [Cross-Cloud Clean Rooms](#cross-cloud-clean-rooms-im-on-aws-my-partner-is-on-azure) |
 
 ---
@@ -87,7 +87,7 @@ flowchart LR
     Provider[Snowflake Provider]
     
     Provider -->|Traditional Share| SFConsumer[Snowflake Consumer]
-    Provider -->|Open Data Sharing| ExtEngine["Any IRC Engine\n(Spark, Trino, PyIceberg)"]
+    Provider -->|Open Data Sharing| ExtEngine["Any Iceberg REST\nCatalog Engine\n(Spark, Trino, PyIceberg)"]
     Provider -->|Agent Sharing| AgentUser[Non-Technical Consumer]
     Provider -->|Collaboration API| CleanRoom["N-Party Clean Room\n(Symmetric)"]
     
@@ -113,7 +113,7 @@ flowchart LR
 3. Provider creates an Iceberg table and a traditional SHARE
 4. Provider creates an **EXTERNAL LISTING** linking the share to the external consumer
 5. Provider calls `SYSTEM$GET_LISTING_URL_FOR_EXTERNAL_CONSUMER` to get the catalog URL
-6. External consumer connects with any IRC-compatible client (Spark, Trino, PyIceberg, DuckDB, etc.)
+6. External consumer connects with any Iceberg REST Catalog-compatible client (Spark, Trino, PyIceberg, DuckDB, etc.)
 
 ### Key SQL
 
@@ -154,7 +154,7 @@ $$;
 CALL SYSTEM$GET_LISTING_URL_FOR_EXTERNAL_CONSUMER('REVENUE_LISTING');
 ```
 
-The partner receives a `catalog_uri` and uses their PAT to authenticate via any Iceberg REST Catalog client.
+The partner receives a `catalog_uri` and uses their access token to authenticate via any Iceberg REST Catalog client.
 
 </details>
 
@@ -167,7 +167,7 @@ All governance defined in Horizon Catalog travels with the data:
 
 ### Current Limitations (Public Preview)
 
-- PATs are the only authentication method (more coming)
+- Programmatic Access Tokens are the only authentication method (more coming)
 - Read-only access for external consumers
 - Region-specific during initial rollout
 
@@ -175,14 +175,14 @@ All governance defined in Horizon Catalog travels with the data:
 
 ---
 
-## 2. Open Table Format Sharing (GA)
+## 2. Open Table Format Sharing (Generally Available)
 
 > **TL;DR:** Share Iceberg and Delta Lake tables across clouds and regions with full governance. No ETL, no egress surprises. Consumer must have Snowflake.
 
-This is the **foundation layer** that Open Data Sharing builds upon. GA since late 2025. Works with:
+This is the **foundation layer** that Open Data Sharing builds upon. Generally available since late 2025. Works with:
 
 - **Snowflake-managed Iceberg** (Horizon Catalog)
-- **Externally-managed Iceberg** (AWS Glue, Apache Polaris, Databricks Unity via IRC API)
+- **Externally-managed Iceberg** (AWS Glue, Apache Polaris, Databricks Unity via Iceberg REST Catalog API)
 - **Delta Lake** (via Delta Direct or Unity Catalog federation)
 
 ### Key Capabilities
@@ -208,7 +208,7 @@ Both use Iceberg underneath. Open Data Sharing builds on top of Open Table Forma
 
 ---
 
-## 3. Multi-Party Clean Rooms — Collaboration API (GA)
+## 3. Multi-Party Clean Rooms — Collaboration API (Generally Available)
 
 > **TL;DR:** The Collaboration API replaces the legacy 2-party model with fully symmetric, N-party collaboration. Any participant provides data, contributes logic, or runs analysis. **Migrate before Oct 2026.**
 
@@ -304,7 +304,7 @@ CALL SAMOOHA_BY_SNOWFLAKE_LOCAL_DB.LIBRARY.ENABLE_GLOBAL_DATA_SHARING_FOR_ACCOUN
 
 > **Action required:** Legacy clean rooms cannot be created via UI after **Oct 2026**. Migration tool available now.
 
-- **Apr 2026:** Collaboration API goes GA
+- **Apr 2026:** Collaboration API goes generally available
 - **Oct 2026:** No new legacy clean rooms via UI
 - **Migration tool available** to convert existing legacy rooms
 
@@ -314,7 +314,7 @@ CALL SAMOOHA_BY_SNOWFLAKE_LOCAL_DB.LIBRARY.ENABLE_GLOBAL_DATA_SHARING_FOR_ACCOUN
 
 ## 4. Universal Governance — Policies Follow the Data
 
-> **TL;DR:** Define governance once in Horizon Catalog. It's enforced on Snowflake, Spark, Trino, and any IRC engine. **For Spark today: use the Snowflake Connector for Apache Spark (GA).**
+> **TL;DR:** Define governance once in Horizon Catalog. It's enforced on Snowflake, Spark, Trino, and any Iceberg REST Catalog-compatible engine. **For Spark today: use the Snowflake Connector for Apache Spark (generally available).**
 
 ### The Problem It Solves
 
@@ -325,23 +325,23 @@ Multi-engine environments previously required duplicating access policies in eac
 1. **Horizon Catalog** manages all Iceberg tables (Snowflake-managed + external via Catalog-Linked Databases)
 2. **Iceberg REST Scan Plan API** (Private Preview) pushes row-access and masking policies to external engines at query time
 3. **Comprehensive Auditing** (Private Preview) logs all external engine operations in Snowflake Access History
-4. **Snowflake Connector for Apache Spark** (GA) enforces policies for Spark users today
+4. **Snowflake Connector for Apache Spark** (Generally Available) enforces policies for Spark users today
 
 ### What's Available Today vs. Coming
 
 | Layer | Status | What It Does |
 |---|---|---|
-| Catalog-Linked Databases (read/write) | GA | Discover + access external Iceberg from Snowflake |
-| Horizon Catalog IRC APIs for external engines | Private Preview | External engines read/write Snowflake-managed Iceberg |
+| Catalog-Linked Databases (read/write) | Generally Available | Discover + access external Iceberg from Snowflake |
+| Horizon Catalog Iceberg REST APIs for external engines | Private Preview | External engines read/write Snowflake-managed Iceberg |
 | Iceberg REST Scan Plan API | Private Preview | Row-access + masking enforced on external engines |
 | Comprehensive Auditing | Private Preview | All external engine ops in Access History |
-| Snowflake Connector for Apache Spark | **GA** | Enforces Horizon policies for Spark today |
-| Private Link to External Catalogs | GA | Keeps connections off public internet |
+| Snowflake Connector for Apache Spark | **Generally Available** | Enforces Horizon policies for Spark today |
+| Private Link to External Catalogs | Generally Available | Keeps connections off public internet |
 
 ### The "Today" Answer for Spark Customers
 
 > If a customer needs policy enforcement on Spark NOW:
-> - **Snowflake Connector for Apache Spark (GA)**
+> - **Snowflake Connector for Apache Spark (Generally Available)**
 > - Enforces row-access + masking policies
 > - Production-ready today
 > - No additional configuration beyond connector setup
@@ -372,7 +372,7 @@ Deploy Cortex Agents across Snowflake accounts via Marketplace:
 ### Why This Matters for Non-Technical Consumers
 
 The partner who doesn't have a Snowflake account AND doesn't know SQL can now:
-1. Access shared data via Open Data Sharing (IRC-compatible tool)
+1. Access shared data via Open Data Sharing (Iceberg REST Catalog-compatible tool)
 2. OR interact with an Agent that already understands the data's semantics
 
 This is the "last mile" — data sharing that reaches the business user, not just the data engineer.
@@ -383,15 +383,15 @@ This is the "last mile" — data sharing that reaches the business user, not jus
 
 | Feature | Status | Key Limitation |
 |---|---|---|
-| Open Data Sharing | Public Preview | PATs only; expanding to multi-region |
-| Open Table Format Sharing (Iceberg/Delta) | GA | Catalog federation doesn't support Catalog-Linked Databases yet |
-| Collaboration API (multi-party DCR) | GA | Legacy deprecated Oct 2026 |
+| Open Data Sharing | Public Preview | Access tokens only; expanding to multi-region |
+| Open Table Format Sharing (Iceberg/Delta) | Generally Available | Catalog federation doesn't support Catalog-Linked Databases yet |
+| Collaboration API (multi-party Data Clean Rooms) | Generally Available | Legacy deprecated Oct 2026 |
 | Iceberg REST Scan Plan API | Private Preview | No customer-facing config yet |
 | Comprehensive Auditing (external engines) | Private Preview | No customer-facing config yet |
 | Auto-gen Agents for Data Shares | Public Preview | Production-ready but preview status |
 | Cortex Agent Sharing | Public Preview | Production-ready but preview status |
-| Snowflake Connector for Apache Spark | **GA** | Policy enforcement ready today |
-| Vended Credentials (external engine R/W) | GA | Full bidirectional interop |
+| Snowflake Connector for Apache Spark | **Generally Available** | Policy enforcement ready today |
+| Vended Credentials (external engine R/W) | Generally Available | Full bidirectional interop |
 
 ---
 
