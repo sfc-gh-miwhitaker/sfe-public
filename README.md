@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-12-blue)
+![Projects](https://img.shields.io/badge/Projects-13-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -13,6 +13,7 @@ Snowflake guides for connecting AI coding assistants to Snowflake. Every project
 
 | Directory | Description | Features |
 |---|---|---|
+| [guide-adaptive-compute](guide-adaptive-compute/) | The warehouse sizing decision is going away: what Adaptive Compute changes operationally, the two parameters you now manage (MAX_QUERY_PERFORMANCE_LEVEL + QUERY_THROUGHPUT_MULTIPLIER), conversion DDL (zero-downtime ALTER), per-query billing via QUERY_METERING_HISTORY, and post-conversion tuning recipes | Adaptive Compute, WAREHOUSE_TYPE ADAPTIVE, MAX_QUERY_PERFORMANCE_LEVEL, QUERY_THROUGHPUT_MULTIPLIER, per-query billing |
 | [guide-cortex-search-access-control](guide-cortex-search-access-control/) | Enforce per-user, per-account, or per-tenant access control on Cortex Search Services today: filter-based UBAC (`@contains` on ARRAY attribute columns, with stored procedure hardening), separate services per data boundary, and an honest roadmap for native caller's rights. Covers all query APIs (REST, Python, SQL), multi-identifier support, and the tradeoffs between patterns | Cortex Search, RBAC, UBAC, owner's rights, filter, ATTRIBUTES, @contains, per-tenant search, access control, caller's rights |
 | [guide-powerbi-oauth](guide-powerbi-oauth/) | Configure Power BI to connect to Snowflake using OAuth SSO (Microsoft Entra ID): security integration setup, DirectQuery vs Import mode, user provisioning (LOGIN_NAME = UPN), per-viewer identity for row-level security, B2B guests, Azure Government, network policies, and a full troubleshooting error table | Power BI, OAuth, DirectQuery, External OAuth, Entra ID, Azure AD, security integration, row-level security |
 | [guide-horizon-context-catalog](guide-horizon-context-catalog/) | The catalog pivot explained: Select Star acquisition → Horizon Context (Collect/Enrich/Activate, Wave 1 connectors, OpenLineage, OSI) → Cortex Sense (runtime context activation, ~86% benchmark). Covers the dual security boundary question for customers who used semantic views + RBAC as two checkpoints, what changes with Sense's single-role private preview, and practical guidance on when to keep explicit scoping vs enable Sense. Validated claims only; availability table; common objections | Horizon Context, Cortex Sense, Select Star, metadata connectors, semantic view security, dual security boundary, catalog pivot |
