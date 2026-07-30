@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-14-blue)
+![Projects](https://img.shields.io/badge/Projects-16-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -13,6 +13,8 @@ Snowflake guides for connecting AI coding assistants to Snowflake. Every project
 
 | Directory | Description | Features |
 |---|---|---|
+| [guide-snowflake-splunk-ingestion](guide-snowflake-splunk-ingestion/) | Four patterns for ingesting Snowflake audit logs into Splunk: Federated Search (GA July 2026, Cloud AWS), DB Connect JDBC pull with Rising Column configs for LOGIN/QUERY/ACCESS_HISTORY, External Stage export via COPY INTO, and Sentry detection-push to HEC. Decision flowchart, pattern comparison table, working SQL for all four | ACCOUNT_USAGE, DB Connect, JDBC, Federated Search, Splunk HEC, External Stage, Sentry, MITRE, security monitoring |
+| [guide-cortex-agent-image-tool](guide-cortex-agent-image-tool/) | How to give a Cortex Agent the ability to generate images: the UDF-as-bridge pattern, SPCS path (image gen model inside Snowflake), External API path (DALL-E/Stability AI), agent spec with generic tool, presigned URL vs base64 return formats, and the key gotcha that the agent can see the image URL but not the pixels | Cortex Agents, generic tool, SPCS, image generation, UDF, External Function, External Access Integration |
 | [guide-adaptive-compute](guide-adaptive-compute/) | The warehouse sizing decision is going away: what Adaptive Compute changes operationally, the two parameters you now manage (MAX_QUERY_PERFORMANCE_LEVEL + QUERY_THROUGHPUT_MULTIPLIER), conversion DDL (zero-downtime ALTER), per-query billing via QUERY_METERING_HISTORY, and post-conversion tuning recipes | Adaptive Compute, WAREHOUSE_TYPE ADAPTIVE, MAX_QUERY_PERFORMANCE_LEVEL, QUERY_THROUGHPUT_MULTIPLIER, per-query billing |
 | [guide-cortex-search-access-control](guide-cortex-search-access-control/) | Enforce per-user, per-account, or per-tenant access control on Cortex Search Services today: filter-based UBAC (`@contains` on ARRAY attribute columns, with stored procedure hardening), separate services per data boundary, and an honest roadmap for native caller's rights. Covers all query APIs (REST, Python, SQL), multi-identifier support, and the tradeoffs between patterns | Cortex Search, RBAC, UBAC, owner's rights, filter, ATTRIBUTES, @contains, per-tenant search, access control, caller's rights |
 | [guide-powerbi-oauth](guide-powerbi-oauth/) | Configure Power BI to connect to Snowflake using OAuth SSO (Microsoft Entra ID): security integration setup, DirectQuery vs Import mode, user provisioning (LOGIN_NAME = UPN), per-viewer identity for row-level security, B2B guests, Azure Government, network policies, and a full troubleshooting error table | Power BI, OAuth, DirectQuery, External OAuth, Entra ID, Azure AD, security integration, row-level security |
