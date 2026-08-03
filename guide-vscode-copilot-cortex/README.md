@@ -87,8 +87,6 @@ All three paths get more accurate from the same groundwork: a **semantic view** 
 
 ---
 
-## Related guides
+## Related Guides
 
-- [`guide-connecting-claude-snowflake`](../guide-connecting-claude-snowflake/) — same patterns for Claude Desktop / Claude Code
-- [`guide-mcp-auth`](../guide-mcp-auth/) — comprehensive MCP authentication across clients
-- [`guide-agent-hardening`](../guide-agent-hardening/) — production governance for Cortex Agents
+For guides that work alongside this one, see the [**Start Here** index](../README.md#start-here).

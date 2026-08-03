@@ -93,6 +93,10 @@ All views are in `SNOWFLAKE.ACCOUNT_USAGE`:
 3. [External Stage Export](pattern-3-external-stage.md) — COPY INTO cloud storage + Splunk S3 Add-on (high-volume / cost-sensitive)
 4. [Sentry Detection Push](pattern-4-sentry.md) — Run detections in Snowflake, push only findings to Splunk HEC
 
+## Related Guides
+
+For guides that work alongside this one, see the [**Start Here** index](../README.md#start-here).
+
 ---
 
 ## External References

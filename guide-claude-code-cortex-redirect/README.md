@@ -84,6 +84,10 @@ Snowflake's Cortex REST API has two endpoints. Pick one:
 
 Claude Code uses the Anthropic SDK internally, so it routes through the **Messages API**. Most existing Anthropic SDK applications should also use the Messages API path. Switch to Chat Completions only if you want access to non-Claude models or prefer the OpenAI SDK interface.
 
+## Related Guides
+
+For guides that work alongside this one, see the [**Start Here** index](../README.md#start-here).
+
 ---
 
 ## External References

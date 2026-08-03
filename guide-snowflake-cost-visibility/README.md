@@ -39,6 +39,8 @@ If you're in a hurry, here's the priority order:
 
 Step 4 has the most blast radius. Don't skip the audit query at the top of the file before making changes.
 
+> **Reading order.** This guide is the foundational visibility layer: budget alerting, usage attribution, warehouse guardrails, and AI RBAC. For AI-specific enforcement patterns — querying the 14 Cortex AI usage views, detecting runaway inference queries, and setting per-user CoCo limits — continue with [demo-cortex-ai-cost-controls](../demo-cortex-ai-cost-controls/). Add [guide-adaptive-compute](../guide-adaptive-compute/) for warehouse rightsizing and per-query billing visibility.
+
 ---
 
 ## Vocabulary
@@ -508,9 +510,10 @@ A complete cost governance stack combines the foundational visibility layer in t
 
 ---
 
-## Related Resources
+## Related Guides
 
-- [`guide-cortex-ai-cost-controls`](../guide-cortex-ai-cost-controls/README.md) — AI-specific spend: 14 ACCOUNT_USAGE views, tag-based attribution, per-user Cortex Code limits, runaway query protection, anomaly detection
+For guides that work alongside this one, see the [**Start Here** index](../README.md#start-here).
+
 - [Snowflake docs: Monitor credit usage with budgets](https://docs.snowflake.com/en/user-guide/budgets)
 - [Snowflake docs: Working with resource monitors](https://docs.snowflake.com/en/user-guide/resource-monitors)
 - [Snowflake docs: AI_FUNCTIONS_USER database role](https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql-privileges-and-access)

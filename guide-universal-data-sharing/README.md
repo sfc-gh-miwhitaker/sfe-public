@@ -397,6 +397,8 @@ This is the "last mile" — data sharing that reaches the business user, not jus
 
 ## Further Reading
 
+> **Re-verify before 2026-08-27.** This guide covers Summit 2026 announcements. Several features (Open Data Sharing PAT auth, Scan Plan API, Auto-gen Agents for Data Shares) are in public preview and their syntax or availability may change. Check [docs.snowflake.com](https://docs.snowflake.com) against the code samples here before using in a customer conversation.
+
 - [Open Data Sharing Docs](https://docs.snowflake.com/en/user-guide/open-data-sharing)
 - [Extending Data Sharing to Open Table Formats (Blog)](https://www.snowflake.com/en/blog/data-sharing-open-table-formats/)
 - [Interoperable Lakehouse (Summit 2026 Blog)](https://www.snowflake.com/en/blog/interoperable-lakehouse-architecture/)

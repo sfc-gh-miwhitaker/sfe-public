@@ -17,6 +17,8 @@ Pair-programmed by SE Community + Cortex Code
 
 > **No support provided.** Reference only; test before you rely on it in production. Every SQL/REST claim here was checked against Snowflake's official docs on the created date above. Agent versioning is a **current, fast-moving** capability — if a command errors with `Unsupported feature 'AGENT VERSIONING'`, ask your account admin to enable it, and re-verify syntax before quoting it.
 
+> **Before you start.** This guide covers the deployment and versioning lifecycle. For configuration best practices — how to write semantic views, custom instructions, and tool descriptions that produce accurate answers regardless of model — start with [guide-model-agnostic-accuracy](../guide-model-agnostic-accuracy/). For calling agents from other agents once deployed, see [guide-agent-to-agent-orchestration](../guide-agent-to-agent-orchestration/).
+
 ---
 
 ## New to this? Read these words once

@@ -423,6 +423,8 @@ Network policies apply at the account or user level — they can't be scoped to 
 
 ## Reference links
 
+> **Re-verify before 2026-08-19.** OAuth audience URLs, user mapping claim syntax, and B2B guest configurations may change with Entra ID updates. Check [Snowflake's Power BI OAuth docs](https://docs.snowflake.com/en/user-guide/oauth-powerbi) against the code samples here before using in a customer conversation.
+
 - [Snowflake docs: Power BI SSO setup](https://docs.snowflake.com/en/user-guide/oauth-powerbi)
 - [Snowflake docs: Microsoft Entra SCIM integration](https://docs.snowflake.com/en/user-guide/scim-azure)
 - [Microsoft tutorial: Snowflake provisioning with Entra](https://learn.microsoft.com/en-us/azure/active-directory/saas-apps/snowflake-provisioning-tutorial)
