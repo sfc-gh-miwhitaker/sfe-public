@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2026--09--30-orange)
+![Expires](https://img.shields.io/badge/Expires-2027--02--28-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Cost Visibility — Foundations
@@ -20,7 +20,7 @@ Each section has companion SQL in `sql/`. The SQL is copy-paste ready once you s
 
 Pair-programmed by SE Community + Cortex Code
 
-**Created:** 2026-07-08 | **Expires:** 2026-09-30 | **Status:** ACTIVE
+**Created:** 2026-07-08 | **Expires:** 2027-02-28 | **Status:** ACTIVE
 
 > **No support provided.** Reference only; validate before production use.
 
@@ -470,6 +470,31 @@ GRANT DATABASE ROLE SNOWFLAKE.AI_FUNCTIONS_USER TO ROLE limited_bu_role;
 ```
 
 Per-function privileges and the blanket `USE AI FUNCTIONS` have an OR relationship — a role with the blanket privilege can call all functions regardless of per-function grants. Only use per-function if you're intentionally restricting to a subset.
+
+### Model RBAC (new Aug 2026 — control which models roles can use)
+
+As of August 2026, `CORTEX_MODELS_ALLOWLIST` is being deprecated — you can no longer change it to a new value. The replacement is **model-level RBAC** via application roles in `SNOWFLAKE.MODELS`:
+
+```sql
+USE ROLE ACCOUNTADMIN;
+
+-- Refresh model objects (runs daily automatically; call on-demand if needed)
+CALL SNOWFLAKE.MODELS.CORTEX_BASE_MODELS_REFRESH();
+
+-- See available models
+SHOW CORTEX BASE MODELS IN SCHEMA SNOWFLAKE.MODELS;
+
+-- Grant a specific model to a role
+GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-LLAMA3.1-70B" TO ROLE analyst_role;
+
+-- Or grant access to all models
+GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-ALL" TO ROLE data_eng_role;
+
+-- Disable the legacy allowlist (forces RBAC-only)
+ALTER ACCOUNT SET CORTEX_MODELS_ALLOWLIST = 'None';
+```
+
+This gives per-role, per-model control — useful for restricting expensive frontier models to specific teams while allowing smaller models broadly. Combine with `AI_FUNCTIONS_USER` RBAC for complete AI governance: who can call AI functions (database roles), which functions they can call (per-function privileges), and which models they can use (model RBAC).
 
 ### Verification
 

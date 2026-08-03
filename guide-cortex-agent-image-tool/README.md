@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![Deploy](https://img.shields.io/badge/Deploy-Reference%20Only-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2026--08--29-orange)
+![Expires](https://img.shields.io/badge/Expires-2027--01--29-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Give Your AI Assistant the Ability to Create Images
@@ -15,7 +15,7 @@ generate images on demand.
 Snowflake background assumed in the first half; the second half is a complete
 technical recipe for practitioners.
 
-**Created:** 2026-07-30 | **Expires:** 2026-08-29 | **Status:** ACTIVE
+**Created:** 2026-07-30 | **Expires:** 2027-01-29 | **Status:** ACTIVE
 
 Pair-programmed by SE Community + Cortex Code
 
@@ -180,38 +180,28 @@ SELECT mydb.myschema.generate_image('a snow-covered mountain at sunset');
 
 ### Step 4 — Register the UDF as an agent tool
 
-```json
-{
-  "tools": [
-    {
-      "tool_spec": {
-        "type": "generic",
-        "name": "generate_image",
-        "description": "Generates an image from a text description. Use this when the user asks to create, draw, or visualize something. Returns the image as a base64-encoded PNG and the original prompt.",
-        "input_schema": {
-          "type": "object",
-          "properties": {
-            "prompt": {
-              "type": "string",
-              "description": "A detailed text description of the image to generate. Include style, subject, lighting, and mood for best results. Example: 'A photorealistic golden retriever running on a beach at sunset, shallow depth of field.'"
-            }
-          },
-          "required": ["prompt"]
-        }
-      }
-    }
-  ],
-  "tool_resources": {
-    "generate_image": {
-      "type": "function",
-      "execution_environment": {
-        "type": "warehouse",
-        "warehouse": "MY_WAREHOUSE"
-      },
-      "identifier": "MYDB.MYSCHEMA.GENERATE_IMAGE"
-    }
-  }
-}
+The tool specification below uses the **YAML format** required by `CREATE AGENT ... FROM SPECIFICATION`. If using the REST API (`POST /api/v2/.../agents`), use the equivalent JSON body instead.
+
+```yaml
+tools:
+  - tool_spec:
+      type: "generic"
+      name: "generate_image"
+      description: "Generates an image from a text description. Use this when the user asks to create, draw, or visualize something. Returns the image as a base64-encoded PNG and the original prompt."
+      input_schema:
+        type: "object"
+        properties:
+          prompt:
+            type: "string"
+            description: "A detailed text description of the image to generate. Include style, subject, lighting, and mood for best results. Example: 'A photorealistic golden retriever running on a beach at sunset, shallow depth of field.'"
+        required: ["prompt"]
+tool_resources:
+  generate_image:
+    type: "function"
+    execution_environment:
+      type: "warehouse"
+      warehouse: "MY_WAREHOUSE"
+    identifier: "MYDB.MYSCHEMA.GENERATE_IMAGE"
 ```
 
 ---
@@ -281,19 +271,16 @@ SELECT mydb.myschema.generate_image_external('a futuristic city skyline at night
 
 ### Step 4 — Register in the agent spec (identical pattern)
 
-Same JSON as Path 1 — just change the `identifier` to point to the new UDF:
+Same YAML as Path 1 — just change the `identifier` to point to the new UDF:
 
-```json
-"tool_resources": {
-  "generate_image": {
-    "type": "function",
-    "execution_environment": {
-      "type": "warehouse",
-      "warehouse": "MY_WAREHOUSE"
-    },
-    "identifier": "MYDB.MYSCHEMA.GENERATE_IMAGE_EXTERNAL"
-  }
-}
+```yaml
+tool_resources:
+  generate_image:
+    type: "function"
+    execution_environment:
+      type: "warehouse"
+      warehouse: "MY_WAREHOUSE"
+    identifier: "MYDB.MYSCHEMA.GENERATE_IMAGE_EXTERNAL"
 ```
 
 ---
@@ -342,44 +329,33 @@ tool response alongside the URL.
 
 Replace `MYDB`, `MYSCHEMA`, `MY_WAREHOUSE` with your values.
 
+> **Format note:** `CREATE AGENT ... FROM SPECIFICATION` requires **YAML**. The REST API (`POST /api/v2/.../agents`) accepts JSON.
+
 ```sql
 CREATE AGENT mydb.myschema.image_creator_agent
   FROM SPECIFICATION $$
-  {
-    "instructions": {
-      "response": "You are a creative AI assistant. When users ask you to generate, draw, or create an image, use the generate_image tool. Show the image URL in your response and describe what was created.",
-      "orchestration": "Use generate_image whenever the user asks to create, draw, visualize, or generate any visual content. Craft a detailed, descriptive prompt from the user's request before calling the tool."
-    },
-    "tools": [
-      {
-        "tool_spec": {
-          "type": "generic",
-          "name": "generate_image",
-          "description": "Generates an image from a text description. Returns a URL to the generated image and the prompt used. Use this for any request to create, draw, or visualize something.",
-          "input_schema": {
-            "type": "object",
-            "properties": {
-              "prompt": {
-                "type": "string",
-                "description": "Detailed text description. Include subject, style, lighting, mood, and any relevant details. More specific prompts produce better images."
-              }
-            },
-            "required": ["prompt"]
-          }
-        }
-      }
-    ],
-    "tool_resources": {
-      "generate_image": {
-        "type": "function",
-        "execution_environment": {
-          "type": "warehouse",
-          "warehouse": "MY_WAREHOUSE"
-        },
-        "identifier": "MYDB.MYSCHEMA.GENERATE_IMAGE"
-      }
-    }
-  }
+instructions:
+  response: "You are a creative AI assistant. When users ask you to generate, draw, or create an image, use the generate_image tool. Show the image URL in your response and describe what was created."
+  orchestration: "Use generate_image whenever the user asks to create, draw, visualize, or generate any visual content. Craft a detailed, descriptive prompt from the user's request before calling the tool."
+tools:
+  - tool_spec:
+      type: "generic"
+      name: "generate_image"
+      description: "Generates an image from a text description. Returns a URL to the generated image and the prompt used. Use this for any request to create, draw, or visualize something."
+      input_schema:
+        type: "object"
+        properties:
+          prompt:
+            type: "string"
+            description: "Detailed text description. Include subject, style, lighting, mood, and any relevant details. More specific prompts produce better images."
+        required: ["prompt"]
+tool_resources:
+  generate_image:
+    type: "function"
+    execution_environment:
+      type: "warehouse"
+      warehouse: "MY_WAREHOUSE"
+    identifier: "MYDB.MYSCHEMA.GENERATE_IMAGE"
   $$;
 ```
 

@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2026--08--28-orange)
+![Expires](https://img.shields.io/badge/Expires-2027--01--28-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Adaptive Compute
@@ -8,7 +8,7 @@
 **Adaptive Compute removes the warehouse sizing decision.** Instead of choosing XS–4XL and tuning multi-cluster counts, you set a performance cap and a throughput multiplier — Snowflake handles everything else from a shared compute pool dedicated to your account.
 
 **Audience:** Snowflake administrators who manage warehouses today and need to understand what Adaptive changes operationally.
-**Created:** 2026-07-29 | **Expires:** 2026-08-28 | **Status:** ACTIVE
+**Created:** 2026-07-29 | **Expires:** 2027-01-28 | **Status:** ACTIVE
 
 Pair-programmed by SE Community + Cortex Code
 
@@ -52,7 +52,7 @@ Think of this as the ceiling on how much compute a single query can consume. It 
 
 A scaling factor that controls concurrent throughput capacity for queries running at the maximum performance level. This is not a count of parallel queries — it's a multiplier on capacity.
 
-**Values:** Integer ≥ 2, or `0` for unlimited
+**Values:** Non-negative integer (0 = unlimited)
 **Default (greenfield):** `2`
 
 Think of this as replacing multi-cluster configuration. Higher values allow more concurrent workload at peak.
@@ -66,8 +66,10 @@ Think of this as replacing multi-cluster configuration. Higher values allow more
 | Mixed workloads where query sizes vary widely | Snowpark-optimized warehouses (not supported) |
 | High-concurrency workloads using multi-cluster or QAS | Interactive warehouses (not supported) |
 | Teams that struggle to pick the right warehouse size | X5LARGE or X6LARGE warehouses (not supported) |
-| Any workload currently paying separate QAS charges | HTAP / key-value lookup patterns |
+| Any workload currently paying separate QAS charges | Workloads primarily using HTAP / key-value lookup patterns |
 | Operational simplicity is a priority | SLA-sensitive workloads requiring predictable, explicit control |
+
+> **Note on HTAP:** Adaptive Warehouses support occasional HTAP queries within a primarily-analytical workload. Only warehouses where HTAP is the dominant access pattern (most queries are point lookups) should stay on standard Gen2.
 
 **Performance framing:** Adaptive delivers generally better performance at similar costs to Gen2. It is a performance and simplicity improvement — not a cost-reduction feature.
 
@@ -181,7 +183,7 @@ Standard warehouse properties (`WAREHOUSE_SIZE`, `MIN_CLUSTER_COUNT`, `MAX_CLUST
 | `WAREHOUSE_METERING_HISTORY` | Aggregated warehouse-level billing |
 | `QUERY_HISTORY` | Identify adaptive queries via `warehouse_size = 'ADAPTIVE'` |
 | `WAREHOUSE_LOAD_HISTORY` | Queuing behavior for tuning decisions |
-| `WAREHOUSE_EVENTS_HISTORY` | Conversion audit trail (`EVENT_NAME = 'CONVERT_WAREHOUSE'`) |
+| `WAREHOUSE_EVENTS_HISTORY` | Conversion audit trail (look for `ALTER_WAREHOUSE` events around conversion time) |
 
 ### Top Queries by Cost (Last 7 Days)
 

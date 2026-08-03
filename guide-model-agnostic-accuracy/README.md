@@ -1,6 +1,6 @@
 # Model-Agnostic Accuracy: Configuring Semantic Views and Cortex Agents
 
-[![Expiration](https://img.shields.io/badge/expires-2026--08--28-yellow)]()
+[![Expiration](https://img.shields.io/badge/expires-2027--02--01-yellow)]()
 
 A best practices guide for building Snowflake Cortex Agents that produce consistent, correct results regardless of which LLM is used for orchestration.
 
@@ -83,6 +83,7 @@ For columns like product names, customer names, or SKUs — where user input rar
 | Validate incrementally | One table at a time, dims then metrics — know exactly what broke |
 
 **Further reading**:
+- [Best Practices for Semantic Views (modeling)](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-modeling)
 - [Best Practices for Semantic Views (dev pipeline)](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-dev)
 - [Custom Instructions in Cortex Analyst](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/custom-instructions)
 - [Cortex Analyst Verified Query Repository](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/verified-query-repository)
@@ -214,6 +215,8 @@ Common gaps exposed by weaker models:
 
 ### Start with `auto`, then optimize
 
+> **Note:** When Cortex Analyst is invoked by an agent, it does not have access to open source LLM models — only a narrower set of frontier models. The orchestration model and the Analyst sub-component may use different models.
+
 > "Prioritize database structure optimization first, enable advanced model access, and maintain lean semantic models to achieve production-ready conversational analytics."
 > — [Tianxia Jia, "Optimizing Snowflake Cortex Analyst Performance"](https://medium.com/snowflake/optimizing-snowflake-cortex-analyst-performance-48ae4735c8e1)
 
@@ -274,6 +277,7 @@ When adding to a semantic view: one table at a time, dimensions first, then metr
 | Validate incrementally (one table, dims then metrics) | Know exactly what caused a break |
 
 **Further reading**:
+- [Best Practices for Semantic Views (modeling)](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-modeling)
 - [Best Practices for Semantic Views (dev pipeline)](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-dev)
 - [Suggestions for Semantic Models and Views](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/verified-query-suggestions)
 - [Kaivalya Pendse, "From Prototype to Production: Version Control for Cortex Agent Workflow"](https://medium.com/snowflake/from-prototype-to-production-how-we-added-version-control-to-our-snowflake-cortex-agent-workflow-595e94d43a56)
@@ -332,6 +336,7 @@ For practitioners who have read the guide and want a reminder during implementat
 
 | Topic | Link |
 |-------|------|
+| Semantic view best practices (modeling) | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-modeling) |
 | Semantic view best practices (dev pipeline) | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-dev) |
 | Build agents | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-cowork/build-agents) |
 | Cortex Agent evaluations | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations) |

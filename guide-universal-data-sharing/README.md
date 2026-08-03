@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2026--08--27-orange)
+![Expires](https://img.shields.io/badge/Expires-2027--01--27-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Universal Data Sharing: What You Missed at Summit 2026
@@ -12,7 +12,7 @@ But quietly, Snowflake shipped something that solves the longest-standing object
 The answer is no longer "create a reader account." It's a collection of capabilities that make Snowflake the collaboration hub regardless of what your partners run.
 
 **Audience:** Data Architects, Data Engineers, and technical decision-makers evaluating how to share data with partners who don't use Snowflake.
-**Created:** 2026-07-28 | **Expires:** 2026-08-27 | **Status:** ACTIVE
+**Created:** 2026-07-28 | **Expires:** 2027-01-27 | **Status:** ACTIVE
 
 Pair-programmed by SE Community + Cortex Code
 
@@ -30,7 +30,7 @@ Pair-programmed by SE Community + Cortex Code
 
 | # | Section | One-Line Summary |
 |---|---------|-----------------|
-| 1 | [Open Data Sharing](#1-open-data-sharing-public-preview) | Non-Snowflake consumers access shares via Iceberg REST Catalog APIs + access token |
+| 1 | [Open Data Sharing](#1-open-data-sharing-private-preview) | Non-Snowflake consumers access shares via Iceberg REST Catalog APIs + access token |
 | 2 | [Open Table Format Sharing](#2-open-table-format-sharing-ga) | Share Iceberg/Delta across clouds with auto-fulfillment (consumer has Snowflake) |
 | 3 | [Multi-Party Clean Rooms](#3-multi-party-clean-rooms--collaboration-api-ga) | Symmetric N-party collaboration replacing the old 2-party model |
 | ↳ | [Cross-Cloud Clean Rooms](#cross-cloud-clean-rooms-im-on-aws-my-partner-is-on-azure) | "I'm on AWS, my partner is on Azure" — solved |
@@ -102,7 +102,7 @@ flowchart LR
 
 ---
 
-## 1. Open Data Sharing (Public Preview)
+## 1. Open Data Sharing (Private Preview)
 
 > **TL;DR:** Non-Snowflake consumers access your shared data via standard Iceberg REST Catalog APIs. No Snowflake account. No reader accounts. No data movement.
 
@@ -165,11 +165,13 @@ All governance defined in Horizon Catalog travels with the data:
 - Dynamic data masking policies
 - Projection, aggregation, and join policies
 
-### Current Limitations (Public Preview)
+### Current Limitations (Private Preview)
+
+> **Status note (Aug 2026):** Open Data Sharing is in **Private Preview** — available to selected accounts only. If you cannot find the relevant SQL commands in your account, contact your Snowflake representative to request access.
 
 - Programmatic Access Tokens are the only authentication method (more coming)
 - Read-only access for external consumers
-- Region-specific during initial rollout
+- Region-locked to the provider's region during Private Preview (no cross-region yet)
 
 > **Reference:** [Open Data Sharing Docs](https://docs.snowflake.com/en/user-guide/open-data-sharing)
 
@@ -302,10 +304,12 @@ CALL SAMOOHA_BY_SNOWFLAKE_LOCAL_DB.LIBRARY.ENABLE_GLOBAL_DATA_SHARING_FOR_ACCOUN
 
 ### Timeline
 
-> **Action required:** Legacy clean rooms cannot be created via UI after **Oct 2026**. Migration tool available now.
+> **Action required:** Legacy clean room deprecation is phased. Plan migration by Jun 2027.
 
 - **Apr 2026:** Collaboration API goes generally available
-- **Oct 2026:** No new legacy clean rooms via UI
+- **Oct 2026:** No new legacy clean rooms via the web UI
+- **Feb 2027:** Web app UI no longer accessible; no new legacy clean rooms via Provider and Consumer API
+- **Jun 2027:** Legacy Provider and Consumer clean rooms fully decommissioned
 - **Migration tool available** to convert existing legacy rooms
 
 > **Reference:** [Collaboration API Reference](https://docs.snowflake.com/en/user-guide/cleanrooms/v2/v2-api-reference) | [Migration Guide](https://docs.snowflake.com/en/user-guide/cleanrooms/getting-started) | [Cross-Cloud Auto-Fulfillment](https://docs.snowflake.com/en/user-guide/cleanrooms/laf)
@@ -383,9 +387,9 @@ This is the "last mile" — data sharing that reaches the business user, not jus
 
 | Feature | Status | Key Limitation |
 |---|---|---|
-| Open Data Sharing | Public Preview | Access tokens only; expanding to multi-region |
-| Open Table Format Sharing (Iceberg/Delta) | Generally Available | Catalog federation doesn't support Catalog-Linked Databases yet |
-| Collaboration API (multi-party Data Clean Rooms) | Generally Available | Legacy deprecated Oct 2026 |
+| Open Data Sharing | **Private Preview** (selected accounts) | Access tokens only; region-locked to provider region |
+| Open Table Format Sharing (Iceberg/Delta) | Generally Available | CLDs with non-Iceberg-REST catalog integrations not yet supported |
+| Collaboration API (multi-party Data Clean Rooms) | Generally Available | Legacy deprecated (phased: Oct 2026 → Feb 2027 → Jun 2027) |
 | Iceberg REST Scan Plan API | Private Preview | No customer-facing config yet |
 | Comprehensive Auditing (external engines) | Private Preview | No customer-facing config yet |
 | Auto-gen Agents for Data Shares | Public Preview | Production-ready but preview status |
@@ -397,7 +401,7 @@ This is the "last mile" — data sharing that reaches the business user, not jus
 
 ## Further Reading
 
-> **Re-verify before 2026-08-27.** This guide covers Summit 2026 announcements. Several features (Open Data Sharing PAT auth, Scan Plan API, Auto-gen Agents for Data Shares) are in public preview and their syntax or availability may change. Check [docs.snowflake.com](https://docs.snowflake.com) against the code samples here before using in a customer conversation.
+> **Re-verify before 2027-01-27.** This guide covers Summit 2026 announcements. Open Data Sharing is in Private Preview (selected accounts); the Scan Plan API uses terminology that differs from public docs ("Horizon Iceberg REST Catalog API" in docs). Re-verify feature status before quoting. Check [docs.snowflake.com](https://docs.snowflake.com) against the code samples here before using in a customer conversation.
 
 - [Open Data Sharing Docs](https://docs.snowflake.com/en/user-guide/open-data-sharing)
 - [Extending Data Sharing to Open Table Formats (Blog)](https://www.snowflake.com/en/blog/data-sharing-open-table-formats/)

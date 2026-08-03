@@ -1,9 +1,9 @@
 # Connect Power BI to Snowflake Using Your Microsoft Login
 
-![Expires](https://img.shields.io/badge/Expires-2026--08--19-orange)
+![Expires](https://img.shields.io/badge/Expires-2027--02--19-orange)
 
 **Pair-programmed by:** SE Community + Cortex Code
-**Created:** 2026-07-20 | **Expires:** 2026-08-19 | **Status:** ACTIVE
+**Created:** 2026-07-20 | **Expires:** 2027-02-19 | **Status:** ACTIVE
 
 Power BI needs to verify who each person is before it shows them Snowflake data. Right now it probably uses a shared password — meaning everyone looks the same to Snowflake. This guide switches it to use your organization's Microsoft login instead, so each person is identified individually.
 
@@ -417,13 +417,21 @@ CREATE NETWORK POLICY powerbi_allowed_ips
 ALTER ACCOUNT SET NETWORK_POLICY = powerbi_allowed_ips;
 ```
 
-Network policies apply at the account or user level — they can't be scoped to just Power BI connections.
+**Better approach — scope the policy to the security integration only:**
+
+Rather than applying the network policy account-wide, you can attach it directly to the Power BI security integration. This limits the IP restriction to OAuth connections without affecting other account traffic:
+
+```sql
+ALTER SECURITY INTEGRATION powerbi SET NETWORK_POLICY = powerbi_allowed_ips;
+```
+
+This is the recommended pattern when other Snowflake connections (CLI, JDBC, etc.) need different IP allowlists.
 
 ---
 
 ## Reference links
 
-> **Re-verify before 2026-08-19.** OAuth audience URLs, user mapping claim syntax, and B2B guest configurations may change with Entra ID updates. Check [Snowflake's Power BI OAuth docs](https://docs.snowflake.com/en/user-guide/oauth-powerbi) against the code samples here before using in a customer conversation.
+> **Re-verify before 2027-02-19.** OAuth audience URLs, user mapping claim syntax, and B2B guest configurations may change with Entra ID updates. Check [Snowflake's Power BI OAuth docs](https://docs.snowflake.com/en/user-guide/oauth-powerbi) against the code samples here before using in a customer conversation.
 
 - [Snowflake docs: Power BI SSO setup](https://docs.snowflake.com/en/user-guide/oauth-powerbi)
 - [Snowflake docs: Microsoft Entra SCIM integration](https://docs.snowflake.com/en/user-guide/scim-azure)
