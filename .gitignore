@@ -90,8 +90,8 @@ package-lock.json
 *.swo
 *~
 
-# ---- Archive (override global Emacs *_archive pattern; this directory is tracked) ----
-!_archive/
+# ---- Archive (local only — not pushed to remote) ----
+_archive/
 
 # ---- Lifecycle (local analysis, not tracked) ----
 lifecycle.md

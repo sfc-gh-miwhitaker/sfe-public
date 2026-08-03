@@ -1,6 +1,0 @@
-name: ap_invoice_pipeline
-channels:
-  - snowflake
-dependencies:
-  - streamlit
-  - snowflake-snowpark-python
