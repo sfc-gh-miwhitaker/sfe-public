@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-17-blue)
+![Projects](https://img.shields.io/badge/Projects-18-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -19,7 +19,7 @@ Pick the row that matches why you're here:
 | **Build a production Cortex Agent** | [guide-model-agnostic-accuracy](guide-model-agnostic-accuracy/) — configuration foundation | Then: [versioning](guide-cortex-agent-versioning/) → [multi-agent orchestration](guide-agent-to-agent-orchestration/) → [custom tools](guide-cortex-agent-image-tool/) (optional). Add [search access control](guide-cortex-search-access-control/) if your agent uses Cortex Search. |
 | **Govern Snowflake costs and usage** | [guide-snowflake-cost-visibility](guide-snowflake-cost-visibility/) — foundational layer | Then: [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) for AI enforcement patterns · [guide-adaptive-compute](guide-adaptive-compute/) for compute rightsizing |
 | **Secure Snowflake and build an audit trail** | Pick by gap: [Cortex Search RBAC](guide-cortex-search-access-control/) · [Power BI identity federation](guide-powerbi-oauth/) · [Splunk SIEM ingestion](guide-snowflake-splunk-ingestion/) | Each guide is standalone |
-| **Understand new Snowflake capabilities** | [guide-horizon-context-catalog](guide-horizon-context-catalog/) for the Cortex Sense + catalog stack · [guide-universal-data-sharing](guide-universal-data-sharing/) for Summit 2026 sharing enhancements | No required order — pick based on area of interest |
+| **Understand new Snowflake capabilities** | [guide-horizon-context-catalog](guide-horizon-context-catalog/) for the Cortex Sense + catalog stack · [guide-universal-data-sharing](guide-universal-data-sharing/) for Summit 2026 sharing enhancements · [guide-cowork-easter-eggs](guide-cowork-easter-eggs/) for the full CoWork feature compendium | No required order — pick based on area of interest |
 
 ---
 
@@ -29,6 +29,7 @@ Pick the row that matches why you're here:
 
 | Directory | Description | Features |
 |---|---|---|
+| [guide-cowork-easter-eggs](guide-cowork-easter-eggs/) | Full feature compendium for Snowflake CoWork: the `+` menu command center, Deep Research (parallel sub-queries, up to 10 min), Extended Thinking, Uber Agent auto-routing with power-user override, Artifacts (live-refresh governed dashboards), three-tier chart customization (Vega-Lite template + viz policies), User Skills + Skill Catalog, User Memory, MCP connectors (Slack/Drive/Salesforce via OAuth), Automations, Verified Answers, file upload (5 files/50 MB each), iOS mobile with QR login and voice. Includes Common Misconceptions table for demo prep | CoWork, Deep Research, Artifacts, Uber Agent, Vega-Lite, chart customization, User Skills, User Memory, MCP, Automations, Verified Answers, mobile, Teams |
 | [guide-snowflake-splunk-ingestion](guide-snowflake-splunk-ingestion/) | Four patterns for ingesting Snowflake audit logs into Splunk: Federated Search (GA July 2026, Cloud AWS), DB Connect JDBC pull with Rising Column configs for LOGIN/QUERY/ACCESS_HISTORY, External Stage export via COPY INTO, and Sentry detection-push to HEC. Decision flowchart, pattern comparison table, working SQL for all four | ACCOUNT_USAGE, DB Connect, JDBC, Federated Search, Splunk HEC, External Stage, Sentry, MITRE, security monitoring |
 | [guide-cortex-agent-image-tool](guide-cortex-agent-image-tool/) | How to give a Cortex Agent the ability to generate images: the UDF-as-bridge pattern, SPCS path (image gen model inside Snowflake), External API path (DALL-E/Stability AI), agent spec with generic tool, presigned URL vs base64 return formats, and the key gotcha that the agent can see the image URL but not the pixels | Cortex Agents, generic tool, SPCS, image generation, UDF, External Function, External Access Integration |
 | [guide-adaptive-compute](guide-adaptive-compute/) | The warehouse sizing decision is going away: what Adaptive Compute changes operationally, the two parameters you now manage (MAX_QUERY_PERFORMANCE_LEVEL + QUERY_THROUGHPUT_MULTIPLIER), conversion DDL (zero-downtime ALTER), per-query billing via QUERY_METERING_HISTORY, and post-conversion tuning recipes | Adaptive Compute, WAREHOUSE_TYPE ADAPTIVE, MAX_QUERY_PERFORMANCE_LEVEL, QUERY_THROUGHPUT_MULTIPLIER, per-query billing |

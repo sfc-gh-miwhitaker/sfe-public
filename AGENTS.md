@@ -106,6 +106,7 @@ order — pick based on area of interest.
 **Current members:**
 - `guide-horizon-context-catalog` — Cortex Sense, Horizon Context, catalog pivot (Summit 2026)
 - `guide-universal-data-sharing` — Open Data Sharing, OTF sharing, Collaboration API (Summit 2026)
+- `guide-cowork-easter-eggs` — full CoWork feature surface: power-user tricks, chart customization, Uber Agent, Deep Research, Skills, Memory, Artifacts
 
 **Belongs here if:** the guide's primary job is explaining a new Snowflake feature or
 capability rather than configuring or building something.
@@ -156,7 +157,7 @@ Each guide README must include:
 - `> **No support provided.** Reference only; validate before production use.`
 - `---` divider before body content
 - `## Start Here` or `## Quick Start` section near the top
-- `## Related Guides` section near the bottom (if other guides in this repo are relevant)
+- `## Related Guides` section near the bottom — **public, stable external links only** (docs.snowflake.com, etc.). Do NOT link to sibling guides in this repo — they expire and rot. Use the [Start Here index](README.md#start-here) for cross-guide navigation instead.
 - `## External References` section at the end
 
 Expiry dates: set 3–6 months from creation date. Guides covering private preview

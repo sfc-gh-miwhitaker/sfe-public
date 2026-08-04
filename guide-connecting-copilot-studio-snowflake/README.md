@@ -129,11 +129,10 @@ All patterns require:
 
 ## Related Guides
 
-- [`guide-connecting-claude-snowflake`](../guide-connecting-claude-snowflake/) — Same MCP + OAuth setup for Claude Desktop / Claude Code
-- [`guide-cortex-agent-versioning`](../guide-cortex-agent-versioning/) — Deploying agents with LIVE → VERSION → alias lifecycle
-- [`guide-cortex-search-access-control`](../guide-cortex-search-access-control/) — RBAC patterns for Cortex Search used in Pattern C
-- [`guide-model-agnostic-accuracy`](../guide-model-agnostic-accuracy/) — Semantic view design and agent accuracy best practices
-- [`guide-snowflake-cost-visibility`](../guide-snowflake-cost-visibility/) — Monitoring Cortex Agent + Analyst credit consumption
+- [Snowflake MCP Server documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp) — MCP protocol reference for Pattern C
+- [Cortex Agents overview](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents) — agent configuration and tool setup
+- [Semantic views overview](https://docs.snowflake.com/en/user-guide/views-semantic/overview) — the data layer Cortex Analyst reads
+- [External OAuth for Snowflake](https://docs.snowflake.com/en/user-guide/oauth-external) — identity federation reference for Pattern A/B
 
 ## External References
 
