@@ -66,6 +66,7 @@ Reading order within this path matters.
 4. `guide-cortex-agent-image-tool` — custom generic tool pattern (optional, specialized)
 5. `guide-cortex-search-access-control` — RBAC for Cortex Search (add when agent uses search)
 6. `guide-connecting-copilot-studio-snowflake` — exposing a Cortex Agent via MCP to Microsoft Copilot Studio
+7. `guide-cowork-only-users` — admin provisioning for CoWork-only user cohorts (RBAC, interface lock, SCIM)
 
 **Belongs here if:** the guide's primary job is building, configuring, deploying, or
 extending a Cortex Agent or its supporting objects (semantic views, tools, search).
@@ -94,6 +95,7 @@ Each guide in this path is standalone — no required reading order.
 - `guide-cortex-search-access-control` — Cortex Search RBAC (also in Path 2)
 - `guide-powerbi-oauth` — OAuth identity federation (also in Path 1)
 - `guide-snowflake-splunk-ingestion` — Splunk SIEM ingestion (also in Path 1)
+- `guide-cowork-only-users` — CoWork-only interface restriction via ALLOWED_INTERFACES (also in Path 2)
 
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
 identity federation, or feeding an audit or SIEM system.

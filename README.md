@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-18-blue)
+![Projects](https://img.shields.io/badge/Projects-19-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -16,9 +16,9 @@ Pick the row that matches why you're here:
 | I need to... | Entry point | Reading order / notes |
 |---|---|---|
 | **Connect an external tool to Snowflake** | Pick by tool: [Power BI OAuth](guide-powerbi-oauth/) · [Claude Desktop + MCP](guide-connecting-claude-snowflake/) · [Claude Code CLI/SDK](guide-claude-code-cortex-redirect/) · [VS Code + Copilot](guide-vscode-copilot-cortex/) · [Microsoft Copilot Studio](guide-connecting-copilot-studio-snowflake/) · [Splunk audit logs](guide-snowflake-splunk-ingestion/) | Each guide is standalone — no required reading order |
-| **Build a production Cortex Agent** | [guide-model-agnostic-accuracy](guide-model-agnostic-accuracy/) — configuration foundation | Then: [versioning](guide-cortex-agent-versioning/) → [multi-agent orchestration](guide-agent-to-agent-orchestration/) → [custom tools](guide-cortex-agent-image-tool/) (optional). Add [search access control](guide-cortex-search-access-control/) if your agent uses Cortex Search. |
+| **Build a production Cortex Agent** | [guide-model-agnostic-accuracy](guide-model-agnostic-accuracy/) — configuration foundation | Then: [versioning](guide-cortex-agent-versioning/) → [multi-agent orchestration](guide-agent-to-agent-orchestration/) → [custom tools](guide-cortex-agent-image-tool/) (optional). Add [search access control](guide-cortex-search-access-control/) if your agent uses Cortex Search. End with [CoWork-only provisioning](guide-cowork-only-users/) when rolling out to business users. |
 | **Govern Snowflake costs and usage** | [guide-snowflake-cost-visibility](guide-snowflake-cost-visibility/) — foundational layer | Then: [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) for AI enforcement patterns · [guide-adaptive-compute](guide-adaptive-compute/) for compute rightsizing |
-| **Secure Snowflake and build an audit trail** | Pick by gap: [Cortex Search RBAC](guide-cortex-search-access-control/) · [Power BI identity federation](guide-powerbi-oauth/) · [Splunk SIEM ingestion](guide-snowflake-splunk-ingestion/) | Each guide is standalone |
+| **Secure Snowflake and build an audit trail** | Pick by gap: [Cortex Search RBAC](guide-cortex-search-access-control/) · [Power BI identity federation](guide-powerbi-oauth/) · [Splunk SIEM ingestion](guide-snowflake-splunk-ingestion/) · [CoWork-only interface lock](guide-cowork-only-users/) | Each guide is standalone |
 | **Understand new Snowflake capabilities** | [guide-horizon-context-catalog](guide-horizon-context-catalog/) for the Cortex Sense + catalog stack · [guide-universal-data-sharing](guide-universal-data-sharing/) for Summit 2026 sharing enhancements · [guide-cowork-easter-eggs](guide-cowork-easter-eggs/) for the full CoWork feature compendium | No required order — pick based on area of interest |
 
 ---
@@ -45,6 +45,7 @@ Pick the row that matches why you're here:
 | [guide-snowflake-cost-visibility](guide-snowflake-cost-visibility/) | Foundational cost governance: Budget object (predictive spend alerts), METERING_DAILY_HISTORY attribution queries, Resource Monitors (warehouse guardrails), and AI_FUNCTIONS_USER RBAC for new BU governance. Read this first, then [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) for AI-specific enforcement patterns | Budget object, ACCOUNT_USAGE, resource monitors, AI_FUNCTIONS_USER, RBAC, cost visibility |
 | [guide-vscode-copilot-cortex](guide-vscode-copilot-cortex/) | Connect VS Code GitHub Copilot to Snowflake Cortex: managed MCP for Copilot Chat, subagent skill for Copilot CLI, and the CoCo CLI (formerly Cortex Code) in the integrated terminal. Post-Summit-26, with the shared semantic-view accuracy foundation | Snowflake MCP, OAuth, PAT, subagent-cortex-code, CoCo CLI |
 | [guide-connecting-copilot-studio-snowflake](guide-connecting-copilot-studio-snowflake/) | Four patterns for connecting Microsoft Copilot Studio to Snowflake — from no-code Knowledge Source (~5 min) to full Cortex Agent delegation via MCP (recommended for production). Decision framework, governance comparison table, and real-world evaluation data showing 93% structural-error reduction from semantic-model grounding | Copilot Studio, MCP Server, Cortex Agent, Cortex Analyst, Power Automate, Entra ID, External OAuth, Snowflake OAuth |
+| [guide-cowork-only-users](guide-cowork-only-users/) | Admin runbook for giving a group of users access to only Snowflake CoWork without broader Snowsight access: CORTEX_AGENT_USER role, ALLOWED_INTERFACES lock, CoWork object curation, single and bulk provisioning, SCIM attribute, private connectivity (PrivateLink), IdP redirect. Full verification and revocation scripts included | CoWork, RBAC, ALLOWED_INTERFACES, SCIM, PrivateLink, CORTEX_AGENT_USER, bulk provisioning |
 
 ### Demos
 
