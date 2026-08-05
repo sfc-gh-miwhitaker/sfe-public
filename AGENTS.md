@@ -43,6 +43,7 @@ Guides that configure a third-party tool (BI, AI coding assistant, SIEM, etc.) t
 authenticate and communicate with Snowflake.
 
 **Current members:**
+- `guide-coco-setup` — Cortex Code Desktop + CLI onboarding, configuration hierarchy, first skill
 - `guide-powerbi-oauth` — Power BI OAuth SSO and DirectQuery
 - `guide-connecting-claude-snowflake` — Claude Desktop and CoWork/CoCo surfaces
 - `guide-claude-code-cortex-redirect` — Claude Code CLI and Anthropic/OpenAI SDK redirect
@@ -106,6 +107,7 @@ Guides that explain and position recent Snowflake announcements. No required rea
 order — pick based on area of interest.
 
 **Current members:**
+- `guide-coco-setup` — Cortex Code Desktop + CLI onboarding (also in Path 1)
 - `guide-horizon-context-catalog` — Cortex Sense, Horizon Context, catalog pivot (Summit 2026)
 - `guide-universal-data-sharing` — Open Data Sharing, OTF sharing, Collaboration API (Summit 2026)
 - `guide-cowork-easter-eggs` — full CoWork feature surface: power-user tricks, chart customization, Uber Agent, Deep Research, Skills, Memory, Artifacts
