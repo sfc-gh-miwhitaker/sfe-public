@@ -98,6 +98,7 @@ Each guide in this path is standalone — no required reading order.
 - `guide-snowflake-splunk-ingestion` — Splunk SIEM ingestion (also in Path 1)
 - `guide-cowork-only-users` — CoWork-only interface restriction via ALLOWED_INTERFACES (also in Path 2)
 - `guide-snowflake-firewall-allowlist` — Edge firewall allowlisting (FQDN outbound + stable egress CIDR inbound)
+- `guide-cortex-code-access-control` — Restrict CoCo to specific roles, progressive rollout, usage observability queries
 
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
 identity federation, or feeding an audit or SIEM system.
