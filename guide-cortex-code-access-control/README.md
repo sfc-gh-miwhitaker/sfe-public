@@ -23,6 +23,7 @@ Pair-programmed by SE Community + Cortex Code
 | Understand what controls CoCo access | [How Access Works](#how-cortex-code-access-works) |
 | Lock it down to one role right now | [Lockdown Procedure](#lockdown-procedure) |
 | Roll out gradually without breaking things | [Progressive Rollout](#progressive-rollout-for-the-paranoid) |
+| Cap daily credit spend per user | [Spend Limits](#spend-limits-daily-credit-caps) |
 | See who is using CoCo today | [Observability Queries](#observability-queries) |
 | Avoid common mistakes | [Gotchas](#gotchas-and-faq) |
 
@@ -176,282 +177,110 @@ GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE PUBLIC;
 
 ---
 
+## Spend Limits (Daily Credit Caps)
+
+Independently from RBAC, Snowflake provides per-surface daily credit limits. These are rolling 24-hour caps — when a user's estimated usage hits the limit, that surface blocks until usage rolls off.
+
+### Parameters
+
+| Parameter | Controls |
+|---|---|
+| `CORTEX_CODE_CLI_DAILY_EST_CREDIT_LIMIT_PER_USER` | CoCo CLI |
+| `CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER` | CoCo Desktop |
+| `CORTEX_CODE_SNOWSIGHT_DAILY_EST_CREDIT_LIMIT_PER_USER` | CoCo in Snowsight |
+
+### How it works
+
+| Value | Behavior |
+|---|---|
+| `-1` (default) | No limit — unlimited access |
+| `0` | Blocked entirely |
+| Positive number | Blocked when rolling 24-hour estimated usage exceeds this value |
+
+User-level settings override account-level settings for that user.
+
+### Pattern A — Set a default cap for everyone
+
+```sql
+USE ROLE ACCOUNTADMIN;
+
+-- 20 credits/day/user across all surfaces
+ALTER ACCOUNT SET CORTEX_CODE_CLI_DAILY_EST_CREDIT_LIMIT_PER_USER = 20;
+ALTER ACCOUNT SET CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER = 20;
+ALTER ACCOUNT SET CORTEX_CODE_SNOWSIGHT_DAILY_EST_CREDIT_LIMIT_PER_USER = 20;
+```
+
+### Pattern B — Block by default, allow specific users
+
+```sql
+USE ROLE ACCOUNTADMIN;
+
+-- Block Desktop for everyone
+ALTER ACCOUNT SET CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER = 0;
+
+-- Allow specific users with a per-user override
+ALTER USER power_user SET CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER = 50;
+ALTER USER team_lead  SET CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER = 20;
+```
+
+### Pattern C — Unlimited for pilots, capped for everyone else
+
+```sql
+USE ROLE ACCOUNTADMIN;
+
+-- Conservative default
+ALTER ACCOUNT SET CORTEX_CODE_CLI_DAILY_EST_CREDIT_LIMIT_PER_USER = 10;
+ALTER ACCOUNT SET CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER = 10;
+
+-- Pilot users get unlimited
+ALTER USER pilot_user_1 SET CORTEX_CODE_CLI_DAILY_EST_CREDIT_LIMIT_PER_USER = -1;
+ALTER USER pilot_user_1 SET CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER = -1;
+```
+
+### Removing limits
+
+```sql
+-- Remove account-level limit (restores default unlimited)
+ALTER ACCOUNT UNSET CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER;
+
+-- Remove user-level override (account-level applies instead)
+ALTER USER jsmith UNSET CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER;
+```
+
+### Spend limits vs RBAC — when to use which
+
+| Goal | Use |
+|---|---|
+| Completely block CoCo for unauthorized users | RBAC (revoke CORTEX_USER from PUBLIC) |
+| Allow access but prevent runaway spend | Spend limits |
+| Block one surface but allow others | Spend limits (set 0 on the blocked surface) |
+| Both restrict who AND cap how much | Combine both — RBAC for access, limits for guardrails |
+
+> Note: Spend limits are a complementary mechanism to RBAC. A user needs **both** a qualifying database role AND a non-zero credit limit to use a surface.
+
+---
+
 ## Observability Queries
 
-All queries use `SNOWFLAKE.ACCOUNT_USAGE` views (up to 1-hour latency, 365-day retention). Replace date ranges as needed.
+All queries use `SNOWFLAKE.ACCOUNT_USAGE` views (up to 1-hour latency, 365-day retention).
 
-### Query 1 — Who is using Cortex Code today?
+The full query set is in [`sql/observability.sql`](sql/observability.sql). Below is a summary of what each query answers:
 
-```sql
-SELECT
-    u.name                    AS user_name,
-    u.login_name              AS login_name,
-    u.email                   AS email,
-    COUNT(h.request_id)       AS total_requests,
-    SUM(h.token_credits)      AS total_credits,
-    MIN(h.usage_time)         AS first_seen,
-    MAX(h.usage_time)         AS last_seen
-FROM (
-    SELECT user_id, request_id, token_credits, usage_time
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-    UNION ALL
-    SELECT user_id, request_id, token_credits, usage_time
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-    UNION ALL
-    SELECT user_id, request_id, token_credits, usage_time
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-) h
-JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS u
-  ON h.user_id = u.user_id
-WHERE h.usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-  AND u.deleted_on IS NULL
-GROUP BY u.name, u.login_name, u.email
-ORDER BY total_credits DESC;
-```
+| # | Question |
+|---|---|
+| 1 | Who is using Cortex Code today? (user, requests, credits, first/last seen) |
+| 2 | Which surface is most popular? (CLI vs Desktop vs Snowsight) |
+| 3 | What models are being consumed? (token breakdown per model) |
+| 4 | Monthly credits per user (3-month trend) |
+| 5 | Peak usage hours (hour-of-day distribution) |
+| 6 | Top 10 heaviest users (last 30 days) |
+| 7 | What roles are people using CoCo with? |
+| 8 | Users with access who have NEVER used CoCo (unused license audit) |
+| 9 | Daily credit trend (last 30 days — good for alerting) |
+| 10 | New users in the last 7 days (adoption tracking) |
+| 11 | Inference region distribution (regional vs global routing) |
 
-### Query 2 — Which surface is most popular?
-
-```sql
-SELECT
-    'CLI'        AS surface,
-    COUNT(request_id) AS requests,
-    SUM(token_credits) AS credits
-  FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-  WHERE usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-UNION ALL
-SELECT
-    'Desktop'    AS surface,
-    COUNT(request_id) AS requests,
-    SUM(token_credits) AS credits
-  FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-  WHERE usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-UNION ALL
-SELECT
-    'Snowsight'  AS surface,
-    COUNT(request_id) AS requests,
-    SUM(token_credits) AS credits
-  FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-  WHERE usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-ORDER BY credits DESC;
-```
-
-### Query 3 — What models are being consumed?
-
-```sql
-SELECT
-    f.key                       AS model_name,
-    COUNT(h.request_id)         AS request_count,
-    SUM(f.value:input::NUMBER + 
-        f.value:output::NUMBER + 
-        COALESCE(f.value:cache_read_input::NUMBER, 0) +
-        COALESCE(f.value:cache_write_input::NUMBER, 0)
-    )                           AS total_tokens
-FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY h,
-     LATERAL FLATTEN(input => h.tokens_granular) f
-WHERE h.usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-GROUP BY f.key
-ORDER BY total_tokens DESC;
-```
-
-> Repeat with `CORTEX_CODE_DESKTOP_USAGE_HISTORY` and `CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY` for full coverage, or UNION ALL the three before flattening.
-
-### Query 4 — Monthly credits per user
-
-```sql
-SELECT
-    u.name                      AS user_name,
-    DATE_TRUNC('month', h.usage_time) AS month,
-    SUM(h.token_credits)        AS credits
-FROM (
-    SELECT user_id, usage_time, token_credits
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-    UNION ALL
-    SELECT user_id, usage_time, token_credits
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-    UNION ALL
-    SELECT user_id, usage_time, token_credits
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-) h
-JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS u
-  ON h.user_id = u.user_id
-WHERE h.usage_time >= DATEADD('month', -3, CURRENT_TIMESTAMP())
-  AND u.deleted_on IS NULL
-GROUP BY u.name, month
-ORDER BY month DESC, credits DESC;
-```
-
-### Query 5 — Peak usage hours (hour-of-day distribution)
-
-```sql
-SELECT
-    EXTRACT(HOUR FROM CONVERT_TIMEZONE('UTC', usage_time)) AS hour_utc,
-    COUNT(request_id)    AS requests,
-    SUM(token_credits)   AS credits
-FROM (
-    SELECT usage_time, request_id, token_credits
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-    UNION ALL
-    SELECT usage_time, request_id, token_credits
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-    UNION ALL
-    SELECT usage_time, request_id, token_credits
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-) h
-WHERE usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-GROUP BY hour_utc
-ORDER BY hour_utc;
-```
-
-### Query 6 — Top 10 heaviest users (last 30 days)
-
-```sql
-SELECT
-    u.name                  AS user_name,
-    COUNT(h.request_id)     AS total_requests,
-    SUM(h.token_credits)    AS total_credits,
-    SUM(h.tokens)           AS total_tokens
-FROM (
-    SELECT user_id, request_id, token_credits, tokens
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-    UNION ALL
-    SELECT user_id, request_id, token_credits, tokens
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-    UNION ALL
-    SELECT user_id, request_id, token_credits, tokens
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-) h
-JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS u
-  ON h.user_id = u.user_id
-WHERE h.usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-  AND u.deleted_on IS NULL
-GROUP BY u.name
-ORDER BY total_credits DESC
-LIMIT 10;
-```
-
-### Query 7 — What roles are people using CoCo with?
-
-```sql
-SELECT
-    h.metadata:role_name::VARCHAR   AS role_name,
-    COUNT(h.request_id)             AS requests,
-    COUNT(DISTINCT h.user_id)       AS distinct_users,
-    SUM(h.token_credits)            AS credits
-FROM (
-    SELECT user_id, request_id, token_credits, metadata
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-    UNION ALL
-    SELECT user_id, request_id, token_credits, metadata
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-    UNION ALL
-    SELECT user_id, request_id, token_credits, metadata
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-) h
-WHERE h.usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-GROUP BY role_name
-ORDER BY credits DESC;
-```
-
-### Query 8 — Users with CORTEX_USER access who have NEVER used CoCo
-
-```sql
-WITH coco_users AS (
-    SELECT DISTINCT user_id
-    FROM (
-        SELECT user_id FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-        UNION
-        SELECT user_id FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-        UNION
-        SELECT user_id FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-    )
-)
-SELECT
-    u.name          AS user_name,
-    u.login_name    AS login_name,
-    u.email         AS email,
-    u.created_on    AS user_created
-FROM SNOWFLAKE.ACCOUNT_USAGE.USERS u
-LEFT JOIN coco_users c
-  ON u.user_id = c.user_id
-WHERE c.user_id IS NULL
-  AND u.deleted_on IS NULL
-  AND COALESCE(u.disabled, 'false')::VARCHAR != 'true'
-ORDER BY u.created_on DESC;
-```
-
-> Note: This shows users who have never used CoCo in the 365-day retention window. It does not confirm they currently have CORTEX_USER — combine with `SHOW GRANTS` for precision.
-
-### Query 9 — Daily credit trend (last 30 days)
-
-```sql
-SELECT
-    DATE_TRUNC('day', usage_time)::DATE AS day,
-    COUNT(request_id)                   AS requests,
-    SUM(token_credits)                  AS credits
-FROM (
-    SELECT usage_time, request_id, token_credits
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-    UNION ALL
-    SELECT usage_time, request_id, token_credits
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-    UNION ALL
-    SELECT usage_time, request_id, token_credits
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-) h
-WHERE usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-GROUP BY day
-ORDER BY day;
-```
-
-### Query 10 — New users in the last 7 days (adoption tracking)
-
-```sql
-WITH first_use AS (
-    SELECT
-        user_id,
-        MIN(usage_time) AS first_usage
-    FROM (
-        SELECT user_id, usage_time FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-        UNION ALL
-        SELECT user_id, usage_time FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-        UNION ALL
-        SELECT user_id, usage_time FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-    )
-    GROUP BY user_id
-)
-SELECT
-    u.name          AS user_name,
-    u.email         AS email,
-    f.first_usage   AS first_used_at
-FROM first_use f
-JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS u
-  ON f.user_id = u.user_id
-WHERE f.first_usage >= DATEADD('day', -7, CURRENT_TIMESTAMP())
-  AND u.deleted_on IS NULL
-ORDER BY f.first_usage DESC;
-```
-
-### Query 11 — Inference region distribution (regional vs global routing)
-
-```sql
-SELECT
-    COALESCE(metadata:inference_region::VARCHAR, 'unknown') AS inference_region,
-    COUNT(request_id)    AS requests,
-    SUM(token_credits)   AS credits
-FROM (
-    SELECT metadata, request_id, token_credits, usage_time
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_CLI_USAGE_HISTORY
-    UNION ALL
-    SELECT metadata, request_id, token_credits, usage_time
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_DESKTOP_USAGE_HISTORY
-    UNION ALL
-    SELECT metadata, request_id, token_credits, usage_time
-      FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_CODE_SNOWSIGHT_USAGE_HISTORY
-) h
-WHERE usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
-GROUP BY inference_region
-ORDER BY credits DESC;
-```
+> **Tip:** `SNOWFLAKE.ACCOUNT_USAGE.SNOWFLAKE_COCO_USAGE_HISTORY` combines CLI, Desktop, and Snowsight into a single view. If available in your account, use it instead of UNION ALL across the three individual views. The queries in the SQL file use the individual views for maximum compatibility.
 
 ---
 
@@ -482,10 +311,6 @@ You may see guidance elsewhere to run `REVOKE IMPORTED PRIVILEGES ON DATABASE SN
 - Retention: **365 days** for both
 
 Don't expect real-time visibility. If you just revoked access and want to confirm it worked, test with a direct `AI_COMPLETE` call rather than waiting for the usage views to update.
-
-### The unified view
-
-`SNOWFLAKE.ACCOUNT_USAGE.SNOWFLAKE_COCO_USAGE_HISTORY` combines CLI, Desktop, and Snowsight into a single view. If available in your account, use it instead of UNION ALL across the three individual views. The queries above use the individual views for maximum compatibility.
 
 ### CORTEX_AGENT_USER is narrower than CORTEX_USER
 

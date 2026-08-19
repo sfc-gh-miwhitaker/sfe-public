@@ -83,6 +83,8 @@ compute rightsizing. Reading order within this path matters.
 2. `demo-cortex-ai-cost-controls` — AI enforcement: usage view queries, runaway detection,
    per-user limits
 3. `guide-adaptive-compute` — compute rightsizing: Adaptive warehouse parameters and tuning
+4. `guide-org-reporting` — multi-account visibility: ORGANIZATION_USAGE two-path decision,
+   application/database roles, query discipline, materialization pattern
 
 **Belongs here if:** the guide's primary job is monitoring, alerting on, or limiting
 Snowflake credit or AI token consumption.
@@ -113,6 +115,7 @@ order — pick based on area of interest.
 - `guide-horizon-context-catalog` — Cortex Sense, Horizon Context, catalog pivot (Summit 2026)
 - `guide-universal-data-sharing` — Open Data Sharing, OTF sharing, Collaboration API (Summit 2026)
 - `guide-cowork-easter-eggs` — full CoWork feature surface: power-user tricks, chart customization, Uber Agent, Deep Research, Skills, Memory, Artifacts
+- `guide-org-reporting` — ORGANIZATION_USAGE primer: two access paths, premium vs non-premium, query discipline
 
 **Belongs here if:** the guide's primary job is explaining a new Snowflake feature or
 capability rather than configuring or building something.
