@@ -50,6 +50,8 @@ authenticate and communicate with Snowflake.
 - `guide-vscode-copilot-cortex` — VS Code + GitHub Copilot
 - `guide-snowflake-splunk-ingestion` — Splunk audit log ingestion (4 patterns)
 - `guide-connecting-copilot-studio-snowflake` — Microsoft Copilot Studio (4 patterns: Knowledge Source, Cortex Analyst, MCP + Cortex Agent, REST API)
+- `guide-cube-snowflake-semantic-layer` — Cube (cube.dev) semantic layer: driver config, three auth paths, OIDC workload identity, pre-aggregation cost
+- `guide-debezium-to-snowflake` — Debezium CDC pipeline: Debezium + Kafka + Snowflake Kafka Connector v4 + Dynamic Table flattening (all GA)
 
 **Belongs here if:** the guide's primary job is configuring a named external product
 to connect to Snowflake. Authentication setup, endpoint configuration, and integration
@@ -116,6 +118,7 @@ order — pick based on area of interest.
 - `guide-universal-data-sharing` — Open Data Sharing, OTF sharing, Collaboration API (Summit 2026)
 - `guide-cowork-easter-eggs` — full CoWork feature surface: power-user tricks, chart customization, Uber Agent, Deep Research, Skills, Memory, Artifacts
 - `guide-org-reporting` — ORGANIZATION_USAGE primer: two access paths, premium vs non-premium, query discipline
+- `guide-cube-snowflake-semantic-layer` — bi-directional Snowflake Semantic Views sync with Cube, push limitations, decoupled vs warehouse-native decision (also in Path 1)
 
 **Belongs here if:** the guide's primary job is explaining a new Snowflake feature or
 capability rather than configuring or building something.
