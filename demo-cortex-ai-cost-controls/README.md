@@ -106,6 +106,14 @@ EXECUTE IMMEDIATE FROM 'teardown_all.sql';
 cd app && snow app teardown
 ```
 
+## Development Tools
+
+This project includes AI assistant configuration for collaborative development:
+
+- `AGENTS.md` — Project-specific instructions for AI coding assistants
+- `.claude/skills/cortex-ai-cost-controls/SKILL.md` — Detailed project skill (architecture, key files, extension playbooks)
+- `ELI5.md` — Plain-language companion explaining the project without jargon
+
 ## Related Guides
 
 - [Per-user quotas documentation](https://docs.snowflake.com/en/user-guide/budgets/per-user-quotas)

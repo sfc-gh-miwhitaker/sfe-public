@@ -81,22 +81,28 @@ export async function getOverviewKpis(): Promise<{
 }> {
   const rows = await querySnowflake(`
     SELECT
-      SUM(TOTAL_CREDITS) AS total_credits,
+      SUM(daily_credits) AS total_credits,
       AVG(daily_credits) AS daily_avg,
-      SUM(UNIQUE_USERS) AS unique_users,
       COUNT(DISTINCT USAGE_DATE) AS active_days
     FROM (
-      SELECT USAGE_DATE, SUM(TOTAL_CREDITS) AS daily_credits, MAX(UNIQUE_USERS) AS UNIQUE_USERS
+      SELECT USAGE_DATE, SUM(TOTAL_CREDITS) AS daily_credits
       FROM ${SCHEMA}.MAT_AI_SPEND_DAILY
       WHERE USAGE_DATE >= DATEADD('day', -30, CURRENT_DATE())
       GROUP BY USAGE_DATE
     )
   `);
   const r = (rows as Record<string, number>[])[0];
+
+  const userRows = await querySnowflake(`
+    SELECT COUNT(DISTINCT user_id) AS unique_users
+    FROM ${SCHEMA}.MAT_AI_USAGE_UNIFIED
+    WHERE usage_time >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+  `);
+  const u = (userRows as Record<string, number>[])[0];
   return {
     totalCredits: r?.TOTAL_CREDITS ?? 0,
     dailyAvg: r?.DAILY_AVG ?? 0,
-    uniqueUsers: r?.UNIQUE_USERS ?? 0,
+    uniqueUsers: u?.UNIQUE_USERS ?? 0,
     activeDays: r?.ACTIVE_DAYS ?? 0,
   };
 }

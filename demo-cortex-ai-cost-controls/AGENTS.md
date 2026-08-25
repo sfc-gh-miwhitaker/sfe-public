@@ -1,3 +1,6 @@
+<!-- Global rules (data integrity, SQL standards, security) apply automatically
+     via ~/.claude/CLAUDE.md. Do not duplicate them here. -->
+
 # demo-cortex-ai-cost-controls — AI Assistant Instructions
 
 ## What This Is

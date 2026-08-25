@@ -64,21 +64,6 @@ CREATE TABLE IF NOT EXISTS MAT_AGENT_ATTRIBUTION (
 );
 
 -- ---------------------------------------------------------------------------
--- Table 5: Quota status snapshot
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS MAT_QUOTA_STATUS (
-    snapshot_time       TIMESTAMP_LTZ,
-    quota_name          VARCHAR,
-    quota_database      VARCHAR,
-    quota_schema        VARCHAR,
-    per_user_limit      NUMBER(38,12),
-    daily_limit         NUMBER(38,12),
-    block_enforcement   BOOLEAN,
-    users_in_scope      NUMBER,
-    users_blocked       NUMBER
-);
-
--- ---------------------------------------------------------------------------
 -- Refresh Procedure
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE PROCEDURE SP_REFRESH_COST_MATERIALIZATION()
@@ -155,13 +140,26 @@ BEGIN
         FROM SNOWFLAKE.ACCOUNT_USAGE.SNOWFLAKE_COCO_USAGE_HISTORY cc
         WHERE cc.USAGE_TIME >= DATEADD('day', -90, CURRENT_TIMESTAMP())
     )
-    SELECT * FROM ai_functions
-    UNION ALL SELECT * FROM agents
-    UNION ALL SELECT * FROM cowork
-    UNION ALL SELECT * FROM coco;
+    SELECT service_type, user_id, user_name, credits, tokens, usage_time,
+           request_id, role_name, user_tags, entity_name, interaction_interface
+    FROM ai_functions
+    UNION ALL
+    SELECT service_type, user_id, user_name, credits, tokens, usage_time,
+           request_id, role_name, user_tags, entity_name, interaction_interface
+    FROM agents
+    UNION ALL
+    SELECT service_type, user_id, user_name, credits, tokens, usage_time,
+           request_id, role_name, user_tags, entity_name, interaction_interface
+    FROM cowork
+    UNION ALL
+    SELECT service_type, user_id, user_name, credits, tokens, usage_time,
+           request_id, role_name, user_tags, entity_name, interaction_interface
+    FROM coco;
 
     INSERT OVERWRITE INTO MAT_AI_USAGE_UNIFIED
-    SELECT * FROM tmp_unified;
+    SELECT service_type, user_id, user_name, credits, tokens, usage_time,
+           request_id, role_name, user_tags, entity_name, interaction_interface
+    FROM tmp_unified;
 
     -- 2. Daily spend
     INSERT OVERWRITE INTO MAT_AI_SPEND_DAILY
@@ -209,12 +207,6 @@ BEGIN
     WHERE START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
     GROUP BY AGENT_NAME, AGENT_DATABASE_NAME, AGENT_SCHEMA_NAME,
              cost_center_tag, interaction_interface;
-
-    -- 5. Quota status snapshot (best-effort; quotas may not exist)
-    -- Note: This requires listing quotas which uses SHOW commands.
-    -- For the materialization, we simply truncate and rely on the app
-    -- to call quota methods directly when needed.
-    -- Placeholder: quota status is queried live by the app.
 
     RETURN 'Materialization complete: ' || CURRENT_TIMESTAMP()::VARCHAR;
 END;

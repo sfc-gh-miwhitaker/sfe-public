@@ -177,6 +177,76 @@ features use 3 months; GA features use 6 months; connector/auth guides use 6 mon
 
 ---
 
+## Demo Format Standards
+
+Each `demo-<name>/deploy_all.sql` must follow this structure exactly. Use
+`demo-media-campaign-analytics/deploy_all.sql` as the canonical reference.
+
+### deploy_all.sql structure (required, in order)
+
+**1. Header block** — block comment with:
+- Demo name + attribution + expiry date on the first line
+- `INSTRUCTIONS:` — "Open Snowsight → New Worksheet → Paste → Run All" + expected runtime
+- `WHAT GETS CREATED:` — every object the script creates, by type
+- `AFTER DEPLOY:` — numbered steps the user takes after the SQL finishes
+- `PREREQUISITES:` — roles needed, API integrations, any manual pre-steps
+
+**2. Expiration check SELECT** — runs immediately so the user sees a warning before anything is created:
+```sql
+SELECT
+    '<YYYY-MM-DD>'::DATE AS expiration_date,
+    CURRENT_DATE()       AS current_date,
+    DATEDIFF('day', CURRENT_DATE(), '<YYYY-MM-DD>'::DATE) AS days_remaining,
+    CASE
+        WHEN DATEDIFF(...) < 0  THEN 'EXPIRED - Code may use outdated syntax.'
+        WHEN DATEDIFF(...) <= 7 THEN 'EXPIRING SOON - ...'
+        ELSE 'ACTIVE - ...'
+    END AS demo_status;
+```
+
+**3. Minimal infrastructure** — only what is needed before the Git repository object can exist:
+```sql
+USE ROLE SYSADMIN;
+CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE ...;
+CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS ...;
+```
+
+**4. Git repository** — shared repo object; reuse across demos, do not create duplicates:
+```sql
+CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO
+  API_INTEGRATION = SFE_GIT_API_INTEGRATION
+  ORIGIN = 'https://github.com/sfc-gh-miwhitaker/sfe-public.git';
+
+ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO FETCH;
+```
+
+**5. EXECUTE IMMEDIATE FROM** — one call per sub-file, using the full stage path:
+```sql
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-<name>/sql/...';
+```
+
+> **NEVER use bare relative paths** (`'sql/01_setup/...'`). Snowflake has no local
+> filesystem — relative paths silently fail. The `@REPO/branches/main/...` form is
+> the only syntax that works from a Snowsight worksheet.
+
+**6. Final validation SELECT** — confirms objects were created and shows the next step:
+```sql
+SELECT
+    '<Demo Name>' AS demo,
+    (SELECT COUNT(*) FROM <schema>.<table1>) AS <label1>,
+    ...
+    '<next action>' AS next_step;
+```
+
+### sql/ subdirectory
+
+The `sql/` subdirectory is correct and intentional — it keeps individual scripts focused
+and independently runnable. `deploy_all.sql` is the **orchestrator**, not the inliner.
+All SQL logic lives in `sql/`; `deploy_all.sql` only contains infrastructure setup,
+the Git repo, `EXECUTE IMMEDIATE FROM` calls, and the validation query.
+
+---
+
 ## Pre-commit Hooks
 
 This repo uses `detect-secrets` and a custom account-name scanner. Common issues:

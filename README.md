@@ -57,7 +57,7 @@ Pick the row that matches why you're here:
 
 | Directory | Description | Features |
 |---|---|---|
-| [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) | Streamlit-in-Snowflake companion to guide-snowflake-cost-visibility: query all 14 Cortex AI usage views, visualize credit consumption by service and user, detect runaway inference queries, and inspect per-user CoCo limits. Read guide-snowflake-cost-visibility first. | Cortex AI, CORTEX_AI_FUNCTIONS_USAGE_HISTORY, CoCo limits, runaway detection, Streamlit |
+| [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) | Next.js dashboard on App Runtime: AI credit attribution by user and agent, native per-user quota status (SNOWFLAKE.CORE.QUOTA), trend analysis with anomaly detection. Materialized tables pre-aggregate ACCOUNT_USAGE for fast response. Read guide-snowflake-cost-visibility first. | Cortex AI, App Runtime, per-user quotas, ACCOUNT_USAGE, attribution, Recharts |
 | [demo-media-campaign-analytics](demo-media-campaign-analytics/) | Cortex Agent demo for paid media analytics. One agent answers both quantitative questions (ROAS, CTR, budget pacing via semantic view) and qualitative questions (campaign briefs, creative copy, channel strategy via Cortex Search). 5-min deploy, zero external tools | Cortex Agent, Semantic View, Cortex Search, Snowflake Intelligence, media analytics, document search |
 
 ## First-Time Setup
