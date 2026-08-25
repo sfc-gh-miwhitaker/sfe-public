@@ -1,0 +1,25 @@
+-- ============================================================================
+-- demo-cortex-ai-cost-controls: Schema Setup
+-- Pair-programmed by SE Community + Cortex Code
+-- ============================================================================
+
+USE ROLE SYSADMIN;
+
+CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE;
+CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.CORTEX_AI_COST_CONTROLS;
+
+CREATE WAREHOUSE IF NOT EXISTS SFE_CORTEX_AI_COST_CONTROLS_WH
+    WAREHOUSE_SIZE = 'XSMALL'
+    AUTO_SUSPEND = 60
+    AUTO_RESUME = TRUE
+    INITIALLY_SUSPENDED = TRUE
+    STATEMENT_TIMEOUT_IN_SECONDS = 3600
+    COMMENT = 'Warehouse for Cortex AI Cost Controls demo';
+
+USE WAREHOUSE SFE_CORTEX_AI_COST_CONTROLS_WH;
+USE SCHEMA SNOWFLAKE_EXAMPLE.CORTEX_AI_COST_CONTROLS;
+
+-- Grant access to ACCOUNT_USAGE
+USE ROLE ACCOUNTADMIN;
+GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE SYSADMIN;
+USE ROLE SYSADMIN;
