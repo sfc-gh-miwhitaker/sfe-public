@@ -11,8 +11,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { BarBreakdown } from "@/components/BarBreakdown";
-import { DataTable } from "@/components/DataTable";
+import { BarBreakdown } from "../../components/BarBreakdown";
+import { DataTable } from "../../components/DataTable";
 
 interface TrendChartsProps {
   dailyData: { date: string; credits: number; movingAvg?: number; threshold?: number }[];
@@ -51,7 +51,7 @@ export function TrendCharts({ dailyData, anomalies, wowData }: TrendChartsProps)
             { key: "threshold", label: "Threshold", align: "right" },
             { key: "overshoot", label: "Overshoot", align: "right" },
           ]}
-          rows={anomalies}
+          rows={anomalies as unknown as Record<string, unknown>[]}
         />
 
         <BarBreakdown

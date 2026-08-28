@@ -11,8 +11,7 @@
     "next": "^15",
     "react": "^19",
     "react-dom": "^19",
-    "recharts": "^2.15",
-    "@snowflake/app-sdk": "latest"
+    "recharts": "^2.15"
   },
   "devDependencies": {
     "typescript": "^5.7",

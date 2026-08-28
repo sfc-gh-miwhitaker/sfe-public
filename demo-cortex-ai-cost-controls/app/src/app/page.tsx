@@ -1,5 +1,5 @@
-import { getOverviewKpis, getDailySpend } from "@/lib/snowflake";
-import { KpiCard } from "@/components/KpiCard";
+import { getOverviewKpis, getDailySpend } from "../lib/snowflake";
+import { KpiCard } from "../components/KpiCard";
 import { OverviewCharts } from "./OverviewCharts";
 
 export default async function OverviewPage() {

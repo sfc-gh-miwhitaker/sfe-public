@@ -1,4 +1,4 @@
-import { getTrendData } from "@/lib/snowflake";
+import { getTrendData } from "../../lib/snowflake";
 import { TrendCharts } from "./TrendCharts";
 
 export default async function TrendsPage() {

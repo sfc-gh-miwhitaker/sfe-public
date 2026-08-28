@@ -1,6 +1,6 @@
-import { getQuotaStatus } from "@/lib/snowflake";
-import { KpiCard } from "@/components/KpiCard";
-import { DataTable } from "@/components/DataTable";
+import { getQuotaStatus } from "../../lib/snowflake";
+import { KpiCard } from "../../components/KpiCard";
+import { DataTable } from "../../components/DataTable";
 
 export default async function QuotasPage() {
   const quotas = await getQuotaStatus();

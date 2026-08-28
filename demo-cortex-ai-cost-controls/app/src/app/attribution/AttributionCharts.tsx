@@ -1,6 +1,6 @@
 "use client";
 
-import { BarBreakdown } from "@/components/BarBreakdown";
+import { BarBreakdown } from "../../components/BarBreakdown";
 
 interface AttributionChartsProps {
   userTotals: { user: string; credits: number }[];

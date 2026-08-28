@@ -1,0 +1,22 @@
+definition_version: "2"
+
+entities:
+  cortex_ai_cost_controls:
+    type: snowflake-app
+    identifier:
+      name: CORTEX_AI_COST_CONTROLS
+      database: SNOWFLAKE_EXAMPLE
+      schema: CORTEX_AI_COST_CONTROLS
+    artifacts:
+      - src: ./*
+        dest: ./
+        ignore:
+          - node_modules
+          - .env*
+          - __pycache__
+          - "*.pyc"
+          - .next
+          - .git
+          - snowflake.log
+
+    query_warehouse: SFE_CORTEX_AI_COST_CONTROLS_WH

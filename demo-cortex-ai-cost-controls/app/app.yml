@@ -1,17 +1,10 @@
 install:
   commands:
-    - [npm, ci]
+    - [npm, install]
 build:
   commands:
     - [npm, run, build]
-run:
-  command: [node, dist/server.js]
-artifacts:
-  - src: "dist/**"
-    dest: "."
-  - src: "package.json"
-    dest: "."
 profile:
-  icon: public/logo.svg
+  icon: logo.svg
   label: AI Cost Controls
   description: Read-only dashboard for Cortex AI spend attribution, quota status, and trend analysis.

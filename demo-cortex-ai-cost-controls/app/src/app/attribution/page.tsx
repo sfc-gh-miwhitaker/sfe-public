@@ -1,5 +1,5 @@
-import { getSpendByUser, getAgentAttribution } from "@/lib/snowflake";
-import { DataTable } from "@/components/DataTable";
+import { getSpendByUser, getAgentAttribution } from "../../lib/snowflake";
+import { DataTable } from "../../components/DataTable";
 import { AttributionCharts } from "./AttributionCharts";
 
 export default async function AttributionPage() {
@@ -52,7 +52,7 @@ export default async function AttributionPage() {
           { key: "REQUEST_COUNT", label: "Requests", align: "right" },
           { key: "COST_CENTER", label: "Cost Center" },
         ]}
-        rows={userRows}
+        rows={userRows as unknown as Record<string, unknown>[]}
       />
 
       <DataTable
@@ -66,7 +66,7 @@ export default async function AttributionPage() {
           { key: "REQUEST_COUNT", label: "Requests", align: "right" },
           { key: "INTERACTION_INTERFACE", label: "Interface" },
         ]}
-        rows={agents}
+        rows={agents as unknown as Record<string, unknown>[]}
       />
     </>
   );

@@ -1,6 +1,65 @@
-import { querySnowflake } from "@snowflake/app-sdk";
+import { readFileSync } from "node:fs";
 
+const TOKEN_PATH = "/snowflake/session/token";
 const SCHEMA = "SNOWFLAKE_EXAMPLE.CORTEX_AI_COST_CONTROLS";
+
+function getToken(): string {
+  return readFileSync(TOKEN_PATH, "utf8").trim();
+}
+
+interface ColumnMeta {
+  name: string;
+  type: string;
+}
+
+async function querySnowflake(sql: string): Promise<Record<string, unknown>[]> {
+  const host = process.env.SNOWFLAKE_HOST;
+  if (!host) throw new Error("SNOWFLAKE_HOST not set");
+
+  const token = getToken();
+
+  const resp = await fetch(`https://${host}/api/v2/statements`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "X-Snowflake-Authorization-Token-Type": "OAUTH",
+    },
+    body: JSON.stringify({
+      statement: sql,
+      timeout: 60,
+      database: "SNOWFLAKE_EXAMPLE",
+      schema: "CORTEX_AI_COST_CONTROLS",
+      warehouse: "SFE_CORTEX_AI_COST_CONTROLS_WH",
+    }),
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`Snowflake query failed (${resp.status}): ${body}`);
+  }
+
+  const json = await resp.json();
+  const columns: ColumnMeta[] = json.resultSetMetaData?.rowType ?? [];
+  const data: string[][] = json.data ?? [];
+
+  return data.map((row) => {
+    const obj: Record<string, unknown> = {};
+    columns.forEach((col, i) => {
+      const raw = row[i];
+      if (raw === null || raw === undefined) {
+        obj[col.name] = null;
+      } else if (col.type === "fixed" || col.type === "real") {
+        obj[col.name] = Number(raw);
+      } else if (col.type === "boolean") {
+        obj[col.name] = raw === "true" || raw === "1";
+      } else {
+        obj[col.name] = raw;
+      }
+    });
+    return obj;
+  });
+}
 
 export interface DailySpend {
   USAGE_DATE: string;
@@ -49,7 +108,7 @@ export async function getDailySpend(days = 30): Promise<DailySpend[]> {
     WHERE USAGE_DATE >= DATEADD('day', -${days}, CURRENT_DATE())
     ORDER BY USAGE_DATE
   `);
-  return rows as DailySpend[];
+  return rows as unknown as DailySpend[];
 }
 
 export async function getSpendByUser(): Promise<UserSpend[]> {
@@ -59,7 +118,7 @@ export async function getSpendByUser(): Promise<UserSpend[]> {
     FROM ${SCHEMA}.MAT_AI_SPEND_BY_USER
     ORDER BY TOTAL_CREDITS DESC
   `);
-  return rows as UserSpend[];
+  return rows as unknown as UserSpend[];
 }
 
 export async function getAgentAttribution(): Promise<AgentAttribution[]> {
@@ -70,7 +129,7 @@ export async function getAgentAttribution(): Promise<AgentAttribution[]> {
     FROM ${SCHEMA}.MAT_AGENT_ATTRIBUTION
     ORDER BY TOTAL_CREDITS DESC
   `);
-  return rows as AgentAttribution[];
+  return rows as unknown as AgentAttribution[];
 }
 
 export async function getOverviewKpis(): Promise<{
@@ -112,7 +171,6 @@ export async function getQuotaStatus(): Promise<QuotaStatus[]> {
     const rows = await querySnowflake(`
       SHOW SNOWFLAKE.CORE.QUOTAS IN ACCOUNT
     `);
-    // SHOW returns quota metadata; parse into our interface
     return (rows as Record<string, unknown>[]).map((r) => ({
       QUOTA_NAME: String(r.name ?? ""),
       PER_USER_LIMIT: Number(r.per_user_limit ?? 0),
@@ -122,7 +180,6 @@ export async function getQuotaStatus(): Promise<QuotaStatus[]> {
       BLOCKED_USERS: Number(r.users_blocked ?? 0),
     }));
   } catch {
-    // No quotas configured or insufficient privileges
     return [];
   }
 }
@@ -134,5 +191,5 @@ export async function getTrendData(days = 90): Promise<DailySpend[]> {
     WHERE USAGE_DATE >= DATEADD('day', -${days}, CURRENT_DATE())
     ORDER BY USAGE_DATE
   `);
-  return rows as DailySpend[];
+  return rows as unknown as DailySpend[];
 }

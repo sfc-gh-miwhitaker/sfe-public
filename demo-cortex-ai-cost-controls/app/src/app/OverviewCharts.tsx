@@ -1,7 +1,7 @@
 "use client";
 
-import { SpendChart } from "@/components/SpendChart";
-import { BarBreakdown } from "@/components/BarBreakdown";
+import { SpendChart } from "../components/SpendChart";
+import { BarBreakdown } from "../components/BarBreakdown";
 
 const SERVICE_COLORS: Record<string, string> = {
   AI_FUNCTION: "#3B82F6",

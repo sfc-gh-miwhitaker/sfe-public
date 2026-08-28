@@ -82,7 +82,7 @@ BEGIN
             u.NAME AS user_name,
             f.CREDITS,
             NULL AS tokens,
-            f.START_TIME AS usage_time,
+            f.START_TIME::TIMESTAMP_LTZ AS usage_time,
             f.QUERY_ID AS request_id,
             f.ROLE_NAMES[0]::VARCHAR AS role_name,
             NULL AS user_tags,
@@ -99,7 +99,7 @@ BEGIN
             a.USER_NAME,
             a.TOKEN_CREDITS AS credits,
             a.TOKENS,
-            a.START_TIME AS usage_time,
+            a.START_TIME::TIMESTAMP_LTZ AS usage_time,
             a.REQUEST_ID,
             a.METADATA:role_name::VARCHAR AS role_name,
             a.USER_TAGS,
@@ -115,7 +115,7 @@ BEGIN
             c.USER_NAME,
             c.TOKEN_CREDITS AS credits,
             c.TOKENS,
-            c.START_TIME AS usage_time,
+            c.START_TIME::TIMESTAMP_LTZ AS usage_time,
             c.REQUEST_ID,
             c.METADATA:role_name::VARCHAR AS role_name,
             c.USER_TAGS,
@@ -131,7 +131,7 @@ BEGIN
             NULL AS user_name,
             cc.TOKEN_CREDITS AS credits,
             cc.TOKENS,
-            cc.USAGE_TIME AS usage_time,
+            cc.USAGE_TIME::TIMESTAMP_LTZ AS usage_time,
             cc.REQUEST_ID,
             cc.METADATA:role_name::VARCHAR AS role_name,
             cc.USER_TAGS,
@@ -188,23 +188,33 @@ BEGIN
     GROUP BY user_id, user_name, service_type;
 
     -- 4. Agent attribution (30d)
+    CREATE OR REPLACE TEMPORARY TABLE tmp_agent_base AS
+    SELECT
+        a.AGENT_NAME,
+        a.AGENT_DATABASE_NAME,
+        a.AGENT_SCHEMA_NAME,
+        a.TOKEN_CREDITS,
+        a.TOKENS,
+        a.METADATA:interaction_interface::VARCHAR AS interaction_interface,
+        a.METADATA:sql_query_credits::NUMBER(38,12) AS sql_query_credits,
+        t.VALUE:tag_value::VARCHAR AS cost_center_tag
+    FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY a,
+         LATERAL FLATTEN(input => a.AGENT_TAGS, OUTER => TRUE) t
+    WHERE a.START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+      AND (t.VALUE IS NULL OR LOWER(t.VALUE:tag_name::VARCHAR) = 'cost-center');
+
     INSERT OVERWRITE INTO MAT_AGENT_ATTRIBUTION
     SELECT
         AGENT_NAME,
         AGENT_DATABASE_NAME,
         AGENT_SCHEMA_NAME,
-        -- Extract cost-center from AGENT_TAGS array
-        (SELECT t.VALUE:tag_value::VARCHAR
-         FROM LATERAL FLATTEN(input => a.AGENT_TAGS) t
-         WHERE LOWER(t.VALUE:tag_name::VARCHAR) = 'cost-center'
-         LIMIT 1) AS cost_center_tag,
+        cost_center_tag,
         SUM(TOKEN_CREDITS) AS total_credits,
         SUM(TOKENS) AS total_tokens,
         COUNT(*) AS request_count,
-        METADATA:interaction_interface::VARCHAR AS interaction_interface,
-        SUM(METADATA:sql_query_credits::NUMBER(38,12)) AS sql_query_credits
-    FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AGENT_USAGE_HISTORY a
-    WHERE START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+        interaction_interface,
+        SUM(sql_query_credits) AS sql_query_credits
+    FROM tmp_agent_base
     GROUP BY AGENT_NAME, AGENT_DATABASE_NAME, AGENT_SCHEMA_NAME,
              cost_center_tag, interaction_interface;
 
