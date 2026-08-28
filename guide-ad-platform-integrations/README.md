@@ -39,7 +39,7 @@ flowchart LR
     subgraph SF["Snowflake"]
         direction TB
         OF["<b>Openflow</b><br/>deployment + runtime<br/><i>Part 3</i>"]
-        MCP["<b>Meta ads MCP</b><br/>in CoWork<br/><i>access by request</i>"]
+        MCP["<b>Meta ads MCP</b><br/>in CoWork<br/><i>prebuilt: by request</i>"]
         LAND[("Destination tables<br/>ad performance")]
         CAPI["<b>Meta CAPI skill</b><br/>in CoCo<br/><i>public on GitHub</i>"]
         VIEW[("Secure view<br/>audiences + conversions")]
@@ -54,7 +54,7 @@ flowchart LR
 
     MA_IN -- "Insights API<br/>graph.facebook.com" --> OF
     GA_IN -- "Google Ads API<br/>googleads.googleapis.com" --> OF
-    MA_IN -- "campaign data<br/>diagnostics" --> MCP
+    MA_IN <-- "campaign data, diagnostics<br/>+ campaign actions" --> MCP
 
     VIEW -- "username + PAT" --> DM
     DM -- "Customer Match<br/>offline conversions" --> GA_OUT
@@ -63,7 +63,7 @@ flowchart LR
     VIEW -- "hashed identifiers" --> BRIDGE
     BRIDGE -- "Custom Audiences" --> MA_OUT
 
-    IN_LBL["<b>INBOUND</b><br/>Openflow connectors Preview<br/>MCP by request"]
+    IN_LBL["<b>INBOUND</b><br/>Openflow connectors Preview<br/>MCP prebuilt by request"]
     OUT_LBL["<b>OUTBOUND</b><br/>events native both ways<br/>audience lists brokered to Meta"]
     IN_LBL ~~~ MA_IN
     GA_OUT ~~~ OUT_LBL
@@ -100,7 +100,7 @@ Pick the row that matches the direction you need.
 | Push audience lists from Snowflake to Google Ads | Google Ads Data Manager, Snowflake source | Google | Native source, no status label | [Part 1](#part-1--google-ads-data-manager) |
 | Push offline conversions from Snowflake to Google Ads | Google Ads Data Manager, Snowflake source | Google | Native source | [Part 1](#part-1--google-ads-data-manager) |
 | Push conversion events from Snowflake to **Meta** | Meta Conversions API skill for CoCo | Snowflake | Public sample, on GitHub | [Part 2](#part-2--meta-ads-mcp-and-the-conversions-api-skill) |
-| Let a marketer query Meta campaign data with Snowflake context | Meta ads MCP, in CoWork | Meta / Snowflake | **Access by request only** | [Part 2](#part-2--meta-ads-mcp-and-the-conversions-api-skill) |
+| Let a marketer query Meta campaign data and act on it | Meta ads MCP, in CoWork | Meta / Snowflake | Prebuilt connector **by request**; custom-connector path GA | [Part 2](#part-2--meta-ads-mcp-and-the-conversions-api-skill) |
 | Pull Meta Ads performance data into Snowflake tables | Openflow Connector for Meta Ads | Snowflake | **Preview** | [Part 3](#part-3--openflow-connector-for-meta-ads) |
 | Pull Google Ads performance data into Snowflake | Openflow Connector for Google Ads | Snowflake | **Preview** | [Both directions](#google-ads-goes-both-directions) |
 | Push audience *lists* from Snowflake to **Meta** | DCR activation connector, or a marketplace partner | Snowflake / third party | No native audience-push path | [Closing the gap](#closing-the-snowflake--meta-gap) |
@@ -126,7 +126,10 @@ service user, and a PAT (`CREATE ROLE` and `CREATE USER` are account-level).
 
 **Part 2:** for the Conversions API skill — `ACCOUNTADMIN` or `CREATE INTEGRATION`, a Meta Pixel ID
 from Events Manager, a Meta access token carrying `ads_management`, and a warehouse for task
-execution. For the Meta ads MCP — a conversation with Snowflake; there is no self-serve path.
+execution. For the Meta ads MCP — either request the prebuilt connector through your
+Snowflake account team, or build a custom MCP connector against Meta's ads MCP server using the
+customer's own Meta app, which needs `CREATE EXTERNAL MCP SERVER`, an API integration, and a
+CoWork agent to attach it to.
 
 **Part 3:** a Meta App with the Marketing API enabled and a long-lived token; on the Snowflake
 side, `CREATE OPENFLOW DATA PLANE INTEGRATION`, `CREATE OPENFLOW RUNTIME INTEGRATION`, and
@@ -468,10 +471,10 @@ described as one product.
 | | Meta Conversions API skill | Meta ads MCP |
 |---|---|---|
 | Direction | Snowflake → Meta | Meta → Snowflake |
-| Carries | PII-hashed conversion events | Campaign performance, signal diagnostics, inventory, reporting |
+| Carries | PII-hashed conversion events | Campaign performance, signal diagnostics, inventory, reporting, and campaign actions |
 | Runs in | Snowflake CoCo (the coding agent, formerly Cortex Code) | Snowflake CoWork |
 | Operated by | Data team | Marketer |
-| How to get it | **Public on GitHub, self-serve** | **Contact Snowflake — not self-serve** |
+| How to get it | **Public on GitHub, self-serve** | **Prebuilt connector is by request only.** A generally-available do-it-yourself path exists — see below |
 
 That last row is the one that governs scoping. The two halves do not arrive together.
 
@@ -558,16 +561,92 @@ Both are written into the skill as non-negotiable rules, so expect them in a dem
 It also calls Meta's Use Case API for signal recommendations, so the event strategy starts from
 Meta's own guidance rather than a blank mapping exercise.
 
-### The MCP half is gated
+### The MCP half: two paths, one of them available now
 
-The Meta ads MCP provides the marketer's authenticated read access to Meta — campaign performance,
-signal diagnostics, inventory health, reporting — surfaced in Snowflake CoWork. There is no public
-repository or self-serve enablement path for it. The blog's instruction is to
-[contact Snowflake](https://www.snowflake.com/en/contact-sales/) to inquire about access in your
-account.
+The Meta ads MCP provides the marketer's authenticated access to Meta — campaign performance,
+signal diagnostics, inventory health, reporting, and preparing campaign actions — surfaced in
+Snowflake CoWork. Note that the surface is **not read-only**. Meta's own July 2026 announcement
+describes create, edit, and delete operations for campaigns, ad sets, and ads, alongside catalog
+management, reporting, diagnostics, and A/B testing. Treat it as a path that can affect live ad
+spend and scope the security review accordingly.
 
-Scope accordingly: a customer can install and test the CAPI skill on their own data today. The
-MCP side is a conversation, not a download. Do not promise both on the same timeline.
+Mechanically this is Snowflake's standard MCP connector pattern, documented under
+[MCP Connectors](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp-connectors):
+an API integration with `API_PROVIDER = external_mcp` holding the OAuth configuration, a
+`CREATE EXTERNAL MCP SERVER` object referencing it, `ALTER AGENT ... ADD MCP_SERVER` to attach it,
+then per-user OAuth consent from the CoWork sources panel. `CREATE EXTERNAL MCP SERVER` is a schema
+privilege held by account admins by default, and the docs note that access to an MCP server does
+not itself grant access to its tools — tool permissions are granted separately.
+
+That mechanism matters, because it means there are **two ways to get here** and they have very
+different availability:
+
+| | Snowflake prebuilt connector | Customer's own custom connector |
+|---|---|---|
+| Availability | **By request** — not a documented built-in connector | **Generally available** — the custom-connector path is documented |
+| Meta app | Snowflake's | **The customer's own** |
+| Setup | Browse Connectors, minimal config | `CREATE API INTEGRATION` with `TYPE = OAUTH2` + `CREATE EXTERNAL MCP SERVER` |
+| Who does the work | Snowflake | The customer's account admin |
+| How to start | Ask your Snowflake account team | Build it |
+
+The prebuilt route is the one the blog points at, and it is not self-serve. Meta is **not** among
+the providers with built-in connector support — that list is Atlassian, GitHub, Glean, Linear, and
+Salesforce — and there is no Meta-specific Snowflake docs page. The blog's instruction is to
+[contact Snowflake](https://www.snowflake.com/en/contact-sales/) to inquire about access.
+
+The **custom** route does not depend on that. As of **2026-07-16**, Meta opened its ads MCP server
+to any developer holding a Meta app — no partner status required; you add the use case in the Meta
+developer dashboard and authenticate. Snowflake's custom MCP connector path accepts any
+MCP-compatible endpoint with standard OAuth2. So a customer with their own Meta app can wire Meta's
+ads MCP into CoWork today, using documented, generally-available Snowflake functionality.
+
+> **Not validated end to end.** Both halves of that custom path are individually documented and
+> current, but this guide has not stood one up against a live account. Treat it as the documented
+> path, not a verified runbook, and expect to spend time on the Meta OAuth app configuration —
+> `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`, the token and authorization endpoints, and the scope
+> list. Also set `OAUTH_REFRESH_TOKEN_VALIDITY` explicitly; the default of `0` means a refresh
+> token that never expires.
+
+Scope accordingly. A customer can install and test the CAPI skill on their own data today, and can
+build a custom MCP connector today. What they cannot do today is get Snowflake's prebuilt,
+minimal-config Meta connector. Do not promise the managed experience on a near-term timeline.
+
+### Do not make MCP the reporting layer
+
+This is the design mistake most likely to surface in a real engagement, and it is worth getting
+ahead of. MCP returns point-in-time results during a conversation. Nothing is persisted. That has
+three consequences:
+
+- **No history.** "Compare this week to last month" and "show me the trend since March" cannot be
+  answered from MCP alone, because there is no stored series to query.
+- **No modeling.** You cannot train on performance history you never landed.
+- **Live API calls per question, subject to rate limits.** At meaningful campaign counts, an agent
+  that fetches from Meta for every analysis will consume the account's API quota.
+
+So the two products in this guide are **complementary, not alternatives**:
+
+| Layer | Use | Covered in |
+|---|---|---|
+| Historical reporting foundation | Openflow connectors land Meta and Google Ads data in Snowflake tables the agent can query and join to first-party data | [Part 3](#part-3--openflow-connector-for-meta-ads) |
+| Real-time diagnostics and actions | MCP, for signal health and current-state checks that aren't in the replicated data, and for the write path | Part 2 |
+| Conversion signal out | CAPI skill | Part 2 |
+
+If a customer wants "a marketing agent," the durable architecture is Openflow underneath for the
+read layer plus MCP for real-time and action. Positioning MCP as the reporting layer looks fine in
+a demo on one campaign and degrades at production scale.
+
+### MCP is not the audience-activation path either
+
+Meta's ads MCP entity model does reach custom and lookalike audiences, so it is technically
+possible to create and manage audiences through it. Two reasons not to plan around that:
+
+- Snowflake's blueprint does not position MCP as an activation mechanism; the announced
+  Snowflake → Meta path is conversion events via the CAPI skill.
+- Pushing a large audience through a conversational tool call is not what that interface is built
+  for, and reliability degrades with list size.
+
+For audience lists, use the routes in
+[Closing the gap](#closing-the-snowflake--meta-gap), not MCP.
 
 ### What sits on top
 
@@ -582,8 +661,12 @@ pipeline or handle PII; those controls stay with the data team.
 ## Part 3 — Openflow Connector for Meta Ads
 
 This is a different product from Part 2 and solves a different problem: bulk ingestion of Meta Ads
-reporting into Snowflake tables. It is not the Meta ads MCP. Include it when the customer wants
-performance data landed in Snowflake for modeling, rather than a marketer querying Meta live.
+reporting into Snowflake tables. It is not the Meta ads MCP.
+
+**It is also the read foundation for the Part 2 agent experience**, not a competing option — see
+[Do not make MCP the reporting layer](#do-not-make-mcp-the-reporting-layer). If a customer wants an
+agent that can compare periods, spot trends, or train on campaign history, that history has to be
+landed, and this is what lands it.
 
 ### What it is
 
@@ -805,7 +888,7 @@ audience. For that, there are three routes, in rough order of how close they sit
 | | Into Snowflake | Conversion events out | Audience lists out |
 |---|---|---|---|
 | Google Ads | Openflow connector (Preview) | Data Manager (native) | Data Manager (native) |
-| Meta Ads | Openflow connector (Preview), Meta ads MCP (by request) | **CAPI skill (Part 2)** | Clean-room connector, marketplace partner, or Marketing API |
+| Meta Ads | Openflow connector (Preview), Meta ads MCP (prebuilt by request) | **CAPI skill (Part 2)** | Clean-room connector, marketplace partner, or Marketing API |
 
 ### Route 1 — Data Clean Rooms activation connector
 

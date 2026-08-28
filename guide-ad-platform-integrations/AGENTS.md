@@ -44,6 +44,31 @@ Concretely, do NOT add:
 reader draw the conclusion. "Openflow is required, here are the three privileges, here is the
 networking, here is what's GA and what's Preview" is the right register.
 
+## Provenance: This Repo Is Public
+
+`sfe-public` pushes to a public GitHub remote. Everything tracked here is world-readable.
+Established 2026-08-28 after a draft introduced an internally-sourced maturity label, and after a
+worse idea — a gitignored `*.internal.md` companion file inside this repo — was correctly rejected.
+**Do not create internal-notes files here, gitignored or otherwise.** A `.gitignore` entry is one
+`git add -f`, one pattern edit, or one unaware contributor away from publishing internal material.
+Internal notes belong outside the repo entirely.
+
+- **Source rule (hard):** every factual claim must trace to a publicly fetchable URL or to SQL
+  executed against an account. Glean, Slack, Confluence, Jira, Seismic, Salesforce, Gong, and
+  internal decks are **research aids for finding public sources — never citations themselves.**
+  Finding a fact internally means going to look for its public counterpart, not quoting it.
+- **URL rule (hard):** before any URL appears in the guide, fetch it, confirm HTTP 200, confirm
+  the page content actually supports the claim, and confirm the domain is customer-facing.
+  Mention of a URL in an internal channel does not qualify it.
+- **Maturity labels are claims too.** "GA", "Preview", "private preview", and any target date
+  require a public citation. If the only support is internal, describe the observable behavior
+  instead: "not among the documented built-in connectors; access is by request" is publicly
+  defensible where "private preview, targeted for August" is not.
+- **No internal identifiers** anywhere in tracked files: no `go/` links, Slack archive URLs,
+  Seismic links, employee names as routing instructions, ticket IDs, or use-case record numbers.
+- **Test before writing:** *if a customer read this line, would anything in it be something they
+  could not have learned from a public source?* If yes, cut it or reground it.
+
 The prerequisite comparison table in the README is factual and belongs. It compares object
 counts and setup steps without editorializing.
 
@@ -104,9 +129,9 @@ Confirmed by execution or primary documentation:
 
 **Part 2 — Meta ads MCP and Conversions API skill**
 
-Added 2026-08-28 after a Snowflake internal slide and the July 2026 blog identified the product a
-customer means by "that Meta MCP." This is **not** the Openflow Meta Ads connector. Part 2 was
-retargeted and Openflow moved to Part 3. Do not merge them back together.
+Added 2026-08-28. The July 2026 Snowflake blog identifies the product a customer means by "that
+Meta MCP." This is **not** the Openflow Meta Ads connector. Part 2 was retargeted and Openflow
+moved to Part 3. Do not merge them back together.
 
 - **The pairing is two separate halves with different access models.** The **Meta Conversions API
   skill** is a public CoCo skill on GitHub, self-serve. The **Meta ads MCP** is **not self-serve** —
@@ -131,7 +156,26 @@ retargeted and Openflow moved to Part 3. Do not merge them back together.
 - **This skill is not audience activation.** It sends conversion *events*. The audience-list gap
   is still real. Keep that distinction — an earlier draft claimed "no native first-party path" for
   all Snowflake→Meta traffic, which the CAPI skill falsifies for events but not for lists.
-- Nothing in Part 2 has been executed live. It is sourced from the repo, the blog, and the slide.
+- **The MCP surface is NOT read-only.** It covers campaign performance, diagnostics, inventory,
+  reporting, **and campaign actions**. Meta's own 2026-07-16 announcement documents create, edit,
+  and delete for campaigns, ad sets, and ads. An earlier draft called it "authenticated read
+  access"; that was wrong and was corrected 2026-08-28. Do not reintroduce read-only framing.
+- **Mechanically it is the standard MCP connector pattern**, not a bespoke product: API
+  integration with `API_PROVIDER = external_mcp` + `CREATE EXTERNAL MCP SERVER` +
+  `ALTER AGENT ... ADD MCP_SERVER` + per-user OAuth from the CoWork sources panel. The gate is
+  availability, not mechanism. Meta is **not** in the documented built-in provider list
+  (Atlassian, GitHub, Glean, Linear, Salesforce), and there is no Meta-specific docs page.
+- The generic MCP docs disclaimer — "external MCP servers are not provided, maintained, or
+  verified by Snowflake" — **does not accurately describe this connector.** Do not quote it
+  against Meta ads MCP in a security-review context.
+- **Availability language is deliberately conservative.** The prebuilt Meta connector is described
+  only as **"by request"**, sourced to the blog's own "contact our team to inquire about access"
+  CTA plus the absence of Meta from the documented built-in provider list. A draft labeled it
+  "private preview" and named a target date; **both came from internal channels and were removed
+  2026-08-28.** Do not reintroduce a maturity label or any date for this connector unless a
+  publicly fetchable Snowflake URL states it. See the provenance rule below.
+- Nothing in Part 2 has been executed live. It is sourced from the repo, the blog, and public
+  Meta/Snowflake documentation.
 
 **Part 3 — Openflow**
 - **Openflow — Snowflake Deployments is Generally Available** (AWS, Azure, GCP commercial), runs

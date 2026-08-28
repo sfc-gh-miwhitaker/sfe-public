@@ -68,8 +68,9 @@ before you promise anyone a timeline is most of the value here.
   to sales. It asks your permission three times before it turns anything on.
 - **Letting a marketer ask Meta questions:** there's a second piece that pulls campaign data back
   from Meta so a marketer can ask "why did our ads do worse this week?" and get an answer that
-  also looks at your own sales data. This one you can't just download — you have to ask
-  Snowflake for access.
+  also looks at your own sales data. It can also *prepare* changes to a campaign for someone to
+  approve — so it isn't only looking, it can reach back and touch live ad spend. This one you
+  can't just download; you have to ask Snowflake for access.
 - **The Meta send-out gap, narrowed:** sending *sales results* to Meta now has an official path
   (above). Sending a *list of customers* to Meta still doesn't — for that you go through a
   middleman: Snowflake's clean-room connector, or a partner app from the Snowflake Marketplace.
