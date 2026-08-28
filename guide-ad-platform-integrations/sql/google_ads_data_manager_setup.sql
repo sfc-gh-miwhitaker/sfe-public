@@ -407,8 +407,7 @@ SECTION 8 — TEARDOWN
 -- DROP ROLE IF EXISTS GOOGLE_ADS_DM_ROLE;
 -- DROP WAREHOUSE IF EXISTS SFE_ADS_ACTIVATION_WH;
 --
--- Drop the schema ONLY if no other activation views live in it — the Meta MCP
--- reference file also creates objects in MARKETING.ACTIVATION.
+-- Drop the schema ONLY if no other activation views live in it.
 -- DROP SCHEMA IF EXISTS MARKETING.ACTIVATION;
 --
 -- Remember to remove the connection in Google Ads as well. Dropping the

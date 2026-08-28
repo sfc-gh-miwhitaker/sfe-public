@@ -3,19 +3,21 @@
 ![Expires](https://img.shields.io/badge/expires-2026--11--28-yellow)
 ![Status](https://img.shields.io/badge/status-ACTIVE-brightgreen)
 
-# Snowflake and the Ad Platforms: Meta Ads MCP and Google Ads Data Manager
+# Snowflake and the Ad Platforms: Google Ads Data Manager and the Openflow Ads Connectors
 
-Two different integrations that get confused with each other. **Google Ads Data Manager**
-pulls first-party audience and conversion data *out of* Snowflake into Google Ads — it is a
-native, no-code connector and Snowflake is on the supported source list. **Meta's Ads MCP
-Server** lets an AI agent *operate* Meta ad accounts — it is an open-beta tool surface, not
-a data pipe, and nothing about it reads your warehouse.
+Moving advertising data between Snowflake and Meta or Google runs through two unrelated
+mechanisms, and the direction determines which one applies.
 
-One moves rows. The other moves intent. Choosing the wrong one for the job is the most
-common mistake in this area.
+**Google Ads Data Manager** is a Google product that reads first-party audience and conversion
+data *out of* Snowflake. Snowflake is one of its supported source connectors. It requires no
+Snowflake infrastructure beyond a view and a service identity.
 
-**Audience:** Marketing data engineers and Snowflake administrators building first-party
-data activation, and SEs fielding "can Snowflake talk to Meta/Google Ads?" questions.
+**The Openflow connectors for Meta Ads and Google Ads** are Snowflake products that ingest
+advertising performance data *into* Snowflake. They run inside Snowflake Openflow, which is a
+deployment and runtime you stand up.
+
+**Audience:** Marketing data engineers and Snowflake administrators moving advertising data in
+either direction, and SEs fielding "can Snowflake talk to Meta or Google Ads?" questions.
 
 Pair-programmed by SE Community + Cortex Code
 
@@ -27,59 +29,118 @@ Pair-programmed by SE Community + Cortex Code
 
 ## Start Here
 
-Pick the row that matches what you are actually trying to do.
+**Direction determines mechanism.** Inbound and outbound are unrelated products with different owners, different auth, and very different setup.
 
-| Goal | Use | Maturity | Section |
-|---|---|---|---|
-| Push audience lists from Snowflake to Google Ads | Google Ads Data Manager, Snowflake source | Native connector, no status label | [Part 1](#part-1--google-ads-data-manager) |
-| Push offline conversions from Snowflake to Google Ads | Google Ads Data Manager, Snowflake source | Native connector | [Part 1](#part-1--google-ads-data-manager) |
-| Let an agent create, pause, or report on Meta campaigns | Meta Ads MCP Server | **Open beta** | [Part 2](#part-2--meta-ads-mcp-server) |
-| Push audience lists from Snowflake to **Meta** | Neither — see the gap | No native path | [The Meta activation gap](#the-meta-activation-gap) |
-| Pull Google Ads performance data *into* Snowflake | Openflow Connector for Google Ads | **Preview** | [Reverse direction](#reverse-direction-ads--snowflake) |
+```mermaid
+flowchart LR
+    MA_IN["Meta Ads"]
+    GA_IN["Google Ads"]
 
-### The one-sentence version of each
+    subgraph SF["Snowflake"]
+        direction TB
+        OF["<b>Openflow</b><br/>deployment + runtime<br/><i>you stand this up</i>"]
+        LAND[("Destination tables<br/>ad performance")]
+        VIEW[("Secure view<br/>audiences + conversions")]
+        OF --> LAND
+    end
 
-- **Google Ads Data Manager** is a point-and-click importer inside Google Ads. You register
-  a Snowflake table or view once, map columns to a destination (Customer Match, offline
-  conversions), and schedule a daily refresh. Google connects outbound to your Snowflake
-  endpoint with a username and a Programmatic Access Token.
-- **Meta Ads MCP Server** is a hosted remote MCP endpoint Meta exposes over the Marketing
-  API. You add it to an MCP client — Claude Desktop and Cortex Code today, and Snowflake
-  CoWork via `EXTERNAL MCP SERVER` (untested — see [Part 2](#part-2--meta-ads-mcp-server)) —
-  and authenticate with Meta Business OAuth. It gives an agent tools, not tables.
+    DM["<b>Data Manager</b><br/><i>Google operates this</i>"]
+    GA_OUT["Google Ads"]
+    BRIDGE["<b>DCR activation connector</b><br/><b>or marketplace partner</b><br/><i>no native first-party path</i>"]
+    MA_OUT["Meta Ads"]
+
+    MA_IN -- "Insights API<br/>graph.facebook.com" --> OF
+    GA_IN -- "Google Ads API<br/>googleads.googleapis.com" --> OF
+
+    VIEW -- "username + PAT" --> DM
+    DM -- "Customer Match<br/>offline conversions" --> GA_OUT
+
+    VIEW -- "hashed identifiers" --> BRIDGE
+    BRIDGE -- "Custom Audiences<br/>offline conversions" --> MA_OUT
+
+    IN_LBL["<b>INBOUND</b><br/>Snowflake connectors<br/>Preview"]
+    OUT_LBL["<b>OUTBOUND</b><br/>native to Google<br/>brokered to Meta"]
+    IN_LBL ~~~ MA_IN
+    GA_OUT ~~~ OUT_LBL
+
+    classDef platform fill:#FEF5E7,stroke:#B9770E,stroke-width:2px,color:#7E5109
+    classDef bridge fill:#F4ECF7,stroke:#7D3C98,stroke-width:2px,color:#4A235A
+    classDef inbound fill:#E8F4FD,stroke:#1B7FC4,stroke-width:2px,color:#0B3C5D
+    classDef outbound fill:#E9F7EF,stroke:#1E8449,stroke-width:2px,color:#145A32
+    classDef store fill:#FFFFFF,stroke:#5D6D7E,stroke-width:2px,color:#2C3E50
+    classDef lbl fill:none,stroke:none,color:#566573
+
+    class MA_IN,GA_IN,GA_OUT,MA_OUT platform
+    class BRIDGE bridge
+    class OF inbound
+    class DM outbound
+    class LAND,VIEW store
+    class IN_LBL,OUT_LBL lbl
+
+    linkStyle 1,2 stroke:#1B7FC4,stroke-width:2px
+    linkStyle 3,4 stroke:#1E8449,stroke-width:2px
+    linkStyle 5,6 stroke:#7D3C98,stroke-width:2px
+```
+
+Blue is inbound and runs on Openflow, which you deploy. Green is outbound and operated by Google. Purple is also outbound but brokered — Meta has no native first-party path, so it goes through a clean-room activation connector or a marketplace partner.
+
+Pick the row that matches the direction you need.
+
+| Goal | Mechanism | Built by | Status | Section |
+|---|---|---|---|---|
+| Push audience lists from Snowflake to Google Ads | Google Ads Data Manager, Snowflake source | Google | Native source, no status label | [Part 1](#part-1--google-ads-data-manager) |
+| Push offline conversions from Snowflake to Google Ads | Google Ads Data Manager, Snowflake source | Google | Native source | [Part 1](#part-1--google-ads-data-manager) |
+| Pull Meta Ads performance data into Snowflake | Openflow Connector for Meta Ads | Snowflake | **Preview** | [Part 2](#part-2--openflow-connector-for-meta-ads) |
+| Pull Google Ads performance data into Snowflake | Openflow Connector for Google Ads | Snowflake | **Preview** | [Both directions](#google-ads-goes-both-directions) |
+| Push audience lists from Snowflake to **Meta** | DCR activation connector, or a marketplace partner | Snowflake / third party | No native first-party path | [Closing the gap](#closing-the-snowflake--meta-gap) |
+
+### The prerequisite difference
+
+The two halves of this guide ask for very different setup, which is the main thing to establish
+before scoping either:
+
+| | Google Ads Data Manager | Openflow Ads connectors |
+|---|---|---|
+| Direction | Snowflake → ad platform | Ad platform → Snowflake |
+| Snowflake objects | A view, a role, a service user, a PAT | Deployment, compute pool, runtime, execute-as role, network rule, EAI |
+| Who initiates the connection | Google, inbound to Snowflake | Your Openflow runtime, outbound |
+| Openflow required | No | **Yes** |
+| Credits consumed when idle | None | None — only active runtimes consume credits |
 
 ### Before you start
 
-For Part 1: Google Ads administrator access, plus Snowflake privileges to create a role, a
+**Part 1:** Google Ads administrator access, plus Snowflake privileges to create a role, a
 service user, and a PAT (`CREATE ROLE` and `CREATE USER` are account-level).
 
-For Part 2: an admin role on the target Meta ad account in Business Manager, and — for the
-Cortex Agents path — `CREATE INTEGRATION` (ACCOUNTADMIN by default).
+**Part 2:** a Meta App with the Marketing API enabled and a long-lived token; on the Snowflake
+side, `CREATE OPENFLOW DATA PLANE INTEGRATION`, `CREATE OPENFLOW RUNTIME INTEGRATION`, and
+`CREATE COMPUTE POOL` on the account. Openflow — Snowflake Deployment is not automatically
+available in trial accounts.
 
 ### Provenance of the claims in this guide
 
-This guide documents two vendors' moving targets. Claims are tagged:
+This guide spans three independently versioned products, so claims are tagged:
 
 - **Verified** — read from official Snowflake or Google documentation, or executed against a
   live Snowflake account.
-- **Beta-reported** — consistent across multiple secondary sources but not confirmable from
-  Meta's own documentation, which is JavaScript-rendered and not machine-readable.
-- **Untested** — a construction that follows documented Snowflake syntax but that nobody has
-  published working end-to-end.
+- **Unverified** — stated in one vendor's documentation but not confirmable elsewhere, or
+  documented inconsistently. Called out inline where it matters.
 
-**The Snowflake side of both `sql/` files was executed end-to-end against a live account
-(v10.30.102) on 2026-08-28, then torn down.** That includes the least-privilege role, the
-`SERVICE_AGENT` user, a real PAT with no network policy, both views, the `external_mcp` API
-integration, the `EXTERNAL MCP SERVER`, `SYSTEM$START_USER_OAUTH_FLOW`, and the teardown
-ordering. Positive *and* negative access tests were run.
+**Executed against a live Snowflake account (v10.30.102) on 2026-08-28, then torn down:**
 
-That run found two defects in an earlier draft, both since fixed: the least-privilege
-verification needs `USE SECONDARY ROLES NONE` to mean anything, and the service user needs
+- Part 1, end to end — least-privilege role, `SERVICE_AGENT` user, a real PAT with no network
+  policy, both views, positive *and* negative access tests, and the teardown ordering.
+- Part 2 prerequisites — all three Openflow account privileges granted to a non-ACCOUNTADMIN
+  role and confirmed in `SHOW GRANTS`, plus the egress network rules and external access
+  integrations for `graph.facebook.com` and `googleads.googleapis.com`.
+
+That run corrected two defects in an earlier draft: least-privilege verification needs
+`USE SECONDARY ROLES NONE` to mean anything, and the Part 1 service user needs
 `DEFAULT_SECONDARY_ROLES = ()`. Both are called out inline.
 
-**What execution did not prove:** creating the MCP objects is metadata only — Snowflake does
-not contact Meta at `CREATE` time, and `SYSTEM$START_USER_OAUTH_FLOW` only returns a consent
-URL for a browser. The Meta handshake itself remains untested.
+**Not executed:** the Openflow deployment, runtime, and connector flow itself, which require an
+Openflow deployment the validation account did not have. Those steps are transcribed from
+Snowflake documentation, not observed.
 
 ---
 
@@ -381,291 +442,360 @@ a customer deck.
 
 ---
 
-## Part 2 — Meta Ads MCP Server
+## Part 2 — Openflow Connector for Meta Ads
 
-### What it is, and what it is not
+### What it is
 
-**Verified:** Meta publishes an official MCP server. The umbrella product is **Meta Ads AI
-Connectors**, comprising an **MCP server** and a **CLI**. The documentation page is titled
-"Ads MCP Server," lives under `developers.facebook.com/documentation/ads-commerce/ads-ai-connectors/`,
-and the launch announcement is at `facebook.com/business/news/meta-ads-ai-connectors`.
+The **Openflow Connector for Meta Ads** ingests Meta Ads data into Snowflake using the Meta Ads
+Insights API. It is Snowflake-built and runs inside Snowflake Openflow. Data flows **inbound**:
+Meta Ads → Snowflake. There is a sibling **Openflow Connector for Google Ads** that works the
+same way.
 
-It wraps the **Marketing API**. Meta's announcement describes it as giving advertisers "a
-secure, Meta-authenticated connection from their ad account to an AI agent," with "no
-developer credentials, API setup, or coding required."
+**Status: Preview feature.** Subject to the Snowflake Connector Terms.
 
-**Verified: open beta.** Meta's own announcement text says "in open beta." It is not GA and
-no GA date has been announced.
+Region availability differs by deployment model:
 
-**What it is not:** it is not a data pipeline. It does not read Snowflake. It exposes tools an
-agent can call against your Meta ad accounts. If you want Meta *performance data* in
-Snowflake for modeling, this is the wrong tool.
+| Deployment model | Status | Regions |
+|---|---|---|
+| Openflow — Snowflake Deployments (runs on SPCS) | **Generally Available** | AWS, Azure, GCP commercial |
+| Openflow — BYOC | Generally Available | **AWS commercial only** |
 
-There is **no public GitHub repository** — it appears to be a closed-source hosted service.
-That is a notable contrast with Google, which does publish `github.com/googleads/google-ads-mcp`.
+Note the split: the Openflow *platform* on Snowflake Deployments is GA, while the Meta Ads and
+Google Ads *connectors* are Preview.
 
-### A necessary caveat about the details below
+### Openflow is a prerequisite
 
-`developers.facebook.com` and `facebook.com/business` are client-side JavaScript-rendered.
-Their page **existence and titles** are verifiable, and the announcement page's **indexed
-excerpt** is readable, but the documentation bodies are not machine-readable. Everything in
-the next three subsections is therefore **beta-reported** — consistent across many secondary
-sources, most of which are vendor blogs with a competing product to sell.
+The connector is a set of flow parameters. It runs inside an Openflow deployment and runtime, so
+standing those up is part of the work. The documented task order is:
 
-**Open these two pages in a real browser before quoting any of it to a customer:**
+```
+1. Core Snowflake        OPENFLOW_ADMIN role + 3 account privileges
+2. [optional] PrivateLink UI access
+3. Deployment            data plane container, backed by a compute pool
+4. Execute-as role       + external access integrations
+5. Runtime               hosts the flows, has its own execute-as role
+6. Allowed domains       network rules + EAI for the connector's endpoints
+7. Connector             install, configure parameters, start
+```
 
-- `.../ads-ai-connectors/ads-mcp-server/ads-mcp-server-overview`
-- `.../ads-ai-connectors/ads-mcp-server/ads-mcp-server-get-started`
+Steps 3–5 are typically repeated per connector.
 
-They will settle the endpoint, the tool list, the scopes, the rate limits, and the CLI
-install command — the five things that could not be confirmed.
+### Prerequisites, validated
 
-### Endpoint, auth, and tools (beta-reported)
+Every statement in this section was executed against a live Snowflake account and then dropped.
 
-- **Endpoint:** `https://mcp.facebook.com/ads`. A hosted remote endpoint — there is no
-  install step, you paste a URL. At least one source warns to paste it exactly, with no
-  trailing slash, implying path sensitivity only official docs can settle.
-- **Auth:** Meta Business OAuth in the browser. Reported to need **no** Meta Developer App,
-  **no** App Review, and **no** manually managed system-user token. This aligns with Meta's
-  official "no developer credentials" claim. **One secondary source contradicts this**,
-  claiming a Developer App is required — flagging the conflict rather than resolving it.
-- **Scopes:** `ads_read`, `ads_management`, `business_management`, sometimes
-  `read_insights`. These are the underlying Marketing API scopes; that the connector uses
-  exactly this set is inference.
-- **Prerequisite:** admin role on the target ad account in Business Manager. You choose which
-  ad accounts to grant during consent.
-- **Tool count: 29**, across reporting and insights, campaign management, catalog operations,
-  account diagnostics, and dataset/signal quality. The count is unusually consistent across
-  sources, which suggests it traces to a real official list.
-- **Safety behavior:** objects an agent creates reportedly land **PAUSED**, requiring a human
-  to activate.
-- **Rate limits:** none published for the MCP during beta. Marketing API limits presumably
-  still apply, but the specific figures floating around (200 calls/hour, etc.) are
-  third-party claims about the *API*, not the connector. Do not quote them as authoritative.
-
-**Two corrections to widely-circulated misinformation:**
-
-1. **`npm install -g @meta/ads-cli` does not work.** The npm registry returns HTTP 404 for
-   `@meta/ads-cli` — **verified directly against `registry.npmjs.org`.** No Meta-published
-   npm package exists. The only registry matches are third-party, one of which self-describes
-   as "Unofficial." One source describes the real CLI as a local *Python* tool. The actual
-   distribution channel is **unverified** — do not repeat the npm command.
-2. **Tool names in blog posts are contaminated.** Lists citing
-   `mcp_meta_ads_get_login_link` are quoting the **third-party Pipeboard** server's tool
-   catalog, not Meta's. Treat every specific `ads_*` tool name you see in a blog post as
-   unreliable; only the count and the five capability areas have broad agreement.
-
-### Connecting it to Snowflake
-
-Snowflake has a genuinely first-class mechanism for consuming external MCP servers. **The
-Snowflake half of what follows is fully verified.** The Meta half is not, so both paths are
-**untested** — no working Meta↔Snowflake MCP integration has been published anywhere.
-
-#### Path A — Cortex Agents and Snowflake CoWork (`EXTERNAL MCP SERVER`)
-
-**Verified mechanism.** An admin creates an API integration holding OAuth credentials, then
-an `EXTERNAL MCP SERVER` object referencing it, then adds that server to a Cortex Agent.
-CoWork users complete OAuth in the browser and the agent's tools light up.
-
-Snowflake's pre-built connectors are exactly **Atlassian, GitHub, Glean, Linear, Salesforce**.
-**Meta is not among them**, so it must be built as a custom connector.
-
-The important refinement over the naive approach: Snowflake supports
-**`TYPE = OAUTH_DYNAMIC_CLIENT`**, which performs Dynamic Client Registration and needs only
-`OAUTH_RESOURCE_URL`. Since Meta's connector is designed for interactive AI clients that
-register dynamically, **DCR is the better first attempt than `TYPE = OAUTH2`** with a manual
-client ID and secret you have no documented way to obtain.
+**Account-level privileges.** Exactly three, all grantable to a non-ACCOUNTADMIN role:
 
 ```sql
-CREATE API INTEGRATION meta_ads_mcp_api_integration
-  API_PROVIDER = external_mcp
-  API_ALLOWED_PREFIXES = ('https://mcp.facebook.com')
-  API_USER_AUTHENTICATION = (
-    TYPE = OAUTH_DYNAMIC_CLIENT
-    OAUTH_RESOURCE_URL = 'https://mcp.facebook.com/ads'
-  )
+USE ROLE ACCOUNTADMIN;
+
+CREATE ROLE IF NOT EXISTS OPENFLOW_ADMIN;
+GRANT ROLE OPENFLOW_ADMIN TO USER <openflow_user>;
+
+GRANT CREATE OPENFLOW DATA PLANE INTEGRATION ON ACCOUNT TO ROLE OPENFLOW_ADMIN;
+GRANT CREATE OPENFLOW RUNTIME INTEGRATION    ON ACCOUNT TO ROLE OPENFLOW_ADMIN;
+GRANT CREATE COMPUTE POOL                    ON ACCOUNT TO ROLE OPENFLOW_ADMIN;
+```
+
+All three appear in `SHOW GRANTS TO ROLE` afterward. `CREATE COMPUTE POOL` is documented on the
+*Core Snowflake* setup page rather than the deployment page — worth checking explicitly, since a
+deployment cannot be created without it.
+
+**Outbound network access.** Openflow runtimes have no outbound access by default. Each connector
+needs a network rule and an external access integration:
+
+```sql
+CREATE NETWORK RULE meta_ads_nr
+  MODE = EGRESS
+  TYPE = HOST_PORT
+  VALUE_LIST = ('graph.facebook.com');
+
+CREATE EXTERNAL ACCESS INTEGRATION meta_ads_eai
+  ALLOWED_NETWORK_RULES = (meta_ads_nr)
   ENABLED = TRUE;
-
-CREATE EXTERNAL MCP SERVER MARKETING.ACTIVATION.meta_ads_mcp_server
-  WITH DISPLAY_NAME = 'Meta Ads'
-  URL = 'https://mcp.facebook.com/ads'
-  API_INTEGRATION = meta_ads_mcp_api_integration;
 ```
 
-Qualify the MCP server name. The object is schema-scoped, so an unqualified `CREATE` lands
-it in whatever schema the session happens to point at.
+Endpoints: **`graph.facebook.com`** for Meta Ads, **`googleads.googleapis.com`** for Google Ads.
+Separate rules per connector keep each EAI scoped to one endpoint; a single combined rule also
+works. The EAI is attached to the runtime's execute-as role.
 
-**Verified constraints that shape this path:**
+**Destination objects.** The database and schema must exist before the connector is installed:
 
-- **OAuth only.** "Snowflake supports only OAuth for MCP server connections." A static-token
-  server cannot be registered this way at all.
-- **Callback URL:** `https://identity.snowflake.com/oauth2/callback`. Some providers also
-  require allowlisting it. **This is the most likely hard blocker** — Meta must accept a
-  server-side OAuth client with Snowflake's callback, and whether a connector designed for
-  desktop AI clients permits that is unknown.
-- **Tools only.** External MCP servers "support tool capabilities only" — no resources,
-  prompts, roots, notifications, or sampling. Fine for Meta's tool-only surface.
-- **Hostnames must use hyphens, not underscores.** `mcp.facebook.com` is fine.
-- **`OAUTH_REFRESH_TOKEN_VALIDITY` does not apply to DCR.** If you fall back to
-  `TYPE = OAUTH2`, set it explicitly (minimum 3600) — the default of `0` means a refresh
-  token that **never expires**.
-- **Privileges:** `CREATE EXTERNAL MCP SERVER` on the schema; to delegate, grant `USAGE` on
-  **both** the MCP server **and** the underlying API integration. Account admins only by
-  default.
-- **Observability:** calls land in `SNOWFLAKE.LOCAL.AI_OBSERVABILITY_EVENTS` and appear as
-  spans in the agent Observability tab. Tool names, latency, and tokens need `MONITOR` on the
-  agent; full inputs and outputs are redacted without
-  `READ UNREDACTED AI OBSERVABILITY EVENTS TABLE`.
-- **Disable vs drop:** disabling the API integration invalidates all user tokens immediately
-  and calls the provider's revocation endpoint, but preserves config. Dropping permanently
-  deletes the OAuth configuration and secrets. Disable for maintenance; drop to decommission.
+```sql
+CREATE DATABASE META_ADS_DESTINATION_DB;
+CREATE SCHEMA   META_ADS_DESTINATION_DB.META_ADS_DESTINATION_SCHEMA;
 
-Snowflake attaches an explicit disclaimer to this feature: external MCP servers "are not
-provided, maintained, or verified by Snowflake," and you are responsible for the server's
-trustworthiness and for complying with third-party terms governing the data. For ad data
-with audience and PII characteristics, that is a real governance obligation.
-
-#### Path B — Cortex Code (`mcp.json`) — try this first
-
-**Verified mechanism, and far more likely to work.** Cortex Code is itself an MCP client
-supporting `stdio`, `http`, and `sse`, with a native OAuth block. Omitting `client_id` makes
-Cortex Code attempt **Dynamic Client Registration** and open your system browser — which is
-behaviorally identical to how Claude Desktop and Cursor connect, the exact flow Meta designed
-for.
-
-```bash
-cortex mcp add meta-ads https://mcp.facebook.com/ads --type http
+GRANT USAGE        ON DATABASE META_ADS_DESTINATION_DB TO ROLE <connector_role>;
+GRANT USAGE        ON SCHEMA   META_ADS_DESTINATION_DB.META_ADS_DESTINATION_SCHEMA TO ROLE <connector_role>;
+GRANT CREATE TABLE ON SCHEMA   META_ADS_DESTINATION_DB.META_ADS_DESTINATION_SCHEMA TO ROLE <connector_role>;
 ```
 
-Tools namespace as `mcp__meta-ads__<tool>`. Tokens go to the OS keychain and auto-refresh.
+Destination names are **case-sensitive** in the connector parameters. For unquoted identifiers,
+supply the name in uppercase.
 
-**The practical guardrail worth applying:** `~/.snowflake/cortex/permissions.json` lets you
-`deny` the write tools and `allow` only reads. With `ads_management` granted, an agent can
-change live spend — start read-only, and set an account-level budget cap in Business Suite
-regardless. Admins can also disable user MCP servers entirely
-(`areUserMcpServersAllowed: false`) or enforce a URL allowlist.
+### Authentication
 
-Configuration details and a permissions example: **`sql/meta_ads_mcp_setup.sql`**.
+**Meta side.** Create a Meta App (or use an existing one), enable the Marketing API in the App
+dashboard, and generate a long-lived token. To raise the rate limit, change the app access type
+from Standard to Advanced access on Ads Management Standard Access and enable `ads_read` and
+`ads_management`.
 
-#### Which path
+**Snowflake side.** Two strategies, set by the `Snowflake Authentication Strategy` parameter:
 
-Start with **Path B**. It costs nothing, requires no ACCOUNTADMIN, and its auth flow matches
-what Meta built for. Only after you have confirmed the endpoint and the OAuth behavior
-interactively should you attempt Path A — where a failure could be Meta's callback policy,
-Snowflake's DCR handshake, or a wrong endpoint, with little to distinguish them.
+| Strategy | When | Notes |
+|---|---|---|
+| `SNOWFLAKE_MANAGED` | Snowflake Deployments, or BYOC with runtime roles configured | Token managed by Snowflake. Account identifier, username, and private key fields must be **blank**. |
+| `KEY_PAIR` | BYOC | Requires a `TYPE = SERVICE` user, PKCS8 RSA private key, account identifier as `[org]-[account]`. |
 
-### Do not use MCP as a data pipeline
+On Snowflake Deployments, execute-as roles are linked to Openflow session tokens, which removes
+the need for a separate service user and key pair. Where key-pair auth is used, Snowflake
+recommends storing the keys in a supported secrets manager (AWS, Azure, HashiCorp) and referencing
+them through an Openflow Parameter Provider, so no sensitive values persist in Openflow.
 
-An MCP tool call returns a JSON blob into a context window. It is not a join key, and it does
-not scale to modeling.
+### Two Openflow behaviors that surprise people
 
-The durable pattern: **land Meta ads data in Snowflake on a schedule, model it in a semantic
-view, and let Cortex Analyst answer questions about it.** Use the Meta MCP connector only for
-*actions* — create, pause, adjust — and for freshness-critical reads that must bypass your
-pipeline latency.
+Both are documented, and both are the opposite of what Part 1 requires:
 
-Snowflake also warns specifically about **recursive loops** between agents and MCP servers
-producing "expensive, unbounded loops." An agent that can both query the warehouse and call
-an ads API is exactly the shape where that happens.
+- **A user whose default role is `ACCOUNTADMIN` cannot log in to an Openflow runtime.** Assign a
+  different default role to anyone who needs runtime access.
+- **Snowflake recommends `DEFAULT_SECONDARY_ROLES = ('ALL')` for Openflow users.** That is the
+  reverse of the `DEFAULT_SECONDARY_ROLES = ()` hardening in Part 1 — and both are correct for
+  their context. Part 1's identity is a machine account scoped to one PII view; an Openflow user
+  is a human who needs to reach many objects across the setup flow.
 
-### Third-party Meta Ads MCP servers
+### Report configuration
 
-An official server now exists, so these are alternatives rather than necessities. The
-largest is **`pipeboard-co/meta-ads-mcp`** (~1.2k stars, Python, hosted option, 42 tools).
-Others include `hashcott/meta-ads-mcp-server` (TypeScript, 54 tools with writes gated behind
-an env var), `gomarble-ai/facebook-ads-mcp-server` (Python, MIT), and `amekala/ads-mcp`
-(multi-platform, OAuth 2.1 with DCR and PKCE).
+Ingestion is driven by parameters rather than SQL. The ones that shape the output:
 
-Four cautions that are substantive rather than pro forma:
+| Parameter | Values / meaning |
+|---|---|
+| `Report Object Id` | The Meta object to pull — ad account, ad set, ad, or campaign |
+| `Report Level` | Aggregation level: `account`, `campaign`, `ad`, `adset` |
+| `Report Ingestion Strategy` | `snapshot` or `incremental` |
+| `Report Time Increment` | `1` daily, `3`, `7` weekly, `monthly`, `90` quarterly, `all_days` |
+| `Report Fields` | Comma-separated Insights fields |
+| `Report Breakdowns` | Comma-separated breakdowns (age, gender, placement, and others) |
+| `Report Action Time` | `conversion`, `impression`, or `mixed` |
+| `Report Click Attribution Window` | `1d_click`, `7d_click`, `28d_click` |
+| `Report View Attribution Window` | `1d_view`, `7d_view`, `28d_view` |
+| `Meta Ads Version` | Meta Marketing API version to call |
+| `Report Name` | Becomes the destination table name; must be unique in the schema |
 
-1. **Token custody is the core risk.** Self-hosting means handing a Marketing API token with
-   `ads_management` to third-party code. Multiple sources report advertiser accounts being
-   **restricted by Meta** for misuse of developer tokens with third-party AI tools — and
-   report that this is part of *why* Meta shipped an official connector.
-2. **Licensing is not what it looks like.** Pipeboard is **Business Source License 1.1**,
-   not OSI open source; it converts to Apache-2.0 in 2029 and forbids competing hosted
-   services. It is routinely mislabeled "open source." Its history also includes an SSRF fix
-   in `upload_ad_image` and an HTTP auth middleware fix — read as normal maturation, but read
-   it.
-3. **API version drift.** `hashcott` pins Graph API v22.0 while the official connector
-   reportedly targets v25.0. Self-hosted servers rot.
-4. **They mostly cannot be used with Path A.** Servers authenticating via static bearer
-   tokens or `?token=` query parameters are **incompatible** with Snowflake's OAuth-only
-   requirement for `EXTERNAL MCP SERVER`. They may work in Cortex Code via `headers`, but not
-   in Cortex Agents.
+One report definition maps to one destination table, so a wide matrix of accounts × levels ×
+breakdowns becomes a correspondingly large number of configurations.
+
+**On `Meta Ads Version`:** the setup documentation lists `v22.0` as the allowed value. Meta
+retires Marketing API versions on its own schedule, so confirm the version the connector currently
+supports with Snowflake before finalizing a design that depends on it — particularly for a
+long-lived pipeline.
+
+### Documented limitations
+
+- **Incremental ingestion is supported only when `Report Time Increment` is daily.** Any other
+  increment is snapshot-only.
+- **Changing a report definition while processors are running can produce data inconsistencies.**
+  Stop the processors and clear the queues before updating configuration.
+- **If the Meta Ads API rate limit is hit, data does not get ingested** while the connector keeps
+  attempting to pull. Raising the limit requires Advanced access plus `ads_read` and
+  `ads_management`.
+- **Data can be fetched only from the past 37 months**, a Meta-imposed bound.
+- Openflow — Snowflake Deployment is **not automatically available in trial accounts**; it has to
+  be requested through the account team.
+- **PrivateLink requires Business Critical Edition.**
+
+### Cost model
+
+There is no separate charge for a deployment; **only active runtimes consume Snowflake credits.**
+A deployment is backed by a compute pool, and multiple runtimes can share one deployment, so
+workload isolation by project or environment does not require additional deployments.
+
+### Resetting the connector
+
+To return it to its initial state: drain the queues, stop all processors, right-click the
+**Create Meta Ads Report** processor → **View State** → **Clear State**, then drop the destination
+table.
+
+Full setup reference: **`sql/openflow_ads_connectors_setup.sql`**.
+
+---
+
+## Google Ads goes both directions
+
+This is the part worth being precise about, because the two Google paths are unrelated products
+that happen to share a name.
+
+| | Google Ads Data Manager | Openflow Connector for Google Ads |
+|---|---|---|
+| Direction | Snowflake → Google Ads | Google Ads → Snowflake |
+| Purpose | Activate audiences and conversions | Ingest performance reporting |
+| Built by | Google | Snowflake |
+| Status | Native source, no status label | **Preview** |
+| Snowflake infrastructure | A view, a service user, a PAT | Openflow deployment + runtime |
+| Auth to Snowflake | Username + PAT | `SNOWFLAKE_MANAGED` or key pair |
+| Auth to Google | N/A — Google connects in | Service account JSON + developer token |
+
+The Openflow Google Ads connector needs a Google Cloud project with the Google Ads API enabled,
+service account authentication, and a developer token at Basic or Standard access level. Its
+ingestion modes mirror the Meta connector: **snapshot** (default, appends each run) and
+**incremental** (enabled by including the `segments.date` segment, overlapping by the conversion
+window — a 14-day window on a daily run yields 13 days of overlap, so plan deduplication).
+Documented limitations: no filtering, no custom columns, no attributed-resource ingestion, one
+report per (resource name, client ID) pair, and all-zero metric rows dropped when segmenting.
+
+Snowflake also ships Openflow connectors for **Amazon Ads** and **LinkedIn Ads**, and a separate
+**Snowflake Connector for Google Analytics Raw Data** (a distinct, GA product on the Marketplace).
 
 ---
 
-## The Meta activation gap
+## Closing the Snowflake → Meta gap
 
-Worth stating plainly, because it is the question customers ask next.
+Both Meta paths covered above move data **into** Snowflake. Google Ads Data Manager moves data
+**out**. There is no Meta equivalent of Data Manager's Snowflake source — Meta publishes no
+first-party connector that reads a Snowflake table directly.
 
-Google Ads has a native Snowflake source. **Meta does not.** There is no Meta equivalent of
-Data Manager's Snowflake connector — Meta's official MCP server is a tool surface, not an
-importer, and Custom Audience uploads still go through the Marketing API or a partner.
+That is a gap in the *native* path, not a dead end. There are three routes, in rough order of
+how close they sit to Snowflake.
 
-So for Snowflake → Meta audience activation the realistic options are:
+| | Into Snowflake | Out of Snowflake |
+|---|---|---|
+| Google Ads | Openflow connector (Preview) | Data Manager (native first-party source) |
+| Meta Ads | Openflow connector (Preview) | Clean-room activation connector, marketplace partner, or Marketing API |
 
-- A **reverse-ETL partner** (Hightouch and similar) that reads Snowflake and writes Custom
-  Audiences via Meta's API.
-- **Your own code** against the Marketing API, with a Snowflake external access integration
-  and the token-custody responsibility that implies.
-- **Meta's own file-based upload**, which is not an integration.
+### Route 1 — Data Clean Rooms activation connector
 
-If a customer says "we do this with Google, do it with Meta," the answer is that the shape is
-genuinely different and the effort is not comparable.
+Snowflake Data Clean Rooms ships a **Meta Ads Manager activation connector** alongside a Google
+Ads one. It pushes the result of a clean-room analysis to Meta as an audience segment. This is
+the closest thing to a native path.
 
----
+Configuration, which requires the `MANAGE_DCR_CONNECTORS` role: clean rooms UI → **Connectors**
+→ **Activation** tab → expand **Meta Ads Manager** → enter Meta Business Manager credentials and
+the Meta Ads Manager Account ID → Save.
 
-## Reverse direction: Ads → Snowflake
+Activation: run an analysis, then **Results** → **Activate** → **Activation Hub** → Meta Ads
+Manager. Supply the account ID, a segment name, a description, and select the columns holding
+identifiers plus each identifier's type, then **Push Data**.
 
-For completeness, since it is usually the second half of the conversation.
+Constraints, all documented:
 
-**Openflow Connector for Google Ads** — Snowflake-native, uses the Google Ads API,
-configurable custom reports. **Explicitly a preview feature.** BYOC deployments are AWS
-commercial regions only; Openflow Snowflake deployments cover AWS, Azure, and GCP commercial.
+- **Third-party activation is UI only.** It is not available through custom templates, and the
+  support matrix lists it as "UI only" for both provider-run and consumer-run analyses.
+- **Only the Audience Overlap & Segmentation template supports third-party activation.**
+- The clean rooms account must be configured to allow activation, and an administrator must
+  select and configure the connector before any clean room can use it.
+- Activation respects differential privacy rules and budgets where enabled, and both parties
+  must approve activation for their own columns via an activation policy.
+- If provider and consumer are in different cloud regions, cross-cloud auto-fulfillment must be
+  enabled in both accounts and for both clean rooms.
+- **Third-party connectors are not offered by Snowflake** and may carry additional terms.
+- **Snowflake Data Clean Rooms do not support data subject consent management.** Obtaining
+  consents is the customer's responsibility.
 
-Two ingestion modes: **snapshot** (default, appends each run) and **incremental** (enabled by
-including the `segments.date` segment, overlapping by the conversion window — a 14-day window
-on a daily run means 13 days of overlap, so plan your deduplication). Limitations: no
-filtering, no custom columns, no attributed-resource ingestion, one report per
-(resource name, client ID) pair, and all-zero metric rows are dropped when segmenting.
+> **Time-box this one.** The Meta Ads Manager connector is documented on the **legacy** Provider
+> and Consumer clean rooms, which are being discontinued in favor of the Collaboration API:
+> no new legacy clean rooms via the web UI after **2026-10-01**; the web UI becomes inaccessible
+> and no new legacy clean rooms can be created via the Provider/Consumer API after
+> **2027-02-01**; legacy clean rooms stop being accessible after **2027-06-01**. Because
+> third-party activation is **UI only**, and the UI is what goes away, confirm how Meta
+> activation is delivered under the Collaboration API before building on this route.
 
-**Snowflake Connector for Google Analytics** is a distinct, GA product on the Marketplace —
-no extra licensing, consumes your credits. Aggregate data via the GA4 API; raw event data
-replicated from the BigQuery storage layer.
+### Route 2 — Marketplace partners
 
-Third-party ELT also covers this ground for both Google and Meta.
+Several providers list Snowflake-side activation to Meta on the Snowflake Marketplace. Listings
+below are as described by their providers; capability, pricing, and terms are the provider's, and
+none of this is a Snowflake-supported path.
 
----
+**Meta-specific**
+
+- **Audience Activation for Meta and TikTok** — Deep Sync — https://app.snowflake.com/marketplace/listing/GZT1ZJ0SDY
+  Reformats, enriches, and sends custom audiences for activation on social platforms. The
+  closest direct analogue to Customer Match for Meta.
+- **Connect Offline Conversions to Meta** — Deep Sync — https://app.snowflake.com/marketplace/listing/GZT1ZJ0SDU
+  Reformats, enriches, and sends offline conversion data to Meta's Offline Conversions API —
+  the Meta counterpart to Google's offline conversion import.
+- **Data Activation for Social Channels** — Rivery — https://app.snowflake.com/marketplace/listing/GZSYZ6AVF
+  Create audiences in Snowflake and activate to Facebook, Snap, TikTok, and LinkedIn.
+
+**Multi-destination hubs**
+
+- **MadConnect** — MadTech — https://app.snowflake.com/marketplace/listing/GZTSZ91TLO38
+  Integration hub connecting Snowflake data to AdTech and MarTech platforms for activation,
+  reporting, and privacy-safe transfers.
+- **GrowthLoop Audience Segmentation** — GrowthLoop — https://app.snowflake.com/marketplace/listing/GZ2FQZ3MOWJ
+  AI-driven customer journeys, decisioning, and activation without moving data.
+- **Activation** — Experian Marketing Services — https://app.snowflake.com/marketplace/listing/GZSTZNOUX
+  Pipes to hundreds of destination endpoints for first-, second-, and third-party audiences.
+- **Activation & Insights** — Acxiom — https://app.snowflake.com/marketplace/listing/GZTSZ12XF2AJ
+  Audience portrait plus activation against Acxiom's marketing universe.
+- **Tealium Audience Discovery** — Tealium — https://app.snowflake.com/marketplace/listing/GZSOZ70FXV
+  Native app that builds audiences from Snowflake data and activates them in Tealium without
+  moving data out of Snowflake.
+
+**Clean-room and collaboration alternatives**
+
+- **Data Clean Rooms for Audience Segmentation and Private Activation** — AppsFlyer — https://app.snowflake.com/marketplace/listing/GZSVZGLY8N
+  Private set intersection to build segments from Snowflake audience lists and pass them for
+  activation or suppression.
+- **Narrative Data Collaboration** — Narrative, Inc — https://app.snowflake.com/marketplace/listing/GZTSZI0HICH
+  Native app for data collaboration within Snowflake.
+
+**Identity resolution, if match rates are the problem**
+
+- **Linkedin To HEM** — Springbolt Group — https://app.snowflake.com/marketplace/listing/GZT1Z4EQXFA
+  Resolves a LinkedIn profile URL into a SHA-256 hashed email for privacy-safe activation across
+  Meta, Google, The Trade Desk, and other platforms; output feeds custom audience uploads.
+
+### Route 3 — Meta Marketing API directly
+
+Write against Meta's Marketing API from Snowflake using an external access integration and your
+own code, holding the Meta token yourself. This is the same API the partners above call. It gives
+full control over payload shape and scheduling, and makes token custody, hashing, normalization,
+retry, and rate-limit handling your responsibility.
+
+### What this means for scoping
+
+Google's outbound path is a native connector Google operates; Meta's outbound path is brokered
+by a third party in every case. Both are achievable. The work, the contracting, and the party
+accountable for the data in transit are different — so "do for Meta what we do for Google" is
+not a like-for-like request, even though both end with an audience in an ad account.
+
+Note also that hashing responsibility flips. Google Ads Data Manager normalizes and hashes for
+you (hex SHA-256). On the Meta side, the clean-room connector asks you to identify which columns
+hold identifiers and of what type, and the partner listings describe reformatting as part of
+their service — so confirm per route who is doing the normalization and hashing before assuming
+either.
 
 ## Quick reference
 
-| Question | Google Ads Data Manager | Meta Ads MCP Server |
+| | Google Ads Data Manager | Openflow Ads connectors |
 |---|---|---|
-| Moves warehouse rows? | Yes | No |
-| Direction | Snowflake → Google Ads | Agent ↔ Meta ad account |
-| Maturity | Native source, no status label | Open beta |
-| Snowflake auth | Username + PAT | N/A (Meta Business OAuth) |
-| Snowflake object | Table or view (prefer secure view) | `EXTERNAL MCP SERVER` or `mcp.json` |
-| Who initiates | Google, outbound to Snowflake | The MCP client |
-| Network policy issue | Yes — dynamic Google Cloud IPs | No |
-| Hashing | Google does it, hex SHA-256 | N/A |
-| Cadence | Daily scheduled, or manual | Per agent turn |
-| Documented by Snowflake? | **No** | The generic `EXTERNAL MCP SERVER` mechanism, yes; Meta's server itself, no |
+| Direction | Snowflake → Google Ads | Meta / Google Ads → Snowflake |
+| Built and operated by | Google | Snowflake |
+| Status | Native source, no status label | **Preview** (platform on Snowflake Deployments is GA) |
+| Openflow required | No | Yes |
+| Snowflake source/target object | Table or view (prefer secure view) | Connector-created destination tables |
+| Auth to Snowflake | Username + PAT | `SNOWFLAKE_MANAGED`, or key pair on BYOC |
+| Auth to the ad platform | N/A — Google connects in | Meta long-lived token; Google service account + developer token |
+| Who initiates the connection | Google, inbound | Your runtime, outbound |
+| Outbound network config | N/A | Network rule + EAI required |
+| Network policy consideration | Yes — dynamic Google Cloud IPs | No |
+| PII hashing | Google does it, hex SHA-256 | N/A — reporting data, not audiences |
+| Meta outbound equivalent | — | See [Closing the gap](#closing-the-snowflake--meta-gap) — DCR connector or partner |
+| Cadence | Daily scheduled, or manual | Per `Report Schedule` |
+| Idle cost | None | None — only active runtimes consume credits |
+| Documented by Snowflake | **No** | Yes |
 
 ---
 
 ## Related Guides
 
 - [Google Ads Data Manager — connect Snowflake](https://support.google.com/google-ads-data-manager/answer/14186945)
-- [Snowflake MCP Connectors](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp-connectors)
+- [About Openflow Connector for Meta Ads](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/meta-ads/about)
+- [Set up Openflow — Snowflake Deployment: Core Snowflake](https://docs.snowflake.com/en/user-guide/data-integration/openflow/setup-openflow-spcs-sf)
 - [Snowflake Programmatic Access Tokens](https://docs.snowflake.com/en/user-guide/programmatic-access-tokens)
-- [CREATE API INTEGRATION](https://docs.snowflake.com/en/sql-reference/sql/create-api-integration)
 
 ## External References
 
-**Google**
+**Google Ads Data Manager (outbound)**
 
 - [Data Manager overview](https://support.google.com/google-ads-data-manager/answer/13761872)
 - [Supported data sources](https://support.google.com/google-ads-data-manager/table/13860693)
@@ -681,18 +811,39 @@ Third-party ELT also covers this ground for both Google and Meta.
 - [Google Cloud IP ranges (JSON)](https://www.gstatic.com/ipranges/cloud.json)
 - [Confidential match, open source](https://github.com/google-ads-confidential-computing/confidential-match)
 
-**Meta**
+**Openflow platform**
 
-- [Ads MCP Server overview](https://developers.facebook.com/documentation/ads-commerce/ads-ai-connectors/ads-mcp-server/ads-mcp-server-overview)
-- [Ads MCP Server, get started](https://developers.facebook.com/documentation/ads-commerce/ads-ai-connectors/ads-mcp-server/ads-mcp-server-get-started)
-- [Meta Ads AI Connectors announcement](https://www.facebook.com/business/news/meta-ads-ai-connectors)
+- [About Openflow — Snowflake Deployments](https://docs.snowflake.com/en/user-guide/data-integration/openflow/about-spcs)
+- [Set up Openflow — Snowflake Deployment: task overview](https://docs.snowflake.com/en/user-guide/data-integration/openflow/setup-openflow-spcs)
+- [Set up Openflow — Snowflake Deployment: Core Snowflake (privileges)](https://docs.snowflake.com/en/user-guide/data-integration/openflow/setup-openflow-spcs-sf)
+- [Create deployment](https://docs.snowflake.com/en/user-guide/data-integration/openflow/setup-openflow-spcs-deployment)
+- [Openflow connectors index](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/about)
 
-**Snowflake**
+**Openflow ads connectors (inbound)**
 
-- [MCP Connectors](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp-connectors)
-- [Snowflake-managed MCP server](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp)
-- [Cortex Code MCP configuration](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-mcp)
+- [About Openflow Connector for Meta Ads](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/meta-ads/about)
+- [Set up Openflow Connector for Meta Ads](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/meta-ads/setup)
+- [About Openflow Connector for Google Ads](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/google-ads/about)
+- [Set up Openflow Connector for Google Ads](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/google-ads/setup)
+- [About Openflow Connector for Amazon Ads](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/amazon-ads/about)
+- [About Openflow Connector for LinkedIn Ads](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/linkedin-ads/about)
+- [Meta Ads Insights API breakdowns](https://developers.facebook.com/docs/marketing-api/insights/breakdowns)
+- [Google Ads Query Builder](https://developers.google.com/google-ads/api/fields/v18/overview_query_builder)
+
+**Snowflake → Meta activation**
+
+- [Data Clean Rooms: Activation connectors (Google Ads, Meta Ads Manager)](https://docs.snowflake.com/en/user-guide/cleanrooms/connector-activation)
+- [Data Clean Rooms: Activating query results](https://docs.snowflake.com/en/user-guide/cleanrooms/v1/activation)
+- [Data Clean Rooms: Identity and data provider connectors](https://docs.snowflake.com/en/user-guide/cleanrooms/connector-identity)
+- [Data Clean Rooms Collaboration API (legacy migration target)](https://docs.snowflake.com/en/user-guide/cleanrooms/collaboration-api/about)
+- [Meta Marketing API — Custom Audiences](https://developers.facebook.com/docs/marketing-api/audiences/guides/custom-audiences)
+- [Meta Offline Conversions API](https://developers.facebook.com/docs/marketing-api/offline-conversions)
+
+**Snowflake platform**
+
 - [Programmatic access tokens](https://docs.snowflake.com/en/user-guide/programmatic-access-tokens)
 - [Account identifiers](https://docs.snowflake.com/en/user-guide/admin-account-identifier)
 - [Access control privileges](https://docs.snowflake.com/en/user-guide/security-access-control-privileges)
-- [Openflow Connector for Google Ads](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/google-ads/about)
+- [CREATE NETWORK RULE](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule)
+- [CREATE EXTERNAL ACCESS INTEGRATION](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration)
+- [Snowflake Connector for Google Analytics Raw Data](https://docs.snowflake.com/en/connectors/google/gard/gard-connector-about)
