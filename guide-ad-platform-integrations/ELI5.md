@@ -4,9 +4,9 @@
 
 ## One-Sentence Version
 
-Getting advertising data between Snowflake and Google or Meta uses two completely
-different mechanisms, and which one you need depends entirely on which way the
-data is moving.
+Getting advertising data between Snowflake and Google or Meta uses several
+completely different mechanisms, and which one you need depends entirely on which
+way the data is moving and what kind of data it is.
 
 ## The Story
 
@@ -62,10 +62,17 @@ before you promise anyone a timeline is most of the value here.
   third-party tool or your own code.
 - **After:** Snowflake ships its own connectors for both — but they run on
   Openflow, so there's a platform to set up first.
-- **The Meta send-out gap:** there's no built-in way to *send* audience lists
-  from Snowflake to Meta the way there is for Google. But it isn't impossible —
-  you go through a middleman: either Snowflake's clean-room activation connector,
-  or one of several partner apps from the Snowflake Marketplace.
+- **Sending *sales results* to Meta:** Snowflake publishes a free recipe on GitHub that builds
+  this pipeline for you. You tell Snowflake's coding assistant "set up Meta CAPI," it finds your
+  purchase data, scrambles the personal details, and starts telling Meta which ads actually led
+  to sales. It asks your permission three times before it turns anything on.
+- **Letting a marketer ask Meta questions:** there's a second piece that pulls campaign data back
+  from Meta so a marketer can ask "why did our ads do worse this week?" and get an answer that
+  also looks at your own sales data. This one you can't just download — you have to ask
+  Snowflake for access.
+- **The Meta send-out gap, narrowed:** sending *sales results* to Meta now has an official path
+  (above). Sending a *list of customers* to Meta still doesn't — for that you go through a
+  middleman: Snowflake's clean-room connector, or a partner app from the Snowflake Marketplace.
 
 ## What to Watch Out For
 
@@ -117,14 +124,25 @@ runtime, and connector configuration were not — that needed an Openflow
 deployment the test account didn't have. Those steps come from documentation, not
 from watching them work.
 
-**The Meta middleman has an expiry date.** Snowflake's clean-room connector to
-Meta only works through a web screen that Snowflake is retiring — the first
-shutoff date is October 2026. If you build on it, check first what replaces it.
+**Two Meta things share a name.** "The Meta MCP" usually means the new pairing that
+lets a marketer ask questions about Meta campaigns. That is a different product
+from Snowflake's Openflow connector, which just copies Meta's numbers into tables.
+If someone asks about "the Meta MCP," make sure you know which one they mean.
+
+**Half of it you can't download.** The piece that sends sales results to Meta is
+public on GitHub. The piece that reads Meta data back is available only by asking
+Snowflake. Don't promise both on the same day.
+
+**The audience-list middleman has an expiry date.** Snowflake's clean-room
+connector to Meta only works through a web screen that Snowflake is retiring — the
+first shutoff date is October 2026. If you build on it, check first what replaces it.
 
 ## The One Thing to Remember
 
-Sending data to Google Ads needs a view and a token; pulling data from Meta or
-Google needs an entire Openflow platform; and sending to Meta needs a middleman.
-Same-sounding requests, very different amounts of work.
+Four different jobs that sound like one: sending customer lists to Google needs a
+view and a token; sending sales results to Meta needs a free skill from GitHub;
+pulling ad performance into Snowflake needs an entire Openflow platform; and
+sending customer *lists* to Meta still needs a middleman. Same-sounding requests,
+very different amounts of work.
 
 > For the full technical details, see the source document.

@@ -11,11 +11,14 @@ Two mechanisms, split by direction:
 
 1. **Google Ads Data Manager** (outbound, Snowflake → Google Ads) — a Google product with
    Snowflake as a supported source connector. Customer Match and offline conversions.
-2. **Openflow connectors for Meta Ads and Google Ads** (inbound, ad platform → Snowflake) —
-   Snowflake products that run on Openflow.
-3. **Snowflake → Meta activation** (outbound, brokered) — no native first-party path, closed via
-   the Data Clean Rooms Meta Ads Manager activation connector, a marketplace partner, or Meta's
-   Marketing API directly.
+2. **Meta ads MCP and the Meta Conversions API skill** (the pairing announced Jul 2026) — the
+   CAPI skill is outbound (Snowflake → Meta, conversion events) and public on GitHub; the MCP is
+   inbound (Meta → Snowflake, campaign data) and available by request only.
+3. **Openflow connectors for Meta Ads and Google Ads** (inbound, ad platform → Snowflake) —
+   Snowflake products that run on Openflow. **Distinct from the Meta ads MCP.**
+4. **Snowflake → Meta audience-list activation** (outbound, brokered) — no native path for
+   *lists* (events are covered by the CAPI skill), closed via the Data Clean Rooms Meta Ads
+   Manager activation connector, a marketplace partner, or Meta's Marketing API directly.
 
 The organizing idea is **direction determines mechanism**, and the two directions have very
 different prerequisites. Preserve that framing. The most common reader error is assuming the
@@ -52,10 +55,10 @@ counts and setup steps without editorializing.
 | **Unverified** | In one vendor's docs but not confirmable elsewhere, or documented inconsistently | Called out inline |
 
 **Executed live against a Snowflake account (v10.30.102) on 2026-08-28, then dropped:** all of
-Part 1 end to end, plus the Part 2 prerequisites (three Openflow privileges, both network rules,
+Part 1 end to end, plus the Part 3 prerequisites (three Openflow privileges, both network rules,
 both EAIs). **Not executed:** the Openflow deployment, runtime, and connector flow — the
 validation account had no Openflow deployment. Keep that boundary explicit; do not let the
-Part 2 setup steps read as observed behavior.
+Part 3 setup steps read as observed behavior.
 
 ## Verified Facts — Do Not Regress These
 
@@ -99,7 +102,38 @@ Confirmed by execution or primary documentation:
   types, and partners describe reformatting as part of their service. The guide says to confirm
   per route rather than assuming either.
 
-**Part 2 — Openflow**
+**Part 2 — Meta ads MCP and Conversions API skill**
+
+Added 2026-08-28 after a Snowflake internal slide and the July 2026 blog identified the product a
+customer means by "that Meta MCP." This is **not** the Openflow Meta Ads connector. Part 2 was
+retargeted and Openflow moved to Part 3. Do not merge them back together.
+
+- **The pairing is two separate halves with different access models.** The **Meta Conversions API
+  skill** is a public CoCo skill on GitHub, self-serve. The **Meta ads MCP** is **not self-serve** —
+  the blog says to contact Snowflake for access. Never present both as equally available.
+- Repo: `https://github.com/Snowflake-Labs/sf-samples/tree/main/samples/meta-capi-pipeline`.
+  Install: `/skill add https://github.com/Snowflake-Labs/sf-samples.git/samples/meta-capi-pipeline`.
+  Both the repo tree and the blog were **fetched live and returned 200** on 2026-08-28.
+- Blog: `https://www.snowflake.com/en/blog/snowflake-meta-campaigns-governed-conversion-signals/`,
+  Jul 21, 2026. Authors: Erin Foxworthy, Florian Delval, Luke Ambrosetti, Varun Kumar, Morgan Davy.
+- Skill prerequisites, quoted from the repo's own `SKILL.md`/`README.md`: **`ACCOUNTADMIN` or
+  `CREATE INTEGRATION`**, Meta Pixel ID from Events Manager, Meta access token with
+  **`ads_management`**, a warehouse. The repo also states use of CAPI is governed by the
+  customer's own agreements with Meta.
+- Objects created: `META_CAPI_DB.PIPELINE` schema, `META_CAPI_EVENTS`, `META_CAPI_LOG`,
+  `META_CAPI_CONFIG`, `send_to_meta_capi` UDTF, `meta_capi_integration` EAI. Egress list is
+  `graph.facebook.com:443` **and** `api.facebook.com:443` — two hosts, unlike Openflow's one.
+- Two rules the skill declares non-negotiable: **SHA256 PII hashing is mandatory** before egress,
+  and **discovery has three mandatory human stops** (table selection → `event_id` + custom fields
+  → final approval). Do not describe it as a one-shot script.
+- `META_CAPI_EVENTS` uses a **VARIANT** schema (`USER_DATA`, `CUSTOM_DATA`), so new Meta fields
+  need no table DDL — only a mapping-view change.
+- **This skill is not audience activation.** It sends conversion *events*. The audience-list gap
+  is still real. Keep that distinction — an earlier draft claimed "no native first-party path" for
+  all Snowflake→Meta traffic, which the CAPI skill falsifies for events but not for lists.
+- Nothing in Part 2 has been executed live. It is sourced from the repo, the blog, and the slide.
+
+**Part 3 — Openflow**
 - **Openflow — Snowflake Deployments is Generally Available** (AWS, Azure, GCP commercial), runs
   on SPCS. **Openflow — BYOC is AWS commercial only.** The Meta Ads and Google Ads *connectors*
   are **Preview**. Do not collapse the platform status into the connector status, or vice versa.
@@ -153,7 +187,7 @@ ad hoc" on the confidential-matching FAQ.
   database `MARKETING`, schema `ACTIVATION`, views `V_GOOGLE_CUSTOMER_MATCH` and
   `V_GOOGLE_CUSTOMER_MATCH_HASHED`, base table `MARKETING.CORE.CUSTOMER`. The base table is the
   one identifier a reader must replace; it is named in PREREQUISITES for that reason.
-- Part 2 identifiers: `OPENFLOW_ADMIN`, `OPENFLOW_MONITOR`, `OPENFLOW_CONFIG.NETWORKING`,
+- Part 3 identifiers: `OPENFLOW_ADMIN`, `OPENFLOW_MONITOR`, `OPENFLOW_CONFIG.NETWORKING`,
   `META_ADS_EGRESS`, `GOOGLE_ADS_EGRESS`, `META_ADS_EAI`, `GOOGLE_ADS_EAI`,
   `META_ADS_DESTINATION_DB`, `GOOGLE_ADS_DESTINATION_DB`.
 - Google's Customer Match headers contain spaces and **require double-quoted identifiers** in
@@ -183,11 +217,11 @@ On any refresh, check these first:
 
 1. **Connector status.** Have the Meta Ads / Google Ads connectors moved from Preview to GA? The
    status split between platform (GA) and connectors (Preview) is the most load-bearing fact in
-   Part 2.
+   Part 3.
 2. **The Meta Ads Version allowed value.** Still `v22.0` in the docs, or updated?
 3. **Gen2 connectors.** Snowflake has been reworking connector configuration, starting with
    Postgres and MySQL. If Meta Ads or Google Ads gets that treatment, the parameter tables in
-   Part 2 and Section 7 of the SQL file need rewriting.
+   Part 3 and Section 7 of the SQL file need rewriting.
 4. **Google Ads API Customer Match sunset dates.** Trade-press dates are deliberately excluded.
    Only add dates sourced from a Google help page.
 5. Whether Snowflake has published anything about Google Ads Data Manager. Currently nothing.
@@ -198,6 +232,12 @@ On any refresh, check these first:
    section — listings and global names change. Never edit a listing's title, provider, or
    description from memory; every claim must come from search output. All listings must carry
    their `https://app.snowflake.com/marketplace/listing/<global_name>` URL.
+8. **Meta ads MCP availability.** Currently request-only with no public docs page. If Snowflake
+   publishes a docs page or self-serve enablement, Part 2's "the MCP half is gated" section and
+   the routing table row both change.
+9. **The CAPI skill repo.** It is an actively developed sample — the last commit touched AI-based
+   event type discovery. Re-read `SKILL.md` and `README.md` before quoting prerequisites or the
+   object list; both have already changed once since the initial commit.
 
 Paths: Path 1 (connect an external tool). Both the root `AGENTS.md` member list and both
 `README.md` tables must stay in sync.
