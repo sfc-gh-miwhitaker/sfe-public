@@ -52,6 +52,7 @@ authenticate and communicate with Snowflake.
 - `guide-connecting-copilot-studio-snowflake` — Microsoft Copilot Studio (4 patterns: Knowledge Source, Cortex Analyst, MCP + Cortex Agent, REST API)
 - `guide-cube-snowflake-semantic-layer` — Cube (cube.dev) semantic layer: driver config, three auth paths, OIDC workload identity, pre-aggregation cost
 - `guide-debezium-to-snowflake` — Debezium CDC pipeline: Debezium + Kafka + Snowflake Kafka Connector v4 + Dynamic Table flattening (all GA)
+- `guide-ad-platform-integrations` — Google Ads Data Manager (Snowflake as native first-party source, PAT auth, Customer Match) and Meta's Ads MCP Server (open beta, `EXTERNAL MCP SERVER` + Cortex Code)
 
 **Belongs here if:** the guide's primary job is configuring a named external product
 to connect to Snowflake. Authentication setup, endpoint configuration, and integration
