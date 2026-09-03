@@ -42,8 +42,8 @@ add a shop to the register, run one command, and the combined view includes it.
   always-on charge that only stops when you delete the garage.
 - **Runtime** — the "van." It does the actual work. You pick its size once and cannot
   change it later. You can park it (suspend) to stop its own cost.
-- **Shopify connector** — the pre-built pickup route for Shopify. It is a Preview feature
-  and is "gen 1," meaning it is configured by clicking, not by SQL.
+- **Shopify connector** — the pre-built pickup route for Shopify. It is a Preview feature,
+  and it is configured by clicking on a canvas rather than by SQL.
 - **Execute-as role** — the badge the van wears inside Snowflake; it decides which
   drawers the van may write to.
 - **Network rule / EAI** — the list of shop addresses the van may drive to. Every store's
@@ -63,14 +63,16 @@ add a shop to the register, run one command, and the combined view includes it.
 - After: adding a store is a Shopify app, a SQL call, a network-rule update, and a
   connector install on a visual canvas — roughly 20 minutes once practiced.
 - Before: someone else fixed it when it broke.
-- After: your team reads the runtime's error log and fixes it on the canvas.
+- After: your team reads the runtime's error log and fixes it on the canvas; Snowflake
+  runs the infrastructure underneath.
 
 ## What to Watch Out For
 
-- **There is a cost floor.** The deployment bills continuously even with nothing running.
-  If you already have unused Snowflake credits, "it bills as credits" is not a saving.
-- **You cannot see cost per store.** Snowflake reports cost per compute pool, not per
-  runtime or connector, for this deployment type.
+- **There is a base cost.** The deployment bills continuously even with nothing running,
+  the same way most managed integration services charge a platform fee. Compare it to what
+  you pay today.
+- **Cost is reported per compute pool, not per store.** If you need per-store numbers, plan
+  an allocation up front.
 - **The connector is Preview.** It may change. It also cannot handle Shopify adding or
   removing a field: you must reset that object and drop its table, per store.
 - **Shopify only gives you 60 days of orders by default.** Older history needs a separate
@@ -85,13 +87,14 @@ add a shop to the register, run one command, and the combined view includes it.
 
 Two questions the guide leaves open on purpose: the name of the raw data column the
 connector creates is not documented (check after the first load), and whether Shopify will
-get a SQL-scriptable "gen 2" version — which would remove most of the per-store clicking —
-has no announced date.
+get a SQL-scriptable setup — which would remove most of the per-store clicking — has no
+announced date.
 
 ## The One Thing to Remember
 
-Openflow can replace your Shopify ELT vendor, but you are trading a vendor bill for an
-always-on Snowflake charge plus a per-store manual setup and an on-call duty your team
-now owns — so start with one store and prove the math before you migrate the rest.
+Openflow can replace your Shopify ELT vendor, moving ingestion inside Snowflake's billing
+and security boundary — in exchange for an always-on base charge, a per-store manual setup,
+and an on-call duty your team now owns. Start with one store and prove the math before you
+migrate the rest.
 
 > For the full technical details, see the source document.

@@ -4,10 +4,10 @@
   Expires: 2026-12-03
 
   PURPOSE
-    One-time account preparation for an Openflow Snowflake Deployment (gen 2).
-    Creates the OPENFLOW_ADMIN role, grants the account-level privileges gen 2
-    requires, and creates the infrastructure database that will hold runtimes,
-    connectors, network rules, and the event table.
+    One-time account preparation for an Openflow Snowflake Deployment.
+    Creates the OPENFLOW_ADMIN role, grants the account-level privileges the
+    deployment requires, and creates the infrastructure database that will hold
+    runtimes, connectors, network rules, and the event table.
 
   RUN AS      ACCOUNTADMIN (once)
   RUNTIME     < 1 minute
@@ -26,7 +26,7 @@ CREATE ROLE IF NOT EXISTS OPENFLOW_ADMIN
 
 GRANT ROLE OPENFLOW_ADMIN TO USER <OPENFLOW_USER>;
 
--- 2. Account-level privileges required by gen 2 (Snowflake deployments) --------
+-- 2. Account-level privileges required for a Snowflake Deployment --------------
 GRANT CREATE OPENFLOW DEPLOYMENT ON ACCOUNT TO ROLE OPENFLOW_ADMIN;
 GRANT CREATE COMPUTE POOL        ON ACCOUNT TO ROLE OPENFLOW_ADMIN;  -- Snowflake deployments only
 GRANT CREATE DATABASE            ON ACCOUNT TO ROLE OPENFLOW_ADMIN;
@@ -48,7 +48,7 @@ CREATE DATABASE IF NOT EXISTS OPENFLOW_DB
 CREATE SCHEMA IF NOT EXISTS OPENFLOW_DB.OPENFLOW_SCHEMA
   COMMENT = 'Openflow runtime and connector objects';
 
--- 5. Schema-level privileges for gen 2 objects ---------------------------------
+-- 5. Schema-level privileges for runtime and connector objects -----------------
 USE ROLE ACCOUNTADMIN;
 GRANT CREATE OPENFLOW RUNTIME   ON SCHEMA OPENFLOW_DB.OPENFLOW_SCHEMA TO ROLE OPENFLOW_ADMIN;
 GRANT CREATE OPENFLOW CONNECTOR ON SCHEMA OPENFLOW_DB.OPENFLOW_SCHEMA TO ROLE OPENFLOW_ADMIN;

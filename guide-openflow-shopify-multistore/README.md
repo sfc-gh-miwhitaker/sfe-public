@@ -50,8 +50,11 @@ Bulk-API-plus-Snowpipe row looks better for your team, that is a legitimate conc
 
 ## Before you commit
 
-Everything below is verified against Snowflake documentation as of the creation date.
-Sources are in [External References](#external-references).
+Openflow is a reasonable way to land Shopify data in Snowflake, and for many teams it is
+the right one. The points below are the things that most often surprise people after the
+fact, so they are worth knowing going in. Everything is verified against Snowflake
+documentation as of the creation date; sources are in
+[External References](#external-references).
 
 ### Facts you need in the decision
 
@@ -59,30 +62,30 @@ Sources are in [External References](#external-references).
    the Shopify connector itself is not. Preview features can change behavior and are
    subject to the Snowflake Connector Terms.
 
-2. **The Shopify connector is a "gen 1" connector.** Openflow has two generations. Gen 2
-   makes deployments, runtimes, and connectors SQL objects (`CREATE OPENFLOW DEPLOYMENT`,
-   `CREATE OPENFLOW RUNTIME`, `CREATE OPENFLOW CONNECTOR`). Today, only the PostgreSQL and
-   MySQL CDC connectors exist as gen 2 definitions. **Shopify has no gen 2 definition.**
-   You can create the deployment and runtime with SQL (this guide does), but each store's
-   connector is installed from the catalog onto a NiFi canvas and configured by
-   right-clicking a process group and typing parameters. There is no SQL, no
-   infrastructure-as-code, and no API documented for this step.
+2. **The infrastructure is SQL; the Shopify connector is not.** You create the deployment
+   and runtime with SQL (`CREATE OPENFLOW DEPLOYMENT`, `CREATE OPENFLOW RUNTIME` — this
+   guide does exactly that). Each store's Shopify connector, however, is installed from the
+   connector catalog onto a NiFi canvas and configured by right-clicking a process group and
+   typing parameters. There is no SQL, no infrastructure-as-code, and no documented API for
+   that step today. Snowflake is progressively adding SQL definitions for connectors; the
+   Shopify one is not there yet.
 
-   **Consequence for "dozens of stores":** dozens of canvas installs, dozens of parameter
-   dialogs, dozens of Shopify dev apps, and every store domain added to one network rule.
-   Phase 5 gives you a runbook to make that repeatable, but it does not make it automatic.
+   **Consequence for "dozens of stores":** one canvas install, one parameter dialog, and one
+   Shopify dev app per store, plus every store domain in the network rule. Phase 5 gives you
+   a runbook that makes this repeatable and reasonably quick; it is just not scripted.
 
-3. **There is a cost floor you cannot turn off.** Creating a deployment starts an Openflow
-   Management Services compute pool (one `CPU_X64_S` node). Snowflake docs: it *"continues
-   to run and incurs costs, even if there are no runtimes running."* Suspending the runtime
-   stops runtime cost; only dropping the deployment stops the floor. On top of that you pay
-   for the runtime compute pool while it runs, Snowpipe Streaming ingestion, warehouse time
-   for `CREATE TABLE`/`MERGE`, and telemetry ingest into the event table.
+3. **There is an always-on base cost, as with any managed integration service.** Creating a
+   deployment starts an Openflow Management Services compute pool (one `CPU_X64_S` node)
+   that runs whether or not any runtime is active. Suspending the runtime stops runtime
+   cost; dropping the deployment stops the base cost. Beyond that you pay for the runtime
+   compute pool while it runs, Snowpipe Streaming ingestion, warehouse time for
+   `CREATE TABLE`/`MERGE`, and telemetry ingest into the event table. Most hosted ELT tools
+   have an equivalent platform fee; the difference here is that it shows up as credits.
 
-4. **You cannot attribute cost per runtime.** `OPENFLOW_USAGE_HISTORY` covers BYOC only.
+4. **Cost is visible per runtime, not per store.** `OPENFLOW_USAGE_HISTORY` covers BYOC only.
    For Snowflake deployments you get compute-pool-level credits in `METERING_HISTORY`
-   (`SERVICE_TYPE = 'OPENFLOW_COMPUTE_SNOWFLAKE'`). If finance asks "what does store X cost,"
-   the honest answer is "we can tell you what the runtime costs."
+   (`SERVICE_TYPE = 'OPENFLOW_COMPUTE_SNOWFLAKE'`). If you need per-store cost, put each
+   store's runtime on its own compute pool or accept an allocation.
 
 5. **No schema evolution.** If Shopify adds or removes a field on an object, you reset the
    connector state for that object and drop the table. This is a documented limitation.
@@ -101,16 +104,15 @@ Sources are in [External References](#external-references).
    store**, which stays inside documented behavior. Treat sizing as something you measure,
    not something you look up.
 
-8. **You are operating NiFi.** Canvas, process groups, controller services, parameter
-   contexts, state resets, bulletins. The Shopify connector hides most of it, but when
-   something breaks the fix is on the canvas, not in a SQL worksheet. If your team came to
-   Snowflake specifically to avoid running integration infrastructure, notice that this is
-   the opposite operating model, even though it lives inside Snowflake.
+8. **Day-two operations happen on the NiFi canvas.** Process groups, controller services,
+   parameter contexts, state resets, bulletins. The Shopify connector hides most of it, and
+   Snowflake runs the infrastructure for you, but when something needs attention the fix is
+   on the canvas rather than in a SQL worksheet. Plan for someone to learn it.
 
 ### When this path tends to work
 
-- You are replacing a tool whose bill is materially higher than the Openflow floor plus
-  runtime, so total cost actually drops.
+- You want ingestion managed inside Snowflake's security and billing boundary rather than
+  a separate vendor contract.
 - You start with **one store**, get it stable, and only then scale.
 - The incumbent pipeline keeps running through the migration; you cut over store by store
   after reconciling row counts (see [Cutover](#cutover-from-an-existing-elt-tool)).
@@ -119,8 +121,6 @@ Sources are in [External References](#external-references).
 ### When it tends not to
 
 - The team expected "add store, done" and has no appetite for a per-store runbook.
-- Under-consumption: if you already have unused Snowflake credits, "it bills as credits"
-  is not a saving — it is spending you were not going to spend.
 - You need full order history immediately and have not yet obtained `read_all_orders`.
 - Private connectivity is a requirement and you are not on Business Critical edition.
 
@@ -130,9 +130,8 @@ Fill this in before Phase 1.
 
 | Question | Your answer |
 |---|---|
-| Current ELT monthly cost for Shopify connectors | |
+| Current ELT monthly cost for Shopify connectors (for comparison) | |
 | Number of stores now / in 12 months | |
-| Do we already have unused Snowflake credits? | |
 | Who owns the runtime canvas on-call? | |
 | Do we need orders older than 60 days on day one? | |
 | Do we need customer PII (needs Shopify approval)? | |
@@ -147,12 +146,12 @@ Fill this in before Phase 1.
  ┌──────────────────┐
  │ store-alpha      │ dev app A ─┐        ┌─────────────────────────────────────────────┐
  │ store-bravo      │ dev app B ─┤        │ OPENFLOW DEPLOYMENT  SHOPIFY_DEPLOYMENT      │
- │ store-charlie    │ dev app C ─┤        │  (gen 2, SQL)   ── Management Services pool  │  ← always-on floor
+ │ store-charlie    │ dev app C ─┤        │  (SQL) ── Management Services pool           │  ← always-on base cost
  │   ...            │    ...     │ HTTPS  │                                              │
  └──────────────────┘            │  443   │  OPENFLOW RUNTIME  SHOPIFY_RUNTIME (MEDIUM)  │
    Admin GraphQL API             ├───────▶│   EAI ── network rule: every store + GCS     │
    Bulk Operations API           │        │   ┌──────────┐ ┌──────────┐ ┌──────────┐    │
-   storage.googleapis.com ───────┘        │   │ Shopify  │ │ Shopify  │ │ Shopify  │ …  │  ← gen 1 process groups,
+   storage.googleapis.com ───────┘        │   │ Shopify  │ │ Shopify  │ │ Shopify  │ …  │  ← process groups,
    (bulk JSONL results)                   │   │ conn A   │ │ conn B   │ │ conn C   │    │    one per store, canvas-installed
                                           │   └────┬─────┘ └────┬─────┘ └────┬─────┘    │
                                           └────────┼────────────┼────────────┼──────────┘
@@ -229,7 +228,8 @@ in an Openflow-enabled account. Everything else was compile-checked.
 Run `sql/01_core_snowflake.sql` through `sql/04_runtime.sql` in order. What each one does,
 for a first-timer:
 
-**01 — Core.** Creates `OPENFLOW_ADMIN` and grants the four account privileges gen 2 needs
+**01 — Core.** Creates `OPENFLOW_ADMIN` and grants the four account privileges a Snowflake
+Deployment needs
 (`CREATE OPENFLOW DEPLOYMENT`, `CREATE COMPUTE POOL`, `CREATE DATABASE`, `CREATE INTEGRATION`).
 Creates `OPENFLOW_DB.OPENFLOW_SCHEMA` for infrastructure objects and a dedicated event table.
 Sets your default role away from `ACCOUNTADMIN`.
@@ -465,10 +465,10 @@ Two runtimes on one deployment is normal; the max is 100 runtimes per deployment
 
 ### What is still manual, honestly
 
-Steps 1, 4, 5, and 6 have no SQL or API today. If a gen 2 Shopify definition ships, steps
-4–6 collapse into `CREATE OPENFLOW CONNECTOR ... FROM DEFINITION` plus a `config.json` per
-store with secrets by reference. Check the gen 2 connector catalog at each expiry review;
-that change would remove most of the per-store toil.
+Steps 1, 4, 5, and 6 have no SQL or API today. Snowflake is adding SQL-based connector
+definitions over time; if a Shopify definition ships, steps 4–6 would collapse into a single
+`CREATE OPENFLOW CONNECTOR` call plus a config file per store, which would remove most of the
+per-store toil. Worth re-checking the connector catalog at each expiry review.
 
 ---
 
@@ -559,7 +559,7 @@ service, and it belongs in the decision, not in the retrospective.
 ## Related Guides
 
 - [About the Openflow Connector for Shopify](https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/shopify/about)
-- [Openflow generations (gen 1 vs gen 2)](https://docs.snowflake.com/en/user-guide/data-integration/openflow/gen2/openflow-generations)
+- [Openflow deployment options](https://docs.snowflake.com/en/user-guide/data-integration/openflow/gen2/openflow-generations)
 - [Openflow Snowflake Deployment cost and scaling](https://docs.snowflake.com/en/user-guide/data-integration/openflow/cost-spcs)
 - [Dynamic Tables overview](https://docs.snowflake.com/en/user-guide/dynamic-tables/overview)
 - [Shopify Bulk Operations API](https://shopify.dev/docs/api/usage/bulk-operations/queries)
@@ -576,9 +576,9 @@ Snowflake documentation (all verified 2026-09-03):
 - Shopify connector — object definition overrides: https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/shopify/object-definitions
 - Shopify connector — maintain (state reset): https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/shopify/maintain
 - Shopify connector — troubleshoot: https://docs.snowflake.com/en/user-guide/data-integration/openflow/connectors/shopify/troubleshoot
-- Openflow generations: https://docs.snowflake.com/en/user-guide/data-integration/openflow/gen2/openflow-generations
-- Gen 2 supported connectors (setup wizard): https://docs.snowflake.com/en/user-guide/data-integration/openflow/gen2/setup-connector-wizard
-- Gen 2 quickstart: https://docs.snowflake.com/en/user-guide/data-integration/openflow/gen2/quickstart
+- Openflow deployment options: https://docs.snowflake.com/en/user-guide/data-integration/openflow/gen2/openflow-generations
+- Connectors available via the SQL setup wizard: https://docs.snowflake.com/en/user-guide/data-integration/openflow/gen2/setup-connector-wizard
+- SQL deployment quickstart: https://docs.snowflake.com/en/user-guide/data-integration/openflow/gen2/quickstart
 - Configure connector with SQL (config.json, secrets): https://docs.snowflake.com/en/user-guide/data-integration/openflow/gen2/configure-connector-sql
 - Snowflake Deployment task overview: https://docs.snowflake.com/en/user-guide/data-integration/openflow/setup-openflow-spcs
 - Core Snowflake setup: https://docs.snowflake.com/en/user-guide/data-integration/openflow/setup-openflow-spcs-sf

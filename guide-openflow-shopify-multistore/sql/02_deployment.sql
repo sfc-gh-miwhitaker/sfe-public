@@ -4,7 +4,7 @@
   Expires: 2026-12-03
 
   PURPOSE
-    Create the Openflow Snowflake Deployment (gen 2). A deployment is the data
+    Create the Openflow Snowflake Deployment. A deployment is the data
     plane container; every runtime lives inside one. Snowflake operates the
     control plane. Provisioning is asynchronous (typically 5-10 minutes).
 
@@ -19,7 +19,7 @@
     exists -- even with zero runtimes running. See 07_monitoring.sql.
 
   LIMITS
-    Max 3 Snowflake deployments per account (gen 1 and gen 2 share the limit).
+    Max 3 Snowflake deployments per account.
     Not available in trial accounts without a request to your account team.
 
   -- syntax from docs, not executed: Openflow DDL cannot be compile-checked
