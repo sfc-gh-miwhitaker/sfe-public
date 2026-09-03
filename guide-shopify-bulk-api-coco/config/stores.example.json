@@ -1,0 +1,7 @@
+[
+  {
+    "store_key": "STORE_ALPHA",
+    "shop_domain": "store-alpha.myshopify.com",
+    "credential_object_fqn": "SHOPIFY_NATIVE.CONTROL.SHOPIFY_STORE_ALPHA_CREDENTIALS"
+  }
+]

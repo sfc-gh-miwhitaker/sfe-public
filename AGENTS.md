@@ -54,6 +54,7 @@ authenticate and communicate with Snowflake.
 - `guide-debezium-to-snowflake` — Debezium CDC pipeline: Debezium + Kafka + Snowflake Kafka Connector v4 + Dynamic Table flattening (all GA)
 - `guide-ad-platform-integrations` — Advertising data by direction: Google Ads Data Manager outbound (Snowflake as native first-party source, PAT auth, Customer Match), the Meta ads MCP + Conversions API skill pairing (CAPI skill public on GitHub, MCP by request), and the Openflow connectors for Meta Ads and Google Ads inbound (Preview connectors on a GA platform)
 - `guide-openflow-shopify-multistore` — Shopify (dozens of stores) into Snowflake via Openflow Snowflake Deployment: gen 2 SQL deployment/runtime, gen 1 canvas-installed Shopify connector per store, registry-driven per-store schemas, generated Dynamic Table analytics layer, honest readiness and cost-floor section, ELT cutover pattern
+- `guide-shopify-bulk-api-coco` — Shopify Bulk API into Snowflake with CoCo Desktop as the lifecycle interface: deterministic Python procedure/Task data path, SECRET + EAI security, generated multi-store bindings, proof-before-promotion qualification, Dynamic Tables, conversational troubleshooting, and read-only operations automations
 
 **Belongs here if:** the guide's primary job is configuring a named external product
 to connect to Snowflake. Authentication setup, endpoint configuration, and integration
