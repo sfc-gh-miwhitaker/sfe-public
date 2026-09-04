@@ -4,70 +4,74 @@
 
 ## One-Sentence Version
 
-CoWork looks like a chat box for asking data questions — but under the hood it's a full work agent with investigation modes, saved dashboards, automations, external tool connections, and a memory system, most of which most users have never touched.
+CoWork looks like a chat box, but it can investigate hard questions, remember reusable workflows, refresh saved charts, schedule reports, create files, connect to other systems, and enforce Snowflake permissions while it works.
 
 ---
 
 ## The Story
 
-Imagine you hire an incredibly capable assistant. On day one, you learn they can answer questions about your data. So every morning you type questions and get answers. That's useful. But six months later you realize: this assistant could have been running your weekly reports automatically. They could have remembered that you always want numbers in millions. They could have connected to Slack and Salesforce and synthesized everything into a pre-call briefing. They could have saved your best analysis as a live dashboard that refreshes itself. You were using 20% of their capability.
+Imagine you hire a capable assistant. At first, you only ask quick questions. Later, you discover the assistant can research a problem for ten minutes, save a chart that stays connected to current data, email you a fresh report every Monday, package a workflow as a reusable skill, and turn the result into a PDF or presentation.
 
-That's CoWork. The chat box is real. The answers are good. But there's a full control panel behind the `+` button that most users never open — and this guide is the map to that panel.
+That is CoWork. The chat box is only the front door. The `+` menu, Artifacts hub, Automations tab, and agent settings expose the larger system.
 
-The three deepest features are: **Deep Research** (where you ask a hard, multi-part question and CoWork runs a proper 10-minute investigation across all your data, with every claim cited), **Artifacts** (where charts stay alive and refresh automatically instead of disappearing when you close the tab), and **auto-routing** (coming soon in Private Preview — makes the whole experience feel like one smart assistant instead of a drawer full of specialized tools you have to pick from).
-
-Everything else — scheduling, file uploads, branded charts, tool connections, mobile app — layers on top of those three.
+Some features are generally available. Others are Preview and may change. Seeing a button does not mean every account has the same feature stage or configuration.
 
 ---
 
 ## The Cast
 
-| Term | What it actually means |
-|------|------------------------|
-| **CoWork** | Snowflake's AI work agent — lives at `ai.snowflake.com`, talks to your governed data |
-| **`+` menu** | The button to the left of the chat input; this is where the advanced features live |
-| **Deep Research** | Investigation mode — CoWork breaks a hard question into sub-questions, runs them all, and produces a citable report |
-| **Extended Thinking** | A toggle that makes CoWork think harder and slower before answering; stays on until you turn it off |
-| **Artifact** | A saved chart or table that stays live, refreshes with new data, and can be shared with a link |
-| **Auto-routing agent** | A coming feature (Private Preview) — one invisible router that sends your question to the right specialist automatically, so you never have to pick an agent |
-| **User Skills** | Macros you create in conversation: "run my Monday recap" becomes a one-click workflow |
-| **User Memory** | CoWork remembers your preferences across sessions once you state them |
-| **MCP Connectors** | OAuth connections to Slack, Google Drive, and Salesforce — no IT ticket, no custom code |
-| **Automations** | Turn any question into a scheduled email or Slack message, re-run with fresh data |
-| **Verified Answers** | Questions certified by your data team get a green shield — the official, trusted answer |
-| **Chart tiers** | Three levels of chart control: ask in English → inject a brand style template → enforce deterministic rules |
+| Term | What it means |
+|---|---|
+| **Deep Research** | Breaks a hard question into smaller investigations and builds a cited report |
+| **Extended Thinking** | Spends more reasoning effort on one answer and stays selected until turned off |
+| **Artifact** | A saved chart or table whose query can run again with the viewer's permissions |
+| **Shared conversation** | A static snapshot of a thread, not a live dashboard |
+| **User Skill** | A personal, repeatable CoWork workflow created in chat or uploaded |
+| **Automation** | A scheduled question that reruns with fresh data and currently delivers by email |
+| **MCP Connector** | An admin-configured connection to an external tool; each user authorizes with OAuth |
+| **Document generation** | Preview support for creating PDF and PowerPoint files from an analysis |
+| **Chart policies** | Preview rules that control chart color, formatting, sorting, and axis ranges |
+| **CoCo Skill Catalog** | A separate account catalog for sharing CoCo skills and plugins |
 
 ---
 
-## What Changed (What Most Users Don't Know Exists)
+## What Most Users Miss
 
-- The `+` menu next to the chat box opens Deep Research, file upload, agent selection, and Skills — most users never press it
-- Charts support heatmaps, dual-axis, box plots, and faceted grids — not just bar/line/pie
-- An uploaded PDF or spreadsheet goes to your personal file area and can be analyzed against your Snowflake data in the same thread
-- Artifacts (saved charts) are live — they pull fresh data every time they're opened; they're not screenshots
-- The iOS app has voice input and a QR code login — scan from the web app to authenticate instantly on your phone
-- Conversations can be shared with a link that includes full context and citations, not just a copy-paste
-- CoWork works in Microsoft Teams as a fully functional integration, not just a notification feed
-- Deep Research does **not** automatically search the internet — web search is a separate option that must be enabled by an admin
+- Deep Research can take up to ten minutes and follow-up questions do not rerun the investigation.
+- Web search is not automatic; the agent needs a separately enabled web-search tool.
+- Artifacts are live references, but automatic refresh occurs after more than 12 hours since the viewer's last view, or when refreshed manually.
+- Shared conversations are static snapshots and disappear when their source conversation is deleted.
+- Automations support hourly, daily, weekly, and monthly schedules, but Preview delivery is email-only.
+- User Skills and PDF/PowerPoint generation need the agent's code execution tool for scripted or file-producing work.
+- MCP connectors are not zero setup. Admins create integrations, grants, and agent connections before users complete OAuth.
+- The iOS app is GA. Android remains roadmap.
 
 ---
 
 ## What to Watch Out For
 
-**Deep Research and web search are separate.** This is the one thing that catches people off guard in live demos. Deep Research investigates your company data deeply. It does not browse the internet unless an admin has specifically enabled web search on the agent. Don't promise "it'll search the web" unless you've confirmed it's configured.
+**Preview is not GA.** User Skills, Automations, chart templates and policies, and document generation are usable open previews, not finished GA contracts.
 
-**Extended Thinking stays on.** Once you enable it, it applies to every following message. This is great for hard questions and annoying for quick lookups. Turn it off when you're done with the complex question.
+**Live does not mean constantly rerun.** An Artifact keeps its query and can refresh against current data. A shared conversation is only a snapshot.
 
-**Artifacts 2.0 (full multi-pane dashboards) is still in Private Preview** as of this writing. The current GA version saves individual charts/tables. Full analyst-authored dashboards published to CoWork are coming but aren't generally available yet.
+**Permissions still matter.** File analysis, skills, automations, artifacts, and external tools run under Snowflake access controls. A feature cannot bypass data the user is not allowed to see.
 
-**Several of the best features are still in preview.** Auto-routing, User Memory, and User Skills are Private or Public Preview — available to accounts that are enrolled, not everyone by default. Check with your account team on what's enabled.
+**Budgets are not instant brakes.** CoWork budgets use credit thresholds and can take hours to enforce. Per-user quotas are the better fit for daily or monthly user limits.
+
+**The catalog names are confusing.** CoWork User Skills are personal workflows. The Cortex Extension catalog distributes CoCo skills and plugins inside an account.
+
+---
+
+## Still Emerging
+
+Personal Work Agent auto-routing, implicit memory behavior, multi-pane CoWork Dashboards, Cortex Sense, the Slack app, and Android are still in preview or roadmap stages. Verify availability before showing them as current account behavior.
 
 ---
 
 ## The One Thing to Remember
 
-Press the `+` button — the whole guide is basically a tour of what's in there and what it can do when properly configured.
+Press the `+` button, then check the feature label and prerequisites before promising what it can do.
 
 ---
 
-> For the full technical details, see the [source document](README.md).
+> For technical details and official references, see the [source document](README.md).

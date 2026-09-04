@@ -5,25 +5,30 @@ description: "Best practices for semantic views and Cortex Agents achieving mode
 
 # Guide: Model-Agnostic Accuracy for Semantic Views and Cortex Agents
 
+Pair-programmed by SE Community + Cortex Code
+
 ## Purpose
 
-Reference guide for configuring Snowflake semantic views and Cortex Agents to produce
-consistent, correct results regardless of which LLM is used for orchestration.
+Reference guide for configuring and evaluating Snowflake semantic views and Cortex Agents
+to reduce avoidable model sensitivity and diagnose regressions across model changes.
 
 ## Architecture
 
-Single README.md with 5 sections:
-1. Semantic View (making SQL generation deterministic)
-2. Agent Configuration (making routing obvious)
-3. Evaluation (diagnosing where accuracy breaks)
-4. Model Selection (performance decision, not accuracy decision)
+README.md with five numbered sections plus trust guidance:
+1. Semantic View (reducing SQL-generation ambiguity)
+2. Agent Configuration (making routing intent explicit)
+3. Evaluation (isolating Analyst and Agent failures)
+4. Model Selection (measured performance and quality decision)
 5. Iteration (building a feedback loop)
+
+The unnumbered mental-model section includes governed-source certification, grain,
+provenance, and policy scope.
 
 ## Key Files
 
 | File | Role |
 |------|------|
-| README.md | The complete guide with all 5 sections + appendix |
+| README.md | The complete guide with five sections, trust guidance, and appendix |
 | AGENTS.md | Project-specific editing conventions |
 | ELI5.md | Plain-language companion for non-technical stakeholders |
 
@@ -47,5 +52,9 @@ None. This is a documentation-only guide with no deployed infrastructure.
   (e.g., "custom_instructions" in YAML vs "orchestration instructions" in agent spec)
 - Blog posts may reference YAML-based semantic models (stage files) — the guide covers
   native semantic views (schema-level objects), which are the current recommended path
-- The "auto" model recommendation is correct for agents but Cortex Analyst within agents
-  has a separate model selection path (see Service Consumption Table)
+- Start Agent orchestration with `auto`; verify named models with `SHOW CORTEX BASE MODELS`
+- Comparable evaluations must target a committed Agent version and pin one exact metric version
+- Native Agent evaluations do not currently exercise MCP tools
+- Official metrics should prefer governed certified sources, with grain and policy scope documented
+- Certification uses `SNOWFLAKE.TAGS.CERTIFICATION_STATUS`; the legacy `SNOWFLAKE.CORE` tag is planned for deprecation
+- Guide expiration: 2027-03-04

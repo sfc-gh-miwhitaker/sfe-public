@@ -1,5 +1,7 @@
 # Horizon Context Catalog Guide — Project Instructions
 
+Pair-programmed by SE Community + Cortex Code
+
 <!-- Global rules (data integrity, SQL standards, security) apply automatically
      via ~/.claude/CLAUDE.md and ~/.claude/rules/. Do not duplicate them here. -->
 
@@ -9,7 +11,10 @@ This is a documentation-only guide. No Snowflake objects are deployed.
 
 Files:
 - `README.md` — the full guide (main deliverable)
+- `ELI5.md` — analogy-driven summary synchronized with the README's factual guardrails
+- `docs/01-WHAT-CAN-I-DO-NOW.md` — actionable checklist for GA capabilities and preview evaluation
 - `AGENTS.md` — this file
+- `.claude/skills/guide-horizon-context-catalog/SKILL.md` — maintenance workflow and claim guardrails
 
 ## Conventions
 

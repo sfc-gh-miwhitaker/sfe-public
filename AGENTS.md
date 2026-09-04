@@ -117,9 +117,9 @@ order — pick based on area of interest.
 
 **Current members:**
 - `guide-coco-setup` — Cortex Code Desktop + CLI onboarding (also in Path 1)
-- `guide-horizon-context-catalog` — Cortex Sense, Horizon Context, catalog pivot (Summit 2026)
+- `guide-horizon-context-catalog` — Horizon Context, Cortex Sense, Apache Ossie, and documented vs unresolved agent security boundaries (Summit 2026)
 - `guide-universal-data-sharing` — Open Data Sharing, OTF sharing, Collaboration API (Summit 2026)
-- `guide-cowork-easter-eggs` — full CoWork feature surface: power-user tricks, chart customization, Uber Agent, Deep Research, Skills, Memory, Artifacts
+- `guide-cowork-easter-eggs` — status-aware CoWork feature surface: Deep Research, Artifacts and shared conversations, chart policies, User Skills, Automations, MCP, document generation, mobile, and cost controls
 - `guide-org-reporting` — ORGANIZATION_USAGE primer: two access paths, premium vs non-premium, query discipline
 - `guide-cube-snowflake-semantic-layer` — bi-directional Snowflake Semantic Views sync with Cube, push limitations, decoupled vs warehouse-native decision (also in Path 1)
 

@@ -1,8 +1,10 @@
 > Simplified from: guide-horizon-context-catalog/README.md
 
+Pair-programmed by SE Community + Cortex Code
+
 ## One-Sentence Version
 
-Snowflake acquired a data catalog company and built a three-layer stack — inventory (Horizon Catalog), enrichment from outside systems (Horizon Context), and automatic context delivery to AI agents (Cortex Sense) — that fundamentally changes how AI gets the business definitions it needs to answer correctly.
+Snowflake announced an agreement to acquire a data catalog company's team and technology, then introduced a three-layer stack — inventory (Horizon Catalog), enrichment from outside systems (Horizon Context), and runtime context for CoCo queries (Cortex Sense) — that changes how AI gets the business definitions it needs to answer correctly.
 
 ## The Story (analogy-driven)
 
@@ -12,7 +14,7 @@ Now AI doctors (agents) are answering questions. They don't browse card indexes 
 
 1. **Horizon Catalog** — the filing cabinets themselves. What files exist, who can access them, how they connect. Always existed.
 2. **Horizon Context** — a service that pulls records from partner clinics and labs into the same system, stitches them together, and notes which files are most trusted.
-3. **Cortex Sense** — when an AI doctor gets a question, automatically hands them only the relevant files, without anyone having to say which ones to grab.
+3. **Cortex Sense** — when CoCo gets a question, retrieves the relevant context instead of making CoCo inspect every possible file one by one.
 
 The result: accuracy went from 24% to 86% on hard questions in Snowflake's internal testing.
 
@@ -20,25 +22,26 @@ The result: accuracy went from 24% to 86% on hard questions in Snowflake's inter
 
 - **Horizon Catalog** — Snowflake's built-in inventory of your data: tables, views, lineage, access policies.
 - **Horizon Context** — The new layer that pulls metadata from systems outside Snowflake (Tableau, Power BI, PostgreSQL, dbt) and enriches it.
-- **Cortex Sense** — The runtime layer that automatically retrieves and delivers relevant catalog context to each AI query, without manual configuration.
-- **Select Star** — A catalog company Snowflake acquired for its cross-system lineage and popularity signals.
+- **Cortex Sense** — A managed context layer demonstrated with CoCo that retrieves relevant catalog context at query time. Public sources do not establish that it is automatically injected into every agent or AI request.
+- **Select Star** — A catalog company whose team and platform technology Snowflake announced an agreement to acquire for cross-system lineage and popularity signals. The cited announcement does not establish that the transaction closed.
 - **Semantic View** — A business-friendly description of your tables that tells AI what each metric means. The highest-authority signal Sense uses.
 - **Metadata Connector** — A built-in integration that pulls schemas and definitions from external tools into Horizon Catalog.
+- **Apache Ossie (Incubating)** — The open semantic specification formerly called Open Semantic Interchange (OSI), now incubating at the Apache Software Foundation.
 
 ## What Changed
 
-- Before: AI agents either had to be manually configured with exact table references, or they guessed blind (24% accuracy). Catalog data was a passive inventory for humans to browse.
-- After: Cortex Sense automatically delivers relevant business context to AI agents at query time. Horizon Context extends that context to include definitions from systems outside Snowflake. Accuracy reaches ~86% without manual agent configuration per query.
+- Before: In Snowflake's internal benchmark, a frontier coding agent with direct SQL access and no context layer reached 24.1% accuracy. Other grounded agent designs already existed; this number is not a baseline for every agent.
+- After: In Snowflake's internal benchmark, CoCo grounded by Cortex Sense retrieved relevant business context at query time and reached ~86% accuracy. Horizon Context is intended to extend that foundation with definitions from systems outside Snowflake.
 
 ## What to Watch Out For
 
-- **The security boundary question:** Cortex Sense retrieves context based on the calling role's full scope — not necessarily limited to the specific semantic view an agent was configured with. The agent still can't *query* data beyond its tools, but it may *know* things exist beyond them. Snowflake has not publicly clarified whether Sense respects agent tool boundaries. Raise this with your account team before enabling on sensitive workloads.
-- **Single-role access only in private preview.** Per-role context differentiation (marketing sees marketing context, finance sees finance context) is on the roadmap but not available yet.
-- **Most features are in private preview.** Horizon Context connectors and Cortex Sense are early access. Availability is expanding but not guaranteed on every account today.
-- **The benchmark caveat:** The 24% to 86% figure is from Snowflake's internal testing on their own data. Your results will vary based on how much of your data estate has semantic views.
+- **The security boundary question:** Snowflake has not publicly clarified whether Cortex Sense retrieval for a configured Cortex Agent is further limited to that agent's declared tools. Agent execution still uses the calling user's default role, and configured tools still require privileges. Use a least-privilege default role, consider Restricted Session Scope as an additional ceiling, and raise the unresolved retrieval question before enabling sensitive workloads.
+- **The announced initial model used one designated role.** Per-role context differentiation was described as future work. Confirm current Cortex Sense access and behavior with the Snowflake account team.
+- **Most features are early access.** Horizon Context connectors were announced in private preview, and Cortex Sense was announced for private preview in mid-July 2026. Availability is not guaranteed on every account.
+- **The benchmark caveat:** The 24% to 86% figure is from Snowflake's internal testing on its own data. It is not a general before-and-after result for every agent or customer workload.
 
 ## The One Thing to Remember
 
-The gap between a 24%-accurate AI agent and an 86%-accurate one is not a better model — it's whether the agent gets governed business definitions automatically at query time, and that's what this stack delivers.
+The published result shows the value of relevant business context: in Snowflake's internal test, CoCo grounded by Cortex Sense substantially outperformed a direct-SQL frontier agent. Treat that as evidence for the design, not a promised customer outcome.
 
 > For the full technical details, see the source document.

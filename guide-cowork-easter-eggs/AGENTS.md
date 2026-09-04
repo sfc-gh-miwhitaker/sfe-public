@@ -9,7 +9,8 @@ This is a documentation-only guide. No SQL objects, no deploy script.
 
 ```
 guide-cowork-easter-eggs/
-  README.md        — Main guide (15 feature sections)
+  README.md        — Main guide (15 status-aware feature sections)
+  WHAT-CAN-I-DO-NOW.md — Outcome-based action menu with runnable prompts
   ELI5.md          — Plain-language companion for non-technical readers
   AGENTS.md        — This file
   .builddemo-state.json — Build state (gitignored)
@@ -20,9 +21,9 @@ The guide is organized by **surprise value** — features ranked from most-overl
 ## Conventions
 
 - Feature sections are numbered 1–15. Additions go at the end (or renumbered if dramatically more impactful than existing entries).
-- Preview features are always labeled inline with `(PrPr)` or `(Preview)`.
-- The **Common Misconceptions** table and **What's Coming** table are the two highest-maintenance sections — update them first when CoWork ships new capabilities.
-- Expiry is 2027-02-01. When updating, re-verify every item in the **What's Coming** table (some will have gone GA) and every misconception claim.
+- Preview features are labeled inline with `(Preview)` in current sections. Restricted previews and roadmap items stay in **What's Still Emerging**.
+- The **Common Misconceptions** and **What's Still Emerging** tables are the two highest-maintenance sections. Update them first when capabilities change stage.
+- Expiry is 2026-12-04. Re-verify every preview label, prerequisite, limitation, and emerging capability at each review.
 
 ## Key Commands
 
@@ -37,7 +38,8 @@ pre-commit run --files guide-cowork-easter-eggs/README.md
 ## When Updating This Guide
 
 1. Check Snowflake release notes and CoWork release channels for new CoWork features.
-2. Move any "What's Coming" rows to GA status and update their descriptions in the main sections.
+2. Move broadly available capabilities into the main numbered sections with an explicit GA or Preview label.
 3. Update the **Misconceptions** table if any misconceptions are now corrected by GA behavior.
-4. Bump the `Expires` badge and the metadata line in README.md header.
-5. Run pre-commit before committing.
+4. Update WHAT-CAN-I-DO-NOW.md, ELI5.md, and `.claude/skills/guide-cowork-easter-eggs/SKILL.md` so their capabilities and limitations match the README.
+5. Bump the `Expires` badge and metadata line using a three-month review cadence while Preview features remain prominent.
+6. Run pre-commit before committing.

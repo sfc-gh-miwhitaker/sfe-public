@@ -1,12 +1,15 @@
 # Model-Agnostic Accuracy Guide — Project Instructions
 
+Pair-programmed by SE Community + Cortex Code
+
 <!-- Global rules (data integrity, SQL standards, security) apply automatically
      via ~/.claude/CLAUDE.md and ~/.claude/rules/. Do not duplicate them here. -->
 
 ## Architecture
 
-Single-file guide (README.md) with 5 sections covering semantic view configuration,
-agent configuration, evaluation, model selection strategy, and iteration practices.
+Primary guide (README.md) with 5 sections covering semantic view configuration,
+agent configuration, evaluation, model selection strategy, and iteration practices,
+plus governed-source trust guidance and an ELI5.md companion.
 No SQL scripts, no demo infrastructure, no Streamlit.
 
 ## Conventions
@@ -16,6 +19,8 @@ No SQL scripts, no demo infrastructure, no Streamlit.
 - Each section has "Why this matters" framing before practices
 - Tables used for practice summaries; prose used for reasoning
 - No code samples longer than 10 lines (this is a practices guide, not a tutorial)
+- Public trust guidance uses the current `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` tag;
+  never reference internal databases, presentations, customer names, or account identifiers
 
 ## Key Commands
 
@@ -29,4 +34,4 @@ wc -l README.md  # target: 400-600 lines
 
 ## Expiration
 
-This guide expires 2026-08-28. Review for accuracy against current docs before that date.
+This guide expires 2027-03-04. Review semantic-view modeling guidance, Agent model availability, and evaluation versions against current docs before that date.
