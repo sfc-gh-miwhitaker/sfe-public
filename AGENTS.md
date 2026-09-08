@@ -199,7 +199,7 @@ features use 3 months; GA features use 6 months; connector/auth guides use 6 mon
 ## Demo Format Standards
 
 Each `demo-<name>/deploy_all.sql` must follow this structure exactly. Use
-`demo-media-campaign-analytics/deploy_all.sql` as the canonical reference.
+`demo-cortex-ai-cost-controls/deploy_all.sql` as the canonical reference.
 
 ### deploy_all.sql structure (required, in order)
 

@@ -16,7 +16,7 @@ Pair-programmed by SE Community + Cortex Code
 
 > **No support provided.** Reference only; test before you rely on it in production. This is a **fast-moving area**, and some features here are **pre-release** (Snowflake calls this "Preview") — the exact commands may change. Every claim was checked against Snowflake's official docs on the created date above; re-verify before quoting it to anyone. Each section says how mature its feature is.
 
-> **Before you start.** This guide assumes you have a working Cortex Agent with at least one tool configured. If you are building your first agent, start with [guide-model-agnostic-accuracy](../guide-model-agnostic-accuracy/) for configuration best practices and [guide-cortex-agent-versioning](../guide-cortex-agent-versioning/) for the deployment lifecycle. Then come back here.
+> **Before you start.** This guide assumes you have a working Cortex Agent with at least one tool configured. If you are building your first agent, start with guide-model-agnostic-accuracy for configuration best practices and guide-cortex-agent-versioning for the deployment lifecycle — both are in the **Build a production Cortex Agent** row of the [Start Here index](../README.md#start-here). Then come back here.
 
 ## New to Snowflake? Read these words once
 

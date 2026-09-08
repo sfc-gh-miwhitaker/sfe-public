@@ -12,7 +12,7 @@ How to point the `claude` CLI and Anthropic SDK clients at Snowflake's Cortex RE
 
 > **No support provided.** Reference only; validate before production. This guide covers the Cortex REST API (GA) and the `claude` CLI redirect pattern (GA). Verify current model availability in your region before relying on a specific model name.
 
-> **This is not the CoCo guide.** CoCo is Snowflake's own coding agent — it's Snowflake-native and the right tool if you're starting from scratch. This guide is for teams that *already have Claude Code deployed* and want to redirect its inference through Snowflake without switching agents. See [Connecting Claude to Snowflake](../guide-connecting-claude-snowflake/README.md) for the full surface comparison.
+> **This is not the CoCo guide.** CoCo is Snowflake's own coding agent — it's Snowflake-native and the right tool if you're starting from scratch. This guide is for teams that *already have Claude Code deployed* and want to redirect its inference through Snowflake without switching agents. See guide-connecting-claude-snowflake for the full surface comparison — find it in the **Connect an external tool to Snowflake** row of the [Start Here index](../README.md#start-here).
 
 ---
 

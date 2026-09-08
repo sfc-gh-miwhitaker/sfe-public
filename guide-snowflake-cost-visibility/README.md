@@ -39,7 +39,7 @@ If you're in a hurry, here's the priority order:
 
 Step 4 has the most blast radius. Don't skip the audit query at the top of the file before making changes.
 
-> **Reading order.** This guide is the foundational visibility layer: budget alerting, usage attribution, warehouse guardrails, and AI RBAC. For AI-specific enforcement patterns — querying the 14 Cortex AI usage views, detecting runaway inference queries, and setting per-user CoCo limits — continue with [demo-cortex-ai-cost-controls](../demo-cortex-ai-cost-controls/). Add [guide-adaptive-compute](../guide-adaptive-compute/) for warehouse rightsizing and per-query billing visibility.
+> **Reading order.** This guide is the foundational visibility layer: budget alerting, usage attribution, warehouse guardrails, and AI RBAC. For AI-specific enforcement and compute rightsizing, see the **Govern Snowflake costs and usage** row in the [Start Here index](../README.md#start-here).
 
 ---
 
@@ -529,9 +529,9 @@ These four capabilities complement each other — they don't overlap. Here's the
 | Stop a specific warehouse at a credit limit | Resource monitor | `resource_monitors.sql` |
 | Control which teams can call AI Functions | AI_FUNCTIONS_USER RBAC | `ai_functions_user_rbac.sql` |
 
-The one thing that doesn't fit neatly here: **stopping runaway AI Function calls** (e.g., `AI_COMPLETE` running against a million-row table without a WHERE clause). That's covered in the companion guide: [`guide-cortex-ai-cost-controls`](../guide-cortex-ai-cost-controls/README.md) — specifically the runaway query protection section.
+The one thing that doesn't fit neatly here: **stopping runaway AI Function calls** (e.g., `AI_COMPLETE` running against a million-row table without a WHERE clause). That's covered in the companion cost-controls demo — see the **Govern Snowflake costs and usage** row in the [Start Here index](../README.md#start-here) for the link and reading order.
 
-A complete cost governance stack combines the foundational visibility layer in this guide with the AI-specific enforcement patterns in that one.
+A complete cost governance stack combines the foundational visibility layer in this guide with the AI-specific enforcement patterns in that demo.
 
 ---
 

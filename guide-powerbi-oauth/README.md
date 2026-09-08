@@ -1,6 +1,9 @@
-# Connect Power BI to Snowflake Using Your Microsoft Login
-
+![Guide](https://img.shields.io/badge/Type-Guide-blue)
+![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
 ![Expires](https://img.shields.io/badge/Expires-2027--02--19-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
+
+# Connect Power BI to Snowflake Using Your Microsoft Login
 
 **Pair-programmed by:** SE Community + Cortex Code
 **Created:** 2026-07-20 | **Expires:** 2027-02-19 | **Status:** ACTIVE

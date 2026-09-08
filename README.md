@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-31-blue)
+![Projects](https://img.shields.io/badge/Projects-30-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Solutions Engineering -- Public Examples
@@ -65,7 +65,6 @@ Pick the row that matches why you're here:
 |---|---|---|
 | [demo-streams-cdc-workshop](demo-streams-cdc-workshop/) | Hands-on Snowflake-native CDC workshop with deterministic insert, update, and delete changes; transactional audit plus current-state MERGE; exact reconciliation; Stream retention and staleness operations; and an optional triggered Task exercise. | Streams, Tasks, CDC, change tracking, MERGE, stream staleness, data engineering |
 | [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) | Next.js dashboard on App Runtime: AI credit attribution by user and agent, native per-user quota status (SNOWFLAKE.CORE.QUOTA), trend analysis with anomaly detection. Materialized tables pre-aggregate ACCOUNT_USAGE for fast response. Read guide-snowflake-cost-visibility first. | Cortex AI, App Runtime, per-user quotas, ACCOUNT_USAGE, attribution, Recharts |
-| [demo-media-campaign-analytics](demo-media-campaign-analytics/) | Cortex Agent demo for paid media analytics. One agent answers both quantitative questions (ROAS, CTR, budget pacing via semantic view) and qualitative questions (campaign briefs, creative copy, channel strategy via Cortex Search). 5-min deploy, zero external tools | Cortex Agent, Semantic View, Cortex Search, Snowflake Intelligence, media analytics, document search |
 
 ## First-Time Setup
 
