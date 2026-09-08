@@ -33,7 +33,7 @@ No personal names in the attribution line.
 
 ## Path Taxonomy — Maintain This When Adding or Removing Guides
 
-The root `README.md` has a `## Start Here` section with a five-row intent routing
+The root `README.md` has a `## Start Here` section with a six-row intent routing
 table. Every guide and demo belongs to one or more of these paths. When you add or
 remove a project, update the routing table accordingly.
 
@@ -44,12 +44,14 @@ authenticate and communicate with Snowflake.
 
 **Current members:**
 - `guide-coco-setup` — Cortex Code Desktop + CLI onboarding, configuration hierarchy, first skill
+- `guide-snowflake-mcp-role-controls` — Snowflake-managed MCP primary-role OAuth controls and secondary-role session-policy restrictions
 - `guide-powerbi-oauth` — Power BI OAuth SSO and DirectQuery
 - `guide-connecting-claude-snowflake` — Claude Desktop and CoWork/CoCo surfaces
 - `guide-claude-code-cortex-redirect` — Claude Code CLI and Anthropic/OpenAI SDK redirect
 - `guide-vscode-copilot-cortex` — VS Code + GitHub Copilot
 - `guide-snowflake-splunk-ingestion` — Splunk audit log ingestion (4 patterns)
 - `guide-connecting-copilot-studio-snowflake` — Microsoft Copilot Studio (4 patterns: Knowledge Source, Cortex Analyst, MCP + Cortex Agent, REST API)
+- `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake bidirectional zero copy: V2 Data Share, query/file federation, legacy V1/BYOL, Openflow and MCP boundaries
 - `guide-cube-snowflake-semantic-layer` — Cube (cube.dev) semantic layer: driver config, three auth paths, OIDC workload identity, pre-aggregation cost
 - `guide-debezium-to-snowflake` — Debezium CDC pipeline: Debezium + Kafka + Snowflake Kafka Connector v4 + Dynamic Table flattening (all GA)
 - `guide-ad-platform-integrations` — Advertising data by direction: Google Ads Data Manager outbound (Snowflake as native first-party source, PAT auth, Customer Match), the Meta ads MCP + Conversions API skill pairing (CAPI skill public on GitHub, MCP by request), and the Openflow connectors for Meta Ads and Google Ads inbound (Preview connectors on a GA platform)
@@ -60,7 +62,19 @@ authenticate and communicate with Snowflake.
 to connect to Snowflake. Authentication setup, endpoint configuration, and integration
 troubleshooting are the signals.
 
-### Path 2 — Build a Production Cortex Agent
+### Path 2 — Build Snowflake Data Pipelines
+
+Workshops and demos covering Snowflake-native ingestion, transformation, change data
+capture, orchestration, and incremental processing.
+
+**Current members:**
+- `demo-streams-cdc-workshop` — hands-on CDC with Streams and Tasks, including
+  transactional change handling, staleness, monitoring, and recovery
+
+**Belongs here if:** the project's primary job is building or operating a
+Snowflake-native data pipeline rather than configuring an external integration.
+
+### Path 3 — Build a Production Cortex Agent
 
 Guides covering the design, configuration, deployment, and extension of Cortex Agents.
 Reading order within this path matters.
@@ -77,7 +91,7 @@ Reading order within this path matters.
 **Belongs here if:** the guide's primary job is building, configuring, deploying, or
 extending a Cortex Agent or its supporting objects (semantic views, tools, search).
 
-### Path 3 — Govern Snowflake Costs and Usage
+### Path 4 — Govern Snowflake Costs and Usage
 
 Guides covering credit visibility, AI service governance, warehouse controls, and
 compute rightsizing. Reading order within this path matters.
@@ -94,23 +108,24 @@ compute rightsizing. Reading order within this path matters.
 **Belongs here if:** the guide's primary job is monitoring, alerting on, or limiting
 Snowflake credit or AI token consumption.
 
-### Path 4 — Secure Snowflake and Build an Audit Trail
+### Path 5 — Secure Snowflake and Build an Audit Trail
 
 Guides covering access control patterns, identity federation, and audit log export.
 Each guide in this path is standalone — no required reading order.
 
 **Current members:**
-- `guide-cortex-search-access-control` — Cortex Search RBAC (also in Path 2)
+- `guide-snowflake-mcp-role-controls` — least-privilege MCP access role, OAuth role boundary, and named secondary-role ceiling
+- `guide-cortex-search-access-control` — Cortex Search RBAC (also in Path 3)
 - `guide-powerbi-oauth` — OAuth identity federation (also in Path 1)
 - `guide-snowflake-splunk-ingestion` — Splunk SIEM ingestion (also in Path 1)
-- `guide-cowork-only-users` — CoWork-only interface restriction via ALLOWED_INTERFACES (also in Path 2)
+- `guide-cowork-only-users` — CoWork-only interface restriction via ALLOWED_INTERFACES (also in Path 3)
 - `guide-snowflake-firewall-allowlist` — Edge firewall allowlisting (FQDN outbound + stable egress CIDR inbound)
 - `guide-cortex-code-access-control` — Restrict CoCo to specific roles, progressive rollout, usage observability queries
 
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
 identity federation, or feeding an audit or SIEM system.
 
-### Path 5 — Understand New Snowflake Capabilities
+### Path 6 — Understand New Snowflake Capabilities
 
 Guides that explain and position recent Snowflake announcements. No required reading
 order — pick based on area of interest.
@@ -119,6 +134,7 @@ order — pick based on area of interest.
 - `guide-coco-setup` — Cortex Code Desktop + CLI onboarding (also in Path 1)
 - `guide-horizon-context-catalog` — Horizon Context, Cortex Sense, Apache Ossie, and documented vs unresolved agent security boundaries (Summit 2026)
 - `guide-universal-data-sharing` — Open Data Sharing, OTF sharing, Collaboration API (Summit 2026)
+- `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake zero-copy directions, V2 migration, and connector decision framework (also in Path 1)
 - `guide-cowork-easter-eggs` — status-aware CoWork feature surface: Deep Research, Artifacts and shared conversations, chart policies, User Skills, Automations, MCP, document generation, mobile, and cost controls
 - `guide-org-reporting` — ORGANIZATION_USAGE primer: two access paths, premium vs non-premium, query discipline
 - `guide-cube-snowflake-semantic-layer` — bi-directional Snowflake Semantic Views sync with Cube, push limitations, decoupled vs warehouse-native decision (also in Path 1)
@@ -134,7 +150,7 @@ capability rather than configuring or building something.
 
 1. Determine which path(s) above it belongs to. A guide can appear in multiple paths
    if it genuinely serves multiple reader intents (e.g., `guide-cortex-search-access-control`
-   belongs in both Path 2 and Path 4).
+   belongs in both Path 3 and Path 5).
 2. Add it to the **Current members** list in the relevant path section(s) above.
 3. Add it to the `## Start Here` routing table in `README.md` in the appropriate row(s),
    with a linked guide name and brief description of where it fits in the reading order.
