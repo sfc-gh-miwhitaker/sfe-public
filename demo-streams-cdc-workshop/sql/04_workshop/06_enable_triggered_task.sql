@@ -19,7 +19,7 @@ INSERT INTO RAW_ORDERS (
   UPDATED_AT
 )
 VALUES
-  (1007, 507, 'PENDING', 77.70, '2026-09-08 12:00:00', '2026-09-08 12:00:00');
+  (1007, 507, 'PENDING', 77.70, '2026-09-08 12:00:00', CURRENT_TIMESTAMP()::TIMESTAMP_NTZ);
 
 SELECT
   'Wait up to 30 seconds, then run 07_verify_and_stop_triggered_task.sql.' AS next_step;

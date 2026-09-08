@@ -93,7 +93,7 @@ The Task owner must have `EXECUTE TASK ON ACCOUNT`. If resume fails with an auth
 
 ## Reset And Teardown
 
-Rerun `deploy_all.sql` to restore the deterministic baseline. The setup replaces the project schema as one unit, avoiding a partially reset Stream pipeline.
+Rerun `deploy_all.sql` to restore the deterministic baseline. Deployment statements commit independently, so a failed redeployment can leave a partial schema; fix the reported error and rerun the full deploy script.
 
 Run `teardown_all.sql` to suspend the Task and remove `STREAMS_CDC_WORKSHOP` plus `SFE_STREAMS_CDC_WH`. It preserves the shared `SNOWFLAKE_EXAMPLE` database, `GIT_REPOS` schema, Git repository, and API integration.
 
@@ -107,6 +107,7 @@ Run `teardown_all.sql` to suspend the Task and remove `STREAMS_CDC_WORKSHOP` plu
 | Task will not resume | Owner lacks `EXECUTE TASK` or warehouse access | Grant the missing privilege to the task owner role |
 | Stream reports stale | Offset exceeded retained source history | Rebuild from a synchronized checkpoint; do not trust stale output |
 | MERGE is nondeterministic | Multiple current rows share an `ORDER_ID` | Restore key uniqueness before consuming the Stream |
+| Optional Task check says `RETRY` | Triggered run is still queued or executing | Wait briefly and rerun script `07`; it leaves the Task resumed until consumption succeeds |
 
 ## Estimated Demo Costs
 

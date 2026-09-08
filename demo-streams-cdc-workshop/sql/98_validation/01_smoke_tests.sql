@@ -110,13 +110,25 @@ TESTS AS (
     5,
     'UPDATE_PAIRS_BALANCED',
     IFF(
-      COUNT_IF(CDC_ACTION = 'INSERT' AND CDC_IS_UPDATE)
-      = COUNT_IF(CDC_ACTION = 'DELETE' AND CDC_IS_UPDATE),
+      COALESCE(COUNT_IF(PAIR_STATUS <> 'BALANCED'), 0) = 0,
       'PASS',
       'FAIL'
     ),
-    'Every consumed update must have a before and after row.'
-  FROM ORDER_CHANGE_AUDIT
+    'Every update must balance within its batch and immutable row ID.'
+  FROM (
+    SELECT
+      BATCH_ID,
+      CDC_ROW_ID,
+      IFF(
+        COUNT_IF(CDC_ACTION = 'INSERT' AND CDC_IS_UPDATE) = 1
+        AND COUNT_IF(CDC_ACTION = 'DELETE' AND CDC_IS_UPDATE) = 1,
+        'BALANCED',
+        'UNBALANCED'
+      ) AS PAIR_STATUS
+    FROM ORDER_CHANGE_AUDIT
+    WHERE CDC_IS_UPDATE
+    GROUP BY BATCH_ID, CDC_ROW_ID
+  )
 )
 SELECT
   TEST_NAME,

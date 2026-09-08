@@ -8,5 +8,8 @@ WARNING: Deletes the project schema, its data, and its warehouse.
 USE ROLE SYSADMIN;
 
 ALTER TASK IF EXISTS SNOWFLAKE_EXAMPLE.STREAMS_CDC_WORKSHOP.TASK_CONSUME_ORDER_CHANGES SUSPEND;
+DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.STREAMS_CDC_WORKSHOP CASCADE;
+DROP WAREHOUSE IF EXISTS SFE_STREAMS_CDC_WH;
 
-EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-streams-cdc-workshop/sql/99_cleanup/teardown.sql';
+SELECT
+  'Teardown complete. Shared database and Git repository objects were preserved.' AS status;
