@@ -87,7 +87,7 @@ Re-verify on expiry (2027-03-10), or earlier if any of these change:
   regions except government regions. The decision tree's cloud gate was removed. Watch for
   government-region availability, which is the only remaining exclusion.
 - Snowpipe Streaming SDK changes its SPCS support — Pattern 3's
-  [Where to run the relay](pattern-3-snowpipe-streaming.md#where-to-run-the-relay) documents
+  [Where to run the relay]("Where to run the relay" section of the Pattern 3 guide) documents
   `authorization_type: SPCS` and `enableCustomCredentials`, both introduced in SDK 1.5.0. Also
   watch for a documented instance-ordinal environment variable for long-running services, which
   would resolve the caveat in that section's requirement 3.

@@ -58,6 +58,7 @@ authenticate and communicate with Snowflake.
 - `guide-openflow-shopify-multistore` — Shopify (dozens of stores) into Snowflake via Openflow Snowflake Deployment: gen 2 SQL deployment/runtime, gen 1 canvas-installed Shopify connector per store, registry-driven per-store schemas, generated Dynamic Table analytics layer, honest readiness and cost-floor section, ELT cutover pattern
 - `guide-shopify-bulk-api-coco` — Shopify Bulk API into Snowflake with CoCo Desktop as the lifecycle interface: deterministic Python procedure/Task data path, SECRET + EAI security, generated multi-store bindings, proof-before-promotion qualification, Dynamic Tables, conversational troubleshooting, and read-only operations automations
 - `guide-otel-to-snowflake` — External OpenTelemetry logs, metrics, and traces into Snowflake: four ingestion patterns (Openflow ListenOTLP, Collector→Kafka→Connector v4, custom exporter→Snowpipe Streaming HP, files→stage→COPY/Iceberg) plus the shared event-table-shaped shredding layer and Dynamic Table reporting gold layer
+- `guide-ai-spend-consolidation` — Cross-platform AI usage and cost consolidation at user-level grain: pluggable adapter contract over vendor admin APIs (GitHub Copilot fully worked; ChatGPT Enterprise, Box AI, and M365 Copilot as build specifications), Snowflake-native ACCOUNT_USAGE adapter needing no credentials, cost-model-aware unified fact, identity spine, gold layer for five leadership decisions, semantic view and Cortex Agent, plus designed-in extensions for per-agent cost attribution and joining usage to operational outcomes
 
 **Belongs here if:** the guide's primary job is configuring a named external product
 to connect to Snowflake. Authentication setup, endpoint configuration, and integration
@@ -73,6 +74,9 @@ capture, orchestration, and incremental processing.
   transactional change handling, staleness, monitoring, and recovery
 - `guide-otel-to-snowflake` — inbound OpenTelemetry pipelines: four ingestion patterns, the
   shared OTLP shredding layer, and a Dynamic Table gold layer (also in Path 1 and Path 6)
+- `guide-ai-spend-consolidation` — multi-vendor admin-API ingestion: watermarked Python
+  procedures, registry-driven adapters, VARIANT landing with SQL shredding, short-retention
+  feed handling, and a Dynamic Table gold layer (also in Path 1 and Path 4)
 
 **Belongs here if:** the project's primary job is building or operating a
 Snowflake-native data pipeline rather than configuring an external integration.
@@ -107,6 +111,10 @@ compute rightsizing. Reading order within this path matters.
 3. `guide-adaptive-compute` — compute rightsizing: Adaptive warehouse parameters and tuning
 4. `guide-org-reporting` — multi-account visibility: ORGANIZATION_USAGE two-path decision,
    application/database roles, query discipline, materialization pattern
+5. `guide-ai-spend-consolidation` — beyond Snowflake: consolidating ChatGPT Enterprise,
+   GitHub Copilot, Box AI, and M365 Copilot usage and cost alongside Cortex at user-level
+   grain, with metered-versus-seat cost modeling, departmental allocation, and seat
+   utilization (also in Path 1 and Path 2)
 
 **Belongs here if:** the guide's primary job is monitoring, alerting on, or limiting
 Snowflake credit or AI token consumption.
@@ -177,6 +185,9 @@ capability rather than configuring or building something.
 2. Update any facts, SQL syntax, availability statuses, or UI flows that have changed.
 3. Move the expiry date forward by 3–6 months depending on the feature's rate of change.
 4. Update the `![Expires](...)` badge in the guide's README.
+5. Verify every file path and relative link referenced in the guide still resolves
+   (paths are relative to the repo root, e.g. `guide-<name>/README.md` — not
+   absolute paths like `~/src/sfe-public/...`). Fix or remove any that 404.
 
 ---
 
@@ -192,7 +203,7 @@ Each guide README must include:
 - `> **No support provided.** Reference only; validate before production use.`
 - `---` divider before body content
 - `## Start Here` or `## Quick Start` section near the top
-- `## Related Guides` section near the bottom — **public, stable external links only** (docs.snowflake.com, etc.). Do NOT link to sibling guides in this repo — they expire and rot. Use the [Start Here index](README.md#start-here) for cross-guide navigation instead.
+- `## Related Guides` section near the bottom — **public, stable external links only** (docs.snowflake.com, etc.). Do NOT link to sibling guides in this repo — they expire and rot. Use the [Start Here index](./README.md) for cross-guide navigation instead.
 - `## External References` section at the end
 
 Expiry dates: set 3–6 months from creation date. Guides covering private preview
