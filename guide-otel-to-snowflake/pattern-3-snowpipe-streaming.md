@@ -38,7 +38,7 @@ Snowpipe Streaming high-performance architecture as AWS-only, which was true at 
 GA. That restriction has lifted:
 
 | Cloud | High-performance architecture GA |
-|---|---|
+| --- | --- |
 | AWS | September 2025 |
 | Azure | [November 5, 2025](https://docs.snowflake.com/en/release-notes/2025/other/2025-11-05-snowpipe-streaming-azure-ga) |
 | GCP | [November 10, 2025](https://docs.snowflake.com/en/release-notes/2025/other/2025-11-10-snowpipe-streaming-gcp-ga) |
@@ -72,7 +72,7 @@ that risk but not the *ownership* half — someone still has to understand the c
 ## Choose Your Bridge
 
 | | Option A: Relay service | Option B: Collector exporter in Go |
-|---|---|---|
+| --- | --- | --- |
 | **Shape** | Collector `otlphttp` → your HTTP service → Snowflake SDK | Custom exporter compiled into your Collector build |
 | **Language** | Python or Node.js | Go only |
 | **Effort** | A few hundred lines | A Collector component plus a custom build pipeline |
@@ -255,7 +255,7 @@ payload.
 So you have a real choice:
 
 | | Land the full envelope in `VARIANT` | Extract typed columns in the pipe |
-|---|---|---|
+| --- | --- | --- |
 | **Ingest cost** | Billed on every key and every structural literal | Billed on values only |
 | **Fidelity** | Lossless; you can re-shred later with a fixed query | Lossy; anything not extracted is gone forever |
 | **Schema changes** | New attributes appear automatically | Requires a pipe change to capture |
@@ -421,7 +421,7 @@ This is a supported, documented deployment target for the Java, Python, and Node
 creative reuse of SPCS.
 
 | | Your own infrastructure | SPCS service |
-|---|---|---|
+| --- | --- | --- |
 | **Credentials** | You provision and rotate an RSA key pair, PAT, or OAuth client | None stored. SPCS mounts a short-lived token; the SDK reads and refreshes it |
 | **Identity** | A `TYPE = SERVICE` user you create and manage | The role that owns the service |
 | **Who patches the host** | You | Snowflake |

@@ -11,7 +11,7 @@ Splunk Federated Search lets you write SPL queries that reach into Snowflake wit
 ## What Federated Search Is (and Isn't)
 
 | | Federated Search | DB Connect (Pattern 2) |
-|---|---|---|
+| --- | --- | --- |
 | **Data lands in Splunk index?** | No — queried in-place | Yes — ingested as events |
 | **Splunk ingest/storage cost?** | None for Snowflake data | Charged on volume |
 | **Can use in SPL correlation searches?** | Only if joined/pulled into a search | Yes — data is indexed |
@@ -90,6 +90,7 @@ ALTER USER SPLUNK_FEDERATED_USER ADD PROGRAMMATIC ACCESS TOKEN SPLUNK_FEDERATED_
 ### Step 3: Add Snowflake as a federated data source in Splunk
 
 In the Splunk Cloud UI:
+
 1. Go to **Settings → Federated Search → Add Provider**
 2. Select **Snowflake** as the provider type
 3. Enter your Snowflake account identifier (e.g., `abc12345.us-east-1`)
@@ -102,7 +103,8 @@ In the Splunk Cloud UI:
 ## Example SPL Queries
 
 ### Failed login attempts (last 24 hours)
-```
+
+```spl
 | federatedsearch provider=snowflake
     query="SELECT EVENT_TIMESTAMP, USER_NAME, CLIENT_IP, ERROR_CODE, ERROR_MESSAGE
            FROM SNOWFLAKE.ACCOUNT_USAGE.LOGIN_HISTORY
@@ -114,7 +116,8 @@ In the Splunk Cloud UI:
 ```
 
 ### Join Splunk events with Snowflake query audit
-```
+
+```spl
 index=main sourcetype=app_errors
 | rex field=_raw "user_id=(?<sf_user>[A-Z_]+)"
 | federatedsearch provider=snowflake join type=left sf_user [
@@ -126,7 +129,8 @@ index=main sourcetype=app_errors
 ```
 
 ### Privilege escalation detection
-```
+
+```spl
 | federatedsearch provider=snowflake
     query="SELECT GRANTEE_NAME, ROLE, PRIVILEGE, GRANTED_ON, GRANTED_BY,
                   CREATED_ON
@@ -146,7 +150,7 @@ index=main sourcetype=app_errors
 Federated Search queries ACCOUNT_USAGE directly. That schema has a latency of **45 minutes to 3 hours** depending on the view. This is a Snowflake platform characteristic, not a Splunk limitation.
 
 | View | Typical Lag |
-|---|---|
+| --- | --- |
 | `QUERY_HISTORY` | ~45 minutes |
 | `LOGIN_HISTORY` | ~2 hours |
 | `ACCESS_HISTORY` | ~3 hours |

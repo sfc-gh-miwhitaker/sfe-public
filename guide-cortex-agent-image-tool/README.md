@@ -27,7 +27,7 @@ Pair-programmed by SE Community + Cortex Code
 ## New to this? Read these words once
 
 | Term | In plain words |
-|------|----------------|
+| ------ | ---------------- |
 | **Cortex Agent** | An AI assistant inside Snowflake that answers questions by thinking and calling tools. |
 | **Tool** | A named ability the agent can call, like "search these documents" or "look up revenue." |
 | **Generic tool** | A custom tool you define yourself — the agent calls a function you wrote. |
@@ -59,7 +59,7 @@ auditable, governed, and within Snowflake's security perimeter.
 ## Two ways to build an image-generation tool
 
 | | Path 1: SPCS | Path 2: External API |
-|--|--------------|----------------------|
+| -- | -------------- | ---------------------- |
 | Where the model runs | Inside Snowflake (container) | Outside Snowflake (e.g. OpenAI) |
 | Data leaves Snowflake? | No | Yes (prompts go to external API) |
 | Setup complexity | Higher (build + push Docker image) | Lower (just a UDF + secret) |
@@ -291,7 +291,7 @@ The tool returns JSON to the agent's context. The agent then includes that in
 its response. What happens in the UI depends on the client:
 
 | Response shape | Snowflake Intelligence | Custom app |
-|----------------|------------------------|------------|
+| ---------------- | ------------------------ | ------------ |
 | `{"image_url": "https://..."}` | Renders inline if URL is accessible | You handle rendering |
 | `{"image_b64": "iVBOR..."}` | Not rendered automatically | Decode and render in your UI |
 
@@ -314,6 +314,7 @@ receives your tool's JSON response as text. It does **not** see the pixels of
 the image.
 
 This means:
+
 - The model can tell the user "here is your image: [url]"
 - The model *cannot* look at the image and describe what it sees (unless you
   separately run it through a vision model)
@@ -364,6 +365,7 @@ tool_resources:
 ## Quick reference checklist
 
 **SPCS path:**
+
 - [ ] Docker image built for `linux/amd64`, pushed to Snowflake image registry
 - [ ] `CREATE COMPUTE POOL` with GPU node type (e.g. `GPU_NV_S` for SDXL-Turbo)
 - [ ] SPCS service running and `DESCRIBE SERVICE` shows `RUNNING`
@@ -371,6 +373,7 @@ tool_resources:
 - [ ] Agent spec registered, `generate_image` tool pointing to UDF
 
 **External API path:**
+
 - [ ] `CREATE SECRET` with API key
 - [ ] `CREATE NETWORK RULE` allowlisting the API host
 - [ ] `CREATE EXTERNAL ACCESS INTEGRATION` referencing rule + secret
@@ -379,6 +382,7 @@ tool_resources:
 - [ ] Agent spec registered, `generate_image` tool pointing to UDF
 
 **Both paths:**
+
 - [ ] Test the UDF with `SELECT your_udf('a test prompt')` before hooking up the agent
 - [ ] If returning URLs: verify presigned URL TTL is set appropriately
 - [ ] If returning base64: verify your UI or client renders it

@@ -69,7 +69,7 @@ flowchart TD
 ### Two Questions, Four Patterns
 
 | # | Pattern | Delegation | Setup Time | Cortex AI | Auth |
-|---|---------|-----------|------------|-----------|------|
+| --- | --------- | ----------- | ------------ | ----------- | ------ |
 | A | [Knowledge Source](knowledge-source.md) | None (Copilot generates SQL) | ~5 min | No | Entra ID Service Principal |
 | B | [Cortex Analyst via Agent Flow](cortex-analyst-connector.md) | Partial (Snowflake generates SQL) | ~1 hour | Analyst only | Entra ID External OAuth |
 | C | [MCP Server + Cortex Agent](mcp-server.md) | Full (Snowflake Agent orchestrates) | ~2 hours | Full (Analyst + Search + custom) | Snowflake OAuth via MCP |
@@ -84,7 +84,7 @@ flowchart TD
 From a [30-question evaluation](https://blog.mwccomms.com/2026/04/connecting-copilot-studio-to-snowflake.html) across all three primary patterns on a football ticketing dataset:
 
 | Pattern | Success Rate | 422 Errors | Failure Mode |
-|---------|-------------|------------|--------------|
+| --------- | ------------- | ------------ | -------------- |
 | A: Copilot generates SQL | 54% (16/30) | 14 | Schema hallucination — wrong tables, columns, joins |
 | B: Cortex Analyst | 64% (19/30) | 1 | Accuracy — query runs but answer doesn't match intent |
 | C: Cortex Agent | 67% (20/30) | 0 | Accuracy — same class as B, better on ambiguous prompts |
@@ -96,7 +96,7 @@ The semantic model eliminated 93% of structural errors (14 down to 1). The Corte
 ## Governance Comparison
 
 | Layer | Pattern A | Pattern B | Pattern C |
-|-------|-----------|-----------|-----------|
+| ------- | ----------- | ----------- | ----------- |
 | **Authentication** | Entra Service Principal (External OAuth) | Same | Snowflake OAuth (via MCP connector) |
 | **Identity** | Mapped to Snowflake user via `sub` claim | Same | OAuth token-bound per session |
 | **Data visibility** | Full table access (role-gated) | Semantic model boundary | Semantic View + Agent Tool List |
@@ -110,7 +110,7 @@ The semantic model eliminated 93% of structural errors (14 down to 1). The Corte
 ## Detailed Guides
 
 | | |
-|---|---|
+| --- | --- |
 | **[Pattern A: Knowledge Source](knowledge-source.md)** | No-code quick start. Copilot queries Snowflake tables directly. Best for demos and simple analytics. |
 | **[Pattern B: Cortex Analyst via Agent Flow](cortex-analyst-connector.md)** | Semantic-model grounded SQL. Power Automate Agent Flow calls Cortex Analyst via stored procedure. |
 | **[Pattern C: MCP Server + Cortex Agent](mcp-server.md)** | Full delegation. Copilot calls Snowflake MCP Server which routes to a Cortex Agent. Recommended for production. |
@@ -120,6 +120,7 @@ The semantic model eliminated 93% of structural errors (14 down to 1). The Corte
 ## Shared Prerequisites
 
 All patterns require:
+
 - Snowflake account with ACCOUNTADMIN (for security integrations) and SYSADMIN (for objects)
 - Microsoft Entra ID tenant with App Registration permissions
 - Microsoft Copilot Studio environment (Sandbox or Production)

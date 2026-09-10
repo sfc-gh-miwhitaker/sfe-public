@@ -28,7 +28,7 @@ advances only when both writes commit.
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `deploy_all.sql` | Creates a clean, synchronized workshop baseline |
 | `sql/02_data/01_create_tables.sql` | Defines source, target, and audit tables |
 | `sql/03_processing/01_create_stream.sql` | Creates the standard table Stream |

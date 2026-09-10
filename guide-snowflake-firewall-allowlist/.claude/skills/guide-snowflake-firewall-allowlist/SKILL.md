@@ -13,7 +13,7 @@ automation patterns for keeping rules current.
 
 ## Architecture
 
-```
+```text
 guide-snowflake-firewall-allowlist/
   README.md         Main guide content (single file)
   ELI5.md           Plain-language summary for non-technical stakeholders
@@ -24,13 +24,14 @@ guide-snowflake-firewall-allowlist/
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | README.md | Complete guide with SQL examples, decision matrix, FAQ |
 | ELI5.md | Non-technical companion explanation |
 
 ## Snowflake Objects
 
 No Snowflake objects are created by this guide. SQL examples reference:
+
 - `SYSTEM$ALLOWLIST()` — returns FQDNs for outbound allowlisting
 - `SYSTEM$ALLOWLIST_PRIVATELINK()` — PrivateLink variant
 - `SYSTEM$GET_SNOWFLAKE_EGRESS_IP_RANGES()` — returns stable egress CIDRs

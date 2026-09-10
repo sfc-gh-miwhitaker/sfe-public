@@ -1,0 +1,11 @@
+{
+  // Default lint target: all markdown, excluding retired and vendored content.
+  // Rule configuration lives in .markdownlint.jsonc so editors pick it up too.
+  "globs": ["**/*.md"],
+  "ignores": [
+    "_archive/**",
+    "node_modules/**",
+    // Cortex Code generated plan scratch — untracked, not repo content.
+    ".snowflake/**"
+  ]
+}

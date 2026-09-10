@@ -2,15 +2,15 @@
 
 The `ANTHROPIC_AUTH_TOKEN` that Claude Code sends to Snowflake as `Authorization: Bearer` can come from several sources. This page covers all of them, ranked by security posture.
 
-> **Quick start:** If you just want to try the redirect, [get a PAT](#option-1-pat-quickest-start) and move on. Come back to this page when you're ready to harden auth for your team or stop storing a static token in your shell profile.
+> **Quick start:** If you just want to try the redirect, [get a PAT](#option-1-pat--quickest-start) and move on. Come back to this page when you're ready to harden auth for your team or stop storing a static token in your shell profile.
 
 ---
 
 ## Summary
 
 | Option | Best for | Secret on disk? | Admin required? |
-|--------|----------|-----------------|-----------------|
-| [PAT via env var](#option-1-pat-quickest-start) | Getting started, any platform | Yes (in profile) | No |
+| -------- | ---------- | ----------------- | ----------------- |
+| [PAT via env var](#option-1-pat--quickest-start) | Getting started, any platform | Yes (in profile) | No |
 | [PAT via OS credential store + `apiKeyHelper`](#option-2-apikeyhelper--os-credential-store) | Personal developer machines | No | No |
 | [Key-Pair JWT via `apiKeyHelper`](#option-3-key-pair-jwt-via-apikeyhelper) | Service accounts, CI/CD | Private key only | No (key setup) |
 | [CI/CD secrets](#option-4-cicd-and-cloud-environments) | GitHub Actions, cloud VMs | No | Platform-specific |
@@ -30,6 +30,7 @@ A Programmatic Access Token (PAT) is Snowflake's equivalent of an API key. It's 
 4. Copy the token — it is shown only once
 
 **Security tips for PATs:**
+
 - Always restrict to a role — scope the token to `SNOWFLAKE.CORTEX_REST_API_USER` so it can't escalate to `ACCOUNTADMIN`
 - Set a short expiry (90 days, not 1 year) and add a calendar reminder to rotate
 - Issue one PAT per application/user — if one leaks, revoke only that one
@@ -299,7 +300,7 @@ DESCRIBE INTEGRATION CLAUDE_DESKTOP_OAUTH;
 In **Developer > Configure Third Party Inference**:
 
 | Field | Value |
-|-------|-------|
+| ------- | ------- |
 | Connection | Gateway |
 | Credential kind | Interactive sign-in |
 | Gateway base URL | `https://<account>.snowflakecomputing.com/api/v2/cortex/anthropic` |

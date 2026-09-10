@@ -8,7 +8,7 @@ This is the lowest-SIEM-ingest-cost pattern. You ingest megabytes of findings in
 
 ## Architecture
 
-```
+```text
 SNOWFLAKE.ACCOUNT_USAGE views
         │
         │  SQL detection queries (Tasks or stored procs)
@@ -38,7 +38,7 @@ You do not have to use Sentry to implement this pattern — you can write your o
 ## Detection Categories (Sentry + Custom)
 
 | Category | Example Detection | Source View |
-|---|---|---|
+| --- | --- | --- |
 | **Authentication** | Brute force (N failures, same user, short window) | `LOGIN_HISTORY` |
 | **Authentication** | Impossible travel (login from two distant IPs in short time) | `LOGIN_HISTORY` |
 | **Privilege escalation** | New `OWNERSHIP` or `ACCOUNTADMIN` grant | `GRANTS_TO_ROLES` |
@@ -53,9 +53,11 @@ You do not have to use Sentry to implement this pattern — you can write your o
 ## Step 1: Deploy Sentry
 
 Option A — Streamlit UI (fastest for eval):
-```
+
+```bash
 git clone https://github.com/Snowflake-Labs/Sentry
 ```
+
 Follow Sentry's README to deploy the Streamlit app into your Snowflake account. The UI lets you enable/disable individual detections.
 
 Option B — SQL scripts (production):
@@ -68,6 +70,7 @@ Either way, Sentry outputs findings to a table in your account (default: `SENTRY
 ## Step 2: Set Up Splunk HEC
 
 In Splunk:
+
 1. Go to **Settings → Data Inputs → HTTP Event Collector → New Token**
 2. Source type: `snowflake:sentry_finding` (custom; helps with Splunk field extraction)
 3. Index: select your security index
@@ -240,7 +243,7 @@ Trust Center is lower-effort to set up than Sentry (no external repo clone requi
 ## Cost Profile
 
 | Component | Notes |
-|---|---|
+| --- | --- |
 | Sentry detection tasks | SQL tasks on XSMALL warehouse. Very low credit consumption — detections run fast. |
 | Push task | XSMALL, every 15 min. < 0.1 credits/day. |
 | Splunk ingest | Minimal — findings only, not raw logs. Typical busy org: < 10 MB/day of findings. |

@@ -6,6 +6,7 @@
 A copy-and-adapt walkthrough for the most common case — one AI agent handing part of a question to another, where **both live in the same Snowflake account**. No installed apps, no cross-app permission setup. Everything here is production-ready (GA) and pastes straight into a Snowflake SQL worksheet (the query editor in Snowflake's web interface).
 
 > **New to Snowflake?** A quick reminder of the pieces below (full definitions in the [main guide's glossary](README.md#new-to-snowflake-read-these-words-once)):
+>
 > - **Agent** = an AI assistant that answers by calling tools. **Tool** = one capability it can call.
 > - **Stored procedure** = a block of code saved in Snowflake that you run by name.
 > - **`EXECUTE AS OWNER`** = that code runs with its creator's permissions, so callers don't each need their own.
@@ -16,7 +17,7 @@ A copy-and-adapt walkthrough for the most common case — one AI agent handing p
 
 ## The shape
 
-```
+```text
 Parent agent  ──(calls a tool that is really a saved procedure)──▶  Wrapper procedure (EXECUTE AS OWNER)
                                                    │
                                                    ▼
@@ -148,7 +149,7 @@ Passing `TRUE` as the third argument tells Snowflake to start a fresh conversati
 ## Gotchas
 
 | Issue | Fix |
-|---|---|
+| --- | --- |
 | **Name mismatch** | The tool's `name`, its `tool_resources` key, and the input field the parent fills in must all match exactly. A typo means the tool silently never runs. |
 | **Single-quote escaping** | The request is JSON text placed inside SQL text, so any `'` must be doubled to `''` (the wrapper does this for you). Cleaner option: pass values as parameters instead of building the string by hand. |
 | **No word-by-word streaming** | Both `DATA_AGENT_RUN` and `AGENT_RUN` return the full answer in one piece. If your app needs the answer to appear as it's typed, call Snowflake's Cortex Agents web API directly instead of these SQL functions. |

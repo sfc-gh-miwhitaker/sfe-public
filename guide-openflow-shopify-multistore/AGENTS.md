@@ -8,7 +8,7 @@ Pair-programmed by SE Community + Cortex Code
 
 ## Architecture
 
-```
+```text
 N Shopify stores (one dev app each)
   → one Openflow Snowflake Deployment (gen 2, SQL-created)
   → one MEDIUM runtime, N Shopify connector process groups (gen 1, canvas-installed)

@@ -21,7 +21,7 @@ Each option costs different amounts, works with different versions of Splunk, an
 ## The Cast
 
 | Concept | Plain words |
-|---|---|
+| --- | --- |
 | **ACCOUNT_USAGE** | The library's internal records database. Every login, every query, every privilege change is in here. Free to query. But it's always 45 minutes to 3 hours behind real time. |
 | **Splunk** | The security team's monitoring system. Indexes logs and lets analysts search them. Charges by how much data you send to it. |
 | **DB Connect** | A Splunk plugin that reads from external databases via a direct connection. The most common way to pull Snowflake records into Splunk today. |

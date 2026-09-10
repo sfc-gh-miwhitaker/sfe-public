@@ -88,7 +88,7 @@ If you just want to work in CoCo directly, **Path 1** (VS Code extension) is fas
 ## Prerequisites
 
 | | |
-|---|---|
+| --- | --- |
 | **Snowflake** | Account with Cortex Agents enabled. Role with `CREATE MCP SERVER` in the target schema. Hostnames must use **hyphens, not underscores** in the account URL. |
 | **Auth** | OAuth security integration (recommended) or Programmatic Access Token (PAT). |
 | **VS Code** | Version 1.99 or later with the GitHub Copilot Chat extension installed in Agent mode. |
@@ -96,7 +96,7 @@ If you just want to work in CoCo directly, **Path 1** (VS Code extension) is fas
 Privilege requirements per tool type:
 
 | Tool type | Required privilege |
-|---|---|
+| --- | --- |
 | `CORTEX_SEARCH_SERVICE_QUERY` | `USAGE` on the Cortex Search Service |
 | `CORTEX_ANALYST_MESSAGE` | `SELECT` on the Semantic View |
 | `CORTEX_AGENT_RUN` | `USAGE` on the Cortex Agent |
@@ -210,7 +210,7 @@ GRANT USAGE ON WAREHOUSE MY_WH TO ROLE <mcp_access_role>;
 
 The MCP endpoint URL pattern:
 
-```
+```text
 https://<org-account>.snowflakecomputing.com/api/v2/databases/<db>/schemas/<schema>/mcp-servers/<name>
 ```
 

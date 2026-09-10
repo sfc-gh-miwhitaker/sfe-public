@@ -15,6 +15,7 @@ Full delegation to Snowflake. Copilot Studio's MCP connector calls a Snowflake-m
 - Need zero structural (422) errors — Agent eliminated them entirely in [30-question testing](https://blog.mwccomms.com/2026/04/connecting-copilot-studio-to-snowflake.html)
 
 **Trade-offs:**
+
 - Most setup of the three patterns (~2 hours)
 - Highest Snowflake-side cost (Agent + Analyst + Search credits stack)
 - Two layers of orchestration = two layers to debug
@@ -154,17 +155,18 @@ Save the `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET` from the output.
    - **Name:** `Snowflake Analytics`
    - **Description:** `Analytics agent that answers questions about business data using Snowflake Cortex`
    - **MCP Server URL:**
-     ```
+
+     ```text
      https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/databases/<DATABASE>/schemas/<SCHEMA>/mcp-servers/<MCP_SERVER_NAME>
      ```
 
 > **Hostname rule:** Always use hyphens (`-`), never underscores (`_`). Hostnames with underscores cause MCP connection failures.
 
-4. Under **Authentication**, choose **OAuth 2.0** → Set to **Manual**
-5. Fill in:
+1. Under **Authentication**, choose **OAuth 2.0** → Set to **Manual**
+2. Fill in:
 
 | Field | Value |
-|-------|-------|
+| ------- | ------- |
 | Authorization URL | `https://<ORG-ACCOUNT>.snowflakecomputing.com/oauth/authorize` |
 | Token URL | `https://<ORG-ACCOUNT>.snowflakecomputing.com/oauth/token-request` |
 | Client ID | From Step 5 |
@@ -173,7 +175,7 @@ Save the `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET` from the output.
 
 > **Scope limitation:** Snowflake OAuth does NOT support `session:role-any` from Copilot Studio. You must specify a single role.
 
-6. Click **Next** — Copilot Studio generates a **redirect URL**
+1. Click **Next** — Copilot Studio generates a **redirect URL**
 
 ### Step 7: Update Snowflake with the Real Redirect URL
 
@@ -207,6 +209,7 @@ ALTER SECURITY INTEGRATION copilot_mcp_oauth
 ### Test 1: Verify Agent in Snowsight
 
 Before testing via Copilot, verify the agent works directly:
+
 1. Navigate to the Agent in Snowsight → use the built-in chat panel
 2. Ask: *"What were the top 5 products by revenue last quarter?"*
 3. If this fails, fix Snowflake-side config before proceeding
@@ -231,6 +234,7 @@ curl -s -X POST \
 ### Test 3: Test in Copilot Studio
 
 Ask your agent:
+
 - *"What were our sales last month?"* (routes to Cortex Analyst)
 - *"Summarize the latest product announcement"* (routes to Cortex Search)
 - *"Compare Q1 revenue to Q2 and explain any trends mentioned in recent reports"* (multi-tool)
@@ -242,7 +246,7 @@ Ask your agent:
 Three layers working together:
 
 | Layer | What It Controls | How |
-|-------|-----------------|-----|
+| ------- | ----------------- | ----- |
 | **Snowflake RBAC** | Who can access the MCP server and agent | `GRANT USAGE ON MCP SERVER` + `GRANT USAGE ON AGENT` |
 | **Semantic View** | What data the agent can see | Only tables/columns in the view are queryable |
 | **Agent Tool List** | What operations are possible | Omitting `execute_sql` = structurally read-only |
@@ -258,6 +262,7 @@ If Pattern C's managed MCP isn't sufficient, you can:
 2. **Self-hosted MCP Server:** Deploy the [Snowflake-Labs/mcp](https://github.com/Snowflake-Labs/mcp) open-source implementation for complete control over tool definitions, resources, and prompts.
 
 **When to use Pattern D:**
+
 - Need custom response shaping before returning to Copilot
 - Need agent-to-agent orchestration (Copilot Agent ↔ Cortex Agent)
 - Need the same endpoint accessible from Teams bots, web apps, and other surfaces
@@ -270,7 +275,7 @@ If Pattern C's managed MCP isn't sufficient, you can:
 ## Common Gotchas
 
 | Issue | Cause | Fix |
-|-------|-------|-----|
+| ------- | ------- | ----- |
 | Connection fails silently | `OAUTH_USE_SECONDARY_ROLES` not `IMPLICIT` | Set to `IMPLICIT` on the security integration |
 | "does not exist or not authorized" | Role lacks USAGE on MCP server | `GRANT USAGE ON MCP SERVER ... TO ROLE ...` |
 | URL connection failure / TLS error | Underscores in hostname | Replace `_` with `-` in org/account name |
@@ -288,7 +293,7 @@ If Pattern C's managed MCP isn't sufficient, you can:
 ## URL Format Reference
 
 | Use Case | URL Pattern |
-|---|---|
+| --- | --- |
 | Copilot Studio MCP connector | `https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/databases/<DB>/schemas/<SCHEMA>/mcp-servers/<NAME>` |
 | curl / REST testing | Same as above |
 | Authorization endpoint | `https://<ORG-ACCOUNT>.snowflakecomputing.com/oauth/authorize` |

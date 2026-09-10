@@ -7,7 +7,7 @@ The `subagent-cortex-code` skill teaches GitHub Copilot to detect Snowflake-shap
 This targets the **GitHub Copilot CLI** (`gh copilot` in a terminal), not the Copilot Chat extension in the VS Code sidebar. The two are different products.
 
 | Product | Surface | This path? |
-|---|---|---|
+| --- | --- | --- |
 | GitHub Copilot CLI (`gh copilot`) | Terminal | Yes |
 | GitHub Copilot Chat (VS Code sidebar) | Sidebar chat panel | No — use Path 1 or Path 3 |
 
@@ -20,10 +20,12 @@ Engineers who already use `gh copilot` in a terminal and want Snowflake operatio
 ## Prerequisites
 
 - **CoCo CLI** installed and authenticated:
+
   ```bash
   which cortex
   cortex connections list   # must show an active connection
   ```
+
 - **GitHub Copilot CLI** (`gh copilot`) installed and signed in.
 - **Node.js** for `npx`.
 
@@ -64,7 +66,8 @@ gh copilot suggest "list the semantic views in my Snowflake account"
 The skill detects Snowflake intent, asks for approval (default mode), and runs `cortex -p "..."` headlessly. Output flows back into the Copilot session.
 
 Explicit invocation:
-```
+
+```text
 /cortex-code list semantic views in MY_DB.PUBLIC
 ```
 

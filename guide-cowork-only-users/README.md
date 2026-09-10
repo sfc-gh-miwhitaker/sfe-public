@@ -22,7 +22,7 @@ Pair-programmed by SE Community + Cortex Code
 Three things every CoWork-only user needs:
 
 | Requirement | Why |
-|---|---|
+| --- | --- |
 | `COWORK_USER` role with `SNOWFLAKE.CORTEX_AGENT_USER` database role | Access to the Cortex Agents API (CoWork) and nothing else |
 | USAGE on the CoWork object + each agent they'll use | Controls which agents appear in their CoWork session |
 | `ALLOWED_INTERFACES = (SNOWFLAKE_INTELLIGENCE)` on each user | Blocks Snowsight — CoWork interface only |
@@ -38,6 +38,7 @@ SHOW SNOWFLAKE INTELLIGENCES;
 If that returns a row — proceed to [Step 2](#step-2-create-the-role). If empty — start at [Step 1](#step-1-create-the-cowork-object-one-time-per-account).
 
 Jump to:
+
 - [Single user provisioning](#step-3-single-user-provisioning)
 - [Bulk provisioning](#step-4-bulk-provisioning)
 - [Verification checklist](#step-5-verification-checklist)
@@ -182,7 +183,7 @@ ALTER USER alice SET ALLOWED_INTERFACES = (SNOWFLAKE_INTELLIGENCE);
 Send users to the appropriate URL based on your network configuration:
 
 | Method | URL |
-|--------|-----|
+| -------- | ----- |
 | Public internet | `https://ai.snowflake.com` |
 | Private connectivity (PrivateLink) | `https://si-<org-acct>.privatelink.snowflakecomputing.com` |
 | Direct link to specific agent | Copy from Snowsight: AI & ML → Agents → Select agent → Preview in Snowflake CoWork |
@@ -339,7 +340,7 @@ DROP ROLE COWORK_USER;  -- revokes from all members automatically
 ## Gotchas
 
 | Situation | What happens | Fix |
-|---|---|---|
+| --- | --- | --- |
 | User has no `DEFAULT_WAREHOUSE` | Login succeeds but CoWork errors when agent tools run queries | Set `DEFAULT_WAREHOUSE` on the user |
 | CoWork object doesn't exist | Users see no agents (or all agents, depending on timing) | `CREATE SNOWFLAKE INTELLIGENCE IF NOT EXISTS SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT` |
 | Agent not added to CoWork object | Users with correct role still see no agents in the list | `ALTER SNOWFLAKE INTELLIGENCE ... ADD AGENT <db.schema.agent>` |

@@ -7,7 +7,7 @@
 
 Documentation guide with companion SQL examples — no deployed Snowflake objects.
 
-```
+```text
 README.md                              → main guide narrative (start here)
 sql/01_open_data_sharing.sql           → External consumer + PAT + external listing workflow
 sql/02_open_table_format_sharing.sql   → Iceberg/Delta cross-cloud sharing
@@ -29,5 +29,6 @@ AGENTS.md                              → this file
 ## Key Commands
 
 No deployment. To extend:
+
 - Add new sharing pattern: create a new SQL file in `sql/`, add a section in `README.md`, update SKILL.md key files table.
 - Update feature status: search README.md for the status badges table and update the relevant row.

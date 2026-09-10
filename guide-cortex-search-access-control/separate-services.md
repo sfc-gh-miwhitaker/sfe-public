@@ -19,6 +19,7 @@ Use Pattern 2 when:
 - Each group's content is already clearly partitioned by an existing column
 
 Use [Pattern 1 — Filter UBAC](filter-attribute-ubac.md) instead when:
+
 - Boundaries are per-user, per-account, or otherwise dynamic
 - You have many distinct identities (dozens to thousands)
 - A user can belong to multiple groups simultaneously
@@ -32,7 +33,7 @@ Pick the column in your source table that defines the access boundary. This is t
 Common examples:
 
 | Data model | Boundary column | Values |
-|---|---|---|
+| --- | --- | --- |
 | Multi-tenant SaaS | `tenant_tier` | `'enterprise'`, `'standard'`, `'trial'` |
 | Regional compliance | `data_region` | `'EMEA'`, `'AMER'`, `'APAC'` |
 | Department content | `owning_department` | `'legal'`, `'finance'`, `'engineering'` |
@@ -210,6 +211,7 @@ GRANT USAGE ON SCHEMA db.schema TO ROLE security_analyst_role;
 ### Warehouse cost
 
 Each service refresh consumes warehouse credits. With many services sharing a warehouse, refreshes compete for compute. Options:
+
 - **Shared warehouse, staggered lag:** use the same warehouse but accept that refreshes queue
 - **Dedicated warehouse per service:** cleanest isolation; higher cost
 - **Shared warehouse, larger size:** faster individual refreshes; same contention
@@ -223,7 +225,7 @@ If a row's boundary column value changes (e.g., a document is reclassified from 
 ## Tradeoffs vs. Pattern 1
 
 | Consideration | Pattern 2 (separate services) | Pattern 1 (filter UBAC) |
-|---|---|---|
+| --- | --- | --- |
 | **Leakage if app omits filter** | None — data not in service | Yes — full index exposed |
 | **Source table schema change** | None required | Must add ARRAY column |
 | **Number of services to manage** | One per group | One total |

@@ -13,7 +13,7 @@ Works in **VS Code and Cursor** identically.
 ## Prerequisites
 
 | | |
-|---|---|
+| --- | --- |
 | **VS Code or Cursor** | Any recent version |
 | **Snowflake extension** | `snowflake.snowflake-vsc` from the VS Code Marketplace |
 | **Extension sign-in** | Sign in to a Snowflake account through the extension |
@@ -39,7 +39,7 @@ CoCo is enabled by default. If the icon is missing, confirm `CoCo: Enabled` is o
 
 **Step 4 — Verify**
 
-```
+```text
 What databases do I have access to?
 ```
 
@@ -56,11 +56,13 @@ GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE <your_default_role>;
 - **Public preview.** UI labels and behavior can change between builds.
 - **Uses the extension's active role.** CoCo starts with your `DEFAULT_ROLE`. Ask CoCo to switch roles during the session if needed, or set `DEFAULT_ROLE` on the account.
 - **Cross-region inference may be required.** If the selected model isn't in your account's region:
+
   ```sql
   -- AWS (recommended: AWS_GLOBAL for full Claude coverage)
   ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'AWS_GLOBAL';
   -- Azure: AZURE_GLOBAL; multi-cloud: ANY_REGION
   ```
+
 - **Government regions not supported.**
 
 ---
@@ -70,10 +72,12 @@ GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE <your_default_role>;
 **CoCo icon missing** — Toggle `CoCo: Enabled` in VS Code Settings.
 
 **"CoCo CLI not found"** — The extension auto-installs, but if it fails:
+
 ```bash
 curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
 # Windows: irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
 ```
+
 Reload VS Code after installing.
 
 **Model availability error** — Enable cross-region inference (see above). If it persists, verify the model is enabled in your account's AI model access settings.

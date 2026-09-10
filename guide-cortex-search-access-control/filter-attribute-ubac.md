@@ -41,7 +41,7 @@ LIMIT 5;
 The identifier stored in `authorized_ids` must match exactly what the calling application injects at query time. Common patterns:
 
 | Source system | Example identifier |
-|---|---|
+| --- | --- |
 | Salesforce Account | `'0015e000003AbCdAAF'` |
 | Internal tenant ID | `'tenant-acme-corp'` |
 | Workspace ID | `'ws-4f2a9b'` |
@@ -287,7 +287,7 @@ The access control predicate should always be the outermost or first condition t
 ## Tradeoffs and Gotchas
 
 | Consideration | Detail |
-|---|---|
+| --- | --- |
 | **Data model change required** | You must add the `authorized_ids` ARRAY column to your source table. For existing tables with complex ownership logic, this may require a migration. |
 | **Filter injection is the enforcement point** | If the application layer omits the filter, the full index is exposed. Use the stored procedure wrapper to prevent this. |
 | **No partial attribute exposure** | If a column is in the ATTRIBUTES clause, any caller with USAGE on the service can filter on it. Do not put sensitive values in ATTRIBUTES columns themselves. |

@@ -6,11 +6,12 @@ description: "Guide for Snowflake CoWork power-user features and easter eggs. Co
 # guide-cowork-easter-eggs
 
 ## Purpose
+
 Field guide for SEs and CoWork admins covering 15 status-aware CoWork capabilities, with current prerequisites, Common Misconceptions for demo prep, and a tracker for restricted-preview and roadmap features.
 
 ## Architecture
 
-```
+```text
 README.md (main guide)
 ├── Surface Map table — all features + where to find them in the UI
 ├── Features 1–15 (ranked: most-overlooked first)
@@ -43,7 +44,7 @@ ELI5.md — plain-language companion for non-technical readers
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Main guide — 15 feature sections + tables |
 | `WHAT-CAN-I-DO-NOW.md` | Action-oriented menu of current outcomes, prompts, prerequisites, and troubleshooting |
 | `ELI5.md` | Plain-language version for AEs, PMs, execs |

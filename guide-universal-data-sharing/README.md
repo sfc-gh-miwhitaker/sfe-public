@@ -23,21 +23,23 @@ Pair-programmed by SE Community + Cortex Code
 ## Start Here
 
 **Need to share data with a partner who doesn't use Snowflake?** Start with:
+
 - [Common Scenarios](#common-scenarios) — find your situation, get the answer
 - [Decision Tree](#decision-tree) — which mechanism fits
 
 **Then read the deep-dive for the relevant capability:**
 
 | # | Section | One-Line Summary |
-|---|---------|-----------------|
+| --- | --------- | ----------------- |
 | 1 | [Open Data Sharing](#1-open-data-sharing-private-preview) | Non-Snowflake consumers access shares via Iceberg REST Catalog APIs + access token |
-| 2 | [Open Table Format Sharing](#2-open-table-format-sharing-ga) | Share Iceberg/Delta across clouds with auto-fulfillment (consumer has Snowflake) |
-| 3 | [Multi-Party Clean Rooms](#3-multi-party-clean-rooms--collaboration-api-ga) | Symmetric N-party collaboration replacing the old 2-party model |
+| 2 | [Open Table Format Sharing](#2-open-table-format-sharing-generally-available) | Share Iceberg/Delta across clouds with auto-fulfillment (consumer has Snowflake) |
+| 3 | [Multi-Party Clean Rooms](#3-multi-party-clean-rooms--collaboration-api-generally-available) | Symmetric N-party collaboration replacing the old 2-party model |
 | ↳ | [Cross-Cloud Clean Rooms](#cross-cloud-clean-rooms-im-on-aws-my-partner-is-on-azure) | "I'm on AWS, my partner is on Azure" — solved |
 | 4 | [Universal Governance](#4-universal-governance--policies-follow-the-data) | Policies enforced on external engines via Scan Plan API |
 | 5 | [AI-Powered Sharing](#5-ai-powered-sharing--the-last-mile) | Auto-gen agents make shared data conversational for non-technical users |
 
 **Reference:**
+
 - [Feature Status Matrix](#feature-status-matrix-july-2026) — what's generally available vs Preview
 - [Further Reading](#further-reading) — official docs links
 
@@ -70,12 +72,12 @@ flowchart TD
 ## Common Scenarios
 
 | Your Situation | Solution | Details |
-|---|---|---|
-| Partners don't use Snowflake | Open Data Sharing — any Iceberg REST Catalog-compatible engine connects with an access token. No account needed. Governance preserved. | [Section 1](#1-open-data-sharing-public-preview) |
-| Need 3+ parties in a clean room | Collaboration API — fully symmetric, any party brings data or runs analysis. Generally available since April. | [Section 3](#3-multi-party-clean-rooms--collaboration-api-ga) |
+| --- | --- | --- |
+| Partners don't use Snowflake | Open Data Sharing — any Iceberg REST Catalog-compatible engine connects with an access token. No account needed. Governance preserved. | [Section 1](#1-open-data-sharing-private-preview) |
+| Need 3+ parties in a clean room | Collaboration API — fully symmetric, any party brings data or runs analysis. Generally available since April. | [Section 3](#3-multi-party-clean-rooms--collaboration-api-generally-available) |
 | Run Spark + Snowflake and need consistent policies | Snowflake Connector for Apache Spark enforces Horizon policies today (generally available). Scan Plan API coming for all engines. | [Section 4](#4-universal-governance--policies-follow-the-data) |
 | Business partners aren't technical enough for SQL | Auto-gen Agents create a conversational interface over any share — no SQL needed. | [Section 5](#5-ai-powered-sharing--the-last-mile) |
-| Currently using reader accounts | Open Data Sharing eliminates reader account maintenance. Partners use their own tools with an access token. | [Section 1](#1-open-data-sharing-public-preview) |
+| Currently using reader accounts | Open Data Sharing eliminates reader account maintenance. Partners use their own tools with an access token. | [Section 1](#1-open-data-sharing-private-preview) |
 | Partners are on a different cloud (AWS vs Azure vs GCP) | Cross-Cloud Auto-Fulfillment handles this — no data movement required. Must be planned at collaboration creation time. | [Cross-Cloud Clean Rooms](#cross-cloud-clean-rooms-im-on-aws-my-partner-is-on-azure) |
 
 ---
@@ -161,6 +163,7 @@ The partner receives a `catalog_uri` and uses their access token to authenticate
 ### What's Enforced
 
 All governance defined in Horizon Catalog travels with the data:
+
 - Row access policies
 - Dynamic data masking policies
 - Projection, aggregation, and join policies
@@ -190,7 +193,7 @@ This is the **foundation layer** that Open Data Sharing builds upon. Generally a
 ### Key Capabilities
 
 | Capability | What It Does |
-|---|---|
+| --- | --- |
 | Cross-Cloud Auto-Fulfillment | Automatically replicates shared data to consumer's region/cloud |
 | Egress Cost Optimizer | Predictable costs — no per-query egress charges |
 | Full Horizon Governance | Masking, row access, aggregation, join, and projection policies |
@@ -200,7 +203,7 @@ This is the **foundation layer** that Open Data Sharing builds upon. Generally a
 ### When You Need This vs. Open Data Sharing
 
 | Scenario | Use |
-|---|---|
+| --- | --- |
 | Consumer has Snowflake, data is Iceberg/Delta | Open Table Format Sharing |
 | Consumer does NOT have Snowflake | Open Data Sharing |
 
@@ -217,7 +220,7 @@ Both use Iceberg underneath. Open Data Sharing builds on top of Open Table Forma
 ### What Changed
 
 | Before (Legacy) | After (Collaboration API) |
-|---|---|
+| --- | --- |
 | Fixed provider/consumer roles | Fully symmetric — any party plays any role |
 | 2-party only | N-party (advertiser + publisher + identity partner, etc.) |
 | Provider controls everything | Owner orchestrates, but any party can contribute |
@@ -288,12 +291,12 @@ This was previously a hard blocker. It's now solved — with caveats.
 CALL SAMOOHA_BY_SNOWFLAKE_LOCAL_DB.LIBRARY.ENABLE_GLOBAL_DATA_SHARING_FOR_ACCOUNT();
 ```
 
-3. Once enabled, collaborators join normally — the platform replicates what's needed behind the scenes
+1. Once enabled, collaborators join normally — the platform replicates what's needed behind the scenes
 
 **What to know:**
 
 | Question | Answer |
-|---|---|
+| --- | --- |
 | Does my data physically move? | Metadata and aggregated results replicate. Raw data stays in its home region. |
 | Who pays for replication? | The analysis runner bears compute costs. Cross-cloud replication costs apply per Snowflake's standard pricing. |
 | Can I add a cross-cloud partner after creation? | No. The collaboration must be set up for cross-cloud from day one. Plan ahead. |
@@ -334,7 +337,7 @@ Multi-engine environments previously required duplicating access policies in eac
 ### What's Available Today vs. Coming
 
 | Layer | Status | What It Does |
-|---|---|---|
+| --- | --- | --- |
 | Catalog-Linked Databases (read/write) | Generally Available | Discover + access external Iceberg from Snowflake |
 | Horizon Catalog Iceberg REST APIs for external engines | Private Preview | External engines read/write Snowflake-managed Iceberg |
 | Iceberg REST Scan Plan API | Private Preview | Row-access + masking enforced on external engines |
@@ -345,6 +348,7 @@ Multi-engine environments previously required duplicating access policies in eac
 ### The "Today" Answer for Spark Customers
 
 > If a customer needs policy enforcement on Spark NOW:
+>
 > - **Snowflake Connector for Apache Spark (Generally Available)**
 > - Enforces row-access + masking policies
 > - Production-ready today
@@ -361,6 +365,7 @@ Multi-engine environments previously required duplicating access policies in eac
 ### Auto-gen Agents for Data Shares (Public Preview)
 
 Any data listing or secure data share can instantly generate:
+
 - A **Semantic View** defining the business logic over the shared data
 - A **Cortex Agent** that consumers query in natural language
 
@@ -369,6 +374,7 @@ No manual development. Consumers get a governed, conversational experience out o
 ### Cortex Agent Sharing (Public Preview)
 
 Deploy Cortex Agents across Snowflake accounts via Marketplace:
+
 - Internal teams via org listings
 - Partners via private listings
 - Broader ecosystem via public Marketplace
@@ -376,6 +382,7 @@ Deploy Cortex Agents across Snowflake accounts via Marketplace:
 ### Why This Matters for Non-Technical Consumers
 
 The partner who doesn't have a Snowflake account AND doesn't know SQL can now:
+
 1. Access shared data via Open Data Sharing (Iceberg REST Catalog-compatible tool)
 2. OR interact with an Agent that already understands the data's semantics
 
@@ -386,7 +393,7 @@ This is the "last mile" — data sharing that reaches the business user, not jus
 ## Feature Status Matrix (July 2026)
 
 | Feature | Status | Key Limitation |
-|---|---|---|
+| --- | --- | --- |
 | Open Data Sharing | **Private Preview** (selected accounts) | Access tokens only; region-locked to provider region |
 | Open Table Format Sharing (Iceberg/Delta) | Generally Available | CLDs with non-Iceberg-REST catalog integrations not yet supported |
 | Collaboration API (multi-party Data Clean Rooms) | Generally Available | Legacy deprecated (phased: Oct 2026 → Feb 2027 → Jun 2027) |

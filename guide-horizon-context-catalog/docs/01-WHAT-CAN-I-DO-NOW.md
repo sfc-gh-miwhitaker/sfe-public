@@ -11,7 +11,7 @@ This page turns the Horizon Context and Cortex Sense announcements into actions 
 Choose the outcome you need:
 
 | Goal | Start now | Availability boundary |
-|---|---|---|
+| --- | --- | --- |
 | Improve natural-language analytics accuracy | Build or refine native Semantic Views | Semantic Views and Semantic View Autopilot are GA |
 | Reuse existing BI business logic | Ingest supported Tableau or Power BI files with Semantic View Autopilot | Power BI ingestion became GA on August 18, 2026 |
 | Make Cortex Agents safer to operate | Tighten the querying user's default role, require declared tools when appropriate, and apply Restricted Session Scope | Verify RSS support for the client and execution path you use |
@@ -36,7 +36,7 @@ Use Cortex Search for literal matching when users refer to high-cardinality valu
 Semantic View Autopilot can reuse models your organization already maintains instead of rebuilding every definition manually.
 
 | Source | Supported input | Important limits |
-|---|---|---|
+| --- | --- | --- |
 | Tableau | `.twb`, `.twbx`, `.tds`, `.tdsx` | Snowflake connections only; LOD calculations and Tableau virtual connections are not supported |
 | Power BI | `.pbit`, `.pbix` | Report-level measures and time-intelligence functions are not yet fully supported |
 | SQL | Question-and-query pairs in the UI or a two-column CSV | Queries are validated; accepted examples can become verified queries |
@@ -101,7 +101,7 @@ Run an evaluation with representative business questions and a known-good answer
 ## 30-Day Action Plan
 
 | Window | Action | Evidence of completion |
-|---|---|---|
+| --- | --- | --- |
 | Week 1 | Inventory agent default roles, declared tools, semantic views, and existing BI models | Named owner and current-state inventory |
 | Week 2 | Improve one Semantic View or import one supported BI model | Reviewed definitions plus an initial evaluation set |
 | Week 3 | Tighten Agent execution controls and test inaccessible-tool behavior | Least-privilege grants, selected mode, and captured warnings or rejection |

@@ -21,7 +21,7 @@ This guide documents an integration between two independently versioned products
 Claims fall into three buckets, and each is verified differently:
 
 | Claim type | Source of truth | How to re-verify |
-|---|---|---|
+| --- | --- | --- |
 | Snowflake DDL, privileges, `QUERY_TYPE` values, `ACCOUNT_USAGE` columns | The live account | Execute it. Do not trust docs alone. |
 | Cube env vars, plan gating, push limitations | `docs.cube.dev` | Re-fetch the page; Cube ships fast and this list moves. |
 | Behavior at the seam (what push actually generates) | Live test of both | Requires a Cube Enterprise deployment. |

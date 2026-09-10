@@ -22,7 +22,7 @@ GitHub Copilot Chat and GitHub Copilot CLI are different products. The guide is 
 ## Key files
 
 | File | Role |
-|---|---|
+| --- | --- |
 | `README.md` | Landing page. Three-path diagram, decision tree, comparison table, prerequisites, FAQ. |
 | `path-1-mcp.md` | Snowflake-managed MCP for Copilot Chat. SQL for `CREATE MCP SERVER`, OAuth security integration with `OAUTH_ALTERNATE_REDIRECT_URIS`, PAT fallback, `.vscode/mcp.json` for both auth options, verification queries against `ACCOUNT_USAGE.QUERY_HISTORY`. |
 | `path-2-subagent-skill.md` | `subagent-cortex-code` for the GitHub Copilot CLI. Honest framing of which Copilot product is being extended. `npx skills add` install, security envelopes (RO / RW / RESEARCH / DEPLOY), routing scope, uninstall. |

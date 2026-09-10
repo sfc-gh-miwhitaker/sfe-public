@@ -27,6 +27,7 @@ who logged in where, which warehouses are driving spend. Snowflake exposes this 
 `SNOWFLAKE.ORGANIZATION_USAGE`.
 
 This guide covers:
+
 1. What's in ORGANIZATION_USAGE
 2. How to get access (two different paths)
 3. Query discipline that keeps costs low
@@ -40,7 +41,7 @@ Every Snowflake account has a shared, read-only database named `SNOWFLAKE`. Insi
 two usage schemas at different scopes:
 
 | Schema | Scope | Available in |
-|--------|-------|--------------|
+| -------- | ------- | -------------- |
 | `ACCOUNT_USAGE` | A single account | Every account |
 | `ORGANIZATION_USAGE` | All accounts in the organization | An organization account, or a regular account with the `ORGADMIN` role enabled |
 
@@ -171,7 +172,7 @@ GRANT ROLE my_reporting_role TO USER reporting_service_user;
 ```
 
 | Application Role | Covers |
-|-----------------|--------|
+| ----------------- | -------- |
 | `ORGANIZATION_USAGE_VIEWER` | Metering, warehouses, storage, data transfer, serverless feature history |
 | `ORGANIZATION_BILLING_VIEWER` | Currency, rate sheet, remaining balance, contract items, Marketplace disbursement |
 | `ORGANIZATION_SECURITY_VIEWER` | Users, roles, grants, logins, sessions, policies, Trust Center findings |
@@ -210,7 +211,7 @@ consider the full history across every account before it can return a single row
 including for something as innocent-looking as `SELECT COUNT(*)` or `LIMIT 1`.
 
 | View | Primary Time Column |
-|------|-------------------|
+| ------ | ------------------- |
 | `QUERY_HISTORY` | `start_time` |
 | `METERING_HISTORY` | `start_time` |
 | `QUERY_ATTRIBUTION_HISTORY` | `start_time` |
@@ -284,7 +285,7 @@ Two reasons:
 ### Latency by View Tier
 
 | Freshness | Views |
-|-----------|-------|
+| ----------- | ------- |
 | ~2 hours | `METERING_DAILY_HISTORY`, `STORAGE_DAILY_HISTORY`, `DATA_TRANSFER_DAILY_HISTORY` |
 | ~3 hours | `QUERY_HISTORY`, `ACCESS_HISTORY`, `LOGIN_HISTORY`, `TASK_HISTORY`, most object views |
 | ~24 hours | `ACCOUNTS`, `WAREHOUSE_METERING_HISTORY`, `CONTRACT_ITEMS`, Cortex usage views |
@@ -317,6 +318,7 @@ The billing views — `USAGE_IN_CURRENCY_DAILY`, `RATE_SHEET_DAILY`,
 contracted through a Snowflake reseller rather than directly with Snowflake.
 
 Two further notes:
+
 - Figures are not final — some adjustments post at month end
 - If you resell or rebill Snowflake capacity, the cost figures customers should see come
   from your own rate model, not from these views

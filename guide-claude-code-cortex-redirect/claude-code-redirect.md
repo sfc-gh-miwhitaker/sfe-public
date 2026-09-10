@@ -128,6 +128,7 @@ Claude Code also accepts env vars in its `settings.json`. This scopes the redire
 To pin a specific Cortex model, add `"ANTHROPIC_MODEL": "claude-sonnet-4-6"` to the `env` block.
 
 Location of `settings.json`:
+
 - macOS / Linux: `~/.claude/settings.json`
 - Windows: `%APPDATA%\Claude\settings.json`
 
@@ -228,7 +229,7 @@ If your Claude Code inference arrived at Snowflake, you'll see rows here (note: 
 Use bare model names — no date suffixes. Claude models available via the Cortex REST API (from the [Snowflake Service Consumption Table](https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf), effective July 1, 2026):
 
 | Model | Status | Input (credits/M tokens) | Output (credits/M tokens) | Notes |
-|-------|--------|--------------------------|---------------------------|-------|
+| ------- | -------- | -------------------------- | --------------------------- | ------- |
 | `claude-sonnet-4-6` | GA | 1.50 | 7.50 | Best default for Claude Code |
 | `claude-opus-4-6` | GA | 2.50 | 12.50 | High capability, lower throughput |
 | `claude-sonnet-4-5` | GA | 1.50 | 7.50 | Previous generation sonnet |
@@ -301,23 +302,28 @@ Cached tokens are billed at 10% of the input rate (when ≥1024 per request). Cl
 ## Troubleshooting
 
 **403 Not Authorized:**
+
 - Check that the PAT is set in `ANTHROPIC_AUTH_TOKEN`, not `ANTHROPIC_API_KEY`
 - Verify your Snowflake user's default role has `SNOWFLAKE.CORTEX_USER` or `SNOWFLAKE.CORTEX_REST_API_USER`
 - Check that the PAT hasn't expired
 
 **400 unknown model:**
+
 - You're using a model not available in your region. Check the [availability table](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-rest-api#model-availability)
 - Enable cross-region inference or switch to a model natively available in your region
 
 **Connection refused / DNS error:**
+
 - Verify `ANTHROPIC_BASE_URL` has the correct account identifier
 - Check that your machine can reach `<account-identifier>.snowflakecomputing.com` (proxy or firewall blocking?)
 
 **Claude Code ignores ANTHROPIC_BASE_URL:**
+
 - Ensure you're running the `claude` CLI, not the VS Code extension (the extension does not yet support `ANTHROPIC_BASE_URL`)
 - Confirm the env var is exported, not just assigned: `export ANTHROPIC_BASE_URL="..."` not `ANTHROPIC_BASE_URL="..."`
 - Check for a managed settings file overriding your env var
 
 **Responses are slow:**
+
 - Cross-region inference adds latency (the request routes to a region where the model is available)
 - Switch to a model natively in your region, or accept the latency tradeoff for model access

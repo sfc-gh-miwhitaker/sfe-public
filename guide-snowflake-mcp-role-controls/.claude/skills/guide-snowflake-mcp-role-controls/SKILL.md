@@ -18,7 +18,7 @@ Static guide with copy-ready SQL templates.
 ## Key Files
 
 | File | Role |
-|---|---|
+| --- | --- |
 | `README.md` | Customer-facing guide |
 | `ELI5.md` | Plain-language explanation |
 | `sql/` | Ordered configuration and validation templates |

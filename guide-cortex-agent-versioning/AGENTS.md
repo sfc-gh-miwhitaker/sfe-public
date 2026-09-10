@@ -11,11 +11,13 @@ built-in commit-based version model** (`LIVE` → `COMMIT` → immutable `VERSIO
 `agent_spec.yaml` straight from a `GIT REPOSITORY` stage (`ADD VERSION FROM @repo/...`).
 
 Two operating models, same primitives:
+
 - **Iterate-in-Snowflake** — edit `LIVE`, `COMMIT`, alias, set default.
 - **Git-driven** — edit `agent_spec.yaml` in GitHub, PR, then import a version
   from the repo, bypassing `LIVE`. Recommended once >1 person contributes.
 
 Layout:
+
 - `README.md` — model explanation, both flows compared, Git↔Snowflake command map, gotchas.
 - `specs/agent_spec.yaml` — the versioned source-of-truth spec (one Cortex Analyst tool).
 - `sql/01..06 + 99` — self-contained runnable lifecycle over a tiny ORDERS table + semantic view.

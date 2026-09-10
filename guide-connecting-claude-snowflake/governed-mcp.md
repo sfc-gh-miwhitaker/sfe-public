@@ -35,7 +35,7 @@ flowchart LR
 When an agent genuinely must reach Snowflake data *or act on external tools* (email, Slack, Jira), the governed pattern is a **centralized MCP gateway** — the capability Snowflake added by acquiring **Natoma** (announced May 27, 2026).
 
 | Capability | What it provides |
-|---|---|
+| --- | --- |
 | **Centralized MCP gateway** | One governed entry point for agent tool-calls instead of per-app OAuth wiring |
 | **Identity, policy, audit per tool-call** | Verifies who requested an action, what permissions apply, whether to allow it |
 | **Non-human identity governance** | Manages credentials for agents/service identities, not just humans |
@@ -58,7 +58,7 @@ Any MCP path that ends in an agent writing SQL is only as accurate as the founda
 
 ---
 
-# Claude Desktop Setup
+## Claude Desktop Setup
 
 If your directive is "implement Claude Desktop against Snowflake," this section is for you. There are two ways to do it, and the order of preference matters for accuracy and cost.
 
@@ -93,11 +93,13 @@ Add that to `~/Library/Application Support/Claude/claude_desktop_config.json` (m
 >
 > [!IMPORTANT]
 > **`cortex mcp serve` only appears once you have a Snowflake connection configured.** The CLI registers the `serve` subcommand based on `~/.snowflake/connections.toml` — with no connection it is hidden, and `cortex mcp serve` silently falls through to the generic `cortex mcp` help (so it looks like the command is missing). This is **not** channel- or version-specific. Configure a connection first:
+>
 > ```bash
 > cortex connections list          # any connection? if not, add one:
 > cortex connections add           # ...or authenticate an existing one
 > cortex mcp serve --help          # 'serve' now appears, with -c/--bypass/-m/-w
 > ```
+>
 > See [coco.md → Authentication](coco.md#authentication) for connection setup.
 
 ### Option C, end to end
@@ -130,7 +132,7 @@ Add that to `~/Library/Application Support/Claude/claude_desktop_config.json` (m
 > **You don't need a semantic view to start here.** `cortex_code_agent` explores your schema directly, so you can connect Claude Desktop today and see it working. Building the foundation in [The Context Layer](context-layer.md#the-one-thing-every-path-shares) is what makes the `cortex_analyst_query` (natural-language-to-answer) experience accurate for business users — do it next, not first.
 
 | If this happens | Likely cause | Fix |
-|---|---|---|
+| --- | --- | --- |
 | `serve` missing / `Unknown arguments: serve` / falls through to generic `cortex mcp` help | No Snowflake connection configured — `serve` only registers when `~/.snowflake/connections.toml` has one (not a channel/version issue) | `cortex connections add` (or authenticate), then `cortex mcp serve --help` |
 | No tools appear in Claude Desktop | Config not picked up | Fully quit and reopen Claude Desktop; check the JSON is valid |
 | "cortex: command not found" in logs | CLI not on PATH for the GUI app | Use the full path to `cortex` in the `command` field |
@@ -226,9 +228,11 @@ CREATE OR REPLACE SECURITY INTEGRATION claude_mcp_oauth
 ```
 
 > **Role note:** MCP OAuth sessions use each user's `DEFAULT_ROLE` — secondary roles are not supported. Set each user's default role to the one that has USAGE on the MCP server and its tools, and ensure each user has a `DEFAULT_WAREHOUSE` set:
+>
 > ```sql
 > ALTER USER <username> SET DEFAULT_ROLE = '<mcp_access_role>' DEFAULT_WAREHOUSE = '<warehouse_name>';
 > ```
+>
 > Claude requests the `session:role:all` scope, which may display "secondary roles = ALL" on the consent screen — this is cosmetic only; Snowflake enforces the integration setting regardless.
 
 ### Step 2: Retrieve Client Credentials
@@ -313,7 +317,7 @@ For **client credentials flow** (service-to-service), add App Roles in the Manif
 ### Step 3: Collect Entra ID Metadata
 
 | Value | Where to find it |
-|---|---|
+| --- | --- |
 | `<AZURE_AD_ISSUER>` | Federation metadata -> `entityID` (e.g., `https://sts.windows.net/<tenant_id>/`) |
 | `<AZURE_AD_JWS_KEY_ENDPOINT>` | OpenID Connect metadata -> `jwks_uri` (e.g., `https://login.microsoftonline.com/<tenant_id>/discovery/v2.0/keys`) |
 | `<AZURE_AD_OAUTH_TOKEN_ENDPOINT>` | OAuth 2.0 token endpoint v2 (e.g., `https://login.microsoftonline.com/<tenant_id>/oauth2/v2.0/token`) |
@@ -369,7 +373,7 @@ SELECT SYSTEM$VERIFY_EXTERNAL_OAUTH_TOKEN('<access_token>');
 ### Step 8: Configure Claude Desktop
 
 | OS | Path |
-|---|---|
+| --- | --- |
 | macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
 | Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
 | Linux | `~/.config/Claude/claude_desktop_config.json` |
@@ -388,6 +392,7 @@ SELECT SYSTEM$VERIFY_EXTERNAL_OAUTH_TOKEN('<access_token>');
 ```
 
 > **Token refresh:** Entra access tokens expire (~60 min), which makes the static `headers` config above impractical for sustained use.
+>
 > - **For dev/testing:** use a long-lived PAT instead of an Entra JWT — no expiry headache (see [CoCo auth](coco.md#authentication) for PAT setup).
 > - **For production:** run a lightweight proxy that re-fetches a token via the client-credentials grant (the curl in Step 6) before each expiry and injects it as the `Authorization` header. Or sidestep token management entirely with Option C.
 >
@@ -414,7 +419,7 @@ curl -s -X POST \
 ## Common Gotchas (Legacy MCP)
 
 | Issue | Cause | Fix |
-|---|---|---|
+| --- | --- | --- |
 | Session uses wrong role (Option A) | User's `DEFAULT_ROLE` lacks USAGE on MCP server/tools | `ALTER USER ... SET DEFAULT_ROLE = '<mcp_role>' DEFAULT_WAREHOUSE = '<wh>'` |
 | "does not exist or not authorized" | Role lacks USAGE on MCP server | `GRANT USAGE ON MCP SERVER ... TO ROLE ...` |
 | URL connection failure / TLS error | Underscores in org/account name | Replace `_` with `-` in hostname |
@@ -429,7 +434,7 @@ curl -s -X POST \
 ## URL Format Reference
 
 | Use case | URL pattern |
-|---|---|
+| --- | --- |
 | Claude Desktop (native Snowflake connector) | `https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/databases/<DB>/schemas/<SCHEMA>/mcp-servers/<SERVER_NAME>` |
 | REST / curl / JSON config (JSON-RPC) | `https://<ORG-ACCOUNT>.snowflakecomputing.com/api/v2/databases/<DB>/schemas/<SCHEMA>/mcp-servers/<SERVER_NAME>` |
 

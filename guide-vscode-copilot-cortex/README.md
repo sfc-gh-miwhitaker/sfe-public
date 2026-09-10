@@ -30,7 +30,7 @@ flowchart LR
 ```
 
 | | Path 1 — VS Code extension | Path 2 — Copilot CLI skill | Path 3 — MCP server |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Surface** | Dedicated CoCo panel in Activity Bar | GitHub Copilot CLI (`gh copilot`) terminal | Copilot Chat sidebar (VS Code) |
 | **Agent** | CoCo | Copilot CLI → CoCo for Snowflake | Copilot's model + Snowflake tools |
 | **Setup** | ~2 min — already signed into the extension? One click. | ~5 min | ~30 min, needs Snowflake admin |
@@ -78,10 +78,12 @@ All three paths get more accurate from the same groundwork: a **semantic view** 
 
 - **Cortex rejects date-suffixed model IDs.** Pin to bare names: `claude-sonnet-4-6`, `claude-opus-4-6`, `claude-opus-4-7`. (`claude-haiku-4-5` is no longer a current Cortex model.)
 - **Cross-region inference.** If a model isn't natively hosted in your region:
+
   ```sql
   ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'AWS_GLOBAL';
   -- Azure: AZURE_GLOBAL; narrower: AWS_US, AWS_EU, AWS_APJ, AWS_AU, AZURE_US; multi-cloud: ANY_REGION
   ```
+
 - **Government regions not supported** for CoCo on any path.
 - **Network policy.** Confirm the user's machine IP is allowed: `SHOW PARAMETERS LIKE 'NETWORK_POLICY' IN USER <username>;`
 

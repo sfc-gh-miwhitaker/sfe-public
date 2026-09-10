@@ -62,7 +62,7 @@ After 2026: Snowflake is the governed hub — your partners use whatever tools t
 ## Status Check
 
 | What | Ready to use? |
-|---|---|
+| --- | --- |
 | Open Data Sharing (non-Snowflake partners) | Preview — works but expanding |
 | Open Table Format Sharing (Iceberg/Delta) | Yes — fully available |
 | Multi-party Clean Rooms | Yes — fully available |

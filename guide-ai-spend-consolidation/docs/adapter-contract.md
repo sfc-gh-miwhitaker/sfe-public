@@ -73,6 +73,18 @@ can be restated** for a day or two after first publication. An adapter should th
 window slightly rather than resuming exactly at the watermark, and the normalization layer
 deduplicates. Overlap plus dedup is correct here; exact resumption silently misses restatements.
 
+**Some vendors restate for far longer than a day or two, and one of them is 30 days.** Anthropic's
+Claude Enterprise revises a given date's cost and usage for up to 30 days as late events and
+reconciliation arrive, and returns a `data_refreshed_at` timestamp so you can tell. For a feed like
+that, "overlap slightly" is not enough — the adapter's window must be the vendor's full revision
+period on every run, and only dates older than that period should be treated as invoicing-grade.
+
+So the overlap length is a **per-platform property, not a constant**. Take it from the vendor's
+documented revision window, record the vendor's own freshness timestamp alongside the rows when one
+is offered, and prefer it to the date you asked for when deciding what is settled. The failure mode
+if you do not is the quiet one: a number that was correct when captured and disagrees with the
+vendor a week later, with nothing erroring in between.
+
 **Watermark recovery is not the same as data safety.** Some feeds expire: Box's streaming event
 stream holds two weeks and its `admin_logs` stream one year. A watermark will happily resume from
 three weeks ago and pull nothing, reporting success. That is why `CONTROL.V_PIPELINE_HEALTH` alarms
@@ -95,7 +107,7 @@ editing the procedure's `SECRETS` clause. The registry still drives everything e
 
 ### 3. Land to the stage first, then `COPY`
 
-```
+```text
 @RAW.AI_USAGE_STAGE/{platform}/{report}/{YYYY}/{MM}/{DD}/{run_id}.jsonl
 ```
 
@@ -121,7 +133,7 @@ than around a particular HTTP shape.
 Success and failure. The failure row is the more important one — a pipeline that logs only
 successes cannot distinguish "no usage yesterday" from "the adapter has been dead for a week".
 
-```
+```text
 RUN_ID, PLATFORM_KEY, REPORT_NAME, STARTED_AT, COMPLETED_AT, STATUS,
 FILE_NAME, RECORDS_FETCHED, ROWS_LOADED,
 WATERMARK_FROM, WATERMARK_TO, ERROR_CLASS, ERROR_MESSAGE, QUERY_ID
@@ -166,7 +178,7 @@ its own cost is not a good look.
 ## What an adapter must not do
 
 | Do not | Because |
-|---|---|
+| --- | --- |
 | Rename or restructure vendor fields | Kills the ability to backfill and to reconstruct what the vendor actually returned |
 | Convert credits to dollars | Rates change and are contractual. Currency conversion belongs in `SEAT_ENTITLEMENT` and the allocation view, in one place |
 | Resolve identity | `IDENTITY_MAP` is applied once in normalization. An adapter that resolves identity itself will drift from the others |

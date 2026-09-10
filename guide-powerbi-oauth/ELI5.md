@@ -23,7 +23,7 @@ The trickiest part isn't the setup — it's making sure every Power BI user's Sn
 ## The Cast
 
 | Concept | Plain language |
-|---|---|
+| --- | --- |
 | **OAuth** | A system where Microsoft vouches for who your employees are, so they don't need a separate Snowflake password |
 | **Microsoft Entra ID** | Your company's Microsoft identity system — the same one behind Office 365 and Teams |
 | **SCIM** | An automated sync that creates and removes Snowflake accounts when you add/remove people in Entra groups |

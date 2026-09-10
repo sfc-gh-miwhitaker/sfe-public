@@ -13,7 +13,7 @@ This guide covers how to enforce access control on Cortex Search Services today.
 
 Documentation-only — no SQL objects, no deploy scripts.
 
-```
+```text
 README.md                  → decision tree, pattern comparison, roadmap
 filter-attribute-ubac.md   → Pattern 1: ATTRIBUTES + @contains filter
 separate-services.md       → Pattern 2: one service per data boundary
@@ -27,7 +27,7 @@ Pattern 2 (separate services) is recommended for static groups where zero leakag
 ## Key Files
 
 | File | Role |
-|---|---|
+| --- | --- |
 | `README.md` | Start here — decision tree + pattern comparison table |
 | `filter-attribute-ubac.md` | Full walkthrough of the `@contains` ARRAY filter pattern |
 | `separate-services.md` | Full walkthrough of the per-boundary service pattern |

@@ -43,7 +43,7 @@ observed behavior, this guide documents the behavior and flags the conflict.
 
 ## Architecture
 
-```
+```text
                         ┌──────────────────────────────────┐
                         │   Snowflake                      │
                         │   storage + compute + RBAC       │
@@ -93,7 +93,7 @@ CUBEJS_DB_NAME=ANALYTICS
 Set via `CUBEJS_DB_SNOWFLAKE_AUTHENTICATOR`:
 
 | Value | Mechanism | Required companions | Verdict |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `SNOWFLAKE` (default) | Username + password | `CUBEJS_DB_USER`, `CUBEJS_DB_PASS` | **Avoid.** Snowflake is actively deprecating single-factor password auth for service connections. |
 | `SNOWFLAKE_JWT` | RSA key pair | `CUBEJS_DB_SNOWFLAKE_PRIVATE_KEY` or `_PRIVATE_KEY_PATH`; `_PRIVATE_KEY_PASS` if encrypted | **Default choice for Cube Core / self-hosted.** A secret still exists, but it rotates cleanly. |
 | `OAUTH` | External OAuth, incl. Cube Cloud OIDC workload identity | `CUBEJS_DB_SNOWFLAKE_OAUTH_TOKEN_PATH` (auto-populated in Cube Cloud) | **Best posture if you're on Cube Cloud.** No long-lived secret provisioned or rotated. |
@@ -139,7 +139,7 @@ CREATE USER CUBE_SVC
 `TYPE = SERVICE` is a hard guarantee, not a convention. Attempting to set a password on such a
 user fails outright:
 
-```
+```text
 511503 (23001): SQL execution error:
 Cannot set PASSWORD on users with TYPE=SERVICE.
 ```
@@ -209,7 +209,7 @@ deployment quietly *increases* it, by rebuilding rollups more often than anyone 
 ### Two build strategies
 
 | Strategy | Mechanism | Warehouse impact | Config |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Batching** (default) | Cube reads results through the driver, writes `CREATE TABLE` in the pre-agg schema | Needs write access; slower at volume | No extra config |
 | **Export bucket** | Snowflake `COPY INTO` unloads to S3 / GCS / Azure; Cube Store reads the files | Read-only; much faster at volume | `CUBEJS_DB_EXPORT_BUCKET_TYPE` + `CUBEJS_DB_EXPORT_INTEGRATION` |
 
@@ -283,7 +283,7 @@ on the following keep working in Cube but **cannot be pushed**; the push wizard 
 validation.
 
 | Blocked pattern | Why |
-|---|---|
+| --- | --- |
 | Templated `sql` (Jinja, dbt `{{ source(...) }}`) | Cube can't resolve the template into static DDL |
 | No single-column `primary_key` | Composite keys and SQL-expression keys unsupported |
 | Non-equi and expression joins (`LOWER(a.id) = b.id`, `OR`, inequalities) | Joins must be simple column equality |
@@ -303,7 +303,7 @@ tables, which do propagate into semantic views.
 An honest decision table. Cube is real infrastructure with real operational cost.
 
 | Reach for Cube when… | Stay Snowflake-native when… |
-|---|---|
+| --- | --- |
 | Non-Snowflake consumers need governed metrics — Excel via MDX, Power BI via DAX, embedded apps via REST/GraphQL | Your consumers are BI tools plus Snowflake-native AI (Cortex Analyst, CoWork) |
 | Multiple warehouses sit behind one metric layer (Snowflake + BigQuery + Databricks) | Snowflake is your only warehouse |
 | High-concurrency embedded analytics where a pre-agg cache must absorb traffic your warehouse shouldn't see | Query volume is analyst-scale, not application-scale |
@@ -320,7 +320,7 @@ metrics it can actually express.
 ## Troubleshooting
 
 | Symptom | Cause |
-|---|---|
+| --- | --- |
 | `The role … is not listed in the Access Token or was filtered` | The `scp` custom claim is missing from the Cube token config, or the role isn't granted to the mapped user. **This is the most common failure** — Snowflake grants session roles exclusively through `scp`; a token without it authenticates fine and then fails role authorization. |
 | `Invalid OAuth access token` | Issuer or audience mismatch between the Cube token config and the Snowflake security integration, or the JWKS URL is unreachable. Values are case-sensitive and must match exactly. |
 | `User … not found` / mapping errors | The rendered `sub` doesn't match the Snowflake user's `LOGIN_NAME`. Compare against the live preview in Cube's token config dialog. |
@@ -334,7 +334,7 @@ metrics it can actually express.
 Login history records the mechanism, and the value differs per path — check the one you expect:
 
 | Auth path | `FIRST_AUTHENTICATION_FACTOR` |
-|---|---|
+| --- | --- |
 | `SNOWFLAKE_JWT` (key pair) | `RSA_KEYPAIR` |
 | `OAUTH` / OIDC workload identity | `OAUTH_ACCESS_TOKEN` |
 | `SNOWFLAKE` (password) | `PASSWORD` |
@@ -350,7 +350,7 @@ ORDER BY event_timestamp DESC;
 ## Files
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `README.md` | This guide |
 | `ELI5.md` | Plain-language companion for non-technical stakeholders |
 | `AGENTS.md` | Project instructions for AI coding assistants |

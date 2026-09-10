@@ -28,7 +28,7 @@ export ANTHROPIC_AUTH_TOKEN="<your-snowflake-pat>"
 **Why bother?**
 
 | Concern | Default (Anthropic direct) | Via Snowflake Cortex |
-|---------|---------------------------|----------------------|
+| --------- | --------------------------- | ---------------------- |
 | Data residency | Leaves your network to `api.anthropic.com` | Stays within Snowflake perimeter |
 | Auth | Anthropic API key (separate credential) | Snowflake PAT / OAuth (existing credential) |
 | Audit | Anthropic dashboard only | `CORTEX_REST_API_USAGE_HISTORY` in your account |
@@ -41,6 +41,7 @@ export ANTHROPIC_AUTH_TOKEN="<your-snowflake-pat>"
 ## Before you start
 
 **Prerequisites:**
+
 - A Snowflake account with Cortex enabled
 - A Snowflake Programmatic Access Token (PAT) — or an OAuth token
 - Claude Code CLI (`claude`) installed and working
@@ -59,7 +60,7 @@ For accounts with org-level URLs like `<myorg>-<myaccount>.snowflakecomputing.co
 Jump to the guide that matches your situation:
 
 | I need to... | Guide |
-|---|---|
+| --- | --- |
 | Redirect `claude` CLI for my own machine | [Claude Code CLI redirect](claude-code-redirect.md) |
 | Choose the right auth method (PAT vs keychain vs JWT) | [Authentication Options](authentication.md) |
 | Redirect an Anthropic SDK Python/Node app | [SDK redirect patterns](sdk-redirect.md) |
@@ -74,7 +75,7 @@ Jump to the guide that matches your situation:
 Snowflake's Cortex REST API has two endpoints. Pick one:
 
 | | Messages API | Chat Completions API |
-|---|---|---|
+| --- | --- | --- |
 | **Format** | Anthropic Messages spec | OpenAI Chat Completions spec |
 | **Endpoint** | `/api/v2/cortex/v1/messages` | `/api/v2/cortex/v1/chat/completions` |
 | **Models** | Claude only | All Cortex models |

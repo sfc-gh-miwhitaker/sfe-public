@@ -23,7 +23,7 @@ Pair-programmed by SE Community + Cortex Code
 Choose the outcome first. The controls have similar names but operate at different layers.
 
 | Requirement | Control | Recommended? |
-|---|---|---|
+| --- | --- | --- |
 | Give an MCP client one predictable access boundary | Dedicated `MCP_ACCESS_ROLE`, `OAUTH_USE_SECONDARY_ROLES = NONE`, and OAuth `ALLOWED_ROLES_LIST` | Yes |
 | Let the MCP session combine a small set of roles | `OAUTH_USE_SECONDARY_ROLES = IMPLICIT` plus a session policy with `ALLOWED_SECONDARY_ROLES` | Only when one role is insufficient |
 | Advertise named primary roles to capable clients | `OAUTH_SCOPES_SUPPORTED` on the MCP server's schema, database, or account | Client-dependent |
@@ -47,7 +47,7 @@ MCP endpoint
 ```
 
 | Layer | Governs | Main controls |
-|---|---|---|
+| --- | --- | --- |
 | MCP object | Connection and tool discovery | `USAGE ON MCP SERVER` |
 | Tool object | Invocation of Agent, Search, Analyst, UDF, or procedure tools | Object-specific `USAGE` or `SELECT` grants |
 | Primary role | The session's active role | OAuth scope, `DEFAULT_ROLE`, `OAUTH_SCOPES_SUPPORTED` |
@@ -146,7 +146,7 @@ The OAuth allowlist can only be set when `OAUTH_USE_SECONDARY_ROLES = NONE`. Oth
 OAuth scopes govern the primary role, not secondary roles.
 
 | Scope | Meaning |
-|---|---|
+| --- | --- |
 | `session:role:<ROLE_NAME>` | Use the named role as primary |
 | `session:role:all` | Use the connecting user's `DEFAULT_ROLE`; despite the name, it does not activate all roles |
 | `session:role-any` | Permit primary-role switching when the integration also enables any-role mode |
@@ -184,7 +184,7 @@ Do not adopt this pattern solely to compensate for a client that always requests
 ## Client Behavior
 
 | Client behavior | Primary role result | Secondary-role result |
-|---|---|---|
+| --- | --- | --- |
 | Requests `session:role:<ROLE>` | Named role, if granted and permitted | Controlled separately |
 | Requests `session:role:all` | User's `DEFAULT_ROLE` | Not "all"; controlled by the integration |
 | Requests `session:role-any` | Default or named initial role; switching allowed only when enabled | Controlled separately |
@@ -205,7 +205,7 @@ Use the statements in [`sql/04_validate_role_behavior.sql`](sql/04_validate_role
 ## Troubleshooting
 
 | Symptom | Likely cause | Check |
-|---|---|---|
+| --- | --- | --- |
 | Authentication succeeds but the wrong role is active | Client requested `session:role:all` | Verify the user's `DEFAULT_ROLE` |
 | OAuth authorization rejects the requested role | Role is not granted or is outside OAuth allow/block lists | `SHOW GRANTS TO USER` and `DESCRIBE INTEGRATION` |
 | `ALLOWED_ROLES_LIST` cannot be set | Secondary roles are `IMPLICIT` | Set `OAUTH_USE_SECONDARY_ROLES = NONE` first |

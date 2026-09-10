@@ -18,7 +18,7 @@ Snowflake Kafka Connector v4 with Snowpipe Streaming (sink), and Dynamic Tables
 
 ## Architecture
 
-```
+```text
 Operational DB → Debezium (Kafka Connect source) → Kafka topics
   → Snowflake Kafka Connector v4 (SnowflakeStreamingSinkConnector)
   → cdc_raw.landing.<table>_raw (RECORD_CONTENT VARIANT)
@@ -28,13 +28,13 @@ Operational DB → Debezium (Kafka Connect source) → Kafka topics
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Complete guide: prerequisites, all connector configs, Dynamic Table patterns, ops |
 
 ## Snowflake Objects
 
 | Object | Name | Purpose |
-|--------|------|---------|
+| -------- | ------ | --------- |
 | Database | `cdc_raw` | Houses all CDC landing and current-state tables |
 | Schema | `cdc_raw.landing` | Raw Kafka topic tables (VARIANT columns) |
 | Schema | `cdc_raw.current_state` | Flattened, current-state Dynamic Tables |

@@ -41,7 +41,7 @@ memorize Snowflake system views or debug a Bulk Operation state machine alone.
 ### What runs where
 
 | Responsibility | Surface | Reason |
-|---|---|---|
+| --- | --- | --- |
 | Build, deploy, qualify, troubleshoot, evolve | **CoCo Desktop** | It sees current docs, source code, Snowflake objects, query results, and run evidence together |
 | Pull, land, and load data | **Python stored procedure + Snowflake Task** | Deterministic, testable, secure, and independent of an LLM response |
 | Transform for analytics | **Dynamic Tables** | Declarative dependency and refresh management |
@@ -57,7 +57,7 @@ The same Shopify requirement can be solved with Openflow. The difference is the 
 interface.
 
 | Concern | Openflow Shopify connector | CoCo-managed native pipeline |
-|---|---|---|
+| --- | --- | --- |
 | Store onboarding | Gen 1 canvas install and parameter dialog per store | Add metadata, regenerate bindings, CoCo qualifies each store |
 | Implementation | Flow hidden behind a connector process group | Inspectable SQL, Python, GraphQL, and tests in Git |
 | Idle cost | Deployment management compute continues with no runtimes | No always-on service; task/warehouse run only when needed |
@@ -75,7 +75,7 @@ diagnose precisely, and evolve safely.
 
 ## Architecture
 
-```
+```text
 Snowflake administrator
         │ plain-language build / operate / repair requests
         ▼
@@ -123,7 +123,7 @@ call Shopify. They remain read-only supervisors.
 cannot happen. `coco/BUILD_PLAYBOOK.md` makes these gates explicit:
 
 | Gate | CoCo proves |
-|---|---|
+| --- | --- |
 | Documentation | Current Shopify API, auth flow, limits, Snowflake runtime and external-access syntax |
 | Security | Secrets remain in Snowflake; EAI and grants are least privilege; repository scan is clean |
 | Compilation | SQL, embedded Python, and GraphQL parse before deployment |
@@ -144,7 +144,7 @@ playbook independently.
 ## Implementation Map
 
 | File | What CoCo uses it for |
-|---|---|
+| --- | --- |
 | `sql/01_landing.sql` | Roles, warehouse, stage, registry, run log, qualification evidence, raw VARIANT table |
 | `sql/02_network_secrets.sql` | Wildcard Shopify network rule, result host, EAI, interactive secret pattern |
 | `config/stores.example.json` | Non-secret source of truth for generated bindings |
@@ -166,7 +166,7 @@ playbook independently.
 Create and install one dev app per store. Grant the minimum scopes:
 
 | Scope | Use |
-|---|---|
+| --- | --- |
 | `read_orders` | Orders, transactions, and fulfillments; about 60 days by default |
 | `read_all_orders` | Older order history; requires Shopify approval |
 | `read_merchant_managed_fulfillment_orders` | Fulfillment orders |
@@ -287,7 +287,7 @@ repeatable, evidence-gated CoCo workflow.
 The automations are the operations engineer, not the data mover.
 
 | Cadence | Checks | Output |
-|---|---|---|
+| --- | --- | --- |
 | Daily 07:00 | Store freshness, last task, failures, 14-day same-weekday anomalies | `shopify/status-YYYY-MM-DD.md` + exact investigation prompts |
 | Weekly Monday 08:00 | Cost by store, stage hygiene, registry/schedule drift, qualification | `shopify/weekly-YYYY-MM-DD.md` |
 | Monthly day 1 09:00 | Shopify API/deprecations, runtime/packages, secrets metadata, EAI, grants, timeout, DT health | `shopify/monthly-YYYY-MM-DD.md` |

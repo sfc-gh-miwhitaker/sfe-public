@@ -24,6 +24,7 @@ EXECUTE IMMEDIATE FROM 'deploy_all.sql';
 ```
 
 This creates:
+
 - Schema `SNOWFLAKE_EXAMPLE.CORTEX_AI_COST_CONTROLS`
 - 5 materialized tables pre-aggregating ACCOUNT_USAGE data
 - A 15-minute refresh task (ships SUSPENDED — resume when ready)
@@ -62,14 +63,14 @@ ALTER TASK SNOWFLAKE_EXAMPLE.CORTEX_AI_COST_CONTROLS.TASK_REFRESH_COST_MATERIALI
 
 ## Architecture
 
-```
+```text
 ACCOUNT_USAGE views ──► Refresh Task (15 min) ──► Materialized Tables ──► React App
                                                                             │
 SNOWFLAKE.CORE.QUOTA ──────────────────────────────────────────────────────►│
 ```
 
 | Component | Technology |
-|-----------|-----------|
+| ----------- | ----------- |
 | Data layer | Materialized tables + SQL stored procedure + scheduled task |
 | Cost governance | Native per-user quotas (`SNOWFLAKE.CORE.QUOTA`) |
 | Frontend | Next.js 15 + React 19 + Recharts |
@@ -79,7 +80,7 @@ SNOWFLAKE.CORE.QUOTA ───────────────────�
 ## Pages
 
 | Page | What it shows |
-|------|--------------|
+| ------ | -------------- |
 | **Overview** | KPI cards (total credits, daily avg, unique users) + daily line chart + stacked bar by service |
 | **Attribution** | Top users, per-user table with cost-center from USER_TAGS, agent attribution with interaction_interface |
 | **Quotas** | Per-user quota status, blocked users, utilization — or guidance if no quotas configured |
@@ -88,7 +89,7 @@ SNOWFLAKE.CORE.QUOTA ───────────────────�
 ## Key Modernizations (vs. prior version)
 
 | Before | After |
-|--------|-------|
+| -------- | ------- |
 | Custom enforcement (SP + task + audit table) | Native `SNOWFLAKE.CORE.QUOTA` with built-in block enforcement |
 | `SNOWFLAKE_INTELLIGENCE_USAGE_HISTORY` | `SNOWFLAKE_COWORK_USAGE_HISTORY` |
 | 2 separate CoCo views (CLI + Snowsight) | Unified `SNOWFLAKE_COCO_USAGE_HISTORY` |

@@ -18,7 +18,7 @@ This demo builds that restaurant manager's dashboard — but for Snowflake AI se
 ## Cast of Characters
 
 | Thing | What It Does |
-|-------|-------------|
+| ------- | ------------- |
 | **Materialized tables** | Pre-cooked summaries of raw usage data, refreshed every 15 minutes |
 | **SNOWFLAKE.CORE.QUOTA** | The "tab limit" — Snowflake's native per-user spending cap |
 | **ACCOUNT_USAGE views** | The raw billing log — every AI call ever made in your account |

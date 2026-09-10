@@ -20,7 +20,7 @@ runbook, a registry-driven landing zone, and generated cross-store Dynamic Table
 
 ## Architecture
 
-```
+```text
 N Shopify stores (one dev app each, read_orders + read_merchant_managed_fulfillment_orders)
   → OPENFLOW DEPLOYMENT SHOPIFY_DEPLOYMENT (gen 2, SQL)   ← Management Services pool, always-on
   → OPENFLOW RUNTIME SHOPIFY_RUNTIME (MEDIUM, 1-2 nodes)
@@ -34,7 +34,7 @@ N Shopify stores (one dev app each, read_orders + read_merchant_managed_fulfillm
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Full guide: options table, "Before you commit", 7 phases, cutover, references |
 | `ELI5.md` | Plain-language companion |
 | `sql/01_core_snowflake.sql` | OPENFLOW_ADMIN, account grants, OPENFLOW_DB, event table, default-role fix |
@@ -50,7 +50,7 @@ N Shopify stores (one dev app each, read_orders + read_merchant_managed_fulfillm
 ## Snowflake Objects
 
 | Object | Name | Purpose |
-|--------|------|---------|
+| -------- | ------ | --------- |
 | Role | `OPENFLOW_ADMIN` | Creates deployment/runtime; opens the canvas |
 | Role | `OPENFLOW_SHOPIFY_RUNTIME_EXECUTE_AS_RL` | Identity the connectors run as |
 | Role | `SHOPIFY_ANALYST` | Read-only on SHOPIFY_ANALYTICS.CORE |

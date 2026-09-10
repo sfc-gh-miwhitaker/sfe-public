@@ -11,7 +11,7 @@ Post-Summit-26 guide for putting Claude in front of Snowflake data. Core thesis:
 
 ## Architecture
 
-```
+```text
 Principle 1: Bring the model to the data
   Claude inside Cortex AI -> powers CoWork (business) + CoCo (developer)
 
@@ -27,7 +27,7 @@ Legacy (demoted): Claude Desktop -> MCP Server -> Cortex Agent text-to-SQL
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Thesis, two benchmark numbers, Summit 26 rebrand table, surface-first decision matrix |
 | `context-layer.md` | Horizon Context + Cortex Sense; semantic views, Semantic Studio, Autopilot, verified queries, eval gate (the accuracy mechanism) |
 | `coco.md` | CoCo platform: Desktop, Cloud Agents, CLI, Agent SDK, MCP+ACP, profiles/skills, envelopes, `cortex mcp serve` delegation, ADE-Bench |
@@ -43,10 +43,12 @@ Legacy (demoted): Claude Desktop -> MCP Server -> Cortex Agent text-to-SQL
 ## Extension Playbook
 
 **To document a new IdP for the legacy Entra path (Okta, Cognito):**
+
 1. Replace Entra Steps 1-3 with the IdP's app registrations
 2. Update `EXTERNAL_OAUTH_TYPE` (`OKTA`, `CUSTOM`), issuer, JWKS, token endpoints, and user-mapping claim
 
 **To add a new CoCo surface or integration:**
+
 1. Confirm against the [CoCo blog](https://www.snowflake.com/en/blog/snowflake-coco-ai-coding-agent-modern-data-stack/) and `cortex-code` docs
 2. For client delegation, use `cortex mcp serve` (server mode); for embedding, the Agent SDK
 

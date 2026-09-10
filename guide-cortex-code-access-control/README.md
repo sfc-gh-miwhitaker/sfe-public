@@ -19,7 +19,7 @@ Pair-programmed by SE Community + Cortex Code
 ## Start Here
 
 | If you want to... | Jump to |
-|---|---|
+| --- | --- |
 | Understand what controls CoCo access | [How Access Works](#how-cortex-code-access-works) |
 | Lock it down to one role right now | [Lockdown Procedure](#lockdown-procedure) |
 | Roll out gradually without breaking things | [Progressive Rollout](#progressive-rollout-for-the-paranoid) |
@@ -33,7 +33,7 @@ Pair-programmed by SE Community + Cortex Code
 
 Three layers must ALL pass for a user to invoke Cortex Code:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  Layer 1: CORTEX_USER database role                             │
 │  Gates access to ALL Cortex AI features (CoCo, Agents,         │
@@ -147,6 +147,7 @@ For administrators who want certainty before making changes.
 ### Phase 1 — Observe (7-14 days)
 
 **Change nothing.** Run the observability queries below to answer:
+
 - Who is already using Cortex Code?
 - How many credits per day?
 - Which surfaces and models?
@@ -184,7 +185,7 @@ Independently from RBAC, Snowflake provides per-surface daily credit limits. The
 ### Parameters
 
 | Parameter | Controls |
-|---|---|
+| --- | --- |
 | `CORTEX_CODE_CLI_DAILY_EST_CREDIT_LIMIT_PER_USER` | CoCo CLI |
 | `CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER` | CoCo Desktop |
 | `CORTEX_CODE_SNOWSIGHT_DAILY_EST_CREDIT_LIMIT_PER_USER` | CoCo in Snowsight |
@@ -192,7 +193,7 @@ Independently from RBAC, Snowflake provides per-surface daily credit limits. The
 ### How it works
 
 | Value | Behavior |
-|---|---|
+| --- | --- |
 | `-1` (default) | No limit — unlimited access |
 | `0` | Blocked entirely |
 | Positive number | Blocked when rolling 24-hour estimated usage exceeds this value |
@@ -250,7 +251,7 @@ ALTER USER jsmith UNSET CORTEX_CODE_DESKTOP_DAILY_EST_CREDIT_LIMIT_PER_USER;
 ### Spend limits vs RBAC — when to use which
 
 | Goal | Use |
-|---|---|
+| --- | --- |
 | Completely block CoCo for unauthorized users | RBAC (revoke CORTEX_USER from PUBLIC) |
 | Allow access but prevent runaway spend | Spend limits |
 | Block one surface but allow others | Spend limits (set 0 on the blocked surface) |
@@ -267,7 +268,7 @@ All queries use `SNOWFLAKE.ACCOUNT_USAGE` views (up to 1-hour latency, 365-day r
 The full query set is in [`sql/observability.sql`](sql/observability.sql). Below is a summary of what each query answers:
 
 | # | Question |
-|---|---|
+| --- | --- |
 | 1 | Who is using Cortex Code today? (user, requests, credits, first/last seen) |
 | 2 | Which surface is most popular? (CLI vs Desktop vs Snowsight) |
 | 3 | What models are being consumed? (token breakdown per model) |

@@ -14,7 +14,7 @@ Pair-programmed by SE Community + Cortex Code
 ## Boundary Map
 
 | Boundary | Evidence | Common cause | Repair pattern |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Task did not fire | `TASK_HISTORY`, `SHOW TASKS` | Suspended task, owner privilege | Preserve prior state; fix grant; resume only if previously resumed |
 | Procedure did not start | task error + `SHOW GRANTS TO ROLE` | Missing EAI/warehouse/procedure privilege | Add least privilege; retry one store |
 | Token request | `PULL_RUN_LOG.ERROR_MESSAGE` | App not installed/released; wrong secret; missing scope | Verify app state; rotate secret without exposing it |

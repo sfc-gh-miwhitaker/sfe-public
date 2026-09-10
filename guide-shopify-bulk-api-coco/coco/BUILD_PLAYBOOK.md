@@ -17,7 +17,7 @@ to execute these gates in order.
 ## Gates
 
 | Gate | CoCo action | Pass evidence |
-|---|---|---|
+| --- | --- | --- |
 | Documentation | Verify API version, client-credentials grant, Bulk Operation limits, Python runtime, secret API, and `put_stream` | Current first-party URLs and no contradicted syntax |
 | Security | Deploy `01` and `02`; create the store secret through a private SQL input; scan the repository | `DESC SECRET` metadata, EAI allowlist, no secret values in files |
 | Compilation | Compile every DDL independently; parse embedded Python; validate GraphQL against one store | No compile/parser errors |

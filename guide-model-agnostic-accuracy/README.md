@@ -65,6 +65,7 @@ The mechanism is straightforward: Cortex Analyst generates SQL by following rule
 The model cannot reliably infer that `amt_ttl_pre_dsc` means "gross revenue before discounts." When you skip descriptions, you're asking the LLM to guess from column names, and different models can guess differently. An authoritative description removes that specific source of ambiguity.
 
 Write descriptions for every logical table and business-relevant column. A useful description includes:
+
 - What the data represents in business terms
 - Calculation logic if the column is derived
 - Valid values or edge cases (e.g., "Present only on failures. Use with is_success = 'NO'")
@@ -88,6 +89,7 @@ Add VQRs after the tables, relationships, descriptions, metrics, and filters are
 Business rules live in your team's heads — fiscal year starts in April, exclude internal accounts by default, "performance" means conversion rate not page load time. Without custom instructions, the system has no way to know these things, and no model — however capable — can infer them from column names.
 
 Use `module_custom_instructions` with two components:
+
 - **`sql_generation`**: Data formatting, default filters, domain-specific calculation rules
 - **`question_categorization`**: Guardrails — block out-of-scope topics, ask for clarification when input is ambiguous
 
@@ -112,7 +114,7 @@ Avoid auto-generated synonym lists. Current guidance is to add synonyms only for
 ### Summary of practices
 
 | Practice | Why it matters |
-|----------|---------------|
+| ---------- | --------------- |
 | Descriptions on every table and relevant column | Reduces guessing; grounds interpretation in business meaning |
 | 5–10 tables for the initial use case | Keeps early debugging manageable; expand deliberately |
 | Roughly 100,000-token context guideline | Reduces pruning risk as the view, instructions, and conversation grow |
@@ -128,6 +130,7 @@ Avoid auto-generated synonym lists. Current guidance is to add synonyms only for
 | Validate incrementally | One table at a time, dims then metrics — know exactly what broke |
 
 **Further reading**:
+
 - [Best Practices for Semantic Views (modeling)](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-modeling)
 - [Best Practices for Semantic Views (dev pipeline)](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-dev)
 - [Custom Instructions in Cortex Analyst](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/custom-instructions)
@@ -154,6 +157,7 @@ Define why the agent exists, who it serves, and what specific questions it shoul
 Tool descriptions, `instructions.orchestration`, tool types and schemas, and conversation context all influence planning. A vague description ("Analyzes data") forces more model inference. A precise description ("Queries structured sales data including revenue, orders, and customer metrics for the North America region. Use for quantitative questions about sales performance. Do NOT use for policy or documentation questions.") gives the planner a clearer boundary.
 
 A useful tool description includes:
+
 - What the tool does (capabilities)
 - What data it accesses (domain/scope)
 - When to use it (trigger conditions)
@@ -176,7 +180,7 @@ A Cortex Search tool retrieves unstructured content for the Agent. Configure its
 ### Summary of practices
 
 | Practice | Why it matters |
-|----------|---------------|
+| ---------- | --------------- |
 | One agent per high-value use case | Constrains decision space and makes tool selection easier to evaluate |
 | Tool descriptions: WHAT + data + when + when NOT | Gives the planner explicit capability and boundary signals |
 | Orchestration instructions with explicit routing rules | Reduces avoidable model judgment during planning |
@@ -184,6 +188,7 @@ A Cortex Search tool retrieves unstructured content for the Agent. Configure its
 | Current Cortex Search resource fields | Makes document retrieval and result identity explicit |
 
 **Further reading**:
+
 - [Build Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-cowork/build-agents)
 - [Create and Manage Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-manage)
 - [Tianxia Jia, "Mastering Semantic Views and Cortex Agents with Cortex Code"](https://medium.com/snowflake/mastering-semantic-views-and-cortex-agents-with-cortex-code-ba97afcc5aa9)
@@ -214,7 +219,7 @@ Semantic-view optimization can analyze verified queries and propose generalizabl
 Snowflake's evaluation metrics follow the Goal-Plan-Action (GPA) framework. Instead of judging only the final answer, they evaluate the agent at each stage of its reasoning:
 
 | Metric | What it measures | What a failure tells you |
-|--------|-----------------|--------------------------|
+| -------- | ----------------- | -------------------------- |
 | **Tool Selection Accuracy** (Public Preview) | Did the agent pick the expected tools? | Routing failed — inspect tool descriptions and orchestration instructions |
 | **Tool Execution Accuracy** (Public Preview) | Did supported tools get appropriate input and output? | Inspect tool input, semantic view, search configuration, or tool result |
 | **Answer Correctness** | Does the final response match expected ground truth? | Response synthesis failed — fix response instructions or ground truth |
@@ -248,7 +253,7 @@ Current Agent evaluations do not exercise MCP tools. Tool selection and executio
 ### Summary of practices
 
 | Practice | Why it matters |
-|----------|---------------|
+| ---------- | --------------- |
 | Enable every applicable system metric | Each diagnoses a different failure mode and requires suitable ground truth |
 | Absolute dates in ground truth | Eliminates temporal drift that produces false failures |
 | Include negatives ("should NOT contain") | Catches hallucination that positive-only rubrics miss |
@@ -260,6 +265,7 @@ Current Agent evaluations do not exercise MCP tools. Tool selection and executio
 | Test unsupported tool paths separately | Covers MCP, skill, code-file, and session-attribute gaps |
 
 **Further reading**:
+
 - [Cortex Agent Evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations)
 - [Michael Segner, "Monitoring Cortex Agent Performance Using Trace Data"](https://medium.com/snowflake/monitoring-cortex-agent-performance-using-trace-data-8f40dd3e012c)
 
@@ -276,7 +282,7 @@ A well-configured semantic view lowers the cognitive floor for the orchestrator.
 The spectrum:
 
 | Semantic layer quality | Model requirement | Result |
-|------------------------|-------------------|--------|
+| ------------------------ | ------------------- | -------- |
 | Weak (vague descriptions, no VQRs, no routing rules) | Higher model sensitivity | More reasoning is required; quality, latency, and cost become less predictable |
 | Strong (precise descriptions, VQRs, explicit routing) | Broader model choice | Lower ambiguity; validate quality, latency, and consumption per model |
 
@@ -285,6 +291,7 @@ The spectrum:
 It is a useful diagnostic signal that the semantic layer or Agent instructions may contain ambiguity. Inspect those layers first, then decide whether the remaining quality difference justifies a different model.
 
 Common gaps exposed by weaker models:
+
 - Missing VQRs for frequently asked question patterns
 - Vague descriptions that require inference
 - Ambiguous tool descriptions that require reasoning about scope
@@ -310,6 +317,7 @@ A faster response is preferable only when measured quality and governance requir
 Set seconds and token budgets from representative workloads. Tightening a budget can reveal slow tools or broad planning paths, but budget exhaustion does not prove that the semantic view is under-specified.
 
 **Further reading**:
+
 - [Build Agents — Model Selection](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-cowork/build-agents)
 - [Tianxia Jia, "Optimizing Snowflake Cortex Analyst Performance"](https://medium.com/snowflake/optimizing-snowflake-cortex-analyst-performance-48ae4735c8e1)
 
@@ -345,7 +353,7 @@ When adding to a semantic view: one table at a time, dimensions first, then metr
 ### Summary of practices
 
 | Practice | Why it matters |
-|----------|---------------|
+| ---------- | --------------- |
 | Semantic view definition in Git | Version control, peer review, rollback — same discipline as application code |
 | Analyst and Agent evaluations triggered on PR | Separates SQL regressions from end-to-end Agent regressions |
 | Review VQR suggestions from usage data | Real user questions without matching VQRs — targeted accuracy gains |
@@ -354,6 +362,7 @@ When adding to a semantic view: one table at a time, dimensions first, then metr
 | Validate incrementally (one table, dims then metrics) | Know exactly what caused a break |
 
 **Further reading**:
+
 - [Best Practices for Semantic Views (modeling)](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-modeling)
 - [Best Practices for Semantic Views (dev pipeline)](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-dev)
 - [Suggestions for Semantic Models and Views](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/verified-query-suggestions)
@@ -427,7 +436,7 @@ For practitioners who have read the guide and want a reminder during implementat
 ### Official Documentation
 
 | Topic | Link |
-|-------|------|
+| ------- | ------ |
 | Semantic view best practices (modeling) | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-modeling) |
 | Semantic view best practices (dev pipeline) | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-dev) |
 | Build agents | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-cowork/build-agents) |
@@ -442,7 +451,7 @@ For practitioners who have read the guide and want a reminder during implementat
 ### Practitioner Posts (Snowflake Builders Blog)
 
 | Author | Title | Link |
-|--------|-------|------|
+| -------- | ------- | ------ |
 | Augusto Rosa | What I Learned Building 24 ACCOUNT_USAGE Models in Production | [medium.com](https://medium.com/snowflake/snowflake-semantic-views-what-i-learned-building-24-account-usage-models-in-production-566035fa56ae) |
 | Tianxia Jia | Mastering Semantic Views and Cortex Agents with Cortex Code | [medium.com](https://medium.com/snowflake/mastering-semantic-views-and-cortex-agents-with-cortex-code-ba97afcc5aa9) |
 | Tianxia Jia | Optimize Snowflake Intelligence Cortex Agent Setup | [medium.com](https://medium.com/snowflake/optimize-snowflake-intelligence-cortex-agent-setup-a-complete-ai-powered-guide-f01383ac6969) |
@@ -456,7 +465,7 @@ For practitioners who have read the guide and want a reminder during implementat
 ### Snowflake Engineering Blog
 
 | Title | Link |
-|-------|------|
+| ------- | ------ |
 | Cortex Sense for Enterprise AI Agents | [snowflake.com](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) |
 | Using AI to Improve AI with Cortex Analyst | [snowflake.com](https://www.snowflake.com/en/engineering-blog/using-ai-improving-ai/) |
 | Best Practices for Creating Semantic Views (Quickstart) | [snowflake.com](https://www.snowflake.com/en/developers/guides/best-practices-semantic-views-cortex-analyst/) |

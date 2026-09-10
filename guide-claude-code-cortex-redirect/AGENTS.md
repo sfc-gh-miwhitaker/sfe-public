@@ -5,6 +5,7 @@
 ## Architecture
 
 Single-purpose guide with three markdown files:
+
 - `README.md` — overview, routing table, prerequisites
 - `claude-code-redirect.md` — Claude Code CLI redirect setup
 - `sdk-redirect.md` — Anthropic SDK and OpenAI SDK redirect patterns

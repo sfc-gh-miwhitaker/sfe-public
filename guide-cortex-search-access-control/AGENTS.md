@@ -7,7 +7,7 @@
 
 Documentation-only guide — no SQL deploy scripts, no Streamlit app, no Snowflake objects created.
 
-```
+```text
 README.md                  → overview, decision tree, pattern comparison table, roadmap
 filter-attribute-ubac.md   → Pattern 1: ATTRIBUTES + @contains filter (recommended for dynamic access)
 separate-services.md       → Pattern 2: separate service per data boundary (static groups)

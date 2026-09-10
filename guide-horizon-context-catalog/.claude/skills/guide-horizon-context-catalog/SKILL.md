@@ -24,7 +24,7 @@ Cortex Sense         ← announced context activation for CoCo queries
 ## Key Files
 
 | File | Role |
-|---|---|
+| --- | --- |
 | `README.md` | Full guide — the main deliverable |
 | `ELI5.md` | Plain-language summary; must stay factually aligned with the README |
 | `docs/01-WHAT-CAN-I-DO-NOW.md` | Action checklist; separates GA work from preview requests |

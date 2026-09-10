@@ -97,7 +97,7 @@ flowchart LR
 `ListenOTLP` does the signal separation for you. It writes three FlowFile attributes:
 
 | Attribute | Value |
-|---|---|
+| --- | --- |
 | `resource.type` | `LOGS`, `METRICS`, or `TRACES` — route on this |
 | `mime.type` | `application/json` — the processor emits JSON regardless of whether the client sent Protobuf |
 | `resource.count` | Number of resource elements in the message — useful as a throughput metric |
@@ -226,7 +226,7 @@ outbound calls.
 `ListenOTLP` is configured on the NiFi canvas, not in SQL. Add the processor and set:
 
 | Property | Value | Why |
-|---|---|---|
+| --- | --- | --- |
 | `Port` | `4318` | The OTLP/HTTP convention. Protocol is detected from `Content-Type`, so one port can serve both, but running gRPC on `4317` separately is clearer to operate. |
 | `Address` | Leave default | Default listens on all addresses. |
 | `SSL Context Service` | A configured `StandardRestrictedSSLContextService` | **Not optional.** Telemetry routinely carries user IDs, request paths, and exception messages. Unencrypted OTLP is a data-exposure finding waiting to happen. |

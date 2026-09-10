@@ -18,7 +18,7 @@ Pair-programmed by SE Community + Cortex Code
 ## Who This Is For
 
 | You are... | Your question | Jump to |
-|---|---|---|
+| --- | --- | --- |
 | **Admin** | "My users can't access CoCo — how do I fix it?" | [Part 2: Unblock Access](#part-2-why-your-users-cant-access-coco) |
 | **Admin** | "How do I enable this without surprise charges?" | [Part 3: Cost Guardrails](#part-3-enable-with-cost-guardrails) |
 | **Developer** | "Where do I use CoCo?" | [Part 1: Surfaces](#part-1-where-coco-lives) |
@@ -37,7 +37,7 @@ CoCo is available across five surfaces — pick the one that fits where you alre
 CoCo is integrated directly into Snowsight. If your users have the required roles and cross-region inference is enabled, they already have it.
 
 | | |
-|---|---|
+| --- | --- |
 | **Open it** | Click the CoCo icon in the lower-right corner of any Snowsight page |
 | **What it does** | Agentic coding in Workspaces: SQL, notebooks, dbt, Streamlit |
 | **Customizable** | Supports `AGENTS.md` and personal skills in the workspace |
@@ -52,7 +52,7 @@ CoCo is integrated directly into Snowsight. If your users have the required role
 For developers who live in VS Code — **no separate app download required.**
 
 | Step | Action |
-|------|--------|
+| ------ | -------- |
 | 1 | Install the **Snowflake** extension from the VS Code Marketplace |
 | 2 | Click the snowflake icon in the sidebar → sign in to your account |
 | 3 | Click the **CoCo** icon in the Activity Bar to open the chat panel |
@@ -111,7 +111,7 @@ See [Cortex Code in Your Editor](https://docs.snowflake.com/en/user-guide/cortex
 ### The Three Blockers
 
 | # | Blocker | What users see | Fix time |
-|---|---------|---------------|----------|
+| --- | --------- | --------------- | ---------- |
 | 1 | **Cross-region inference disabled** | Empty model picker, "no models available" | 1 minute |
 | 2 | **Model allowlist too restrictive** | Empty model picker (different root cause) | 1 minute |
 | 3 | **CORTEX_USER revoked from PUBLIC** | CoCo icon missing or grayed out | 1 minute |
@@ -131,7 +131,7 @@ ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'AWS_GLOBAL';
 <summary><strong>All CRI options</strong></summary>
 
 | Setting | What it enables |
-|---------|----------------|
+| --------- | ---------------- |
 | `AWS_GLOBAL` | All Claude models on AWS **(recommended for most)** |
 | `AZURE_GLOBAL` | OpenAI GPT models on Azure |
 | `ANY_REGION` | All models across all clouds |
@@ -200,7 +200,7 @@ When a user hits their daily limit, that surface is blocked until the rolling 24
 ### Credit Limit Quick Reference
 
 | Value | What happens |
-|-------|-------------|
+| ------- | ------------- |
 | `-1` (default) | **No limit** — unlimited usage |
 | `0` | **Blocked** — surface completely disabled |
 | `20` | Blocked after ~20 credits in a rolling 24-hour window |
@@ -246,7 +246,7 @@ ORDER BY total_credits DESC;
 ### Common Scenarios
 
 | I want to... | Do this |
-|---|---|
+| --- | --- |
 | Cap daily spend per user | Set all three `*_DAILY_EST_CREDIT_LIMIT_PER_USER` params |
 | Block one surface entirely | Set that surface's param to `0` |
 | Allow only specific users on Desktop | Account = `0`, then per-user positive values |
@@ -270,7 +270,7 @@ Cortex Code follows the same layered configuration model as Claude Code. Higher 
 ### What Cortex Code Adds
 
 | Scope | Shared (CoCo + Claude Code + Cursor) | Cortex Code adds |
-|-------|---------------------------------------|------------------|
+| ------- | --------------------------------------- | ------------------ |
 | **Org** (IT-managed) | — | `managed-settings.json` |
 | **User** | `~/.claude/CLAUDE.md`, `~/.claude/skills/` | `~/.snowflake/cortex/settings.json`, `~/.snowflake/cortex/skills/`, `~/.snowflake/cortex/plugins/` |
 | **Project** | `AGENTS.md`, `.claude/skills/` | `.cortex/skills/`, `.cortex/plugins/` |
@@ -302,7 +302,7 @@ cp -r reference/first-skill/references ~/.claude/skills/team-standards/
 ## Part 6: What's Next
 
 | Capability | What it does | Where to learn |
-|------------|-------------|----------------|
+| ------------ | ------------- | ---------------- |
 | **Plugins** | Bundles of skills + hooks + MCP in one package | Skills & Plugins catalog in Desktop |
 | **Memory** | Persistent context across conversations | `/memory` in chat |
 | **Hooks** | Shell commands on events (session start, tool calls) | [Extensibility](https://docs.snowflake.com/en/user-guide/cortex-code/extensibility) |
@@ -329,7 +329,7 @@ cp -r reference/first-skill/references ~/.claude/skills/team-standards/
 ## External References
 
 | Resource | URL |
-|----------|-----|
+| ---------- | ----- |
 | CoCo in Snowsight | https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-snowsight |
 | CoCo Desktop | https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-desktop |
 | CoCo Desktop Onboarding | https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-desktop/onboarding-and-authentication |

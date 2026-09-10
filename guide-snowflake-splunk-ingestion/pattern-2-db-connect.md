@@ -8,7 +8,7 @@ This works on Splunk Cloud and Splunk Enterprise. It is the recommended path for
 
 ## Architecture
 
-```
+```text
 Snowflake ACCOUNT_USAGE views
         │
         │  JDBC (Snowflake driver)
@@ -89,11 +89,13 @@ ALTER USER SPLUNK_DBX_USER ADD PROGRAMMATIC ACCESS TOKEN SPLUNK_DBX_PAT;
 ## Step 2: Install DB Connect + JDBC Driver
 
 **Install DB Connect:**
+
 1. Download from [Splunkbase](https://splunkbase.splunk.com/app/2686/)
 2. In Splunk: **Apps → Manage Apps → Install app from file**
 3. Restart Splunk after install
 
 **Install Snowflake JDBC driver:**
+
 1. Download the latest `snowflake-jdbc-<version>.jar` from [Maven](https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/)
 2. Place it in: `$SPLUNK_HOME/etc/apps/splunk_app_db_connect/drivers/`
 
@@ -127,9 +129,11 @@ useConnectionPool = true
    - Identity: (select above)
    - Connection Type: `Snowflake`
    - Edit JDBC URL:
-     ```
+
+     ```text
      jdbc:snowflake://<account>.<region>.snowflakecomputing.com/?user=SPLUNK_DBX_USER&db=SNOWFLAKE&role=SPLUNK_DBCONNECT_ROLE&warehouse=SPLUNK_DBX_WH&application=SPLUNK
      ```
+
    - Replace `<account>` with your Snowflake account name and `<region>` with your region (omit for AWS US West)
 
 ---
@@ -161,6 +165,7 @@ ORDER BY EVENT_ID ASC
 ```
 
 In DB Connect Input settings:
+
 - Rising Column: `EVENT_ID`
 - Checkpoint Value: `0` (start from beginning) or a recent `EVENT_ID`
 - Schedule: `*/15 * * * *` (every 15 minutes)
@@ -199,6 +204,7 @@ LIMIT 10000
 > **Important:** Add `LIMIT 10000` (or your batch size). `QUERY_HISTORY` can have millions of rows. The `LIMIT` prevents a single poll from overwhelming both Snowflake and Splunk. Tune based on your query rate.
 
 In DB Connect Input settings:
+
 - Rising Column: `START_TIME_NTZ`
 - Schedule: `*/30 * * * *` (every 30 minutes; ACCOUNT_USAGE lag is ~45 min)
 
@@ -246,7 +252,7 @@ ORDER BY SESSION_ID ASC
 ## Rising Column Gotchas
 
 | Issue | Cause | Fix |
-|---|---|---|
+| --- | --- | --- |
 | Checkpoint not advancing for `QUERY_HISTORY` | `START_TIME` is `TIMESTAMP_LTZ`; DB Connect checkpoint comparison fails across timezone formats | Cast to `TIMESTAMP_NTZ` in the query; use the alias as the rising column |
 | `ACCESS_HISTORY.QUERY_START_TIME` checkpoint stuck | Same timezone issue | Same fix: cast + alias |
 | Re-ingesting rows already seen | Checkpoint value lost or reset | Check DB Connect checkpoint storage; do not change the rising column name |
@@ -257,7 +263,7 @@ ORDER BY SESSION_ID ASC
 ## Cost Profile
 
 | Component | Cost Driver |
-|---|---|
+| --- | --- |
 | Snowflake warehouse | SPLUNK_DBX_WH: XSMALL at $0.02/credit (Standard). Spins up per poll, auto-suspends. Estimate ~2 credits/day for 30-min polling intervals. |
 | Splunk ingest | Per-GB pricing varies by license. `QUERY_HISTORY` at a busy org: 1–5 GB/day. `ACCESS_HISTORY`: can be 5–20 GB/day. `LOGIN_HISTORY`: small (<100 MB/day). |
 

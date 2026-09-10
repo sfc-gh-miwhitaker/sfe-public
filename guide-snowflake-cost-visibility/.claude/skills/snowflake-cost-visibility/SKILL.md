@@ -8,6 +8,7 @@ description: "Guide to foundational Snowflake cost visibility: Budget objects, A
 ## Purpose
 
 Covers the four foundational cost controls any Snowflake account should have in place before AI spend begins scaling:
+
 1. Account-level spend alerting via the Budget object
 2. `METERING_DAILY_HISTORY` queries for service-type attribution
 3. Resource monitor guardrails on individual warehouses
@@ -17,7 +18,7 @@ Companion to `guide-cortex-ai-cost-controls` (AI-specific spend and enforcement)
 
 ## Architecture
 
-```
+```text
 README.md  ←  main narrative guide (4 sections)
 sql/
   budget_setup.sql          ← create/activate account root budget + notifications
@@ -29,7 +30,7 @@ sql/
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Full narrative guide with prose, decision criteria, SQL cross-refs |
 | `sql/budget_setup.sql` | Activate account budget; set limit; wire email/Slack/SNS notifications |
 | `sql/account_usage_queries.sql` | Service type breakdown, warehouse attribution, 30-day trend, user spend |

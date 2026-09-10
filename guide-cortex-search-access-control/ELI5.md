@@ -19,7 +19,7 @@ A smarter version — where the librarian automatically uses your key instead of
 ## The Cast
 
 | Concept | In plain words |
-|---|---|
+| --- | --- |
 | **Cortex Search Service** | The AI-powered search index. You ask it questions in plain English and it finds the most relevant rows from your data. |
 | **Owner's rights** | The security model where the search runs as the person who built the index — not the person asking. Everyone who can use the service sees everything the owner can see. |
 | **ATTRIBUTES** | Columns you mark as "filterable" when you build the service. These are the fields you can use to narrow results at query time. |

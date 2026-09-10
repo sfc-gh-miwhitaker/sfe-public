@@ -29,18 +29,18 @@ CoWork combines Cortex Agents with structured and unstructured data, most Vega-L
 
 **Want to use CoWork right now?** Open [What Can I Do Now?](WHAT-CAN-I-DO-NOW.md) for an outcome-based menu, ready-to-run prompts, prerequisites, and first-line troubleshooting.
 
-**Already know CoWork exists?** Start with [The `+` Menu](#1-the--menu-is-your-command-center) and [Deep Research](#2-deep-research--the-investigation-mode). Those two sections change most demos.
+**Already know CoWork exists?** Start with [The `+` Menu](#1-the--menu-is-your-command-center) and [Deep Research](#2-deep-research----the-investigation-mode). Those two sections change most demos.
 
 **About to show this to a customer?** Read [Common Misconceptions](#common-misconceptions-to-correct-in-demos) first. Availability, live artifacts, web search, and MCP setup are the claims most likely to be overstated.
 
-**Configuring an enterprise rollout?** Jump to [Admin Tricks](#admin-tricks), [MCP Connectors](#10-mcp-connectors--governed-connections-not-zero-setup), and [Cost Controls](#15-cost-controls--budgets-quotas-and-usage-history).
+**Configuring an enterprise rollout?** Jump to [Admin Tricks](#admin-tricks), [MCP Connectors](#10-mcp-connectors----governed-connections-not-zero-setup), and [Cost Controls](#15-cost-controls----budgets-quotas-and-usage-history).
 
 ---
 
 ## Surface Map
 
 | Capability | Availability | Where to find it |
-|---|---|---|
+| --- | --- | --- |
 | Deep Research | GA | `+` menu -> Deep Research |
 | Extended Thinking | GA | Chat controls |
 | File upload | GA | `+` menu -> Upload file |
@@ -259,7 +259,7 @@ Use the account-level Snowflake CoWork object to curate visible agents. Managing
 These capabilities are not part of the broadly documented current surface. Treat them as roadmap or restricted-preview context and verify availability before discussing them externally.
 
 | Capability | Current guidance |
-|---|---|
+| --- | --- |
 | Personal Work Agent / auto-routing | Preview rollout. Provides a single entry point that routes to specialist agents. |
 | User Memory | Explicit memory behavior is in preview rollout; implicit capture and routing behavior continues to evolve. |
 | CoWork Dashboards / Artifacts 2.0 | Restricted preview for analyst-authored, multi-pane dashboards published from CoCo to CoWork. Current GA artifacts remain single charts or tables. |
@@ -272,7 +272,7 @@ These capabilities are not part of the broadly documented current surface. Treat
 ## Common Misconceptions to Correct in Demos
 
 | Misconception | Reality |
-|---|---|
+| --- | --- |
 | "Everything in the `+` menu is GA" | The menu mixes GA and Preview capabilities; availability also depends on account and agent configuration. |
 | "Deep Research automatically searches the web" | It investigates configured agent sources. Web search requires a separately enabled tool. |
 | "Artifacts refresh every time they're opened" | Live chart/table artifacts auto-refresh after more than 12 hours since the viewer's last view, or on manual refresh. |

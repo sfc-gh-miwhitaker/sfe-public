@@ -19,7 +19,7 @@ Two self-contained markdown docs, no deployable objects:
 ## Key Files
 
 | File | Role |
-|---|---|
+| --- | --- |
 | `README.md` | Router + positioning + the five layers + honest gaps |
 | `same-account-agent-to-agent.md` | GA same-account working spec (4 steps + gotchas) |
 | `AGENTS.md` | Project instructions + verified-facts list |
@@ -31,7 +31,7 @@ Snowflake ships **no proprietary agent-to-agent bus**. Every path makes the chil
 ## Decision shortcut
 
 | Where do the agents live? | Path | Maturity |
-|---|---|---|
+| --- | --- | --- |
 | Same account | Wrapper proc + `DATA_AGENT_RUN` as a tool | GA |
 | Different Native Apps | Inter-app agents (RCR + `GRANT CALLER`) | Preview (Open) |
 | Reaching/exposing external systems | MCP (managed / SPCS / connectors) | GA (managed) |

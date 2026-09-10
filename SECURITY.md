@@ -15,7 +15,7 @@ We will acknowledge receipt within 48 hours and provide a timeline for remediati
 This repository is designed to contain **zero real credentials**. Every secret reference uses one of these safe patterns:
 
 | Pattern | Example | Meaning |
-|---|---|---|
+| --- | --- | --- |
 | `<YOUR_...>` placeholder | `OAUTH_CLIENT_SECRET = '<YOUR_INTUIT_CLIENT_SECRET>'` | Replace with your value |
 | Obvious fakes | `T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX` | Placeholder for Slack webhooks |
 | Environment variables | `os.getenv("SNOWFLAKE_PASSWORD")` | Loaded at runtime, never stored |
@@ -36,7 +36,7 @@ Before committing, verify that:
 This repository implements multiple layers of secret detection:
 
 | Layer | Tool | Scope |
-|---|---|---|
+| --- | --- | --- |
 | Pre-commit hook | [detect-secrets](https://github.com/Yelp/detect-secrets) | Blocks secrets before commit |
 | Pre-commit hook | [gitleaks](https://github.com/gitleaks/gitleaks) | Second scanner for defense-in-depth |
 | Pre-commit hook | `detect-private-key` | Blocks PEM/key file content |

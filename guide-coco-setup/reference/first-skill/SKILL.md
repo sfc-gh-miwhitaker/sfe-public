@@ -21,6 +21,7 @@ Trigger phrases: "review this SQL", "check standards", "validate naming", "pre-c
 ## Compaction Recovery
 
 If the AI forgets conventions mid-session, context compaction likely happened. Recovery:
+
 1. Re-read `~/.claude/CLAUDE.md` (the always-on standards)
 2. Re-invoke this skill (`/skill team-standards`)
 3. Re-read the project's `AGENTS.md`

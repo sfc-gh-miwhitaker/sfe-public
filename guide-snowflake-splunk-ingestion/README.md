@@ -21,7 +21,7 @@ Pair-programmed by SE Community + Cortex Code
 ## Read These Words First
 
 | Term | In plain words |
-|---|---|
+| --- | --- |
 | **ACCOUNT_USAGE** | A shared database Snowflake provides to every account. Contains audit views like `LOGIN_HISTORY`, `QUERY_HISTORY`, `ACCESS_HISTORY`. No extra cost to query. Has 45-minute to 3-hour data latency. |
 | **Information Schema** | A lower-latency (7-day retention) alternative to ACCOUNT_USAGE. Use for operational queries; ACCOUNT_USAGE for long-term audit. |
 | **Rising Column** | The DB Connect technique for incremental ingest — a monotonically increasing column (like `EVENT_ID`) that tells Splunk "only fetch rows newer than this checkpoint." |
@@ -57,7 +57,7 @@ flowchart TD
 ## Pattern Comparison
 
 | | [Pattern 1: Federated Search](pattern-1-federated-search.md) | [Pattern 2: DB Connect](pattern-2-db-connect.md) | [Pattern 3: External Stage](pattern-3-external-stage.md) | [Pattern 4: Sentry](pattern-4-sentry.md) |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **Data moves to Splunk?** | No — queried in-place | Yes — ingested as events | Yes — via cloud storage | Findings only |
 | **Splunk ingest cost** | None | Per-GB of audit log volume | Per-GB (scope to what you need) | Minimal (findings only) |
 | **Latency** | ACCOUNT_USAGE lag (45min–3hr) | ACCOUNT_USAGE lag (45min–3hr) | Configurable (task schedule) | Configurable (task schedule) |
@@ -73,7 +73,7 @@ flowchart TD
 All views are in `SNOWFLAKE.ACCOUNT_USAGE`:
 
 | View | What It Contains | ACCOUNT_USAGE Lag | Recommended Rising Column |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `LOGIN_HISTORY` | All login attempts (success + failure), client type, MFA status | ~2 hours | `EVENT_ID` |
 | `QUERY_HISTORY` | All queries: user, role, warehouse, runtime, bytes scanned | ~45 min | `START_TIME` (cast to TIMESTAMP_NTZ) |
 | `ACCESS_HISTORY` | Which tables/columns each query touched; lineage | ~3 hours | `QUERY_START_TIME` (cast to TIMESTAMP_NTZ) |

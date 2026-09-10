@@ -33,6 +33,7 @@ adopt them.** Established 2026-08-28 after a draft leaned toward gating Openflow
 behind a recommendation framework.
 
 Concretely, do NOT add:
+
 - Adoption screens, readiness criteria, or go/no-go frameworks
 - Internal telemetry: support-case sentiment ratios, escalation rates, credit consumption
   patterns, cost-shock figures
@@ -75,7 +76,7 @@ counts and setup steps without editorializing.
 ## Provenance Tiers
 
 | Tier | Meaning | How to re-verify |
-|---|---|---|
+| --- | --- | --- |
 | **Verified** | Official Snowflake/Google docs, or executed live | Re-fetch, or re-execute |
 | **Unverified** | In one vendor's docs but not confirmable elsewhere, or documented inconsistently | Called out inline |
 
@@ -90,6 +91,7 @@ Part 3 setup steps read as observed behavior.
 Confirmed by execution or primary documentation:
 
 **Part 1 — Google Ads Data Manager**
+
 - Authenticates with a **Programmatic Access Token**, not a password and not key-pair. The UI
   field is labeled *password*; the PAT goes in it.
 - The connector exposes **no ROLE field** — hence `ROLE_RESTRICTION` on the PAT.
@@ -109,6 +111,7 @@ Confirmed by execution or primary documentation:
 - Snowflake documentation **does not mention Google Ads Data Manager anywhere.**
 
 **Snowflake → Meta activation**
+
 - **Snowflake Data Clean Rooms ships a Meta Ads Manager activation connector**, alongside a Google
   Ads one. Configured under Connectors » Activation with the `MANAGE_DCR_CONNECTORS` role.
 - **Third-party activation is UI only** — not available via custom templates; the support matrix
@@ -178,6 +181,7 @@ moved to Part 3. Do not merge them back together.
   Meta/Snowflake documentation.
 
 **Part 3 — Openflow**
+
 - **Openflow — Snowflake Deployments is Generally Available** (AWS, Azure, GCP commercial), runs
   on SPCS. **Openflow — BYOC is AWS commercial only.** The Meta Ads and Google Ads *connectors*
   are **Preview**. Do not collapse the platform status into the connector status, or vice versa.

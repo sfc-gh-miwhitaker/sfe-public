@@ -23,7 +23,7 @@ Pair-programmed by SE Community + Cortex Code
 This vocabulary shows up throughout the guide. Skim the table once and the rest reads easily — you don't need to memorize it.
 
 | Term | In plain words |
-|---|---|
+| --- | --- |
 | **Snowflake account** | Your company's Snowflake environment — its data, its compute, and its users. |
 | **Cortex Agent** | An AI assistant inside Snowflake that answers questions by reasoning and calling tools. |
 | **Tool** | One capability an agent can call — run a query, search documents, run a function. The agent decides when to use each one. |
@@ -70,7 +70,7 @@ flowchart TD
 ```
 
 | Need | Use | Maturity |
-|---|---|---|
+| --- | --- | --- |
 | One agent hands work to another, **in the same account** | A small saved procedure (using `DATA_AGENT_RUN`) exposed as a tool | **GA** building blocks ([walkthrough](same-account-agent-to-agent.md)) |
 | Agents across **Native Apps / data products** | Inter-app agents: RCR + `GRANT CALLER` | **Preview (Open)** — all accounts |
 | Agent reaches an **external system**, or exposes itself | MCP: `CREATE MCP SERVER` / `CREATE CUSTOM MCP SERVER` / MCP connectors | **GA** (managed server) |
@@ -107,7 +107,7 @@ When the two agents live in *separate* installed apps (Native Apps), one app's a
 > In this section, **"consumer"** = the account (or its admin) that *installed* the app; **"provider"** = whoever published it.
 
 | What | Rule |
-|---|---|
+| --- | --- |
 | Rights model | App agents run under **Restricted Caller's Rights (RCR)** — default **no access** to consumer data |
 | Cross-app access | Requires explicit **`GRANT CALLER`** from the consumer admin (database/schema/object scope) |
 | Enforcement date | **June 5, 2026** for Native App Cortex Agents — *this is now in effect*. Apps published before that date keep working under the older, looser rules (they're "grandfathered") |
@@ -120,7 +120,7 @@ When the two agents live in *separate* installed apps (Native Apps), one app's a
 Snowflake leans on the **MCP** open standard, not a private Snowflake-only mechanism, to connect across systems:
 
 | Object | What it wraps | When |
-|---|---|---|
+| --- | --- | --- |
 | `CREATE MCP SERVER` (Snowflake-managed) | Cortex Search, Cortex Analyst (semantic views), **Cortex Agents** (`CORTEX_AGENT_RUN`), UDFs/procs (`GENERIC`), SQL (`SYSTEM_EXECUTE_SQL`) | Tools map to Snowflake-native objects |
 | `CREATE CUSTOM MCP SERVER` (SPCS-hosted) | Arbitrary code / ML behind an SPCS endpoint | You need custom compute, external APIs, a non-SQL framework |
 | MCP connectors | Remote third-party MCP servers (Jira, Salesforce, your own) | Agent reaches outward |
@@ -138,7 +138,7 @@ Because an agent can be *wrapped as* an MCP tool **and** *consume* MCP tools, "a
 ## What Is NOT Possible on Snowflake Alone Yet (Be Honest)
 
 | Gap | Reality |
-|---|---|
+| --- | --- |
 | **Google's A2A protocol** | Snowflake has no built-in way to *speak* Google's "Agent2Agent" protocol. You can still bridge it with custom code — wrap a Snowflake agent so it looks like an A2A agent to the outside world, or point Microsoft AI Foundry's A2A feature at Snowflake. Foundry can *call into* Snowflake; Snowflake won't *answer* A2A on its own. |
 | **The `AGENT_RUN()` "no tool execution" claim** | One practitioner's write-up reported that agents called through the `AGENT_RUN()` path "show intent to query but never actually run their tools." This is **not** something Snowflake documents — treat it as something to **test in a small proof-of-concept**, not a confirmed fact. The path proven to work is the saved-procedure + `DATA_AGENT_RUN` pattern in this guide. |
 | **Guaranteed step-by-step reliability** | An agent's decisions are driven by an AI model, so they aren't perfectly repeatable. When you need predictable behavior (automatic retries, guaranteed ordering, never running the same step twice), drive `DATA_AGENT_RUN` from a scheduled **Task** or a stored procedure instead of letting one agent freely delegate to another. |

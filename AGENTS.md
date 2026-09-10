@@ -10,7 +10,7 @@ maintained collaboratively with AI coding assistants (Cortex Code, Claude Code, 
 
 ## Repository Layout
 
-```
+```text
 sfe-public/
   guide-<name>/        Reference guides — no deploy script required
   demo-<name>/         Runnable demos — single deploy_all.sql entry point
@@ -22,7 +22,7 @@ sfe-public/
 
 Every file must carry:
 
-```
+```text
 Pair-programmed by SE Community + Cortex Code
 ```
 
@@ -43,6 +43,7 @@ Guides that configure a third-party tool (BI, AI coding assistant, SIEM, etc.) t
 authenticate and communicate with Snowflake.
 
 **Current members:**
+
 - `guide-coco-setup` — Cortex Code Desktop + CLI onboarding, configuration hierarchy, first skill
 - `guide-snowflake-mcp-role-controls` — Snowflake-managed MCP primary-role OAuth controls and secondary-role session-policy restrictions
 - `guide-powerbi-oauth` — Power BI OAuth SSO and DirectQuery
@@ -58,7 +59,7 @@ authenticate and communicate with Snowflake.
 - `guide-openflow-shopify-multistore` — Shopify (dozens of stores) into Snowflake via Openflow Snowflake Deployment: gen 2 SQL deployment/runtime, gen 1 canvas-installed Shopify connector per store, registry-driven per-store schemas, generated Dynamic Table analytics layer, honest readiness and cost-floor section, ELT cutover pattern
 - `guide-shopify-bulk-api-coco` — Shopify Bulk API into Snowflake with CoCo Desktop as the lifecycle interface: deterministic Python procedure/Task data path, SECRET + EAI security, generated multi-store bindings, proof-before-promotion qualification, Dynamic Tables, conversational troubleshooting, and read-only operations automations
 - `guide-otel-to-snowflake` — External OpenTelemetry logs, metrics, and traces into Snowflake: four ingestion patterns (Openflow ListenOTLP, Collector→Kafka→Connector v4, custom exporter→Snowpipe Streaming HP, files→stage→COPY/Iceberg) plus the shared event-table-shaped shredding layer and Dynamic Table reporting gold layer
-- `guide-ai-spend-consolidation` — Cross-platform AI usage and cost consolidation at user-level grain: pluggable adapter contract over vendor admin APIs (GitHub Copilot fully worked; ChatGPT Enterprise, Box AI, and M365 Copilot as build specifications), Snowflake-native ACCOUNT_USAGE adapter needing no credentials, cost-model-aware unified fact, identity spine, gold layer for five leadership decisions, semantic view and Cortex Agent, plus designed-in extensions for per-agent cost attribution and joining usage to operational outcomes
+- `guide-ai-spend-consolidation` — Cross-platform AI usage and cost consolidation at user-level grain: pluggable adapter contract over vendor admin APIs (GitHub Copilot fully worked; ChatGPT Enterprise, Box AI, M365 Copilot, Anthropic Claude Enterprise and Claude Console, Cursor, and the three Google surfaces — Workspace Gemini, Code Assist, Vertex AI — as build specifications), Snowflake-native ACCOUNT_USAGE adapter needing no credentials, cost-model-aware unified fact distinguishing pure seat from seat-includes-usage from seat-includes-nothing, per-platform revision windows so restated feeds are not appended, identity spine, gold layer for five leadership decisions, semantic view and Cortex Agent, plus designed-in extensions for per-agent cost attribution and joining usage to operational outcomes
 
 **Belongs here if:** the guide's primary job is configuring a named external product
 to connect to Snowflake. Authentication setup, endpoint configuration, and integration
@@ -70,6 +71,7 @@ Workshops and demos covering Snowflake-native ingestion, transformation, change 
 capture, orchestration, and incremental processing.
 
 **Current members:**
+
 - `demo-streams-cdc-workshop` — hands-on CDC with Streams and Tasks, including
   transactional change handling, staleness, monitoring, and recovery
 - `guide-otel-to-snowflake` — inbound OpenTelemetry pipelines: four ingestion patterns, the
@@ -87,6 +89,7 @@ Guides covering the design, configuration, deployment, and extension of Cortex A
 Reading order within this path matters.
 
 **Current members (in recommended reading order):**
+
 1. `guide-model-agnostic-accuracy` — semantic view and agent configuration foundations
 2. `guide-cortex-agent-versioning` — deployment lifecycle (LIVE → VERSION → alias)
 3. `guide-agent-to-agent-orchestration` — multi-agent patterns (DATA_AGENT_RUN, MCP)
@@ -104,6 +107,7 @@ Guides covering credit visibility, AI service governance, warehouse controls, an
 compute rightsizing. Reading order within this path matters.
 
 **Current members (in recommended reading order):**
+
 1. `guide-snowflake-cost-visibility` — foundational: Budget objects, METERING_DAILY_HISTORY,
    Resource Monitors, AI_FUNCTIONS_USER RBAC
 2. `demo-cortex-ai-cost-controls` — AI enforcement: usage view queries, runaway detection,
@@ -112,9 +116,10 @@ compute rightsizing. Reading order within this path matters.
 4. `guide-org-reporting` — multi-account visibility: ORGANIZATION_USAGE two-path decision,
    application/database roles, query discipline, materialization pattern
 5. `guide-ai-spend-consolidation` — beyond Snowflake: consolidating ChatGPT Enterprise,
-   GitHub Copilot, Box AI, and M365 Copilot usage and cost alongside Cortex at user-level
-   grain, with metered-versus-seat cost modeling, departmental allocation, and seat
-   utilization (also in Path 1 and Path 2)
+   Claude Enterprise, GitHub Copilot, Cursor, Box AI, M365 Copilot, and the Google AI
+   surfaces alongside Cortex at user-level grain, with metered-versus-seat cost modeling
+   (including the two seat-plus-meter shapes that break naive totals), departmental
+   allocation, and seat utilization (also in Path 1 and Path 2)
 
 **Belongs here if:** the guide's primary job is monitoring, alerting on, or limiting
 Snowflake credit or AI token consumption.
@@ -125,6 +130,7 @@ Guides covering access control patterns, identity federation, and audit log expo
 Each guide in this path is standalone — no required reading order.
 
 **Current members:**
+
 - `guide-snowflake-mcp-role-controls` — least-privilege MCP access role, OAuth role boundary, and named secondary-role ceiling
 - `guide-cortex-search-access-control` — Cortex Search RBAC (also in Path 3)
 - `guide-powerbi-oauth` — OAuth identity federation (also in Path 1)
@@ -142,6 +148,7 @@ Guides that explain and position recent Snowflake announcements. No required rea
 order — pick based on area of interest.
 
 **Current members:**
+
 - `guide-coco-setup` — Cortex Code Desktop + CLI onboarding (also in Path 1)
 - `guide-horizon-context-catalog` — Horizon Context, Cortex Sense, Apache Ossie, and documented vs unresolved agent security boundaries (Summit 2026)
 - `guide-universal-data-sharing` — Open Data Sharing, OTF sharing, Collaboration API (Summit 2026)
@@ -219,6 +226,7 @@ Each `demo-<name>/deploy_all.sql` must follow this structure exactly. Use
 ### deploy_all.sql structure (required, in order)
 
 **1. Header block** — block comment with:
+
 - Demo name + attribution + expiry date on the first line
 - `INSTRUCTIONS:` — "Open Snowsight → New Worksheet → Paste → Run All" + expected runtime
 - `WHAT GETS CREATED:` — every object the script creates, by type
@@ -226,6 +234,7 @@ Each `demo-<name>/deploy_all.sql` must follow this structure exactly. Use
 - `PREREQUISITES:` — roles needed, API integrations, any manual pre-steps
 
 **2. Expiration check SELECT** — runs immediately so the user sees a warning before anything is created:
+
 ```sql
 SELECT
     '<YYYY-MM-DD>'::DATE AS expiration_date,
@@ -239,6 +248,7 @@ SELECT
 ```
 
 **3. Minimal infrastructure** — only what is needed before the Git repository object can exist:
+
 ```sql
 USE ROLE SYSADMIN;
 CREATE DATABASE IF NOT EXISTS SNOWFLAKE_EXAMPLE ...;
@@ -246,6 +256,7 @@ CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS ...;
 ```
 
 **4. Git repository** — shared repo object; reuse across demos, do not create duplicates:
+
 ```sql
 CREATE GIT REPOSITORY IF NOT EXISTS SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO
   API_INTEGRATION = SFE_GIT_API_INTEGRATION
@@ -255,6 +266,7 @@ ALTER GIT REPOSITORY SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO FETCH;
 ```
 
 **5. EXECUTE IMMEDIATE FROM** — one call per sub-file, using the full stage path:
+
 ```sql
 EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-<name>/sql/...';
 ```
@@ -264,6 +276,7 @@ EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/mai
 > the only syntax that works from a Snowsight worksheet.
 
 **6. Final validation SELECT** — confirms objects were created and shows the next step:
+
 ```sql
 SELECT
     '<Demo Name>' AS demo,

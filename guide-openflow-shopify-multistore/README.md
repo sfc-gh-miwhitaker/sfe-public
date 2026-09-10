@@ -36,7 +36,7 @@ before Phase 1. That section is the most valuable part of this document.
 ### Options people actually use for Shopify to Snowflake
 
 | Option | What it is | Who runs it | Fit for "dozens of stores, daily" |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Managed ELT** (Fivetran, Airbyte Cloud, Stitch, Estuary, etc.) | SaaS connector; you add a store, it appears in Snowflake | Vendor | Best operational fit; cost scales per connector/row and contract terms vary |
 | **Snowflake Openflow, Shopify connector** (this guide) | Snowflake-hosted Apache NiFi runtime with a prebuilt Shopify flow | You, inside Snowflake | Works; per-store setup is manual today; billed as Snowflake credits with an always-on floor |
 | **Shopify Bulk API → cloud storage → Snowpipe** | Your own scheduled job calls Shopify's Bulk Operations API, writes JSONL to S3/Azure/GCS, Snowpipe loads it | You, in your own compute | Cheapest at scale and fully scriptable for N stores, but you own the code, auth refresh, and schema handling |
@@ -129,7 +129,7 @@ documentation as of the creation date; sources are in
 Fill this in before Phase 1.
 
 | Question | Your answer |
-|---|---|
+| --- | --- |
 | Current ELT monthly cost for Shopify connectors (for comparison) | |
 | Number of stores now / in 12 months | |
 | Who owns the runtime canvas on-call? | |
@@ -141,7 +141,7 @@ Fill this in before Phase 1.
 
 ## Architecture
 
-```
+```text
  Shopify (N stores)                        Snowflake account
  ┌──────────────────┐
  │ store-alpha      │ dev app A ─┐        ┌─────────────────────────────────────────────┐
@@ -170,7 +170,7 @@ Fill this in before Phase 1.
 Three databases, deliberately separate:
 
 | Database | Holds | Who writes |
-|---|---|---|
+| --- | --- | --- |
 | `OPENFLOW_DB` | Runtime, network rule, event table | Admin |
 | `SHOPIFY_RAW` | One schema per store + `META` registry | The connector (execute-as role) |
 | `SHOPIFY_ANALYTICS` | Dynamic Tables and views | DT refresh |
@@ -180,7 +180,7 @@ Three databases, deliberately separate:
 ## Files
 
 | Path | Purpose |
-|---|---|
+| --- | --- |
 | `sql/01_core_snowflake.sql` | `OPENFLOW_ADMIN` role, account grants, `OPENFLOW_DB`, event table, default-role fix |
 | `sql/02_deployment.sql` | `CREATE OPENFLOW DEPLOYMENT` + wait |
 | `sql/03_execute_as_role_eai.sql` | Execute-as role, ingestion warehouse, multi-store network rule, EAI |
@@ -272,7 +272,7 @@ Repeat for every store. There is no shortcut across stores in a standard Shopify
 2. Under **Access**, grant only the read scopes you need:
 
    | Scope | Unlocks | Needed for this guide |
-   |---|---|---|
+   | --- | --- | --- |
    | `read_orders` | orders, transactions, fulfillments (last 60 days) | Yes |
    | `read_all_orders` | orders older than 60 days | Only for history; **requires Shopify approval** |
    | `read_merchant_managed_fulfillment_orders` | fulfillment orders | Yes |
@@ -336,7 +336,7 @@ Do this for **one** store first. Get it to a clean daily sync before Phase 5.
 Right-click the process group → **Parameters**. Set:
 
 | Parameter | Value | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Shop Domain | `store-alpha.myshopify.com` | Must exactly match the network rule entry |
 | Shopify Client ID | from secrets manager | |
 | Shopify Client Secret | from secrets manager | Stored as sensitive |
@@ -424,7 +424,7 @@ have done three. Do them in batches of five and validate between batches.
 ### Per-store checklist
 
 | # | Step | Where | Artifact |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | Create, release, install Shopify dev app; store Client ID/Secret | Shopify Dev Dashboard | secrets-manager entry |
 | 2 | `CALL ADD_STORE(...)` | Snowsight | `SHOPIFY_RAW.<STORE_KEY>` |
 | 3 | `ALTER NETWORK RULE ... SET VALUE_LIST` (full list from `NETWORK_RULE_VALUE_LIST`) | Snowsight | updated rule |
@@ -478,7 +478,7 @@ Run `sql/06_analytics_layer.sql` after at least one store has loaded and you hav
 `DESCRIBE TABLE` to confirm the promoted columns exist.
 
 | Object | What it gives the analyst |
-|---|---|
+| --- | --- |
 | `ORDERS_ALL` | Every order across every store, `store_key` + `shop_url` as tenant keys, typed money columns, `is_deleted` flag |
 | `ORDER_LINE_ITEMS_ALL` | Units, SKU, vendor, price per line; `order_gid` joins to `'gid://shopify/Order/' \|\| order_id` |
 | `ORDER_FULFILLMENTS_ALL` | Shipments: status, created/delivered timestamps, tracking |
@@ -515,7 +515,7 @@ replacing — that comparison is the entire justification for this project.
 signatures:
 
 | Signature | Cause | Fix |
-|---|---|---|
+| --- | --- | --- |
 | `UnknownHostException: <store>.myshopify.com` | EAI missing or not granted | `03_execute_as_role_eai.sql` |
 | `UnresolvedAddressException` / `storage.googleapis.com` | GCS host missing from network rule | Add `storage.googleapis.com:443` |
 | HTTP 401 `Invalid API key or access token` | App uninstalled, unreleased, or wrong credentials | Reinstall app, restart connector |

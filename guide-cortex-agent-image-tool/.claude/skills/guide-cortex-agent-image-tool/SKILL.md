@@ -18,7 +18,7 @@ production-ready patterns (SPCS and external API).
 
 ## Architecture
 
-```
+```text
 User → Cortex Agent
          ↓  (generic tool call)
      Snowflake UDF / Stored Proc
@@ -37,7 +37,7 @@ User → Cortex Agent
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Full guide — architecture, code, step-by-step |
 | `ELI5.md` | Plain-language companion |
 | `AGENTS.md` | Project instructions |

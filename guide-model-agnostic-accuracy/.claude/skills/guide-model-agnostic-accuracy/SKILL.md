@@ -15,6 +15,7 @@ to reduce avoidable model sensitivity and diagnose regressions across model chan
 ## Architecture
 
 README.md with five numbered sections plus trust guidance:
+
 1. Semantic View (reducing SQL-generation ambiguity)
 2. Agent Configuration (making routing intent explicit)
 3. Evaluation (isolating Analyst and Agent failures)
@@ -27,7 +28,7 @@ provenance, and policy scope.
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | README.md | The complete guide with five sections, trust guidance, and appendix |
 | AGENTS.md | Project-specific editing conventions |
 | ELI5.md | Plain-language companion for non-technical stakeholders |

@@ -56,7 +56,7 @@ The procedure writes the Stream snapshot to both targets inside one explicit tra
 ## Workshop Flow
 
 | Step | Script | Expected evidence |
-|------|--------|-------------------|
+| ------ | -------- | ------------------- |
 | 1 | `01_first_change_batch.sql` | One insert, one update, and one delete are committed to `RAW_ORDERS` |
 | 2 | `02_inspect_stream.sql` | Four rows: standalone insert, update pair, standalone delete |
 | 3 | `03_consume_and_reconcile.sql` | Four audit rows, exact source/target match, empty Stream |
@@ -70,7 +70,7 @@ Run `sql/98_validation/01_smoke_tests.sql` whenever the Stream is expected to be
 ## CDC Semantics
 
 | Source operation | Stream rows | Consumer action |
-|------------------|-------------|-----------------|
+| ------------------ | ------------- | ----------------- |
 | INSERT | `INSERT`, `ISUPDATE = FALSE` | Insert current state |
 | UPDATE | `DELETE` + `INSERT`, both `ISUPDATE = TRUE` | Ignore before-row delete; update from after-row insert |
 | DELETE | `DELETE`, `ISUPDATE = FALSE` | Delete current state |
@@ -100,7 +100,7 @@ Run `teardown_all.sql` to suspend the Task and remove `STREAMS_CDC_WORKSHOP` plu
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
-|---------|--------------|-----|
+| --------- | -------------- | ----- |
 | Stream is empty after source DML | DML rolled back or changed a different table | Confirm the transaction committed in the project schema |
 | SELECT keeps returning the same rows | SELECT does not consume a Stream | Call `SP_CONSUME_ORDER_CHANGES()` or use Stream data in committed DML |
 | Target differs from source | Consumer has not run or its transaction failed | Check the procedure result, then inspect pending Stream rows |

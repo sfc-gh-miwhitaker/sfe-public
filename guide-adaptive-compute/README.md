@@ -23,7 +23,7 @@ Pair-programmed by SE Community + Cortex Code
 Standard warehouses (Gen1 and Gen2) use a fixed-size compute model. You pick a size, optionally enable multi-cluster scaling, and manage QAS separately. Adaptive replaces all of that.
 
 | Concept | Standard (Gen1/Gen2) | Adaptive |
-|---|---|---|
+| --- | --- | --- |
 | **Compute model** | Fixed warehouse size (XS–4XL) | Query-level resource allocation from shared pool |
 | **Concurrency** | Multi-cluster with min/max counts | `QUERY_THROUGHPUT_MULTIPLIER` — system manages the pool |
 | **Sizing** | You choose and manage | Snowflake selects resources per query, up to your cap |
@@ -62,7 +62,7 @@ Think of this as replacing multi-cluster configuration. Higher values allow more
 ## When Adaptive Is a Good Fit
 
 | Good candidates | Poor candidates |
-|---|---|
+| --- | --- |
 | Mixed workloads where query sizes vary widely | Snowpark-optimized warehouses (not supported) |
 | High-concurrency workloads using multi-cluster or QAS | Interactive warehouses (not supported) |
 | Teams that struggle to pick the right warehouse size | X5LARGE or X6LARGE warehouses (not supported) |
@@ -169,7 +169,7 @@ Standard warehouse properties (`WAREHOUSE_SIZE`, `MIN_CLUSTER_COUNT`, `MAX_CLUST
 ### What Changes
 
 | Before (Standard) | After (Adaptive) |
-|---|---|
+| --- | --- |
 | Per-second warehouse uptime billing | Per-query credit attribution |
 | QAS charged separately | QAS included in compute credits |
 | `WAREHOUSE_METERING_HISTORY` for aggregates | Same view still works |
@@ -178,7 +178,7 @@ Standard warehouse properties (`WAREHOUSE_SIZE`, `MIN_CLUSTER_COUNT`, `MAX_CLUST
 ### Key Views
 
 | View | What it shows |
-|---|---|
+| --- | --- |
 | `QUERY_METERING_HISTORY` | Per-query credits (365-day retention, ~1h latency) |
 | `WAREHOUSE_METERING_HISTORY` | Aggregated warehouse-level billing |
 | `QUERY_HISTORY` | Identify adaptive queries via `warehouse_size = 'ADAPTIVE'` |
@@ -269,6 +269,7 @@ After converting to Adaptive, these operational tasks go away:
 - Right-sizing warehouses as workload patterns change
 
 What remains:
+
 - Setting `MAX_QUERY_PERFORMANCE_LEVEL` and `QUERY_THROUGHPUT_MULTIPLIER`
 - Resource monitors and budgets for cost governance
 - Granting warehouse usage to roles (unchanged)
@@ -279,7 +280,7 @@ What remains:
 ## Quick Reference
 
 | Task | SQL |
-|---|---|
+| --- | --- |
 | Convert to adaptive | `ALTER WAREHOUSE x SET WAREHOUSE_TYPE = 'ADAPTIVE';` |
 | Revert to standard | `ALTER WAREHOUSE x SET WAREHOUSE_TYPE = 'STANDARD';` |
 | Create new adaptive | `CREATE ADAPTIVE WAREHOUSE x;` |

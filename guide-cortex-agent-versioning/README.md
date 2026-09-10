@@ -24,7 +24,7 @@ Pair-programmed by SE Community + Cortex Code
 ## New to this? Read these words once
 
 | Term | In plain words |
-|---|---|
+| --- | --- |
 | **Cortex Agent** | An AI assistant inside Snowflake that answers questions by reasoning and calling tools. |
 | **Specification** (`agent_spec.yaml`) | The agent's full definition — its model, instructions, tools — as one YAML (or JSON) file. This is the thing you version. |
 | **`LIVE` version** | The single **mutable** working copy of an agent. You edit `LIVE` during development. |
@@ -65,7 +65,7 @@ Three facts that trip everyone up the first time:
 Both models use the exact same underlying commands. They differ only in **where the edit happens** and therefore **where your source of truth lives.**
 
 | | **Iterate-in-Snowflake** | **Git-driven** (recommended for teams) |
-|---|---|---|
+| --- | --- | --- |
 | Where you edit the spec | `LIVE` version, via SQL / Snowsight | `agent_spec.yaml` in GitHub |
 | Source of truth | The Snowflake `LIVE` version | The Git repo |
 | Review / approval | Informal | Pull request + review |
@@ -78,18 +78,20 @@ Both models use the exact same underlying commands. They differ only in **where 
 
 ### Iterate-in-Snowflake flow
 
-```
+```text
 Edit LIVE  ->  COMMIT (VERSION$N)  ->  alias production  ->  SET DEFAULT_VERSION
            ->  ADD LIVE VERSION dev FROM LAST  (to resume editing)
 ```
+
 See [`sql/03_iterate_commit_promote.sql`](sql/03_iterate_commit_promote.sql).
 
 ### Git-driven flow
 
-```
+```text
 Edit agent_spec.yaml in Git  ->  PR + review  ->  merge / tag
    ->  Snowflake FETCH  ->  ADD VERSION FROM @repo/tags/vN/specs  ->  alias production
 ```
+
 See [`sql/04_git_driven_import.sql`](sql/04_git_driven_import.sql) and [`github-actions/deploy-agent.yml`](github-actions/deploy-agent.yml).
 
 ---
@@ -99,7 +101,7 @@ See [`sql/04_git_driven_import.sql`](sql/04_git_driven_import.sql) and [`github-
 This is the whole bridge between GitHub and Snowflake agent versioning:
 
 | You do this in Git… | …and Snowflake does this |
-|---|---|
+| --- | --- |
 | Commit `agent_spec.yaml` to a feature branch | *(nothing yet — it's just under review)* |
 | Open a pull request | Reviewers see the exact spec diff |
 | Merge to `main` | `ALTER GIT REPOSITORY agent_repo FETCH;` picks it up |
@@ -114,7 +116,7 @@ Snowflake connects to GitHub **natively** — an API integration plus a `GIT REP
 
 ## Running a specific version (REST)
 
-```
+```text
 POST /api/v2/databases/{db}/schemas/{schema}/agents/{name}/versions/{version}:run
 ```
 
@@ -126,7 +128,7 @@ POST /api/v2/databases/{db}/schemas/{schema}/agents/{name}/versions/{version}:ru
 
 Run the scripts in order in a Snowflake account **with agent versioning enabled** (a sandbox, not a shared prod account). Each file is self-contained and commented.
 
-```
+```text
 sql/01_setup.sql                 -- warehouse, sample ORDERS table, semantic view
 sql/02_create_agent.sql          -- CREATE AGENT -> VERSION$1 + LIVE
 sql/03_iterate_commit_promote.sql-- edit LIVE, COMMIT, alias, default, resume dev
@@ -141,7 +143,7 @@ Steps 04 requires `CREATE INTEGRATION` (ACCOUNTADMIN). If you only want the vers
 ### Files
 
 | Path | Role |
-|---|---|
+| --- | --- |
 | [`specs/agent_spec.yaml`](specs/agent_spec.yaml) | The source-of-truth spec — the file you version in GitHub |
 | [`sql/`](sql/) | The seven-step runnable lifecycle (setup → create → iterate → git → promote → inspect → teardown) |
 | [`github-actions/deploy-agent.yml`](github-actions/deploy-agent.yml) | Example CI/CD: on a release tag, import + (optionally) promote a version |

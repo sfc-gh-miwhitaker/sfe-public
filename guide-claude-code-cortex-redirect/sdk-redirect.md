@@ -13,7 +13,7 @@ How to redirect `anthropic` and `openai` SDK clients to Snowflake Cortex instead
 Two endpoints are available. Pick based on your existing code:
 
 | | Messages API | Chat Completions API |
-|---|---|---|
+| --- | --- | --- |
 | **Use if you have** | `anthropic.Anthropic()` or `anthropic.AsyncAnthropic()` | `openai.OpenAI()` or `openai.AsyncOpenAI()` |
 | **SDK base URL** | `https://<account>.snowflakecomputing.com/api/v2/cortex` | `https://<account>.snowflakecomputing.com/api/v2/cortex/v1` |
 | **Models** | Claude only | All Cortex models (Claude, OpenAI, Llama, Mistral, etc.) |

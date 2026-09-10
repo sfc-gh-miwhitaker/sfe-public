@@ -9,7 +9,7 @@ Read-only dashboard for Cortex AI spend attribution, per-user quota status, and 
 
 ## Architecture
 
-```
+```text
 ACCOUNT_USAGE views (8 AI services)
         │
         ▼
@@ -25,7 +25,7 @@ Next.js App (querySnowflake, owner's rights) ─── Recharts UI (4 pages)
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `deploy_all.sql` | One-command SQL data layer orchestration |
 | `sql/02_materialization/01_tables_and_task.sql` | Core: table DDL + refresh SP + task |
 | `sql/03_quota_example/01_quota_setup.sql` | Native per-user quota configuration |
@@ -37,7 +37,7 @@ Next.js App (querySnowflake, owner's rights) ─── Recharts UI (4 pages)
 ## Snowflake Objects
 
 | Object | Type | Schema |
-|--------|------|--------|
+| -------- | ------ | -------- |
 | `SFE_CORTEX_AI_COST_CONTROLS_WH` | Warehouse | — |
 | `SNOWFLAKE_EXAMPLE.CORTEX_AI_COST_CONTROLS` | Schema | — |
 | `MAT_AI_USAGE_UNIFIED` | Table | CORTEX_AI_COST_CONTROLS |

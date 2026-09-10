@@ -24,7 +24,7 @@ Reference guide + runnable example, no long-lived deployed objects:
 ## Key Files
 
 | File | Role |
-|---|---|
+| --- | --- |
 | `README.md` | Explanation, both operating models, command map, gotchas |
 | `specs/agent_spec.yaml` | Source-of-truth spec to version in Git |
 | `sql/02_create_agent.sql` | `CREATE AGENT` → `VERSION$1` + `LIVE` |
@@ -46,7 +46,7 @@ from a `GIT REPOSITORY` stage — so a merged/tagged spec becomes a version.
 ## Decision shortcut
 
 | Situation | Model | Why |
-|---|---|---|
+| --- | --- | --- |
 | Solo dev, prototype, demo | Iterate-in-Snowflake | Fastest loop; edit LIVE + COMMIT |
 | >1 contributor, needs review/audit | Git-driven | PR review, diff history, reproducible imports |
 | Automated release on tag | Git-driven + Actions | `FETCH` + `ADD VERSION FROM @repo/tags/...` |
@@ -54,7 +54,7 @@ from a `GIT REPOSITORY` stage — so a merged/tagged spec becomes a version.
 ## Extension Playbook: add another example tool or a new deployment target
 
 1. **New tool on the agent** — edit `specs/agent_spec.yaml` (add a `tools[]` entry
-   + matching `tool_resources` key), then mirror the change in
+   - matching `tool_resources` key), then mirror the change in
    `sql/03_iterate_commit_promote.sql`'s `MODIFY LIVE VERSION SET SPECIFICATION`
    so the two stay in sync. Keep `orchestration: auto`.
 2. **New tool needs data** — add the object (table/semantic view/search service)

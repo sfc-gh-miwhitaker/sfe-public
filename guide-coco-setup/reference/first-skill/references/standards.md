@@ -5,21 +5,25 @@
 ## SQL Standards
 
 ### Explicit Columns Only
+
 - **Never use SELECT \*** in production or demo code
 - Always project the specific columns needed
 - Exception: `SELECT *` is acceptable in ad-hoc exploration during a conversation, but never in saved SQL files
 
 ### Sargable Predicates
+
 - Never wrap columns in functions in WHERE clauses
 - Wrong: `WHERE YEAR(order_date) = 2024`
 - Right: `WHERE order_date >= '2024-01-01' AND order_date < '2025-01-01'`
 
 ### QUALIFY Over Subqueries
+
 - Use QUALIFY for window function filtering instead of wrapping in a subquery
 - Wrong: `SELECT * FROM (SELECT *, ROW_NUMBER() OVER (...) AS rn FROM t) WHERE rn = 1`
 - Right: `SELECT ... FROM t QUALIFY ROW_NUMBER() OVER (...) = 1`
 
 ### Join Hygiene
+
 - Join keys must have matching types -- no implicit casts
 - No OR in join predicates -- use UNION ALL with deduplication instead
 
@@ -35,7 +39,7 @@
 > **Define your team's prefix.** Replace `{TEAM_PREFIX}` with your team or org abbreviation (e.g., `ACME`, `DS`, `FINANCE`). Replace `{DEFAULT_DB}` with your shared database name.
 
 | Object | Pattern | Your Example |
-|--------|---------|--------------|
+| -------- | --------- | -------------- |
 | Database | `{DEFAULT_DB}` | _(e.g., `ANALYTICS`, `DATA_WAREHOUSE`)_ |
 | Schema | `{PROJECT_NAME}` | _(e.g., `SALES_PIPELINE`)_ |
 | Warehouse | `{TEAM_PREFIX}_{PROJECT}_WH` | _(e.g., `ACME_SALES_WH`)_ |
@@ -47,7 +51,7 @@
 ### Placeholder Reference
 
 | Placeholder | Description | Your Value |
-|-------------|-------------|------------|
+| ------------- | ------------- | ------------ |
 | `{TEAM_PREFIX}` | Short team/org identifier (3-6 chars) | ________________ |
 | `{DEFAULT_DB}` | Shared database for your team's objects | ________________ |
 | `{PROJECT_NAME}` | Current project name (used as schema) | ________________ |

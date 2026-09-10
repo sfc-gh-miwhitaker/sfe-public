@@ -33,7 +33,7 @@ flowchart TD
 **Horizon Context** is Snowflake's governed semantic and context layer — the place where business definitions live so every engine and agent sees the same truth.
 
 | Component | What it provides |
-|---|---|
+| --- | --- |
 | **Semantic Views** | Defined entities, metrics, dimensions, and join paths — the contract an agent assembles answers from |
 | **Advanced Semantics** (private preview) | Level-of-detail calculations, composable definitions, user-defined materializations with automatic query rewrite |
 | **Semantic Studio** (private preview) | AI-assisted IDE for building semantic views, with git versioning and CoCo edits in one workspace |
@@ -121,7 +121,7 @@ Semantic modeling is a real discipline — it can become its own deep specialty,
 ## The Payoff
 
 | Without context layer | With Horizon Context + Cortex Sense |
-|---|---|
+| --- | --- |
 | ~24% accuracy on hard questions | ~86% accuracy |
 | Unverifiable, regenerated every turn | Grounded in defined, governed truth |
 | Metric meaning guessed | Metric meaning retrieved |

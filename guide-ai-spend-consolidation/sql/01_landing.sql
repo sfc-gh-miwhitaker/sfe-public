@@ -79,14 +79,22 @@ CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.PLATFORM_REGISTRY (
   BILLING_CONTEXT       VARCHAR(64)  NOT NULL,
   -- METERED: cost varies with consumption. SEAT: fixed per licensed person.
   -- Never sum cost_amount across these two without going through GOLD.AI_SPEND_ALLOCATED.
+  --
+  -- THIS DESCRIBES THE USAGE ROWS, NOT THE WHOLE CONTRACT. Several platforms here are
+  -- both: a seat fee plus metered consumption. Those register as METERED, because that
+  -- is what their usage rows measure, and their seat fee goes in SEAT_ENTITLEMENT.
+  -- GitHub Copilot, Cursor, and Anthropic Claude Enterprise are all in this shape.
   COST_MODEL            VARCHAR(16)  NOT NULL,
   -- The vendor's own unit, preserved rather than converted: CREDITS, TOKENS,
-  -- MESSAGES, AI_UNITS, INTERACTIONS, ACTIVE_DAYS. Box's AI_UNIT is a
-  -- vendor-proprietary composite and means nothing outside Box -- which is exactly
-  -- why native units are never converted into each other.
+  -- MESSAGES, AI_UNITS, INTERACTIONS, ACTIVE_DAYS, FEATURE_EVENTS, IDE_INTERACTIONS.
+  -- Box's AI_UNIT is a vendor-proprietary composite and means nothing outside Box --
+  -- which is exactly why native units are never converted into each other.
   NATIVE_UNIT           VARCHAR(32)  NOT NULL,
   -- What the vendor calls a person: SNOWFLAKE_USER_ID, GITHUB_LOGIN, EMAIL,
-  -- WORKSPACE_MEMBER_ID, PSEUDONYMIZED_UPN.
+  -- WORKSPACE_MEMBER_ID, PSEUDONYMIZED_UPN, API_KEY_ID, PROJECT_LABEL.
+  --
+  -- API_KEY_ID and PROJECT_LABEL are not people. They are recorded honestly so the
+  -- monitoring layer can say a platform has no user grain rather than implying one.
   SUBJECT_KEY_KIND      VARCHAR(32)  NOT NULL,
   CREDENTIAL_OBJECT_FQN VARCHAR(255),
   -- Honest capability declaration. FALSE here is a feature, not a gap to hide.
@@ -296,14 +304,32 @@ USING (
      'CREDITS', 'WORKSPACE_MEMBER_ID', 'AI_SPEND.CONTROL.OPENAI_ADMIN_CREDENTIALS', TRUE, TRUE, 48,
      'Analytics endpoints for adoption, Cost API for credits by user/product/model. Separate billing context from the OpenAI API Platform -- never sum the two.'),
     ('OPENAI_API_PLATFORM', 'OpenAI API Platform', 'OPENAI_API_ORG', 'METERED',
-     'TOKENS', 'API_KEY_OWNER', 'AI_SPEND.CONTROL.OPENAI_ADMIN_CREDENTIALS', FALSE, TRUE, 48,
-     'Distinct product and contract from ChatGPT Enterprise. Registered separately so the two can never be blended by accident.'),
+     'TOKENS', 'API_KEY_OWNER', 'AI_SPEND.CONTROL.OPENAI_ADMIN_CREDENTIALS', FALSE, FALSE, 48,
+     'Distinct product and contract from ChatGPT Enterprise. Registered separately so the two can never be blended by accident. Cost is attributable to an API key, not to a person -- so SUPPORTS_USER_COST is FALSE, the same shape as the Anthropic Console row. An API key owner is a plausible proxy for a person and not the same thing as one.'),
     ('M365_COPILOT', 'Microsoft 365 Copilot', 'MICROSOFT_TENANT', 'SEAT',
      'ACTIVE_DAYS', 'PSEUDONYMIZED_UPN', 'AI_SPEND.CONTROL.GRAPH_API_CREDENTIALS', FALSE, FALSE, 72,
      'Graph usage detail pseudonymizes UPN and display name unless the tenant disables report concealment. Returns last-activity dates, not volume. Cannot support engagement tiers or per-user cost.'),
     ('BOX_AI', 'Box AI', 'BOX_ENTERPRISE', 'METERED',
      'AI_UNITS', 'EMAIL', 'AI_SPEND.CONTROL.BOX_API_CREDENTIALS', TRUE, TRUE, 72,
-     'Metered in AI Units since 2025-10-20 -- NOT a bundled seat cost. Per-user and per-agent AI Units come from the AI Units Admin Report (console export, can auto-deliver to a Box folder); the Enterprise Events API gives event granularity but retains only 2 weeks streaming / 1 year admin_logs.')
+     'Metered in AI Units since 2025-10-20 -- NOT a bundled seat cost. Per-user and per-agent AI Units come from the AI Units Admin Report (console export, can auto-deliver to a Box folder); the Enterprise Events API gives event granularity but retains only 2 weeks streaming / 1 year admin_logs.'),
+    ('ANTHROPIC_CLAUDE_ENTERPRISE', 'Anthropic Claude Enterprise', 'CLAUDE_ENTERPRISE', 'METERED',
+     'TOKENS', 'EMAIL', 'AI_SPEND.CONTROL.ANTHROPIC_ANALYTICS_CREDENTIALS', TRUE, TRUE, 24,
+     'The seat includes NO usage on current Enterprise plans -- every token bills separately at API rates, so this platform carries BOTH a seat fee and metered cost. Enterprise Analytics API returns per-user cost with both effective and list amounts. Two hard limits: no data before 2026-01-01, and a value for a given date can be REVISED for up to 30 days, so loads must restate rather than append.'),
+    ('ANTHROPIC_API_CONSOLE', 'Anthropic Claude Console (API)', 'ANTHROPIC_API_ORG', 'METERED',
+     'TOKENS', 'API_KEY_ID', 'AI_SPEND.CONTROL.ANTHROPIC_ADMIN_CREDENTIALS', FALSE, FALSE, 24,
+     'Distinct product, contract, and admin key from Claude Enterprise -- registered separately so the two can never be blended. The Admin usage and cost endpoints have NO user dimension at all: grain is API key, workspace, and model. Needed anyway, because the per-user Enterprise endpoints exclude direct API-key and automation traffic and cannot reconcile to invoice alone.'),
+    ('CURSOR', 'Cursor', 'CURSOR_TEAM', 'METERED',
+     'TOKENS', 'EMAIL', 'AI_SPEND.CONTROL.CURSOR_ADMIN_CREDENTIALS', TRUE, TRUE, 24,
+     'Seat includes a per-user usage pool, then bills on-demand in arrears -- so seat and metered cost overlap and must not be added. Use spendCents (on-demand only), never overallSpendCents, alongside SEAT_ENTITLEMENT. Cost arrives already in cents: do NOT seed PLATFORM_RATE for this platform. Activity and cost are two different endpoints; the 30-day per-request range cap sets the backfill shape.'),
+    ('GOOGLE_WORKSPACE_GEMINI', 'Gemini in Google Workspace', 'GOOGLE_WORKSPACE', 'SEAT',
+     'FEATURE_EVENTS', 'EMAIL', 'AI_SPEND.CONTROL.GOOGLE_SA_CREDENTIALS', TRUE, FALSE, 72,
+     'Baseline Gemini is bundled into the Workspace plan price and has NO separable per-user cost. There is no Gemini userUsageReport -- per-user data is audit events (gemini_in_workspace_apps / feature_utilization), which carry an actor and an action but no tokens and no cost. Retention 180 days rolling with nothing before 2025-06-20, so a Snowflake-side accumulator is mandatory. The only legitimate per-user cost is the AI Expanded Access / AI Ultra Access add-on seat, which goes in SEAT_ENTITLEMENT.'),
+    ('GOOGLE_CODE_ASSIST', 'Gemini Code Assist', 'GOOGLE_CLOUD', 'SEAT',
+     'IDE_INTERACTIONS', 'EMAIL', 'AI_SPEND.CONTROL.GOOGLE_SA_CREDENTIALS', TRUE, FALSE, 24,
+     'The best per-user signal Google offers: Cloud Logging entries carry labels.user_id as a plain email, giving per-user code and chat exposure and acceptance. Cloud Monitoring metrics for the same product are aggregate-only -- do not use them for user grain. Cost is a seat, so per-user cost is allocation from SEAT_ENTITLEMENT, not measurement. Records IDE interactions only.'),
+    ('GOOGLE_VERTEX_AI', 'Gemini Enterprise Agent Platform (Vertex AI)', 'GOOGLE_CLOUD_BILLING', 'METERED',
+     'TOKENS', 'PROJECT_LABEL', 'AI_SPEND.CONTROL.GOOGLE_SA_CREDENTIALS', FALSE, FALSE, 48,
+     'Genuinely cannot do per-user cost. Cloud Billing attribution stops at project, service, and SKU; the only request-level mechanism is labels, and Google both warns against putting PII in them and caps a label key at 1000 distinct values for the life of the billing account. Renamed from Vertex AI in 2026 but the aiplatform.googleapis.com endpoint is unchanged. Per-user USAGE is available from Data Access audit logs (principalEmail); per-user COST is not.')
   AS s(PLATFORM_KEY, DISPLAY_NAME, BILLING_CONTEXT, COST_MODEL, NATIVE_UNIT,
        SUBJECT_KEY_KIND, CREDENTIAL_OBJECT_FQN, SUPPORTS_USER_GRAIN,
        SUPPORTS_USER_COST, EXPECTED_LAG_HOURS, NOTES)

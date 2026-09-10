@@ -32,7 +32,7 @@ Pair-programmed by SE Community + Cortex Code
 ## Read These Words First
 
 | Term | In plain words |
-|---|---|
+| --- | --- |
 | **OTLP** | OpenTelemetry Protocol — the wire format telemetry travels in. Two encodings (Protobuf and JSON) over two transports (gRPC and HTTP). Everything in this guide lands OTLP **JSON**, because that is what Snowflake-side tooling produces and what `PARSE_JSON` can read. |
 | **Signal** | One of the three telemetry types: logs, metrics, traces. OTLP keeps them in separate payload shapes, so each needs its own landing table and its own shredding query. |
 | **Collector** | The OpenTelemetry Collector — a standalone process that receives telemetry from your apps, filters and batches it, and exports it onward. Every pattern here assumes you have one. It is the correct place to drop, sample, and redact, because it is the only place upstream of your storage bill. |
@@ -95,7 +95,7 @@ reversible decision.
 ## Pattern Comparison
 
 | | [1: Openflow ListenOTLP](pattern-1-openflow-listenotlp.md) | [2: Kafka + Connector v4](pattern-2-kafka-connector.md) | [3: Snowpipe Streaming HP](pattern-3-snowpipe-streaming.md) | [4: Stage + COPY / Iceberg](pattern-4-batch-stage-iceberg.md) |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **How telemetry arrives** | Collector exports OTLP straight to a Snowflake-hosted listener | Collector → Kafka topic → Snowflake sink connector | Collector → your exporter → Snowpipe Streaming REST/SDK | Collector writes files → object storage → Snowflake reads |
 | **Typical latency** | Seconds | Seconds | Under 10 seconds | Minutes to hours |
 | **Status** | GA | GA (connector v4) | GA Sep 2025 (AWS), Nov 2025 (Azure, GCP) | GA |
@@ -147,7 +147,7 @@ flowchart LR
 ## Pattern Guides
 
 | Guide | Read it when |
-|---|---|
+| --- | --- |
 | [Pattern 1: Openflow ListenOTLP](pattern-1-openflow-listenotlp.md) | You want a managed OTLP endpoint and no custom code, and sustained volume justifies a standing runtime |
 | [Pattern 2: Kafka + Connector v4](pattern-2-kafka-connector.md) | Kafka is already load-bearing in your stack |
 | [Pattern 3: Snowpipe Streaming HP](pattern-3-snowpipe-streaming.md) | You need maximum throughput and can ship and operate a small relay service — on your own platform or hosted in SPCS |

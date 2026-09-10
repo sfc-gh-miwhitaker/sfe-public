@@ -13,7 +13,7 @@ Reference guide for Snowflake admins who need to give a group of users access to
 
 No deployed Snowflake objects. The guide establishes this privilege structure:
 
-```
+```text
 COWORK_USER role
   ├── SNOWFLAKE.CORTEX_AGENT_USER  (database role — CoWork API only)
   ├── USAGE ON SNOWFLAKE INTELLIGENCE object
@@ -28,7 +28,7 @@ Each user:
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Full guide: Quick Start, all 5 steps, gotchas, reference |
 | `sql/setup_role.sql` | One-time role creation and grant setup |
 | `sql/provision_user.sql` | Single user provisioning (annotated walkthrough) |
@@ -42,14 +42,18 @@ When an admin wants to give the CoWork users access to a new agent:
 
 1. Make sure the agent exists: `SHOW AGENTS IN SCHEMA <db>.<schema>`
 2. Add the agent to the CoWork object:
+
    ```sql
    ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT
      ADD AGENT <db>.<schema>.<agent_name>;
    ```
+
 3. Grant USAGE on the agent to the role:
+
    ```sql
    GRANT USAGE ON AGENT <db>.<schema>.<agent_name> TO ROLE COWORK_USER;
    ```
+
 4. Verify: `DESCRIBE SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT`
 
 No user-level changes needed — all members of `COWORK_USER` see it immediately.
@@ -58,6 +62,7 @@ No user-level changes needed — all members of `COWORK_USER` see it immediately
 
 This guide creates no persistent objects in SNOWFLAKE_EXAMPLE.
 The admin creates these in their own account:
+
 - Role: `COWORK_USER` (name is their choice)
 - Object type: `SNOWFLAKE INTELLIGENCE` (the CoWork object — one per account)
 - Privilege: `SNOWFLAKE.CORTEX_AGENT_USER` database role (built-in)

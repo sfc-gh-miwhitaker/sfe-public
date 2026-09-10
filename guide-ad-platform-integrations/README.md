@@ -96,7 +96,7 @@ activation connector or a marketplace partner.
 Pick the row that matches the direction you need.
 
 | Goal | Mechanism | Built by | Status | Section |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Push audience lists from Snowflake to Google Ads | Google Ads Data Manager, Snowflake source | Google | Native source, no status label | [Part 1](#part-1--google-ads-data-manager) |
 | Push offline conversions from Snowflake to Google Ads | Google Ads Data Manager, Snowflake source | Google | Native source | [Part 1](#part-1--google-ads-data-manager) |
 | Push conversion events from Snowflake to **Meta** | Meta Conversions API skill for CoCo | Snowflake | Public sample, on GitHub | [Part 2](#part-2--meta-ads-mcp-and-the-conversions-api-skill) |
@@ -111,7 +111,7 @@ The two halves of this guide ask for very different setup, which is the main thi
 before scoping either:
 
 | | Google Ads Data Manager | Openflow Ads connectors |
-|---|---|---|
+| --- | --- | --- |
 | Covered in | Part 1 | Part 3 |
 | Direction | Snowflake → ad platform | Ad platform → Snowflake |
 | Snowflake objects | A view, a role, a service user, a PAT | Deployment, compute pool, runtime, execute-as role, network rule, EAI |
@@ -197,7 +197,7 @@ a customer it is "GA" as though Google said so.
 
 ### Architecture
 
-```
+```text
    ┌──────────────────────────────────────────────────────┐
    │ Snowflake                                            │
    │                                                      │
@@ -469,7 +469,7 @@ Snowflake, and Triple Whale; the Snowflake one ships as two separate halves that
 described as one product.
 
 | | Meta Conversions API skill | Meta ads MCP |
-|---|---|---|
+| --- | --- | --- |
 | Direction | Snowflake → Meta | Meta → Snowflake |
 | Carries | PII-hashed conversion events | Campaign performance, signal diagnostics, inventory, reporting, and campaign actions |
 | Runs in | Snowflake CoCo (the coding agent, formerly Cortex Code) | Snowflake CoWork |
@@ -499,7 +499,7 @@ sparse-checkout clone plus a symlink into `~/.snowflake/cortex/skills/`.
 Straight from the repo's own `SKILL.md` and `README.md`:
 
 | Requirement | Detail |
-|---|---|
+| --- | --- |
 | Snowflake privilege | **`ACCOUNTADMIN` or `CREATE INTEGRATION`** |
 | Meta Pixel ID | From [Meta Events Manager](https://business.facebook.com/events_manager) |
 | Meta Access Token | Must carry the **`ads_management`** permission |
@@ -518,7 +518,7 @@ The skill is a guided workflow, not a static script. It discovers candidate tabl
 Meta event type, maps fields, hashes PII, and deploys on approval. Objects created:
 
 | Object | Type | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `META_CAPI_DB.PIPELINE` | Schema | Container |
 | `META_CAPI_EVENTS` | Table | Event staging, `PENDING` → `SENT` |
 | `META_CAPI_LOG` | Table | Batch processing logs |
@@ -582,7 +582,7 @@ That mechanism matters, because it means there are **two ways to get here** and 
 different availability:
 
 | | Snowflake prebuilt connector | Customer's own custom connector |
-|---|---|---|
+| --- | --- | --- |
 | Availability | **By request** — not a documented built-in connector | **Generally available** — the custom-connector path is documented |
 | Meta app | Snowflake's | **The customer's own** |
 | Setup | Browse Connectors, minimal config | `CREATE API INTEGRATION` with `TYPE = OAUTH2` + `CREATE EXTERNAL MCP SERVER` |
@@ -626,7 +626,7 @@ three consequences:
 So the two products in this guide are **complementary, not alternatives**:
 
 | Layer | Use | Covered in |
-|---|---|---|
+| --- | --- | --- |
 | Historical reporting foundation | Openflow connectors land Meta and Google Ads data in Snowflake tables the agent can query and join to first-party data | [Part 3](#part-3--openflow-connector-for-meta-ads) |
 | Real-time diagnostics and actions | MCP, for signal health and current-state checks that aren't in the replicated data, and for the write path | Part 2 |
 | Conversion signal out | CAPI skill | Part 2 |
@@ -680,7 +680,7 @@ same way.
 Region availability differs by deployment model:
 
 | Deployment model | Status | Regions |
-|---|---|---|
+| --- | --- | --- |
 | Openflow — Snowflake Deployments (runs on SPCS) | **Generally Available** | AWS, Azure, GCP commercial |
 | Openflow — BYOC | Generally Available | **AWS commercial only** |
 
@@ -692,7 +692,7 @@ Google Ads *connectors* are Preview.
 The connector is a set of flow parameters. It runs inside an Openflow deployment and runtime, so
 standing those up is part of the work. The documented task order is:
 
-```
+```text
 1. Core Snowflake        OPENFLOW_ADMIN role + 3 account privileges
 2. [optional] PrivateLink UI access
 3. Deployment            data plane container, backed by a compute pool
@@ -767,7 +767,7 @@ from Standard to Advanced access on Ads Management Standard Access and enable `a
 **Snowflake side.** Two strategies, set by the `Snowflake Authentication Strategy` parameter:
 
 | Strategy | When | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `SNOWFLAKE_MANAGED` | Snowflake Deployments, or BYOC with runtime roles configured | Token managed by Snowflake. Account identifier, username, and private key fields must be **blank**. |
 | `KEY_PAIR` | BYOC | Requires a `TYPE = SERVICE` user, PKCS8 RSA private key, account identifier as `[org]-[account]`. |
 
@@ -792,7 +792,7 @@ Both are documented, and both are the opposite of what Part 1 requires:
 Ingestion is driven by parameters rather than SQL. The ones that shape the output:
 
 | Parameter | Values / meaning |
-|---|---|
+| --- | --- |
 | `Report Object Id` | The Meta object to pull — ad account, ad set, ad, or campaign |
 | `Report Level` | Aggregation level: `account`, `campaign`, `ad`, `adset` |
 | `Report Ingestion Strategy` | `snapshot` or `incremental` |
@@ -849,7 +849,7 @@ This is the part worth being precise about, because the two Google paths are unr
 that happen to share a name.
 
 | | Google Ads Data Manager | Openflow Connector for Google Ads |
-|---|---|---|
+| --- | --- | --- |
 | Direction | Snowflake → Google Ads | Google Ads → Snowflake |
 | Purpose | Activate audiences and conversions | Ingest performance reporting |
 | Built by | Google | Snowflake |
@@ -886,7 +886,7 @@ Customer Match lists. Meta publishes no connector that reads a Snowflake table t
 audience. For that, there are three routes, in rough order of how close they sit to Snowflake.
 
 | | Into Snowflake | Conversion events out | Audience lists out |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Google Ads | Openflow connector (Preview) | Data Manager (native) | Data Manager (native) |
 | Meta Ads | Openflow connector (Preview), Meta ads MCP (prebuilt by request) | **CAPI skill (Part 2)** | Clean-room connector, marketplace partner, or Marketing API |
 
@@ -998,7 +998,7 @@ route who is doing the normalization and hashing before assuming either.
 ## Quick reference
 
 | | Google Ads Data Manager | Meta CAPI skill | Openflow Ads connectors |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Section | Part 1 | Part 2 | Part 3 |
 | Direction | Snowflake → Google Ads | Snowflake → Meta | Meta / Google Ads → Snowflake |
 | Built and operated by | Google | Snowflake (public sample) | Snowflake |
@@ -1015,8 +1015,8 @@ route who is doing the normalization and hashing before assuming either.
 | PII hashing | Google does it, hex SHA-256 | Skill does it, SHA256, mandatory | N/A — reporting data, not audiences |
 | Audience-list equivalent | Customer Match, native | Not covered — events only | — |
 | Cadence | Daily scheduled, or manual | Scheduled task | Per `Report Schedule` |
-| Idle cost | None | None — only active runtimes consume credits |
-| Documented by Snowflake | **No** | Yes |
+| Idle cost | None | None | None — only active runtimes consume credits |
+| Documented by Snowflake | **No** — Google documents it | **No** — public GitHub sample | Yes — Preview connector docs |
 
 ---
 

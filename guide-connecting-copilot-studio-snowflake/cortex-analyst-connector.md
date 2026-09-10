@@ -15,6 +15,7 @@ Delegate SQL generation to Snowflake's Cortex Analyst — grounded in a semantic
 - MCP connector isn't available or approved in your environment
 
 **Limitations:**
+
 - Single-shot only — no multi-step reasoning or follow-up questions
 - No unstructured search (requires Pattern C with Cortex Search)
 - Requires building and maintaining a semantic model (real investment)
@@ -123,7 +124,7 @@ Two approaches — choose based on what's simpler to maintain in your environmen
 
 **Flow structure (Option A):**
 
-```
+```text
 Trigger: When agent calls this flow
   ↓
 Input: user_prompt (text)
@@ -173,12 +174,13 @@ For deterministic routing:
 Compare grounded (Pattern B) vs ungrounded (Pattern A) responses:
 
 | Question | Pattern A (direct SQL) | Pattern B (Cortex Analyst) |
-|----------|----------------------|---------------------------|
+| ---------- | ---------------------- | --------------------------- |
 | "What's our MRR this quarter?" | May hallucinate column names, inconsistent definition | Uses semantic model's MRR definition consistently |
 | "Revenue by region last month" | Might join wrong tables | Follows defined join paths in semantic model |
 | "Top 5 customers" | Could pick wrong customer identifier | Uses canonical customer dimension |
 
 Verify:
+
 - Consistent answers across paraphrased questions
 - No 422 errors (Analyst generates valid SQL from the semantic model)
 - Business metric definitions are enforced (not re-invented per query)
@@ -188,7 +190,7 @@ Verify:
 ## Governance
 
 | Layer | How It Works |
-|-------|-------------|
+| ------- | ------------- |
 | **Snowflake RBAC** | Stored procedure runs as caller — limited to ANALYST role grants |
 | **Semantic Model** | Defines what metrics exist and how tables join — Analyst can't query outside it |
 | **Agent Flow** | Power Automate audit logs capture every invocation |
@@ -199,6 +201,7 @@ Verify:
 ## When to Graduate to Pattern C
 
 Move to MCP Server + Cortex Agent when:
+
 - Need multi-step reasoning (Analyst is single-shot)
 - Need unstructured search (Cortex Search)
 - Need multiple tools orchestrated in one conversation turn
@@ -212,7 +215,7 @@ Move to MCP Server + Cortex Agent when:
 ## Common Gotchas
 
 | Issue | Cause | Fix |
-|-------|-------|-----|
+| ------- | ------- | ----- |
 | "Procedure not found" | Wrong schema or missing USAGE grant | `GRANT USAGE ON PROCEDURE ... TO ROLE ANALYST` |
 | Empty or null response | Semantic model doesn't cover the question domain | Expand semantic model definitions |
 | Flow timeout | Complex query exceeds Power Automate timeout | Increase timeout in flow settings, or simplify the semantic model |

@@ -35,7 +35,7 @@ Ready to act? Use [What Can I Do Now?](docs/01-WHAT-CAN-I-DO-NOW.md) for a capab
 ## Vocabulary
 
 | Term | Plain meaning |
-|---|---|
+| --- | --- |
 | **Horizon Catalog** | Snowflake's built-in data governance and discovery layer. Covers Snowflake-native objects: tables, views, lineage, access policies, tags, and documentation. Has always existed; Horizon Context builds on top of it. |
 | **Horizon Context** | Announced Summit 2026. Extends Horizon Catalog to pull metadata from systems outside Snowflake — BI tools, databases, data pipelines — and enriches it into a governed semantic foundation. |
 | **Metadata Connector** | A built-in integration that ingests schemas, query logs, and dashboard definitions from an external system into Horizon Catalog. |
@@ -92,6 +92,7 @@ flowchart TD
 ```
 
 Each layer has a distinct job:
+
 - **Horizon Catalog** — the governed inventory of everything Snowflake knows about your data
 - **Horizon Context** — expands that inventory to external systems and enriches raw metadata into business meaning
 - **Cortex Sense** — was designed to make enriched context active at query time for CoCo queries, retrieving relevant context instead of inspecting the estate table by table
@@ -107,7 +108,7 @@ Horizon Context organizes its work into three phases.
 Horizon Context pulls metadata from systems outside Snowflake using built-in metadata connectors. Wave 1 connectors (all in **private preview** [as announced June 2026](https://www.snowflake.com/en/blog/horizon-context-governed-context/)):
 
 | Connector | What it collects |
-|---|---|
+| --- | --- |
 | PostgreSQL | Schemas, query logs |
 | Microsoft SQL Server | Schemas, query logs |
 | Tableau | Dashboard definitions, calculated fields |
@@ -148,6 +149,7 @@ Snowflake's own product team found that even with Semantic View Autopilot, they 
 ### How It Works
 
 Cortex Sense builds a working model of your data estate automatically from signals your organization already produces:
+
 - Query history from Snowflake and connected external systems
 - Object metadata and table structures
 - BI dashboard definitions (Power BI, Tableau) via Horizon Context connectors
@@ -160,7 +162,7 @@ Rather than injecting the full catalog into every prompt (expensive, slow, and o
 Snowflake published the following results from [internal testing on their own product analytics data in June 2026](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/). These are internal benchmarks; they do not represent guaranteed results on customer workloads.
 
 | Setup | Accuracy |
-|---|---|
+| --- | --- |
 | Frontier coding agent with direct SQL access (no context layer) | ~24% |
 | CoCo with Cortex Sense | ~86% |
 
@@ -169,7 +171,7 @@ Snowflake's blog states accuracy "improved from 24.1% to 86.3%." An intermediate
 Cost comparison on the same benchmark:
 
 | Setup | Estimated cost per query |
-|---|---|
+| --- | --- |
 | Frontier agent (manually inspecting tables via DESCRIBE) | ~$1.76 |
 | CoCo + Cortex Sense | ~$0.59 |
 
@@ -257,7 +259,7 @@ This is not a new risk introduced by Horizon Context or Cortex Sense. It is a pr
 For customers navigating this:
 
 | Use case | Recommended approach |
-|---|---|
+| --- | --- |
 | Discovery, analytics, CoWork queries | Enable Cortex Sense. This is what it is designed for. |
 | Regulated workload with auditability requirement | Keep explicit semantic view tool configuration, set `tool_not_accessible` to `reject` when all declared tools are mandatory, and do not treat Sense as a scope control. |
 | Any agent deployment | Use a purpose-built, minimal-privilege default role; consider Restricted Session Scope as an additional ceiling. |
@@ -280,7 +282,7 @@ For customers with enterprise catalogs: Snowflake's Horizon Context announcement
 ## Availability Summary
 
 | Feature | Status | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Horizon Catalog (base) | **GA** | Always available |
 | Semantic Views | **GA** | Foundation of the semantic layer |
 | Semantic View Autopilot | **GA** | Uses selected tables plus example SQL; supports Tableau `.twb`, `.twbx`, `.tds`, and `.tdsx` ingestion |

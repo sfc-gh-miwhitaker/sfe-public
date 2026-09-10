@@ -42,7 +42,7 @@ flowchart TD
 ```
 
 | Criteria | CoWork | CoCo | Governed MCP (Natoma) | Legacy MCP text-to-SQL |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | **Best for** | Business users, NL questions | Developers, SEs, pipelines, apps | External agents needing governed tool access | Claude Desktop chat, business convenience |
 | **Where it runs** | In Snowflake | Desktop / Snowsight Cloud Agents / CLI | Snowflake-managed gateway | Claude Desktop <-> MCP Server |
 | **Accuracy posture** | Context-grounded (~86%) | Data-native (reads schema/RBAC/lineage) | Tool-scoped, deterministic | ~24% unless context added |
@@ -55,7 +55,7 @@ flowchart TD
 ### The guides
 
 | | |
-|---|---|
+| --- | --- |
 | **[Claude Desktop & Governed MCP](governed-mcp.md)** | **Setting up Claude Desktop? Start here.** The recommended delegate-to-CoCo path (works today, no semantic view required to begin), the Natoma MCP gateway, and — for native-connector cases — the legacy Snowflake OAuth / Entra ID External OAuth setup. |
 | **[CoCo: The Data-Native Developer Surface](coco.md)** | CoCo Desktop, Cloud Agents (Snowsight), CLI, Agent SDK, MCP server + ACP, Skills Catalog. How Claude Desktop / Claude Code delegate to CoCo via `cortex mcp serve`. Connection auth, security envelopes, profiles, and the ADE-Bench efficiency story. |
 | **[The Context Layer](context-layer.md)** | The shared foundation, in plain terms: describe your data, save a few real questions with their correct answers, check it. Points you to Snowflake's own learning resources for going deeper. |
@@ -71,7 +71,7 @@ You don't need this section to follow the steps above — it's the rationale, in
 Five names appear throughout this guide. Read this table once and you're oriented — each row includes a plain-English "think of it as."
 
 | Old name (pre-Summit) | New name / model | Think of it as | Maturity |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Snowflake Intelligence | **Snowflake CoWork** | The chat experience for business users, built into Snowflake | GA |
 | Cortex Code (a plugin) | **CoCo** | A data-aware coding agent (like Claude Code, but it knows your Snowflake) | CLI GA; Desktop in public preview |
 | *(absent)* | **Cortex Sense** | The service that feeds your business definitions to an agent at the moment it answers | GA |
@@ -84,7 +84,7 @@ Five names appear throughout this guide. Read this table once and you're oriente
 ### The two numbers
 
 | Metric | Generic agent over a pipe | Data-native + governed context | Source |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Accuracy** on hard structured-data questions | ~24% | **~86%** (with Cortex Sense context) | Snowflake Summit 26 benchmark |
 | **Token + time cost** (vs CoCo on equivalent work) | +51% tokens, +8% time, *lower* pass rate (65.1%) | CoCo: 72.1% on ADE-Bench | [Snowflake CoCo blog](https://www.snowflake.com/en/blog/snowflake-coco-ai-coding-agent-modern-data-stack/) |
 
@@ -101,7 +101,7 @@ Raw natural-language-to-SQL through an MCP tunnel — no grounding, regenerated 
 ## Governance Comparison
 
 | Layer | CoWork / CoCo | Governed MCP (Natoma) | Legacy MCP text-to-SQL |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Authentication** | Snowflake SSO / connection | Centralized credential brokering | OAuth token (Snowflake or Entra) / PAT |
 | **Identity** | Connection-based, RBAC | Non-human identity, per-call | Token-bound (per-session) |
 | **Data visibility** | Full RBAC + Horizon Context | Tool-scoped | Semantic View boundary |

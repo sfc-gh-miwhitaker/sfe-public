@@ -9,6 +9,7 @@ Single-document guide. No Snowflake objects deployed — this is a reference and
 inspiration guide only.
 
 Two patterns covered:
+
 1. SPCS path — Docker container running image gen model, exposed as SPCS service,
    wrapped in a Snowflake UDF, registered as a Cortex Agent generic tool.
 2. External API path — External Function calling an image gen API (DALL-E, Stability AI),

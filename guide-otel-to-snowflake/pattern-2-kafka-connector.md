@@ -82,7 +82,7 @@ schematization**
 
 OTLP is arrays at every level:
 
-```
+```text
 resourceSpans[]  →  scopeSpans[]  →  spans[]  →  attributes[]
 ```
 

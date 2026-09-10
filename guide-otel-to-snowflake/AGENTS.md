@@ -21,7 +21,7 @@ Snowflake has three distinct OTel-adjacent things that are constantly confused. 
 edit blur them:
 
 | Thing | Direction | Correct role in this guide |
-|---|---|---|
+| --- | --- | --- |
 | Event tables | Snowflake's own telemetry, generated internally | Column-layout template only. **Not a writable target.** |
 | `snowflakereceiver` (collector-contrib) | Pulls Snowflake metrics *out* to an APM tool | Named only as an explicit trap in Gotchas |
 | Patterns 1-4 in this guide | External telemetry *into* Snowflake | The actual subject |
@@ -33,7 +33,7 @@ framing depends on this fact.
 
 ## Structure
 
-```
+```text
 README.md                          Hub: forks, decision tree, comparison, landing model, gotchas
 pattern-1-openflow-listenotlp.md   First-party OTLP listener
 pattern-2-kafka-connector.md       Collector -> Kafka -> Connector v4

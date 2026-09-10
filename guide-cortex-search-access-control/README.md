@@ -21,7 +21,7 @@ Pair-programmed by SE Community + Cortex Code
 ## New to Snowflake? Read these words once
 
 | Term | In plain words |
-|---|---|
+| --- | --- |
 | **Cortex Search Service** | A search index you build from a Snowflake table. Users query it with natural-language text; it returns the most relevant rows. |
 | **Owner's rights** | The security model Cortex Search uses today. The service runs as its creator's role, not as whoever calls it. If you can call the service, you see what the owner sees. |
 | **Caller's rights** | An alternative model — not yet available for Cortex Search — where the service would run as the calling user's role, inheriting their row-level access. |
@@ -52,7 +52,7 @@ flowchart TD
 ## Pattern Comparison
 
 | | [Pattern 1: Filter UBAC](filter-attribute-ubac.md) | [Pattern 2: Separate services](separate-services.md) |
-|---|---|---|
+| --- | --- | --- |
 | **How it works** | Tag each document with allowed identifiers; inject `@contains` filter at query time | Index only the right documents into each service; grant USAGE per role |
 | **Best for** | Dynamic, user-level, or external-ID-based access (per account, per tenant, per user) | Static groups with clean, known boundaries |
 | **Number of services** | One | One per group |
@@ -66,7 +66,7 @@ flowchart TD
 ## What the Platform Does Not Yet Support
 
 | Gap | Reality |
-|---|---|
+| --- | --- |
 | **Native caller's rights** | Not available. Owner's rights is the only model. The two patterns in this guide are the workaround. |
 | **Row-level masking inherited from source table** | A masking policy on the underlying table does not restrict what Cortex Search returns. The service bypasses it. |
 | **Dynamic data masking in search results** | Not supported. If a column would be masked for a given user on the source table, the service still returns it unmasked. |
@@ -79,7 +79,7 @@ flowchart TD
 ## Quick Picks by Scenario
 
 | Scenario | Recommended Pattern |
-|---|---|
+| --- | --- |
 | SaaS platform: each customer account sees only their own content | [Pattern 1](filter-attribute-ubac.md) — tag with account ID array |
 | Market research: reports licensed per client | [Pattern 1](filter-attribute-ubac.md) — tag with licensed client IDs |
 | Healthcare: patients see only their own records | [Pattern 1](filter-attribute-ubac.md) — tag with patient ID |

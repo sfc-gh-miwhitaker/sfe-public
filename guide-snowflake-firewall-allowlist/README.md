@@ -9,7 +9,7 @@ A plain-language guide for the network/firewall admin who has been handed a tick
 
 **Audience:** Network administrators, firewall engineers, security operations teams — anyone maintaining edge firewall rules who needs to permit Snowflake traffic without a Snowflake background.
 
-```
+```text
 Pair-programmed by SE Community + Cortex Code
 ```
 
@@ -24,7 +24,7 @@ Pair-programmed by SE Community + Cortex Code
 You got a ticket. Someone on the data team needs "Snowflake access." Before you reach for a static IP list — stop. Snowflake's architecture means the answer depends on **which direction** the traffic flows.
 
 | Direction | What's happening | How to allowlist | Static IPs? |
-|-----------|-----------------|-----------------|-------------|
+| ----------- | ----------------- | ----------------- | ------------- |
 | **Outbound** (your network → Snowflake) | Users/apps connecting to Snowflake | Allowlist by **DNS hostname** (FQDN) + port | No — IPs are dynamic |
 | **Inbound** (Snowflake → your network) | Snowflake calling your APIs/services | Allowlist by **CIDR block** from a Snowflake function | Yes — stable, but they expire |
 
@@ -70,7 +70,7 @@ ORDER BY type, host;
 ### What the Output Looks Like (representative sample)
 
 | Type | Example Host | Port | Why |
-|------|------|------|-----|
+| ------ | ------ | ------ | ----- |
 | SNOWFLAKE_DEPLOYMENT | `<acct-locator>.<region>.snowflakecomputing.com` | 443 | Main service endpoint |
 | SNOWFLAKE_DEPLOYMENT_REGIONLESS | `<org>-<acct>.snowflakecomputing.com` | 443 | Org-level URL |
 | SNOWSIGHT_DEPLOYMENT | `app.snowflake.com` | 443 | Web UI (Snowsight) |
@@ -90,11 +90,13 @@ ORDER BY type, host;
 ### Firewall Configuration Strategy
 
 **If your firewall supports FQDN-based rules** (Palo Alto, Fortinet, Zscaler, etc.):
+
 1. Create an FQDN object for each hostname from the query above.
 2. Allow HTTPS (TCP 443) and HTTP (TCP 80 for OCSP only) outbound to those FQDNs.
 3. Re-run `SYSTEM$ALLOWLIST()` quarterly — new types can appear (e.g., when Snowflake Apps are enabled).
 
 **If your firewall only supports IP-based rules** (legacy ACLs):
+
 1. Resolve each hostname to its current IP(s) via DNS.
 2. Add those IPs to your outbound allow rule.
 3. **Critical:** Schedule automated DNS re-resolution (daily minimum). The IPs **will** change. If you hardcode them, access will break silently.
@@ -136,13 +138,14 @@ FROM TABLE(FLATTEN(INPUT => PARSE_JSON(SYSTEM$GET_SNOWFLAKE_EGRESS_IP_RANGES()))
 ### What the Output Looks Like
 
 | IP CIDR Range | Effective | Expires |
-|---------------|-----------|---------|
+| --------------- | ----------- | --------- |
 | 153.45.34.0/24 | 2025-08-01 | 2026-05-06 |
 | 153.45.77.0/24 | 2025-08-01 | 2026-05-06 |
 
 ### Supported Use Cases
 
 These egress IPs are used when Snowflake calls out via:
+
 - External access from UDFs and stored procedures (External Network Access)
 - Snowpark Container Services (SPCS) external access
 - Snowflake Openflow on SPCS
@@ -204,7 +207,7 @@ conn.close()
 Use this table to answer "what do I need to do?" based on your scenario:
 
 | Scenario | Action | Static? | Refresh needed? |
-|----------|--------|---------|-----------------|
+| ---------- | -------- | --------- | ----------------- |
 | Users connect to Snowflake from corporate network | Allowlist FQDNs from `SYSTEM$ALLOWLIST()` outbound | No | Quarterly check |
 | ETL server connects to Snowflake | Same as above, or use PrivateLink | No | Quarterly check |
 | Snowflake UDF calls your REST API | Add CIDRs from `SYSTEM$GET_SNOWFLAKE_EGRESS_IP_RANGES()` inbound | Yes (temporary) | Automated, before expiry |

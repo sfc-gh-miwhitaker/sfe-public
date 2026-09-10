@@ -120,6 +120,7 @@ Be honest with yourself here, because Cube is real software that someone has to 
 secure, and pay for.
 
 **Cube earns its place if:**
+
 - Your people use Excel, Power BI, or custom apps — not just Snowflake's own tools
 - You have more than one data warehouse to unify
 - You're building something with lots of simultaneous users, like a customer-facing
@@ -127,6 +128,7 @@ secure, and pay for.
 - Your metrics are genuinely complicated
 
 **Skip it if:**
+
 - Snowflake is your only warehouse, and
 - Your users are business intelligence tools plus Snowflake's built-in AI
 

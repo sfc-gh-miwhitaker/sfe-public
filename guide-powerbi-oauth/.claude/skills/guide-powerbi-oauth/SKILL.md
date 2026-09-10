@@ -18,7 +18,7 @@ Recipe-format guide for Snowflake admins connecting Power BI to Snowflake using 
 
 Static guide — no schema, warehouse, or tables created. Two account-level security objects and one SCIM role:
 
-```
+```text
 Microsoft Entra ID
   → SCIM sync creates Snowflake users with LOGIN_NAME = work email (via aad_provisioner role)
   → issues JWT token on Power BI login (scoped to Snowflake audience URL)
@@ -39,7 +39,7 @@ Snowflake SCIM Security Integration (aad_provisioning)
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Full guide: intro, DirectQuery/Import decision, 4 setup steps, existing-user fork (Paths A/B/C), troubleshooting, special cases |
 | `sql/01_security_integration.sql` | Block A (OAuth integration) + Block B (SCIM integration) + SCIM token generation + verification |
 | `sql/02_provision_users.sql` | Existing user audit queries + LOGIN_NAME fix scripts (Fix 1: ALTER USER; Fix 2: ownership transfer) |
@@ -58,7 +58,7 @@ To add support for a new scenario (e.g., Power BI Embedded, a different IdP):
 ## Snowflake Objects
 
 | Object | Name | Notes |
-|--------|------|-------|
+| -------- | ------ | ------- |
 | Security integration (OAuth) | `powerbi` | Account-level; trusts Entra for Power BI logins |
 | Security integration (SCIM) | `aad_provisioning` | Accepts user sync from Entra; runs as `aad_provisioner` |
 | Role | `aad_provisioner` | Owns SCIM-provisioned users; granted CREATE USER + CREATE ROLE |

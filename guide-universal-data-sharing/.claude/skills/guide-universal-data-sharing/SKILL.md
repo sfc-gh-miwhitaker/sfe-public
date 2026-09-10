@@ -13,7 +13,7 @@ SE guide framed as "what you missed behind all the other Summit 2026 announcemen
 
 Documentation guide with companion SQL examples — no deployed Snowflake objects.
 
-```
+```text
 README.md                              → main guide (start here)
 sql/01_open_data_sharing.sql           → EXTERNAL CONSUMER + PAT + EXTERNAL LISTING workflow
 sql/02_open_table_format_sharing.sql   → Iceberg/Delta + Cross-Cloud Auto-Fulfillment
@@ -26,7 +26,7 @@ AGENTS.md                              → project-specific AI instructions
 ## Key Files
 
 | File | Role |
-|---|---|
+| --- | --- |
 | `README.md` | Full narrative guide — decision tree, feature matrix, SQL walkthroughs |
 | `sql/01_open_data_sharing.sql` | The headline new workflow: share with non-Snowflake consumers |
 | `sql/02_open_table_format_sharing.sql` | Cross-cloud Iceberg/Delta sharing |

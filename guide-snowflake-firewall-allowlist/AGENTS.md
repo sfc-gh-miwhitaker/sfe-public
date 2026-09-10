@@ -9,6 +9,7 @@ Single-file reference guide (README.md) with no deployment artifacts.
 Content is organized for a non-Snowflake audience (network/firewall admins).
 
 Two-direction structure:
+
 - Section 1: Outbound (corp network → Snowflake) — FQDN-based allowlisting
 - Section 2: Inbound (Snowflake → corp network) — CIDR-based allowlisting with expiry
 

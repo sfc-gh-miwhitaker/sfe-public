@@ -13,7 +13,7 @@ Power BI needs to verify who each person is before it shows them Snowflake data.
 **Three systems, three jobs:**
 
 | System | What you do | Time |
-|---|---|---|
+| --- | --- | --- |
 | **Snowflake** | Run two SQL blocks in Snowsight | ~10 min |
 | **Microsoft Entra** | Follow one Microsoft tutorial link | ~20 min (may need your Entra admin) |
 | **Power BI** | Click through connection settings | ~5 min |
@@ -27,6 +27,7 @@ Power BI needs to verify who each person is before it shows them Snowflake data.
 This is a string of letters and numbers that identifies your Microsoft organization. You'll paste it into one SQL command in Step 1.
 
 Where to find it:
+
 - Go to [portal.azure.com](https://portal.azure.com) → search "Microsoft Entra ID" → Overview page → look for **Tenant ID**
 - Or: Power BI Admin portal → Settings → About Power BI
 
@@ -47,7 +48,7 @@ Step 2 happens entirely in Microsoft Entra. If you don't manage Entra yourself, 
 Power BI can either query Snowflake live every time someone opens a report, or copy the data on a schedule and serve it from a local cache. Pick your mode now — it affects how you configure Power BI in Steps 3 and 4.
 
 | I want... | Use |
-|---|---|
+| --- | --- |
 | Data that's always current when the report opens | **DirectQuery** |
 | A daily or hourly data refresh is fine | **Import** |
 | Each person to only see data they're allowed to see (row-level security in Snowflake) | **DirectQuery** — required |
@@ -88,7 +89,8 @@ CREATE SECURITY INTEGRATION powerbi
 **The only thing to change:** Replace `<YOUR_ENTRA_TENANT_ID>` with your actual tenant ID from the "Before you start" section.
 
 Example:
-```
+
+```text
 EXTERNAL_OAUTH_ISSUER = 'https://sts.windows.net/a828b821-f44f-4698-85b2-3c6749302698/'
 ```
 
@@ -214,7 +216,7 @@ This step happens in Microsoft Entra, not Snowflake. When complete, Entra will c
 **Two values to have ready from Step 1:**
 
 | Field | Value |
-|---|---|
+| --- | --- |
 | **Tenant URL** | Your Snowflake SCIM endpoint — see below |
 | **Secret Token** | The value returned by `SYSTEM$GENERATE_SCIM_ACCESS_TOKEN` in Step 1 |
 
@@ -222,7 +224,7 @@ This step happens in Microsoft Entra, not Snowflake. When complete, Entra will c
 
 Your Snowflake account URL is visible in your browser when you're in Snowsight — it looks like `https://YOUR_ORG-YOUR_ACCOUNT.snowflake.com`. Take everything before `.snowflake.com` and append `.snowflakecomputing.com/scim/v2/`:
 
-```
+```text
 https://YOUR_ORG-YOUR_ACCOUNT.snowflakecomputing.com/scim/v2/
 ```
 
@@ -287,7 +289,7 @@ Publishing alone isn't enough — you need to configure credentials in Power BI 
 **Do you need a gateway?**
 
 | Your setup | Gateway |
-|---|---|
+| --- | --- |
 | Power BI Service → Snowflake on a standard public URL | Not needed — Power BI has a built-in Snowflake driver |
 | Power BI Service → Snowflake via Private Link or VPN | Required — [install an on-premises data gateway](https://learn.microsoft.com/en-us/power-bi/connect-data/service-gateway-onprem). Private Link means Snowflake is accessed over a private network, not the public internet — common in security-conscious organizations. |
 | Power BI Desktop → Snowflake | Never needed |
@@ -326,7 +328,7 @@ If the query returns no rows at all, Power BI connected using username and passw
 ### Error table
 
 | Power BI shows | What it means | Fix |
-|---|---|---|
+| --- | --- | --- |
 | "Invalid OAuth access token" | Tenant ID is wrong, or the issuer URL is missing the trailing `/` | Re-check Step 1 Block A. Run `DESC SECURITY INTEGRATION powerbi` in Snowsight and verify the issuer URL contains your tenant ID and ends with `/`. |
 | "Incorrect username or password" | Snowflake can't find a user whose `LOGIN_NAME` matches the email | See the Path C section above |
 | "User access disabled" | The Snowflake user account is disabled | `ALTER USER <name> SET DISABLED = FALSE` |
@@ -340,7 +342,7 @@ If the query returns no rows at all, Power BI connected using username and passw
 
 Run through this in order before spending time on deeper investigation:
 
-```
+```text
 □ SHOW INTEGRATIONS → POWERBI (EXTERNAL_OAUTH) and AAD_PROVISIONING (SCIM) both listed
 □ DESC SECURITY INTEGRATION powerbi → issuer URL has your tenant ID and ends with /
 □ SHOW USERS → affected user exists, login_name is an email address

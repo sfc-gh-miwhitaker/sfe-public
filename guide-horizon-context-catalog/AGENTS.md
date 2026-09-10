@@ -10,6 +10,7 @@ Pair-programmed by SE Community + Cortex Code
 This is a documentation-only guide. No Snowflake objects are deployed.
 
 Files:
+
 - `README.md` — the full guide (main deliverable)
 - `ELI5.md` — analogy-driven summary synchronized with the README's factual guardrails
 - `docs/01-WHAT-CAN-I-DO-NOW.md` — actionable checklist for GA capabilities and preview evaluation

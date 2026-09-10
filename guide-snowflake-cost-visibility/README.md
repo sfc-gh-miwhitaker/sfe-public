@@ -31,7 +31,7 @@ Pair-programmed by SE Community + Cortex Code
 If you're in a hurry, here's the priority order:
 
 | Step | What | SQL file | Time |
-|------|------|----------|------|
+| ------ | ------ | ---------- | ------ |
 | 1 | Activate the account budget and add your email | `sql/budget_setup.sql` | 5 min |
 | 2 | Run the service-type breakdown query | `sql/account_usage_queries.sql` | 2 min |
 | 3 | Create a resource monitor on your largest warehouse | `sql/resource_monitors.sql` | 10 min |
@@ -46,7 +46,7 @@ Step 4 has the most blast radius. Don't skip the audit query at the top of the f
 ## Vocabulary
 
 | Term | Plain-language meaning |
-|------|----------------------|
+| ------ | ---------------------- |
 | **ACCOUNT_USAGE views** | Snowflake's audit log for everything that costs credits. Lives in the `SNOWFLAKE` database. Has up to 3-hour latency — always looking at the recent past, not right now. |
 | **Budget object** | A first-class Snowflake object that watches spend against a threshold you set, then notifies you when projected spend is on track to exceed it. Resets monthly. Does **not** block spend. |
 | **Resource monitor** | A Snowflake object that can suspend warehouses when they reach a credit threshold. Covers warehouses only — not serverless features, not AI services. |
@@ -116,7 +116,7 @@ See `sql/budget_setup.sql` for the full setup sequence, including Slack webhook 
 ### Decision criteria
 
 | You want to… | Use… |
-|---|---|
+| --- | --- |
 | Know when total account spend is trending over budget | Budget object |
 | Stop a specific warehouse from burning credits | Resource monitor |
 | See exactly which service or warehouse spent what | ACCOUNT_USAGE views |
@@ -136,14 +136,14 @@ The Budget object covers all credit types — warehouse compute, AI services, se
 
 ### The view at a glance
 
-```
+```text
 SNOWFLAKE.ACCOUNT_USAGE.METERING_DAILY_HISTORY
 ```
 
 Key columns:
 
 | Column | What it contains |
-|--------|------------------|
+| -------- | ------------------ |
 | `SERVICE_TYPE` | What consumed the credits (see table below) |
 | `USAGE_DATE` | Day the usage occurred |
 | `CREDITS_USED` | Total credits (compute + cloud services) |
@@ -154,7 +154,7 @@ Key columns:
 ### SERVICE_TYPE values you'll see most
 
 | SERVICE_TYPE | What it covers |
-|---|---|
+| --- | --- |
 | `WAREHOUSE_METERING` | All virtual warehouse compute |
 | `AI_SERVICES` | Cortex AI Functions, Cortex Analyst |
 | `AUTO_CLUSTERING` | Automatic table reclustering |
@@ -275,7 +275,7 @@ ALTER WAREHOUSE analytics_wh SET RESOURCE_MONITOR = analytics_wh_monitor;
 ### Account-level vs warehouse-level
 
 | Type | What it covers | When to use |
-|------|----------------|-------------|
+| ------ | ---------------- | ------------- |
 | Account-level | All warehouses in the account | Overall ceiling; no per-warehouse granularity |
 | Warehouse-level | One or more specific warehouses | Per-team or per-workload budgeting |
 
@@ -345,12 +345,13 @@ For accounts where AI usage is governed and attributed by team, that default nee
 
 ### The default state (and why it's a problem)
 
-```
+```text
 PUBLIC role → SNOWFLAKE.CORTEX_USER database role
            → all users get: AI Functions, Agents, Analyst, Search, CoWork
 ```
 
 `CORTEX_USER` is broad. It covers:
+
 - All Cortex AI Functions (AI_COMPLETE, AI_CLASSIFY, AI_EXTRACT, AI_FILTER, AI_SENTIMENT, AI_EMBED, AI_PARSE_DOCUMENT, AI_REDACT, AI_TRANSLATE, AI_TRANSCRIBE)
 - Cortex Agents
 - Cortex Analyst
@@ -362,6 +363,7 @@ If you want a new business unit to use AI Functions — but not run Agents, spin
 ### AI_FUNCTIONS_USER: what it gates
 
 `AI_FUNCTIONS_USER` (GA April 2, 2026) enables the scalar AI functions listed above. It does **not** grant access to:
+
 - Cortex Agents
 - Cortex Analyst
 - Cortex Search
@@ -374,6 +376,7 @@ It also **requires** the `USE AI FUNCTIONS` account-level privilege, which is gr
 ### The two-grant requirement
 
 A user needs **both**:
+
 1. The `USE AI FUNCTIONS` account-level privilege (or a per-function variant)
 2. The `AI_FUNCTIONS_USER` (or `CORTEX_USER`) database role
 
@@ -383,7 +386,7 @@ If the account privilege is still on `PUBLIC` (the default), step 2 is the only 
 
 This is the recommended sequence for an account that currently has `CORTEX_USER` on `PUBLIC` and wants to apply tighter controls to new business units without disrupting existing users:
 
-```
+```text
 STEP 1  Audit: who currently has CORTEX_USER (directly or via PUBLIC)?
 STEP 2  Decide: should existing roles keep CORTEX_USER, or do they only need AI_FUNCTIONS_USER?
 STEP 3  For new BU roles: grant AI_FUNCTIONS_USER instead of CORTEX_USER
@@ -523,7 +526,7 @@ See `sql/ai_functions_user_rbac.sql` for the complete pattern including audit qu
 These four capabilities complement each other — they don't overlap. Here's the decision table:
 
 | You want to… | Use… | SQL file |
-|---|---|---|
+| --- | --- | --- |
 | Know when total monthly spend is trending over budget | Budget object | `budget_setup.sql` |
 | See where credits went (by service, warehouse, user) | ACCOUNT_USAGE queries | `account_usage_queries.sql` |
 | Stop a specific warehouse at a credit limit | Resource monitor | `resource_monitors.sql` |

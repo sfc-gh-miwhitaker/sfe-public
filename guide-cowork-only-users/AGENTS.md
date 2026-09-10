@@ -9,7 +9,7 @@ This is a documentation-only guide — no Snowflake objects are deployed by this
 
 The guide walks an admin through:
 
-```
+```text
 ACCOUNTADMIN
   └── Creates COWORK_USER role
         ├── Grants SNOWFLAKE.CORTEX_AGENT_USER (database role)
@@ -40,6 +40,7 @@ ls -la sql/
 ```
 
 SQL files (run individually, not as a sequence):
+
 - `sql/setup_role.sql` — one-time role and grants setup
 - `sql/provision_user.sql` — annotated single-user example
 - `sql/provision_bulk.sql` — bulk provisioning loop

@@ -14,6 +14,7 @@ Connect Copilot Studio directly to Snowflake tables with zero code. Copilot pars
 - Acceptable that Copilot generates SQL directly (no semantic grounding)
 
 **Limitations:**
+
 - No access to Cortex Analyst, Cortex Search, or Cortex Agents
 - Copilot generates SQL against raw schema — prone to hallucinating table/column names (54% success rate in [real-world testing](https://blog.mwccomms.com/2026/04/connecting-copilot-studio-to-snowflake.html))
 - Single-shot queries only — no multi-step reasoning
@@ -171,6 +172,7 @@ Ask your agent questions that map to the tables you selected:
 - *"Show me customer count by region"*
 
 Verify that:
+
 - Responses contain actual data (not hallucinated)
 - SQL generated targets correct tables and columns
 - Results are consistent across paraphrased questions
@@ -180,6 +182,7 @@ Verify that:
 ## When to Graduate
 
 Move to Pattern B or C when you observe:
+
 - Inconsistent answers for rephrased questions (semantic model solves this)
 - 422 errors from malformed SQL (Cortex Analyst eliminates these)
 - Need for unstructured search (requires Cortex Search via Agent)
@@ -191,7 +194,7 @@ Move to Pattern B or C when you observe:
 ## Common Gotchas
 
 | Issue | Cause | Fix |
-|-------|-------|-----|
+| ------- | ------- | ----- |
 | Connection fails on first attempt | Warehouse is suspended | Resume warehouse before creating connection |
 | "User not found" error | LOGIN_NAME doesn't match `sub` claim | Verify with `SELECT LOGIN_NAME FROM SNOWFLAKE.ACCOUNT_USAGE.USERS` |
 | Empty results | Role lacks SELECT on target tables | `GRANT SELECT ON ALL TABLES IN SCHEMA ... TO ROLE ANALYST` |

@@ -11,7 +11,7 @@ Four-pattern guide for connecting Microsoft Copilot Studio to Snowflake data. Co
 
 ## Architecture
 
-```
+```text
 Pattern A: Knowledge Source (no-code, direct table query)
   Copilot Studio → Snowflake Connector → Tables
 
@@ -25,7 +25,7 @@ Pattern C: MCP Server + Cortex Agent (recommended)
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Landing page — decision framework, 4-pattern comparison, governance table |
 | `knowledge-source.md` | Pattern A: No-code quick start with Snowflake as Knowledge Source |
 | `cortex-analyst-connector.md` | Pattern B: Cortex Analyst via stored procedure + Agent Flow |
@@ -38,6 +38,7 @@ Pattern C: MCP Server + Cortex Agent (recommended)
 
 1. Create the UDF/procedure in Snowflake and grant USAGE to the MCP role
 2. Update the MCP Server specification to include the new tool:
+
    ```sql
    CREATE OR REPLACE MCP SERVER <DB>.<SCHEMA>.COPILOT_MCP_SERVER
      FROM SPECIFICATION $$
@@ -55,6 +56,7 @@ Pattern C: MCP Server + Cortex Agent (recommended)
              input_schema: { type: "object", properties: { ... } }
    $$;
    ```
+
 3. In Copilot Studio, refresh the MCP connector (remove and re-add the tool)
 4. The new tool appears in the tools list — enable it
 

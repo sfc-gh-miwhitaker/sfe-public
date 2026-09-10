@@ -6,7 +6,7 @@
 
 ## Architecture
 
-```
+```text
 Debezium (Kafka Connect source)
   → Kafka topics (one per source table)
   → Snowflake Kafka Connector v4 (SnowflakeStreamingSinkConnector)

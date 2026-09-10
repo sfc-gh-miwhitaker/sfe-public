@@ -27,7 +27,7 @@ The phrase **bidirectional zero copy** describes a portfolio with two directions
 It is not one read/write pipe.
 
 | Need | Direction | Mechanism |
-|---|---|---|
+| --- | --- | --- |
 | Query Salesforce Data 360 data products from Snowflake without copying them | Salesforce to Snowflake | **Salesforce V2 Zero-Copy Connector** and a catalog-linked database |
 | Let Salesforce Data 360 query Snowflake data without copying it | Snowflake to Salesforce | **Query Federation** or **File Federation** configured in Salesforce |
 | Copy Salesforce CRM objects into native Snowflake tables | Salesforce to Snowflake | **Openflow Connector for Salesforce Bulk API** |
@@ -42,7 +42,7 @@ zero-copy methods. The Snowflake V2 connector covered in the runbook below is th
 ## Terminology Map
 
 | Term | Meaning |
-|---|---|
+| --- | --- |
 | Salesforce Data Cloud / Data 360 | Salesforce's data platform; both names appear in current documentation |
 | Salesforce V2 | The new Salesforce Data Share target and Snowflake `ZEROCOPY CONNECTOR` path |
 | Data Share | A Salesforce-defined set of Data 360 objects made available to a target |
@@ -100,7 +100,7 @@ catalog-linked database in Snowflake. See
 ## Choose the Right Path
 
 | | V2 Data Share | Snowflake Federation | Openflow Bulk API | Salesforce MCP |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Primary job | Query Data 360 products in Snowflake | Use Snowflake data in Data 360 | Replicate Salesforce objects | Give agents Salesforce tools |
 | Copies source data | No | No by default; Salesforce can optionally cache | Yes | Not a data pipeline |
 | Requires Data 360 | Yes | Yes | No | Depends on Salesforce MCP setup |
@@ -282,7 +282,7 @@ SHOW SCHEMAS IN DATABASE SALESFORCE_DATA_360;
 ```
 
 | Layer | Symptom | Action |
-|---|---|---|
+| --- | --- | --- |
 | Enrollment | Connector remains `NEW` | Confirm the target type is Snowflake V2 and uses this Enrollment ID |
 | Connection | `CONNECT_ERROR` | Read `connection_error` from `DESC ZEROCOPY CONNECTOR` and correct the Salesforce authorization |
 | Sharing | Connected but no shares appear | Link a Salesforce Data Share to the V2 target |

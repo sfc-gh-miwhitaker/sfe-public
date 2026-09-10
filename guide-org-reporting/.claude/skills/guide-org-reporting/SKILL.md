@@ -13,7 +13,7 @@ performance discipline, and the materialization pattern.
 
 ## Architecture
 
-```
+```text
 guide-org-reporting/
   README.md       — Full guide content (single-file reference)
   ELI5.md         — Plain-language companion for non-technical stakeholders
@@ -26,13 +26,14 @@ No Snowflake objects deployed. Guide reads from existing SNOWFLAKE shared databa
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | README.md | Complete guide: two access paths, role grants, query patterns, latency table |
 | ELI5.md | Non-technical summary |
 
 ## Snowflake Objects
 
 None created. Guide references:
+
 - `SNOWFLAKE.ORGANIZATION_USAGE.*` (read-only shared database views)
 - Application roles: `SNOWFLAKE.ORG_USAGE_ADMIN`, `SNOWFLAKE.ORGANIZATION_*_VIEWER`
 - Database roles: `SNOWFLAKE.ORGANIZATION_USAGE_VIEWER`, `SNOWFLAKE.ORGANIZATION_BILLING_VIEWER`, `SNOWFLAKE.ORGANIZATION_ACCOUNTS_VIEWER`

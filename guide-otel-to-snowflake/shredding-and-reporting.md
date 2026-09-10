@@ -32,7 +32,7 @@ The queries below read `PAYLOAD` from three per-signal tables. Adjust the source
 which pattern you built:
 
 | Pattern | Envelope column | Table shape |
-|---|---|---|
+| --- | --- | --- |
 | 1: Openflow | `PAYLOAD` | `RAW_TRACES`, `RAW_LOGS`, `RAW_METRICS` — as written below |
 | 2: Kafka | `RECORD_CONTENT` | Same three tables; substitute the column name |
 | 3: Snowpipe Streaming | `PAYLOAD` | `STREAM_TRACES`, `STREAM_LOGS`, `STREAM_METRICS` |

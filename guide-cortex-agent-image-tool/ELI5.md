@@ -38,7 +38,7 @@ in a dark room and has never seen what came out.
 ## The Cast
 
 | Term | Plain words |
-|------|-------------|
+| ------ | ------------- |
 | **Cortex Agent** | The AI assistant living in Snowflake. |
 | **Generic tool** | A custom ability you give the assistant — you define what it does. |
 | **UDF (User Defined Function)** | A function you write and store in Snowflake; it's the "draw button" the assistant presses. |

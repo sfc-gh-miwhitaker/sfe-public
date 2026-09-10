@@ -7,7 +7,7 @@
 
 Static guide — no Snowflake compute or data model required. The guide uses three SQL scripts that run in Snowsight:
 
-```
+```text
 sql/01_security_integration.sql  → CREATE SECURITY INTEGRATION powerbi
 sql/02_provision_users.sql       → CREATE/ALTER USER with correct LOGIN_NAME
 sql/03_validate.sql              → login_history + DESC INTEGRATION checks

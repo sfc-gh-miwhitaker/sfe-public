@@ -32,7 +32,7 @@ Snowflake-native Shopify ingestion pipeline. Keep the agent outside the data pat
 ## Key Files
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `README.md` | CoCo-first build and operations guide |
 | `sql/01_landing.sql` | Roles, registry, logs, stage, raw tables |
 | `sql/02_network_secrets.sql` | Network rule, EAI, secret registration pattern |

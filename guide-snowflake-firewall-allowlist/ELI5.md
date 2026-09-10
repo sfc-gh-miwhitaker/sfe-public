@@ -21,7 +21,7 @@ For the reverse direction — when Snowflake needs to visit your building — th
 ## Who Does What
 
 | Person | Action |
-|--------|--------|
+| -------- | -------- |
 | Snowflake admin | Runs `SYSTEM$ALLOWLIST()` and provides the hostname list |
 | Network admin | Adds those hostnames to outbound firewall rules |
 | Snowflake admin | Runs `SYSTEM$GET_SNOWFLAKE_EGRESS_IP_RANGES()` for inbound IPs |

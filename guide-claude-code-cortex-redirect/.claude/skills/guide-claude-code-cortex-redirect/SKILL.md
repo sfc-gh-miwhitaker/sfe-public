@@ -17,7 +17,7 @@ Snowflake perimeter, billed to Snowflake, and governed by RBAC.
 
 ## Architecture
 
-```
+```text
 claude CLI / anthropic SDK client
         |
         | ANTHROPIC_BASE_URL + ANTHROPIC_AUTH_TOKEN
@@ -30,13 +30,14 @@ Claude model (running inside Snowflake perimeter)
 ```
 
 Two endpoint choices:
+
 - Messages API `/api/v2/cortex/v1/messages` — Anthropic-spec, Claude models only
 - Chat Completions `/api/v2/cortex/v1/chat/completions` — OpenAI-spec, all models
 
 ## Key Files
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `README.md` | Overview, routing decision, prerequisites |
 | `authentication.md` | All auth options: PAT, apiKeyHelper+Keychain, Key-Pair JWT, CI/CD, Claude Desktop OAuth |
 | `claude-code-redirect.md` | Claude Code CLI setup (env vars, settings.json) |

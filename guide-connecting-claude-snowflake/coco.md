@@ -8,11 +8,13 @@
 
 > [!IMPORTANT]
 > **`cortex mcp serve` (MCP server mode) only appears once a Snowflake connection is configured.** The CLI registers the `serve` subcommand from `~/.snowflake/connections.toml` — with no connection it is hidden, and `cortex mcp serve -c ... --bypass` silently falls through to the generic `cortex mcp` help (older builds print `Unknown arguments: serve`). This is **not** channel- or version-gated. Configure a connection first:
+>
 > ```bash
 > cortex connections list          # any connection? if not:
 > cortex connections add           # ...add or authenticate one
 > cortex mcp serve --help          # 'serve' now appears
 > ```
+>
 > See [Authentication](#authentication) for connection setup.
 
 ---
@@ -22,7 +24,7 @@
 On [ADE-Bench](https://www.getdbt.com/blog/ade-bench-dbt-data-benchmarking) — dbt Labs' framework for real-world analytics and data-engineering tasks — the numbers favor the data-native approach decisively:
 
 | Agent | ADE-Bench pass rate | Tokens vs CoCo | Time vs CoCo |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **CoCo** | **72.1%** | baseline | baseline |
 | Claude Code (Opus 4.7) | 65.1% | **+51%** | **+8%** |
 | OpenAI Codex | 65.1% | — | — |
@@ -52,7 +54,7 @@ flowchart TD
 ```
 
 | Surface | What it is | Availability |
-|---|---|---|
+| --- | --- | --- |
 | **CoCo Desktop** | Native IDE for Win/macOS: build pipelines, apps, agents, debug notebooks, visualize data flows in one governed surface, with a persistent always-on agent | GA soon (limited access) |
 | **Cloud Agents** | Full agentic runtime inside Snowsight — each session spins up an isolated Snowflake-managed container (shell, Python, dbt builds, web search) with no local setup | GA soon |
 | **CoCo CLI** | The `cortex` command-line agent; config in `~/.snowflake/cortex/` | GA |
@@ -67,7 +69,7 @@ flowchart TD
 CoCo authenticates via `~/.snowflake/connections.toml` — the same file the Snowflake CLI uses. Full enterprise SSO with none of the OAuth integration setup the legacy MCP path requires.
 
 | Method | Config in connections.toml | Best for |
-|---|---|---|
+| --- | --- | --- |
 | **Browser SSO** (recommended) | `authenticator = "externalbrowser"` | Interactive users with Entra ID / Okta / any SAML IdP |
 | **Programmatic Access Token** | `token = "${SNOWFLAKE_PAT}"` | Service accounts, CI/CD, role-scoped access |
 | **Key-pair** | `private_key_path = "..."` | Automated systems, no browser available |
@@ -156,7 +158,7 @@ Configure the MCP client (Claude Desktop shown; Cursor uses `.cursor/mcp.json`):
 This exposes data-native tools to the client, not just text-to-SQL:
 
 | Tool | What it does |
-|---|---|
+| --- | --- |
 | `cortex_code_agent` | Delegates a full task to the CoCo agent loop (writes code, runs SQL, edits files, multi-step) — returns results + an activity summary |
 | `cortex_analyst_query` | Natural language to SQL via Cortex Analyst (grounded in semantic views) |
 | `cortex_search_objects` | Search Snowflake catalog objects |
@@ -179,7 +181,7 @@ cortex mcp start
 ```
 
 | Transport | Use for |
-|---|---|
+| --- | --- |
 | `stdio` | Local tools, CLI wrappers (default) |
 | `http` | Web services, hosted APIs (Streamable HTTP) |
 | `sse` | Real-time streaming services |
@@ -253,7 +255,7 @@ Same RBAC model as Snowflake data governance — only roles with READ on the sta
 Each request operates in one of three permission modes that control whether CoCo pauses for approval before acting:
 
 | Mode | CLI indicator | Slash command | Behavior |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Default (Confirm)** | Blue ⏵⏵ | — | Prompts before potentially dangerous tool calls |
 | **Plan** | Orange ⏸ | `/plan` | Read-only; presents plan before any side effect |
 | **Bypass** | Red >> | `/bypass` | Auto-approves all tool calls; use only in trusted environments |
@@ -267,7 +269,7 @@ Each request operates in one of three permission modes that control whether CoCo
 ## Governance Built In
 
 | Layer | What it controls |
-|---|---|
+| --- | --- |
 | **Snowflake RBAC** | What the user's connection can access (every operation runs under existing RBAC) |
 | **Security envelopes** | What operation types are permitted |
 | **Profiles + skills** | What expertise and framing the user gets (stage-published, RBAC-gated) |
@@ -298,7 +300,7 @@ cortex mcp serve -c my_connection --bypass   # then call from the client
 ## Common Gotchas
 
 | Issue | Cause | Fix |
-|---|---|---|
+| --- | --- | --- |
 | `Unknown arguments: serve` (or `serve` missing from `cortex mcp --help`) | No Snowflake connection configured — `serve` only registers when `~/.snowflake/connections.toml` has one (not a channel/version issue) | `cortex connections add` (or authenticate), then verify with `cortex mcp serve --help` |
 | `cortex` not found | CLI not installed | Run the install script; `which cortex` |
 | Browser SSO not opening | Wrong authenticator | Set `authenticator = "externalbrowser"` in connections.toml |

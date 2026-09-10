@@ -7,7 +7,7 @@ This is a documentation-only guide. No SQL objects, no deploy script.
 
 ## Architecture
 
-```
+```text
 guide-cowork-easter-eggs/
   README.md        — Main guide (15 status-aware feature sections)
   WHAT-CAN-I-DO-NOW.md — Outcome-based action menu with runnable prompts

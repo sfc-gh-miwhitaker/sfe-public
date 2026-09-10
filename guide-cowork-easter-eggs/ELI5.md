@@ -21,7 +21,7 @@ Some features are generally available. Others are Preview and may change. Seeing
 ## The Cast
 
 | Term | What it means |
-|---|---|
+| --- | --- |
 | **Deep Research** | Breaks a hard question into smaller investigations and builds a cited report |
 | **Extended Thinking** | Spends more reasoning effort on one answer and stays selected until turned off |
 | **Artifact** | A saved chart or table whose query can run again with the viewer's permissions |

@@ -9,7 +9,7 @@ A read-only dashboard for monitoring Cortex AI credit consumption, per-user attr
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ SNOWFLAKE BACKEND                                            │
 │                                                              │
@@ -31,7 +31,7 @@ A read-only dashboard for monitoring Cortex AI credit consumption, per-user attr
 ## Key Files
 
 | File | Purpose |
-|------|---------|
+| ------ | --------- |
 | `deploy_all.sql` | One-command SQL data layer deploy |
 | `sql/02_materialization/01_tables_and_task.sql` | Core: table DDL + refresh SP + task |
 | `sql/03_quota_example/01_quota_setup.sql` | Native per-user quota configuration |

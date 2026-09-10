@@ -3,6 +3,7 @@
 Export Snowflake audit data to cloud storage (S3, Azure Blob, or GCS) on a schedule, then have Splunk ingest from that storage. This decouples Snowflake from Splunk — no direct database connection required — and handles high-cardinality tables more gracefully than DB Connect's JDBC pull.
 
 **Best for:**
+
 - High-volume tables (`QUERY_HISTORY`, `ACCESS_HISTORY`) where DB Connect's JDBC pull is slow or expensive
 - Organizations that already use Splunk's cloud storage add-ons and want a consistent ingestion pattern
 - Cases where Splunk cannot establish direct JDBC connectivity to Snowflake (firewall constraints)
@@ -11,7 +12,7 @@ Export Snowflake audit data to cloud storage (S3, Azure Blob, or GCS) on a sched
 
 ## Architecture
 
-```
+```text
 Snowflake ACCOUNT_USAGE views
         │
         │  Snowflake Task (scheduled)
@@ -211,7 +212,7 @@ ALTER TASK SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.EXPORT_ACCESS_HISTORY RESUME;
 
 Because the export window overlaps runs (3-hour lookback on every poll), the same row may appear in multiple export files. In Splunk:
 
-```
+```spl
 sourcetype="snowflake:login"
 | dedup EVENT_ID
 ```
@@ -237,7 +238,7 @@ DROP WAREHOUSE IF EXISTS SPLUNK_EXPORT_WH;
 ## Cost Profile
 
 | Component | Notes |
-|---|---|
+| --- | --- |
 | Snowflake warehouse | XSMALL tasks, hourly schedule. Typically < 1 credit/day per task. |
 | Snowflake data egress | COPY INTO charges standard egress fees for data leaving to S3/Azure/GCS. For audit logs, typically small (< $5/month). |
 | Cloud storage | S3/Azure/GCS storage at standard rates. Audit logs compress well (JSON gzip). Lifecycle-delete old export files after Splunk confirms ingestion. |

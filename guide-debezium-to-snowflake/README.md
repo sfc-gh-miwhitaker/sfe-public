@@ -38,7 +38,7 @@ enrollment or a Snowflake support exception.
 
 ## Architecture
 
-```
+```text
 Operational DB (Postgres / MySQL / SQL Server)
         │
         │  reads WAL / binlog / CT logs
@@ -88,7 +88,9 @@ tables declaratively, without task scheduling.
 ### Source database setup
 
 #### PostgreSQL
+
 Enable logical replication:
+
 ```sql
 -- postgresql.conf (requires restart)
 wal_level = logical
@@ -104,7 +106,9 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO debezium_use
 ```
 
 #### MySQL / MariaDB
+
 Enable binary logging:
+
 ```ini
 # my.cnf
 [mysqld]
@@ -114,6 +118,7 @@ binlog_format     = ROW
 binlog_row_image  = FULL
 expire_logs_days  = 10
 ```
+
 ```sql
 -- Create a CDC user
 CREATE USER 'debezium'@'%' IDENTIFIED BY '<YOUR_STRONG_PASSWORD>';
@@ -123,7 +128,9 @@ FLUSH PRIVILEGES;
 ```
 
 #### SQL Server
+
 Enable CDC at the database and table level:
+
 ```sql
 -- Enable CDC on the database (requires db_owner or sysadmin)
 EXEC sys.sp_cdc_enable_db;
@@ -142,12 +149,14 @@ EXEC sp_addrolemember N'db_datareader', N'debezium';
 ```
 
 ### Kafka Connect worker
+
 Any Kafka Connect 3.x distributed-mode cluster (Apache Kafka or Confluent). Download
 the Debezium connector JARs from https://debezium.io/releases/ and the Snowflake Kafka
 Connector v4 JAR from Confluent Hub or Maven Central. Place both in the Connect worker's
 plugin path.
 
 ### Snowflake objects
+
 ```sql
 USE ROLE securityadmin;
 
@@ -183,6 +192,7 @@ Deploy each connector via the Kafka Connect REST API. Adjust `database.hostname`
 `database.dbname`/`database.server.name`, and include/exclude lists for your schema.
 
 ### PostgreSQL connector
+
 ```json
 {
   "name": "postgres-source",
@@ -208,6 +218,7 @@ Deploy each connector via the Kafka Connect REST API. Adjust `database.hostname`
 Topics created: `pg.<schema>.<table>` — e.g., `pg.public.orders`
 
 ### MySQL connector
+
 ```json
 {
   "name": "mysql-source",
@@ -231,6 +242,7 @@ Topics created: `pg.<schema>.<table>` — e.g., `pg.public.orders`
 Topics created: `mysql.<database>.<table>` — e.g., `mysql.your_db.orders`
 
 ### SQL Server connector
+
 ```json
 {
   "name": "sqlserver-source",
@@ -254,6 +266,7 @@ Topics created: `mysql.<database>.<table>` — e.g., `mysql.your_db.orders`
 Topics created: `mssql.<database>.<schema>.<table>` — e.g., `mssql.your_db.dbo.orders`
 
 **Deploy:**
+
 ```bash
 curl -X POST -H "Content-Type: application/json" \
   --data @postgres-source.json \
@@ -265,6 +278,7 @@ curl -X POST -H "Content-Type: application/json" \
 ## Step 2: Configure Snowflake Kafka Connector v4
 
 ### Generate key pair for Snowflake authentication
+
 ```bash
 # Generate private key
 openssl genrsa -out rsa_key.pem 2048
@@ -277,6 +291,7 @@ grep -v "BEGIN\|END" rsa_key.pem | tr -d '\n'
 ```
 
 Assign the public key to the Snowflake user:
+
 ```sql
 -- Copy the content of rsa_key.pub (strip the header/footer lines)
 ALTER USER kafka_ingest_user SET RSA_PUBLIC_KEY = 'MIIBIjANBgkqh...';
@@ -341,6 +356,7 @@ CREATE TABLE cdc_raw.landing.orders_raw (
 ```
 
 **Debezium envelope anatomy:**
+
 ```json
 {
   "before": { "id": 1, "amount": 100.00, "status": "pending" },
@@ -461,6 +477,7 @@ downstream dependents. Schedule during a maintenance window or low-traffic perio
 
 Debezium performs a one-time snapshot of all existing rows before switching to streaming
 log capture. During snapshot:
+
 - Events use `op: "r"` (read), not `"c"` (insert).
 - The snapshot of a large table can take minutes to hours — scale up your Kafka Connect
   workers for this phase if needed.
@@ -470,11 +487,13 @@ log capture. During snapshot:
 
 Without a schema registry, Debezium serializes events as JSON with embedded schemas.
 With Confluent Schema Registry + Avro, you get:
+
 - Smaller event payloads (schema stored once, not per-event)
 - Schema evolution tracking with compatibility guarantees
 - Better support for column type changes
 
 To use Avro + schema registry, change the Kafka connector value converter:
+
 ```json
 "value.converter": "io.confluent.connect.avro.AvroConverter",
 "value.converter.schema.registry.url": "http://your-schema-registry:8081"
@@ -483,6 +502,7 @@ To use Avro + schema registry, change the Kafka connector value converter:
 ### Monitoring
 
 **Kafka Connect health:**
+
 ```bash
 # List running connectors and their status
 curl http://localhost:8083/connectors?expand=status | jq '.[] | {name: .status.name, state: .status.connector.state}'
@@ -492,6 +512,7 @@ curl http://localhost:8083/connectors/snowflake-sink/status | jq '.tasks'
 ```
 
 **Snowflake ingestion lag:**
+
 ```sql
 -- Check Snowpipe Streaming channel lag
 SELECT system$pipe_status('cdc_raw.landing.orders_raw');
@@ -506,6 +527,7 @@ ORDER BY last_load_time DESC;
 ```
 
 **Dynamic Table freshness:**
+
 ```sql
 -- Check whether DTs are meeting their target lag
 SELECT name, target_lag, scheduling_state, last_completed_refresh,
@@ -526,7 +548,7 @@ ORDER  BY refresh_start_time DESC;
 ### Failure recovery
 
 | Failure scenario | Recovery |
-|-----------------|----------|
+| ----------------- | ---------- |
 | Debezium connector crashes | Kafka Connect restarts it automatically; resumes from last committed offset |
 | Kafka cluster outage | Debezium pauses; WAL/binlog accumulates on source DB until Kafka recovers — ensure source log retention is long enough |
 | Snowflake connector pause | Kafka topics retain messages; connector resumes from last committed offset when restarted |
@@ -546,6 +568,7 @@ WHERE  slot_name = 'debezium_slot';
 
 The sink connector is configured with `errors.deadletterqueue.topic.name: dlq-snowflake-sink`.
 Messages that fail to ingest land there with error headers. Inspect with:
+
 ```bash
 kafka-console-consumer \
   --bootstrap-server kafka:9092 \
@@ -564,7 +587,7 @@ architecture entirely.**
 
 With Datastream, the pipeline simplifies to:
 
-```
+```text
 Operational DB → Debezium → Snowflake Datastream → Snowflake table
 ```
 

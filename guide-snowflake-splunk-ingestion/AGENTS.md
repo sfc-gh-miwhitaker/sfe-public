@@ -15,7 +15,7 @@ This is a documentation-only guide. No Snowflake objects are deployed from this 
 ## Key Files
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `README.md` | Decision flowchart, pattern comparison table, glossary — start here |
 | `pattern-1-federated-search.md` | Splunk Federated Search setup, SPL examples |
 | `pattern-2-db-connect.md` | DB Connect JDBC setup, per-table Rising Column configs with SQL |
@@ -32,6 +32,7 @@ This is a documentation-only guide. No Snowflake objects are deployed from this 
 ## Key Commands
 
 No deploy script — guide only. To validate SQL syntax:
+
 ```bash
 # From repo root
 cat guide-snowflake-splunk-ingestion/pattern-2-db-connect.md | grep -A 30 'CREATE OR REPLACE'
