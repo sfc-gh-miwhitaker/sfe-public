@@ -57,6 +57,7 @@ authenticate and communicate with Snowflake.
 - `guide-ad-platform-integrations` — Advertising data by direction: Google Ads Data Manager outbound (Snowflake as native first-party source, PAT auth, Customer Match), the Meta ads MCP + Conversions API skill pairing (CAPI skill public on GitHub, MCP by request), and the Openflow connectors for Meta Ads and Google Ads inbound (Preview connectors on a GA platform)
 - `guide-openflow-shopify-multistore` — Shopify (dozens of stores) into Snowflake via Openflow Snowflake Deployment: gen 2 SQL deployment/runtime, gen 1 canvas-installed Shopify connector per store, registry-driven per-store schemas, generated Dynamic Table analytics layer, honest readiness and cost-floor section, ELT cutover pattern
 - `guide-shopify-bulk-api-coco` — Shopify Bulk API into Snowflake with CoCo Desktop as the lifecycle interface: deterministic Python procedure/Task data path, SECRET + EAI security, generated multi-store bindings, proof-before-promotion qualification, Dynamic Tables, conversational troubleshooting, and read-only operations automations
+- `guide-otel-to-snowflake` — External OpenTelemetry logs, metrics, and traces into Snowflake: four ingestion patterns (Openflow ListenOTLP, Collector→Kafka→Connector v4, custom exporter→Snowpipe Streaming HP, files→stage→COPY/Iceberg) plus the shared event-table-shaped shredding layer and Dynamic Table reporting gold layer
 
 **Belongs here if:** the guide's primary job is configuring a named external product
 to connect to Snowflake. Authentication setup, endpoint configuration, and integration
@@ -70,6 +71,8 @@ capture, orchestration, and incremental processing.
 **Current members:**
 - `demo-streams-cdc-workshop` — hands-on CDC with Streams and Tasks, including
   transactional change handling, staleness, monitoring, and recovery
+- `guide-otel-to-snowflake` — inbound OpenTelemetry pipelines: four ingestion patterns, the
+  shared OTLP shredding layer, and a Dynamic Table gold layer (also in Path 1 and Path 6)
 
 **Belongs here if:** the project's primary job is building or operating a
 Snowflake-native data pipeline rather than configuring an external integration.
@@ -138,6 +141,7 @@ order — pick based on area of interest.
 - `guide-cowork-easter-eggs` — status-aware CoWork feature surface: Deep Research, Artifacts and shared conversations, chart policies, User Skills, Automations, MCP, document generation, mobile, and cost controls
 - `guide-org-reporting` — ORGANIZATION_USAGE primer: two access paths, premium vs non-premium, query discipline
 - `guide-cube-snowflake-semantic-layer` — bi-directional Snowflake Semantic Views sync with Cube, push limitations, decoupled vs warehouse-native decision (also in Path 1)
+- `guide-otel-to-snowflake` — observability data in Snowflake: what event tables are and are not, why the collector-contrib Snowflake component points the wrong way, and Observe as the first-party buy-side option (also in Path 1 and Path 2)
 
 **Belongs here if:** the guide's primary job is explaining a new Snowflake feature or
 capability rather than configuring or building something.
