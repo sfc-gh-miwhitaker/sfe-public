@@ -25,11 +25,34 @@ Pair-programmed by SE Community + Cortex Code
 
 **Created:** 2026-09-10 | **Expires:** 2027-03-10 | **Status:** ACTIVE
 
+> [!IMPORTANT]
 > **No support provided.** Reference only; validate before production use. The Snowflake-side SQL
 > here was executed on the created date above. The **vendor API details were correct on that date
 > and will drift** — every vendor in this guide changed a relevant endpoint during 2026. Treat the
 > vendor sections as a worked illustration of the pattern, and the vendor's own documentation as
 > the source of truth.
+
+---
+
+## Contents
+
+| Section | Read it for |
+| --- | --- |
+| [Read These Words First](#read-these-words-first) | Nine terms this guide uses precisely |
+| [Start Here](#start-here) | Build-vs-buy, then what grain each of 11 platforms can actually give you |
+| [The Two Decisions That Matter](#the-two-decisions-that-matter) | Cost-model discriminator, identity spine. **The design.** |
+| [Architecture](#architecture) | Diagram, and why raw payloads land verbatim |
+| [What Is In This Guide](#what-is-in-this-guide) | The eleven SQL files, in run order |
+| [The Five Decisions It Supports](#the-five-decisions-it-supports) | Gold objects, and the caveat to state with each |
+| [Extending the Model](#extending-the-model) | Per-agent cost, and joining usage to outcomes |
+| [If You Already Run dbt](#if-you-already-run-dbt) | Coexistence patterns, and the tests worth stealing |
+| [Gotchas](#gotchas-read-before-you-build) | **Eleven traps, collapsed. Skim the summaries.** |
+
+> [!TIP]
+> Shortest useful path: the [second fork](#second-fork-what-grain-can-each-platform-actually-give-you)
+> table, then [The Two Decisions](#the-two-decisions-that-matter), then
+> [`sql/05_snowflake_native.sql`](sql/05_snowflake_native.sql) — which needs no credentials and
+> proves the model before you negotiate access to any vendor API.
 
 ---
 
@@ -123,9 +146,13 @@ Everything else in this guide is plumbing. These two are the design.
 
 ### Decision 1: do not blend meters
 
-The tempting model is one `cost_amount` column so every dashboard can `SUM` it. Resist. A metered
-credit and a fixed monthly seat are different kinds of number, and a chart that adds them produces
-a total that moves for the wrong reasons and a "cost per message" that is arithmetic nonsense.
+> [!WARNING]
+> One `cost_amount` column that every dashboard can `SUM` is the single most consequential mistake
+> available here. A metered credit and a fixed monthly seat are different kinds of number.
+
+The tempting model is one `cost_amount` column so every dashboard can `SUM` it. Resist. A chart that
+adds a metered credit to a fixed seat produces a total that moves for the wrong reasons and a
+"cost per message" that is arithmetic nonsense.
 
 And the split is not simply one column per vendor, because most vendors are *both*. Three shapes
 appear in this guide and each needs different handling:
@@ -166,6 +193,10 @@ repeats the pattern exactly — Claude Enterprise and the Claude Console are sep
 non-interchangeable admin credentials — which is why they are two registry rows rather than one.
 
 ### Decision 2: identity is the actual project
+
+> [!IMPORTANT]
+> There is no natural join key between any two of these platforms. Budget for identity resolution
+> as the main body of work, not as a lookup you add at the end.
 
 Every platform names people differently:
 
@@ -257,14 +288,15 @@ flowchart LR
   goldlayer --> agent["Semantic view + Cortex Agent"]
 ```
 
-Raw payloads land as `VARIANT` and are shredded in SQL rather than schematized on ingest. A
+**Raw payloads land as `VARIANT` and are shredded in SQL** rather than schematized on ingest. A
 shredding bug is then fixed with `CREATE OR REPLACE` over data you already hold, rather than a
 connector redeploy and a re-pull from an API with rate limits and a short retention window.
 
-That retention point is not hypothetical. Box's streaming event feed holds **two weeks**, its
-`admin_logs` feed **one year**, and anything older exists only as a console export. A shredding bug
-discovered three weeks late is unrecoverable if you did not keep the raw payload. Landing the
-vendor's bytes verbatim is the cheapest insurance in this design.
+> [!CAUTION]
+> That retention point is not hypothetical. Box's streaming event feed holds **two weeks**, its
+> `admin_logs` feed **one year**, and anything older exists only as a console export. A shredding
+> bug discovered three weeks late is unrecoverable if you did not keep the raw payload. Landing the
+> vendor's bytes verbatim is the cheapest insurance in this design.
 
 ---
 
@@ -288,13 +320,15 @@ you adapt, not a demo you deploy.
 | [sql/99_teardown.sql](sql/99_teardown.sql) | Reverse-order removal. |
 
 **Only one adapter is fully implemented on purpose.** Nine hand-maintained vendor connectors would
-be stale within two quarters — GitHub retired its legacy Copilot metrics API in April 2026, OpenAI
-removed a conversation log route in June, Box switched Box AI to metered AI Units with the
-per-user report landing mid-2026, Cursor tightened its usage range cap and rebuilt Teams pricing,
-and Google renamed Vertex AI outright. The contract, the identity spine, and the gold layer are the
-durable parts, and they are what the numbered files after `05` protect. `04` gives each remaining
-platform a build specification precise enough to implement against, without pretending its endpoint
-paths will still be current a year from now.
+be stale within two quarters. During 2026 alone: GitHub retired its legacy Copilot metrics API in
+April, OpenAI removed a conversation log route in June, Box switched Box AI to metered AI Units with
+the per-user report landing mid-year, Cursor tightened its usage range cap and rebuilt Teams
+pricing, and Google renamed Vertex AI outright.
+
+The contract, the identity spine, and the gold layer are the durable parts, and they are what the
+numbered files after `05` protect. `04` gives each remaining platform a build specification precise
+enough to implement against, without pretending its endpoint paths will still be current a year
+from now.
 
 ---
 
@@ -356,16 +390,124 @@ not worth over-claiming.
 
 ---
 
+## If You Already Run dbt
+
+> [!NOTE]
+> Short answer: **Pattern A** — leave the pipeline as-is, point dbt at `AI_SPEND.GOLD` as sources,
+> and steal the [tests](#what-dbt-genuinely-adds-here-tests). dbt is not filling an empty seat in
+> the transform layer here, but its test framework is a genuine upgrade over prose invariants.
+
+Nothing in this guide requires dbt, and nothing in it forbids dbt. But most organizations big
+enough to be consolidating seven AI vendors already have a mandated transform layer, so the
+question arrives early: does this land inside our dbt project or beside it?
+
+Read the overlap honestly first. The transform half of this design is already declarative and
+already incremental:
+
+| What dbt is usually adopted for | What this guide already uses instead |
+| --- | --- |
+| DAG construction and dependency ordering | Dynamic Table lineage, inferred from the SQL itself |
+| Incremental materialization | `REFRESH_MODE = ADAPTIVE` on the gold layer, `FULL` where the definition needs it |
+| Scheduling and orchestration | `TARGET_LAG` per object, `DOWNSTREAM` on intermediates — no external scheduler |
+| Templating one model across many sources | `CONTROL.PLATFORM_REGISTRY` plus one shredding view per adapter |
+
+The ingestion half is outside dbt's scope entirely. `sql/03_pull_github_copilot.sql` is a
+watermarked Python stored procedure calling a vendor admin API through a `SECRET` and an external
+access integration. dbt does not do egress, does not hold vendor credentials, and has no opinion about
+API pagination. That code stays where it is under every option below.
+
+### The two coexistence patterns
+
+**Pattern A — dbt reads the gold layer as sources.** Leave `sql/01` through `sql/09` exactly as
+shipped. Declare `AI_SPEND.GOLD` tables in `sources.yml` and build your own downstream models
+from them. This is the low-friction option and the one to default to.
+
+- Snowflake owns freshness; dbt owns the models your analysts write on top.
+- Do **not** rely on dbt's default freshness fallback here. Dynamic Tables do report as
+  `BASE TABLE` with a `last_altered` that advances, but it advances on *every refresh* whether or
+  not any row changed — so a stalled vendor pull leaves freshness green indefinitely. Give each
+  source an explicit `loaded_at_field` of `max(usage_date)::timestamp_ntz`, which only moves when
+  data actually lands.
+- Cost attribution stays clean: the pipeline's credits are all on `AI_SPEND_WH` and tagged by the
+  `QUERY_TAG` set in `sql/03`. Note that tag covers ingestion only — it is set by `ALTER SESSION`
+  inside the pull procedure, so refresh credits are attributable by object through
+  `DYNAMIC_TABLE_REFRESH_HISTORY` instead.
+
+**Pattern B — port the transform layer into dbt models.** Move `sql/06_normalize.sql` and
+`sql/07_gold_dts.sql` into `models/`, keeping `sql/01` through `sql/05` as pre-dbt setup. Choose
+this when a governance policy genuinely requires that all transforms live in version-controlled
+dbt, and understand what it costs:
+
+- `materialized="dynamic_table"` in dbt-snowflake emits the DDL and, **when you set `target_lag`**,
+  steps out of the refresh path. dbt becomes a deployment tool for these objects, not the engine
+  that runs them, and a `dbt build` does not mean the data moved. Omit `target_lag`, or set
+  `scheduler: DISABLE`, and dbt refreshes the object itself during `dbt run` — the opposite of what
+  this design wants. Check the config keys your adapter version actually
+  supports — `target_lag` and `snowflake_warehouse` are long-standing, `refresh_mode` and
+  `initialize` arrived later — and confirm with `SHOW DYNAMIC TABLES IN SCHEMA AI_SPEND.GOLD`
+  rather than trusting the run log.
+- Converting to `materialized="incremental"` instead throws away the lag semantics this design
+  depends on. `TARGET_LAG = DOWNSTREAM` on the intermediates exists so they refresh only when a
+  leaf needs them. The lag semantics themselves survive Pattern B — dbt-snowflake accepts
+  `target_lag: downstream` directly — but they do not survive a switch to `incremental`, where the
+  equivalent is a schedule you now maintain by hand.
+- The `UNION ALL` of per-platform shredding views is the one place dbt is a genuine improvement.
+  A `dbt_utils.union_relations` or a `for` loop over the registry replaces hand-edited branches,
+  and adding a platform stops being an edit to a 300-line view.
+
+Do not split the difference by putting some gold objects in dbt and leaving others in
+`sql/07_gold_dts.sql`. Dynamic Table lineage crosses the boundary invisibly, and it bites twice.
+First, `CREATE OR REPLACE` on an upstream object forces a full **reinitialization** of everything
+downstream — the dbt-managed model keeps working, but it silently rebuilds from scratch on its next
+refresh, and dbt will not report that it happened. Second, an `ADAPTIVE` or `INCREMENTAL` model can
+only sit downstream of a `FULL`-refresh table under specific conditions, and `AI_SPEND_ALLOCATED`
+is deliberately `REFRESH_MODE = FULL`, so a dbt model built on top of it can fail at creation
+rather than merely refresh inefficiently.
+
+### What dbt genuinely adds here: tests
+
+Whichever pattern you pick, this is the part worth taking. The design rests on invariants that are
+currently enforced by prose — comment headers in `sql/06` and `sql/07`, plus the monitoring queries
+in `sql/09` that a human has to remember to run. Every one of them is expressible as an assertion
+that fails a build:
+
+| Invariant | Why it breaks quietly | Test shape |
+| --- | --- | --- |
+| Never sum `COST_AMOUNT` across `COST_MODEL` outside `AI_SPEND_ALLOCATED` | The number still looks plausible; it just moves for the wrong reason | Singular test asserting `COST_AMOUNT IS NULL` on every `SEAT` row. Do **not** invert it into a blanket `not_null` on all `METERED` rows — activity-only reports such as Box AI's `AI_EVENTS` are metered platforms carrying no cost by design, so that test fails on correct data |
+| Never group or window without `CURRENCY_CODE` | Only shows up once a non-USD platform is onboarded | Singular test: `count(distinct currency_code) = 1` per aggregate grain |
+| `UNRESOLVED:` rows must stay in platform totals | Dropping them makes the total disagree with the invoice, and it disagrees *downwards*, so nobody notices | Reconciliation test: platform total from `UNIFIED_AI_USAGE` equals total from the per-platform shredding view |
+| The `UNRESOLVED:<platform>:<subject>` string is identical in `sql/03` and `sql/06` | If the two drift, seats never join to usage and every unresolved seat reads as `DORMANT` | `relationships` test from seat rows to usage rows on `PERSON_KEY` |
+| Declared grain: one row per person, platform, report, day | A vendor adding a breakdown dimension silently fans out every cost | `dbt_utils.unique_combination_of_columns` on `UNIFIED_AI_USAGE` |
+| Vendor field renames read through `TRY_TO_*` as `NULL` | The chart renders, the line just trends to zero | `not_null` on each shredded field, plus a `dbt_utils.expression_is_true` row-count floor per platform per day |
+
+> [!TIP]
+> Prioritize the last row. Schema drift is [gotcha 6](#gotchas-read-before-you-build) and the real
+> operational risk in this design. A `not_null` test on a shredded column is the cheapest possible
+> detector — it fails the day the field is renamed, rather than the day someone questions the chart.
+
+If you are on Pattern A, these tests still apply: point them at the gold sources rather than at
+models you own. A test on data you did not build is still a test.
+
+---
+
 ## Gotchas: Read Before You Build
 
-### 1. Metered and seat costs are not addable
+Eleven traps, ordered roughly by how expensive they are to discover late. **Each summary states the
+trap — expand only the ones on your path.** Every one of these produces a plausible wrong number
+rather than an error, which is why they are worth reading before you build rather than after.
+
+<details>
+<summary><b>1. Metered and seat costs are not addable</b> — the blended total moves for the wrong reason</summary>
 
 Covered above, and it is the most consequential mistake available here. A blended total drops when
 a heavy user goes on leave even though the seat bill did not change, and it rises when a team's
 metered usage spikes even though headcount is flat. Finance will find the discrepancy against the
 invoice, and the report loses credibility permanently.
 
-### 2. Microsoft 365 Copilot pseudonymizes user identity by default
+</details>
+
+<details>
+<summary><b>2. Microsoft 365 Copilot pseudonymizes user identity by default</b> — hashed UPNs cannot join to a department</summary>
 
 `getMicrosoft365CopilotUsageUserDetail` returns hashed values in the `userPrincipalName` and
 `displayName` fields unless the tenant has disabled report concealment. The hashes are stable, so
@@ -376,7 +518,10 @@ Verify this setting before promising user-level Copilot reporting. In some organ
 deliberately on, and a privacy office may decline to change it — a legitimate answer that removes
 Copilot from user-level scope entirely.
 
-### 3. ChatGPT Enterprise and the OpenAI API Platform are different products
+</details>
+
+<details>
+<summary><b>3. ChatGPT Enterprise and the OpenAI API Platform are different products</b> — merging them reconciles to no invoice</summary>
 
 Separate organizations, separate entitlements, separate meters, separate agreements. Merging their
 exports produces a number that reconciles to no invoice. `source_billing_context` on every row is
@@ -388,7 +533,10 @@ disagree, because compliance returns raw system records — including internal m
 without timestamps — while analytics returns cleaned data. Neither is wrong. Use analytics for
 adoption reporting and expect the counts to differ from compliance.
 
-### 4. Box AI's numbers live in a console report, and the API feed expires
+</details>
+
+<details>
+<summary><b>4. Box AI's numbers live in a console report, and the API feed expires</b> — 2-week retention cliff on the streaming feed</summary>
 
 Box exposes AI usage three ways, and they are not interchangeable:
 
@@ -412,7 +560,10 @@ will ever have.
 Also worth correcting a common assumption: **Box AI has been metered since 20 October 2025.** If
 someone tells you Box AI is bundled into the seat, they are describing the pre-2026 model.
 
-### 5. GitHub splits usage and licensing across two APIs
+</details>
+
+<details>
+<summary><b>5. GitHub splits usage and licensing across two APIs</b> — you need both to find unused seats</summary>
 
 Usage metrics do not include seat or license state; that lives in the user management API and is
 the source of truth for entitlement. You need both to answer "who has a seat and is not using it",
@@ -423,7 +574,10 @@ posts will not run. And team-level rollup requires joining a separate user-teams
 excludes teams with fewer than five seated users — small teams vanish from team views while their
 members remain in per-user data, so team totals will not sum to the organization total.
 
-### 6. Vendor schema drift is the operational risk, not API downtime
+</details>
+
+<details>
+<summary><b>6. Vendor schema drift is the operational risk, not API downtime</b> — a renamed field maps to NULL and the chart still renders</summary>
 
 These are young admin APIs and they change. An adapter that silently maps a renamed field to
 `NULL` produces a chart that looks fine and is wrong, which is worse than a failed pull.
@@ -432,10 +586,19 @@ Make adapters assert on their own payload shape and **fail loudly** when a requi
 missing. `CONTROL.V_PIPELINE_HEALTH` surfaces per-platform freshness so a quietly dead adapter
 shows up as stale data rather than a plausible flat line. A missing feed should look broken.
 
-### 7. User-level AI telemetry is monitoring-adjacent — clear it first
+> [!TIP]
+> This is the trap the [dbt test table](#what-dbt-genuinely-adds-here-tests) above is aimed at. A
+> `not_null` assertion on each shredded column is the cheapest detector that exists for it.
 
-You are building a per-person record of AI tool use. In many jurisdictions and under many works
-council agreements that is employee monitoring, whatever the stated intent.
+</details>
+
+<details>
+<summary><b>7. User-level AI telemetry is monitoring-adjacent — clear it first</b> — settle four things before the first pull</summary>
+
+> [!CAUTION]
+> You are building a per-person record of AI tool use. In many jurisdictions and under many works
+> council agreements that is employee monitoring, whatever the stated intent. This is the one
+> gotcha in this list that can stop the project after it is built.
 
 Settle four things before the first pull, not after:
 
@@ -450,7 +613,10 @@ Note that this pipeline deliberately handles **usage metadata only** — no prom
 no file contents. That boundary is much easier to defend in a privacy review than "we ingest the
 compliance logs and promise not to look", and it is sufficient for all five decisions above.
 
-### 8. Do not convert native units into each other
+</details>
+
+<details>
+<summary><b>8. Do not convert native units into each other</b> — and do not seed a rate for Cursor, which already reports currency</summary>
 
 Credits, tokens, messages, and interactions are not interchangeable, and no exchange rate between
 them is defensible. Preserve `native_qty` with `native_unit` and compare platforms on **currency
@@ -462,7 +628,10 @@ native quantity needing conversion. Do not seed `CONTROL.PLATFORM_RATE` for it. 
 needs a rate; applying one here multiplies cents by a rate and produces a plausible wrong number in
 the right column, which is the hardest kind of error to notice.
 
-### 9. Claude Enterprise revises history for 30 days — append-only ingestion is wrong there
+</details>
+
+<details>
+<summary><b>9. Claude Enterprise revises history for 30 days</b> — append-only ingestion is wrong there, and nothing errors</summary>
 
 This is the operational fact that changes the pipeline rather than just a field mapping. A cost or
 usage value for a given date **can be revised for up to 30 days** as late events and reconciliation
@@ -485,7 +654,10 @@ usage at all**. Every token bills separately. Expect three billing generations i
 history, because the legacy seat shapes auto-transition at renewal — which silently changes what a
 cost column means mid-history.
 
-### 10. Cursor's seat and meter overlap, and the API hands you the wrong field first
+</details>
+
+<details>
+<summary><b>10. Cursor's seat and meter overlap</b> — and the activity endpoint hides the idle seats you are looking for</summary>
 
 The opposite trap to Anthropic's. A Cursor seat **includes** a per-user usage pool, and on-demand
 billing starts only once that pool is exhausted. So seat cost and metered cost are not additive:
@@ -500,7 +672,10 @@ One more, and it silently produces a wrong dashboard rather than an error: **the
 endpoint returns active users only unless you paginate explicitly.** The rows it omits are exactly
 the zero-activity seats a seat-utilization metric exists to find.
 
-### 11. Google gives you user-level usage nearly everywhere and user-level cost almost nowhere
+</details>
+
+<details>
+<summary><b>11. Google gives you user-level usage nearly everywhere and user-level cost almost nowhere</b> — three surfaces, three answers</summary>
 
 Say this before anyone builds a slide. Three consequences, one per surface:
 
@@ -529,6 +704,8 @@ Finally, two name collisions that will corrupt a dimension table: "Gemini Enterp
 retired 2024 Workspace add-on SKU *and* the current Cloud agentic platform, and Vertex AI was
 renamed to Gemini Enterprise Agent Platform in 2026 — a docs and console change only. The API
 endpoint is unchanged, so do not "fix" working calls because the brand moved.
+
+</details>
 
 ---
 
@@ -562,3 +739,6 @@ endpoint is unchanged, so do not "fix" working calls because the brand moved.
 - [Gemini Code Assist logging](https://docs.cloud.google.com/gemini/docs/log-gemini) — per-user entries via `labels.user_id`
 - [Vertex AI labels on API calls](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/add-labels-to-api-calls) — the PII warning and the distinct-value ceiling
 - [Cloud Billing export to BigQuery](https://docs.cloud.google.com/billing/docs/how-to/export-data-bigquery)
+- [Snowflake: Dynamic table refresh modes](https://docs.snowflake.com/en/user-guide/dynamic-tables/refresh-modes) — what `CREATE OR REPLACE` does to downstream tables
+- [Snowflake: Modifying dynamic tables](https://docs.snowflake.com/en/user-guide/dynamic-tables/modify)
+- [dbt-snowflake configurations](https://docs.getdbt.com/reference/resource-configs/snowflake-configs) — the `dynamic_table` materialization and its config keys
