@@ -4,7 +4,16 @@ import {test} from 'node:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {discover, publicationFiles, route, site} from '../build.mjs';
+import {badgeText, discover, publicationFiles, route, site} from '../build.mjs';
+
+test('static badges preserve labels, values, and escaped separators locally', () => {
+  assert.equal(badgeText('https://img.shields.io/badge/Expires-2027--03--10-orange', 'Expires'), 'Expires: 2027-03-10');
+  assert.equal(badgeText('https://img.shields.io/badge/Deploy-None-lightgrey', 'No Deploy'), 'Deploy: None');
+  assert.equal(badgeText('https://img.shields.io/badge/Status-In_Review-blue.svg', 'Status'), 'Status: In Review');
+  assert.equal(badgeText('https://img.shields.io/badge/Key-a__b-blue', 'Key'), 'Key: a_b');
+  assert.equal(badgeText('https://example.com/image.svg', 'Architecture'), 'Architecture');
+  assert.equal(badgeText('https://img.shields.io/badge/%ZZ', 'Status'), 'Status');
+});
 
 test('publication includes reader files and excludes development files', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sfe-publication-'));

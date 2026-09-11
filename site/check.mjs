@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {load} from 'cheerio';
-import {site, config, discover} from './build.mjs';
+import {site, config, discover, publicationFiles, route} from './build.mjs';
 const directory = path.join(site, '.build/public');
 const files = [...fs.globSync('**/*', {cwd: directory})].filter(file => fs.statSync(path.join(directory, file)).isFile());
 const documents = new Map(files.filter(file => file.endsWith('.html')).map(file => [file, load(fs.readFileSync(path.join(directory, file), 'utf8'))]));
@@ -46,7 +46,24 @@ if (discover().includes('guide-universal-data-sharing') && universal('.reader-di
 const spend = documents.get('guide-ai-spend-consolidation/index.html');
 if (discover().includes('guide-ai-spend-consolidation') && (!spend('.markdown-alert').length || !spend('details table').length)) errors.push('AI spend alerts or collapsed Markdown missing');
 const search = JSON.parse(documents.get('index.html')('#reader-index').text());
-if (search.filter(entry => /Catalog entry|Pilot guide/.test(entry.scope)).length !== discover().length) errors.push('Search catalog coverage incomplete');
+if (search.filter(entry => entry.kind === 'project').length !== discover().length) errors.push('Search catalog coverage incomplete');
+for (const file of publicationFiles().filter(file => file.endsWith('.md') && discover().includes(file.split('/')[0]))) {
+  if (!search.some(entry => entry.url === config.baseurl + route(file))) errors.push(`Full-text search missing document: ${file}`);
+}
+for (const entry of search) {
+  const url = new URL(entry.url, 'https://reader.invalid');
+  let target = url.pathname.slice(config.baseurl.length + 1);
+  if (target.endsWith('/')) target += 'index.html';
+  const document = documents.get(target);
+  if (!document || (url.hash && !document('[id]').toArray().some(element => element.attribs.id === decodeURIComponent(url.hash.slice(1))))) errors.push(`Invalid search result: ${entry.url}`);
+}
+for (const [file, document] of documents) {
+  if (!document('#reader-index').length) continue;
+  const navigation = document('.site-nav a').toArray().map(element => document(element).attr('href'));
+  for (const project of discover()) {
+    if (navigation.filter(href => href === `${config.baseurl}/${project}/`).length !== 1) errors.push(`${file}: navigation must include ${project} exactly once`);
+  }
+}
 for (const message of inherited) console.warn(`Inherited non-pilot link: ${message}`);
 if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }
 else console.log(`Validated ${files.length} published files, ${documents.size} HTML routes, ${search.length} search entries. ${inherited.length} inherited non-pilot anchor warnings.`);

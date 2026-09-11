@@ -55,6 +55,18 @@ export function route(file) {
   return `/${file.replace(/\.md$/, '.html')}`;
 }
 
+export function badgeText(source, fallback) {
+  try {
+    const url = new URL(source);
+    if (url.hostname === 'img.shields.io' && url.pathname.startsWith('/badge/')) {
+      const parts = decodeURIComponent(url.pathname.slice(7)).replace(/\.svg$/, '')
+        .match(/(?:--|__|[^-])+/g)?.map(part => part.replaceAll('--', '-').replaceAll('__', '\u0000').replaceAll('_', ' ').replaceAll('\u0000', '_'));
+      if (parts?.length === 3) return `${parts[0]}: ${parts[1]}`;
+    }
+  } catch {}
+  return fallback || 'Image available in source';
+}
+
 function write(relative, text) {
   const destination = path.join(staging, relative);
   fs.mkdirSync(path.dirname(destination), {recursive: true});
@@ -88,9 +100,23 @@ async function main() {
     const cells = rootHtml(row).find('td');
     const link = cells.first().find('a').first();
     const project = (link.attr('href') || '').replace(/\/$/, '');
-    if (projects.includes(project)) catalog.set(project, {title: link.text(), summary: cells.eq(1).text(), topics: cells.eq(2).text()});
+    if (projects.includes(project)) {
+      const category = rootHtml(row).closest('table').prevAll('h3').first().text();
+      if (!category) throw new Error(`Project missing a catalog category: ${project}`);
+      catalog.set(project, {title: link.text(), summary: cells.eq(1).text(), topics: cells.eq(2).text(), category});
+    }
   });
   for (const project of projects) if (!catalog.has(project)) throw new Error(`Project missing from README catalog: ${project}`);
+  const categorySlugger = new GithubSlugger();
+  for (const [index, category] of [...new Set([...catalog.values()].map(entry => entry.category))].entries()) {
+    const categoryRoute = `catalog/${categorySlugger.slug(category)}/`;
+    const links = [...catalog].filter(([, entry]) => entry.category === category)
+      .map(([project, entry]) => `<li><a href="${config.baseurl}/${project}/">${escapeHtml(entry.title)}</a>: ${escapeHtml(entry.summary)}</li>`).join('');
+    page(categoryRoute, category, `<h1>${escapeHtml(category)}</h1><ul>${links}</ul>`, {
+      permalink: `/${categoryRoute}`, nav_exclude: false, nav_order: index + 2, has_children: true
+    });
+    inventory.push(categoryRoute);
+  }
 
   const cache = path.join(site, '.cache/diagrams');
   fs.mkdirSync(cache, {recursive: true});
@@ -177,7 +203,7 @@ async function main() {
       document('img').each((_, image) => {
         const element = document(image);
         if (/^https?:|^\/\//.test(element.attr('src') || '')) {
-          element.replaceWith(document('<span class="source-badge"></span>').text(element.attr('alt') || 'Image available in source'));
+          element.replaceWith(document('<span class="source-badge"></span>').text(badgeText(element.attr('src'), element.attr('alt'))));
         }
       });
       document('a[href]').each((_, anchor) => {
@@ -198,28 +224,28 @@ async function main() {
         }
       });
       document('pre:has(code)').wrap('<div class="highlighter-rouge"><div class="highlight"></div></div>');
-      const contentText = document('body').text();
+      const searchDocument = load(document('body').html());
+      searchDocument('.reader-diagram').remove();
+      const contentText = searchDocument('body').text().replace(/\s+/g, ' ').trim();
       const summary = catalog.get(project);
       if (summary && file === `${project}/README.md`) {
-        search.push({title: summary.title, text: `${summary.summary} ${summary.topics}`, url: config.baseurl + route(file), scope: pilot ? 'Pilot guide' : 'Catalog entry; full text not yet indexed'});
+        search.push({title: summary.title, text: `${summary.summary} ${summary.topics} ${contentText}`, url: config.baseurl + route(file), scope: summary.category, kind: 'project'});
         if (pilot) {
-          search.push({title: `${summary.title}: Introduction`, text: document('h1').first().nextUntil('h2,h3').text(), url: config.baseurl + route(file), scope: 'Pilot full-text search'});
-          for (const heading of document('h2,h3').toArray()) {
-            const element = document(heading);
-            search.push({title: `${summary.title}: ${element.text()}`, text: element.nextUntil('h2,h3').text(), url: config.baseurl + route(file) + '#' + element.attr('id'), scope: 'Pilot full-text search'});
+          for (const heading of searchDocument('h2,h3').toArray()) {
+            const element = searchDocument(heading);
+            search.push({title: `${summary.title}: ${element.text()}`, text: element.nextUntil('h2,h3').text().replace(/\s+/g, ' ').trim(), url: config.baseurl + route(file) + '#' + element.attr('id'), scope: 'Guide section', kind: 'section'});
           }
         }
-      } else if (pilot) search.push({title, text: contentText, url: config.baseurl + route(file), scope: 'Pilot supporting document'});
+      } else if (summary) search.push({title: `${summary.title}: ${title}`, text: contentText, url: config.baseurl + route(file), scope: 'Supporting document', kind: 'document'});
       const toc = pilot ? `<details class="reader-toc"><summary>On this page</summary><ul>${headings.map(heading => `<li><a href="#${heading.id}">${escapeHtml(heading.title)}</a></li>`).join('')}</ul></details>` : '';
       const created = markdown.match(/\*\*Created:\*\*\s*(\d{4}-\d{2}-\d{2})/)?.[1];
       const expires = markdown.match(/\*\*Expires:\*\*\s*(\d{4}-\d{2}-\d{2})/)?.[1];
       const notice = pilot ? `<div class="reader-notice">Reader-layout pilot. ${created ? `Source created: ${created}. ` : ''}${expires ? `Review due: ${expires}. ` : ''}Technical verification dates remain those stated in the guide.</div>` : '';
       let body = document('body').html();
-      if (file === 'README.md') body = `<p class="reader-notice">Search covers every catalog entry and the full text of the three pilot guides: Agent Versioning, Universal Data Sharing, and AI Spend Consolidation.</p>${body}`;
       page(file, file === 'README.md' ? 'Start here' : title, `${notice}${toc}<div class="reader-tools"><a href="${sourceUrl}${file}">View source</a><a href="${config.baseurl}/#projects">All projects</a></div>${body}`, {
-        nav_exclude: !(pilot && file === `${project}/README.md`) && file !== 'README.md',
+        nav_exclude: !(summary && file === `${project}/README.md`) && file !== 'README.md',
         ...(file === 'README.md' ? {nav_order: 1} : {}),
-        ...(pilot && file === `${project}/README.md` ? {title: summary.title, nav_order: 2 + config.pilot.indexOf(project)} : {})
+        ...(summary && file === `${project}/README.md` ? {title: summary.title, parent: summary.category} : {})
       });
       write(file, markdown);
       inventory.push(file, route(file));

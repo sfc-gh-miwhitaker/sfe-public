@@ -49,11 +49,18 @@ excluded source files point to their GitHub viewer instead. `.build/inventory.js
 records exactly which source files were included and any inherited broken links.
 
 All projects retain directory URLs and Markdown source downloads. README.html
-aliases preserve heading fragments. Only the three pilot projects receive full-text
-search and expanded page navigation; the full catalog is searchable by title,
-summary, and topics. Search data is embedded and stays in the browser. Mermaid is
+aliases preserve heading fragments. The sidebar includes every project under its
+root README catalog category. Search indexes the full text of every published
+project Markdown page, plus catalog titles, summaries, and topics; SQL downloads
+and the standalone workbook are not indexed. Pilot projects retain their expanded
+page TOCs and verification notices. Search data is embedded and stays in the browser. Mermaid is
 rendered to inline SVG at build time with strict security and network blocked.
 The workbook is copied unchanged, including its local save/load behavior.
+
+Remote static Shields badges become local label/value text without network calls.
+The header remains visible independently of the mobile navigation toggle. Browser
+regressions check catalog navigation, non-pilot full-text search, keyboard dismissal,
+header containment, and light/dark contrast at mobile and desktop breakpoints.
 
 Do not infer technical verification from a Git modification date. Created and
 review-due dates come from the source. Publishing does not revalidate technical
