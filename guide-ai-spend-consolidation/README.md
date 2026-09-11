@@ -74,6 +74,53 @@ Pair-programmed by SE Community + Cortex Code
 
 ## Start Here
 
+### Build your implementation brief
+
+Use the [interactive workbook](workbook.html) to turn this guide into a scoped plan:
+choose reporting outcomes and platforms, settle billing and identity decisions, then export
+the pilot sequence, open questions, and acceptance checklist. It covers all 12 registry entries,
+including the OpenAI API Platform separately from ChatGPT Enterprise.
+
+Open `guide-ai-spend-consolidation/workbook.html` in a browser from your local repository copy.
+No installation, login, or Snowflake connection is needed. GitHub shows HTML source rather than
+running the workbook; download the file to open it locally. Keeping it beside this README
+preserves its relative links to the guide and SQL files.
+
+- **Save / Load** preserves answers in a local JSON file. There is no autosave; unsaved answers
+  are lost when the page closes. Incomplete drafts, including invalid field values, can be saved.
+- **Example** loads clearly labelled fictional decisions after confirming replacement.
+- **Visual review** illustrates the chosen data path, billing model (or activity coverage), and
+  rollout. Diagrams reflect selected platforms, transform ownership, and unresolved boundaries;
+  they describe a proposed design, not deployed infrastructure. They work offline and print.
+- **Connector build prompts** provides a tailored handoff for each selected missing adapter.
+  Expand a platform to copy or download its prompt, including source files, feed requirements,
+  decisions, blockers, and tests. Native Snowflake and the worked GitHub adapter are not labelled
+  missing. A buy decision defers connector-building prompts. Prompts start with discovery and
+  require explicit authorization before implementation or deployment.
+- **Export brief** produces Markdown; **Print summary** uses the browser's PDF/print flow.
+  Markdown includes text equivalents of the diagrams and the full connector prompts. Print
+  includes visual diagrams; long connector prompts are available in the Markdown export instead.
+  Selectable text is available if the host restricts downloads. Hosted Snowflake report behavior
+  has not been independently qualified; opening the local HTML is the supported baseline.
+- Enter planning decisions only, never credentials, employee records, prompts, or account
+  identifiers. Nothing is sent to a server. Saved files can contain confidential planning notes;
+  keep them in an approved location and out of this public repository.
+- **Ready to plan** is not production approval. Vendor capability, implementation status, and
+  remaining validation work stay separate; a supported source may still need an adapter built.
+
+Workbook maintenance checks, from the repository root:
+
+```bash
+node --test guide-ai-spend-consolidation/tests/workbook.test.cjs
+node guide-ai-spend-consolidation/tests/workbook.browser.cjs
+```
+
+The rule tests have no package dependencies. The browser test requires Node.js 22 or newer and
+local Google Chrome (macOS default path, or set `CHROME_PATH` to the executable). It blocks HTTP
+and HTTPS requests, uses an isolated temporary profile, and removes its test downloads afterward.
+Optionally set `WORKBOOK_ARTIFACT_DIR` to an existing local scratch directory to retain a synthetic
+review PDF and screenshot for visual inspection; these test artifacts contain no live account data.
+
 ### First fork: should you build this at all
 
 Buying is often correct. Consider a vendor product instead when:
