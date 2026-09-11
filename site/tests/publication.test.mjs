@@ -28,6 +28,13 @@ test('stable routes distinguish rendered guides from raw downloads', () => {
   assert.equal(route('guide-fixture/sql/example.sql'), '/guide-fixture/sql/example.sql');
 });
 
+test('CoWork action menu exists and is explicitly published', () => {
+  const companion = 'guide-cowork-easter-eggs/WHAT-CAN-I-DO-NOW.md';
+  assert(fs.existsSync(path.join(site, '..', companion)));
+  assert(publicationFiles().includes(companion));
+  assert.equal(route(companion), '/guide-cowork-easter-eggs/WHAT-CAN-I-DO-NOW.html');
+});
+
 test('real publication boundary excludes hidden and agent files', () => {
   const files = publicationFiles();
   assert(files.includes('guide-ai-spend-consolidation/workbook.html'));

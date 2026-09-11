@@ -6,6 +6,12 @@ This is a presentation layer over the existing guides, not a second documentatio
 tree. `build.mjs` stages approved files, converts Markdown and Mermaid, and then
 Jekyll applies the pinned Just the Docs theme. Do not edit `.build/` output.
 
+Just the Docs 0.12.0 still uses deprecated Sass imports, global built-ins, and color
+functions. `_config.yml` silences only those three upstream deprecation categories
+while the pinned theme awaits modernization. This does not fix the upstream Sass;
+compiler errors and other warning categories remain visible. Reassess the list
+when upgrading the theme rather than suppressing all Sass warnings.
+
 ## Build and Preview
 
 Requires Node.js 22+, Ruby 4.0, Bundler, and Google Chrome. On macOS, the default
@@ -37,7 +43,7 @@ node guide-ai-spend-consolidation/tests/workbook.browser.cjs
 
 `publication.json` is the allowlist. Git-tracked root-level reader Markdown, docs/diagrams,
 and SQL example files in guide/demo directories are permitted by explicit patterns;
-the workbook and two versioning examples are named exceptions. Agent instructions,
+the workbook, CoWork action menu, and selected example files are named exceptions. Agent instructions,
 hidden paths, tests, applications, and dependencies are not published. Links to
 excluded source files point to their GitHub viewer instead. `.build/inventory.json`
 records exactly which source files were included and any inherited broken links.

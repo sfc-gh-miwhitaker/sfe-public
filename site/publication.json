@@ -5,6 +5,7 @@
   "readerPatterns": ["*.md", "docs/**/*.md", "diagrams/**/*.md", "sql/**/*.sql", "deploy_all.sql", "teardown_all.sql"],
   "excludedNames": ["AGENTS.md", "CLAUDE.md", "SKILL.md"],
   "extraFiles": [
+    "guide-cowork-easter-eggs/WHAT-CAN-I-DO-NOW.md",
     "guide-ai-spend-consolidation/workbook.html",
     "guide-cortex-agent-versioning/specs/agent_spec.yaml",
     "guide-cortex-agent-versioning/github-actions/deploy-agent.yml",

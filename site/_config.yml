@@ -4,6 +4,11 @@ description: Community guides and runnable examples
 url: https://sfc-gh-miwhitaker.github.io
 baseurl: /sfe-public
 theme: just-the-docs
+sass:
+  silence_deprecations:
+    - import
+    - global-builtin
+    - color-functions
 search_enabled: false
 heading_anchors: true
 enable_copy_code_button: true
