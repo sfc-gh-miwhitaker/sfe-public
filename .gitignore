@@ -77,6 +77,13 @@ npm-debug.log*
 yarn-debug.log*
 .pnpm-debug.log*
 package-lock.json
+!site/package-lock.json
+
+# ---- Documentation build (source lives in site/) ----
+site/.build/
+site/.bundle/
+site/vendor/
+site/.cache/
 
 # ---- Build State (local-only, contains paths and usernames) ----
 .builddemo-state.json

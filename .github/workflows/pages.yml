@@ -1,0 +1,89 @@
+# Pair-programmed by SE Community + Cortex Code
+name: Reader Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Auto-Archive Expired Projects]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reader-pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/site/Gemfile
+      BUNDLE_PATH: ${{ github.workspace }}/site/vendor/bundle
+      CHROME_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0'
+          bundler-cache: true
+          working-directory: site
+      - name: Install locked build dependencies
+        run: npm --prefix site ci --ignore-scripts
+      - name: Test project retrieval and archive lifecycle
+        run: |
+          bash -n shared/get-project.sh
+          python3 -m unittest discover -s shared/tests -v
+          python3 -m unittest discover -s .github/tests -v
+          npm --prefix site test
+      - name: Stage and build reader files
+        run: |
+          npm --prefix site run stage
+          bundle exec jekyll build --source site/.build/source --destination site/.build/public
+          npm --prefix site run check
+      - name: Browser and workbook checks
+        run: |
+          node site/serve.mjs &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/sfe-public/ >/dev/null; then break; fi
+            sleep 1
+          done
+          npm --prefix site run test:browser
+          if [ -f guide-ai-spend-consolidation/tests/workbook.test.cjs ]; then
+            node --test guide-ai-spend-consolidation/tests/workbook.test.cjs
+            node guide-ai-spend-consolidation/tests/workbook.browser.cjs
+          fi
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/.build/public
+
+  deploy:
+    if: vars.PAGES_PILOT_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy validated reader artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

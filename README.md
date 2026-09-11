@@ -1,112 +1,129 @@
 ![Projects](https://img.shields.io/badge/Projects-32-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
-# Snowflake Solutions Engineering -- Public Examples
+# Snowflake SE Community Guides and Examples
 
-Practical Snowflake guides from the SE community: cost governance, Cortex AI application development, external tool integrations (Power BI, Claude, VS Code, Copilot, Splunk), access control, and new capability walkthroughs. Every project includes an `AGENTS.md` that works with AI coding assistants ([Cortex Code](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli), [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview), [Cursor](https://www.cursor.com/)) to guide you through deployment and usage.
+Practical guides and runnable examples for Snowflake data pipelines, Cortex AI,
+integrations, security, and cost governance.
 
-> **No support is provided.** All code is shared for reference and learning. Review, test, and modify thoroughly before any production use.
+**[Read online](https://sfc-gh-miwhitaker.github.io/sfe-public/)**
+| [Browse projects](#projects) | [Get example files](#quick-start) | [Contribute](CONTRIBUTING.md)
 
----
+Pair-programmed by SE Community + Cortex Code
+
+> **No support is provided.** Reference and learning material, not a supported product.
+> Check each guide's review date and feature limitations; validate before production use.
 
 ## Start Here
 
-Pick the row that matches why you're here:
+Pick a goal. Each project's README has its prerequisites and next steps.
 
-| I need to... | Entry point | Reading order / notes |
+| I need to... | Start with | Next steps |
 | --- | --- | --- |
-| **Connect an external tool to Snowflake** | Pick by tool: [Cortex Code setup](guide-coco-setup/) · [Snowflake MCP role controls](guide-snowflake-mcp-role-controls/) · [Power BI OAuth](guide-powerbi-oauth/) · [Claude Desktop + MCP](guide-connecting-claude-snowflake/) · [Claude Code CLI/SDK](guide-claude-code-cortex-redirect/) · [VS Code + Copilot](guide-vscode-copilot-cortex/) · [Microsoft Copilot Studio](guide-connecting-copilot-studio-snowflake/) · [Salesforce V2 Zero-Copy](guide-salesforce-v2-zero-copy/) · [Splunk audit logs](guide-snowflake-splunk-ingestion/) · [Cube semantic layer](guide-cube-snowflake-semantic-layer/) · [Debezium CDC pipeline](guide-debezium-to-snowflake/) · [Google Ads + Meta Ads](guide-ad-platform-integrations/) · [Shopify multi-store via Openflow](guide-openflow-shopify-multistore/) · [Shopify Bulk API with CoCo](guide-shopify-bulk-api-coco/) · [OpenTelemetry ingestion](guide-otel-to-snowflake/) · [AI spend consolidation](guide-ai-spend-consolidation/) | Each guide is standalone — no required reading order |
-| **Build Snowflake data pipelines** | [Streams CDC workshop](demo-streams-cdc-workshop/) — hands-on change data capture with Streams and Tasks | Start here for Snowflake-native incremental processing and operational CDC patterns. Then [OpenTelemetry ingestion](guide-otel-to-snowflake/) for landing and modeling external telemetry feeds, or [AI spend consolidation](guide-ai-spend-consolidation/) for a pluggable multi-vendor adapter contract over admin APIs |
-| **Build a production Cortex Agent** | [guide-model-agnostic-accuracy](guide-model-agnostic-accuracy/) — configuration foundation | Then: [versioning](guide-cortex-agent-versioning/) → [multi-agent orchestration](guide-agent-to-agent-orchestration/) → [custom tools](guide-cortex-agent-image-tool/) (optional). Add [search access control](guide-cortex-search-access-control/) if your agent uses Cortex Search. End with [CoWork-only provisioning](guide-cowork-only-users/) when rolling out to business users. |
-| **Govern Snowflake costs and usage** | [guide-snowflake-cost-visibility](guide-snowflake-cost-visibility/) — foundational layer | Then: [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) for AI enforcement patterns · [guide-adaptive-compute](guide-adaptive-compute/) for compute rightsizing · [guide-org-reporting](guide-org-reporting/) for multi-account org-level visibility · [guide-ai-spend-consolidation](guide-ai-spend-consolidation/) to extend cost visibility beyond Snowflake to ChatGPT Enterprise, Claude Enterprise, Copilot, Cursor, Gemini, and other AI vendors at user-level grain |
-| **Secure Snowflake and build an audit trail** | Pick by gap: [Snowflake MCP role controls](guide-snowflake-mcp-role-controls/) · [Cortex Search RBAC](guide-cortex-search-access-control/) · [Power BI identity federation](guide-powerbi-oauth/) · [Splunk SIEM ingestion](guide-snowflake-splunk-ingestion/) · [CoWork-only interface lock](guide-cowork-only-users/) · [Firewall allowlisting](guide-snowflake-firewall-allowlist/) · [Cortex Code access control](guide-cortex-code-access-control/) | Each guide is standalone |
-| **Understand new Snowflake capabilities** | [guide-horizon-context-catalog](guide-horizon-context-catalog/) for the Cortex Sense + catalog stack · [guide-universal-data-sharing](guide-universal-data-sharing/) for Summit 2026 sharing enhancements · [guide-salesforce-v2-zero-copy](guide-salesforce-v2-zero-copy/) for Salesforce Data 360 zero-copy access · [guide-cowork-easter-eggs](guide-cowork-easter-eggs/) for the full CoWork feature compendium · [guide-org-reporting](guide-org-reporting/) for ORGANIZATION_USAGE primer · [guide-cube-snowflake-semantic-layer](guide-cube-snowflake-semantic-layer/) for the Cube ↔ Snowflake Semantic Views sync · [guide-otel-to-snowflake](guide-otel-to-snowflake/) for what event tables are and are not, and where Observe fits | No required order — pick based on area of interest |
-
----
-
-## Projects
-
-### Guides and References
-
-| Directory | Description | Features |
-| --- | --- | --- |
-| [guide-ai-spend-consolidation](guide-ai-spend-consolidation/) | Consolidating AI usage and cost across ChatGPT Enterprise, Claude Enterprise, GitHub Copilot, Cursor, Box AI, M365 Copilot, Gemini in Workspace, Gemini Code Assist, Vertex AI, and Snowflake Cortex at **user-level grain**. Argues that vendor admin APIs are the disposable layer — most of them changed a relevant surface during 2026 — so it ships one fully worked connector plus a pluggable adapter contract rather than a dozen connectors that rot. Two teaching points carry the guide: (1) **do not blend meters** — a `cost_model` discriminator keeps `cost_amount` NULL on every SEAT row, with amortization confined to one clearly labelled `AI_SPEND_ALLOCATED` view that exposes the allocation rule as a column; (2) **identity is the actual project** — an `IDENTITY_MAP` spine seeded from the IdP, per-row confidence, and an `UNRESOLVED` bucket that keeps unattributable spend visible so department totals still tie to the invoice. Names the three cost shapes vendors actually ship and why treating them alike is wrong in opposite directions: pure seat (M365 Copilot), seat that **includes** a usage pool (Cursor, GitHub Copilot — so seat plus metered double-counts), and seat that includes **no** usage (Claude Enterprise — so they genuinely add, and the metered half is the volatile one). Documents the granularity ceilings people discover too late: M365 Copilot pseudonymizes UPNs by default and returns last-activity dates rather than volume; ChatGPT Enterprise and the OpenAI API Platform are separate billing contexts that must never be summed, and Claude Enterprise versus the Claude Console repeats that pattern with non-interchangeable admin keys; GitHub splits usage and licensing across two APIs; Cursor's activity endpoint silently returns active users only unless paginated, hiding the idle seats you are looking for; Box AI has been metered in AI Units since Oct 2025 but its per-user number lives in a console report while the API feed expires after two weeks; Google gives user-level *usage* nearly everywhere and user-level *cost* almost nowhere, with Vertex AI per-user cost not achievable at all because a billing label key is capped at ~1000 distinct values for the **life** of the billing account. Also shows why append-only ingestion is wrong for some feeds: Claude Enterprise revises a date's cost for up to 30 days, so the adapter's overlap window is a per-platform property taken from the vendor's revision period, keyed on the vendor's own freshness timestamp. Gold layer answers five named leadership decisions plus seat utilization (the dormant-licence reclaim list), fronted by a semantic view and Cortex Agent whose custom instructions name the blending trap explicitly. Closes with two designed-in extensions: cost per **agent** rather than per person, and joining usage to your own operational outcomes. Includes a build-vs-buy fork and a privacy gate, since user-level AI telemetry is monitoring-adjacent. Snowflake-native adapter needs no credentials and works immediately | AI FinOps, cross-platform cost, ACCOUNT_USAGE Cortex views, adapter contract, external access integration, SECRET, identity resolution, seat utilization, revision windows, agent attribution, Dynamic Tables, semantic view, Cortex Agent, schema drift detection, chargeback |
-| [guide-otel-to-snowflake](guide-otel-to-snowflake/) | Inbound OpenTelemetry: landing external application logs, metrics, and traces in Snowflake tables you own, then reporting on them. Opens with the buy-vs-build fork (Observe is now first-party) and a decision tree across four patterns: Openflow `ListenOTLP` (GA, the only first-party OTLP listener — with an honest, unresolved caveat that reaching an arbitrary listener port on a Snowflake Deployment runtime is undocumented), Collector→Kafka→Connector v4, custom exporter→Snowpipe Streaming high-performance (AWS only; no upstream Snowflake exporter exists, so a Python/Node relay is the pragmatic bridge), and files→stage→`COPY`/Iceberg. Shared shredding layer models external telemetry on Snowflake's own event table columns for query portability, using `REDUCE` to collapse OTLP attribute arrays into queryable OBJECTs. Documents the silent-failure traps: event tables are not writable, collector-contrib's `snowflakereceiver` points the wrong way, JSON-ARRAY schematization cannot flatten OTLP, 19-digit nanosecond epochs round silently on a FLOAT cast, histograms vanish from naive shredders, and non-root spans inflate request counts. All shredding, RED-metric, error-budget, `CONNECT BY` waterfall, and monitoring SQL executed against synthetic OTLP payloads | OpenTelemetry, OTLP, Openflow ListenOTLP, Kafka Connector v4, Snowpipe Streaming, COPY INTO, Iceberg, event tables, LATERAL FLATTEN, REDUCE, Dynamic Tables, observability, RED metrics, distributed tracing |
-| [guide-snowflake-mcp-role-controls](guide-snowflake-mcp-role-controls/) | Configure predictable role boundaries for Snowflake-managed MCP servers. Separates primary-role OAuth scopes and allowlists from secondary-role activation and session-policy ceilings; provides a recommended single-role pattern, a named secondary-role exception pattern, client behavior guidance, Preview role-selection coverage, validation queries, and troubleshooting | Snowflake-managed MCP, Snowflake OAuth, secondary roles, session policies, ALLOWED_ROLES_LIST, OAUTH_USE_SECONDARY_ROLES, RBAC |
-| [guide-salesforce-v2-zero-copy](guide-salesforce-v2-zero-copy/) | Decision and setup guide for Salesforce and Snowflake zero copy. Separates the Salesforce-to-Snowflake V2 Data Share path from Snowflake-to-Salesforce query/file federation, legacy V1/BYOL, Openflow replication, and Salesforce MCP; covers the Enrollment ID handshake, catalog-linked databases, RBAC, migration order, lifecycle checks, and public-documentation gaps | Salesforce Data 360, Salesforce Data Cloud, Salesforce V2, Zero-Copy Connector, query federation, file federation, catalog-linked database, Openflow, BYOL migration |
-| [guide-ad-platform-integrations](guide-ad-platform-integrations/) | Moving advertising data between Snowflake and Google/Meta, split by direction. Outbound to Google: Google Ads Data Manager with Snowflake as a native first-party source — PAT authentication (not password, not key-pair), no ROLE field so `ROLE_RESTRICTION` is mandatory, the dynamic-Google-Cloud-IP vs network-policy conflict resolved via `TYPE = SERVICE_AGENT`, Google-side hex SHA-256 hashing, quoted Customer Match header aliases, and the 100-record / 540-day / 100M-row limits. Meta: the Meta ads MCP and Conversions API skill pairing — the CAPI skill is public on GitHub and self-serve (`ACCOUNTADMIN` or `CREATE INTEGRATION`, Pixel ID, `ads_management` token, mandatory SHA256 hashing, three human approval stops), while the MCP half is access-by-request. Inbound bulk: Openflow connectors for Meta Ads and Google Ads (Preview; platform GA) — the three account privileges, egress network rules, execute-as roles, and documented ingestion limits. Plus the audience-list gap, which is still brokered via clean-room connector or marketplace partner. Part 1 and the Openflow prerequisites executed live and torn down | Google Ads Data Manager, Customer Match, offline conversions, PAT, secure view, Meta ads MCP, Meta Conversions API, CAPI skill, Openflow, Meta Ads connector, Google Ads connector, network rules, external access integration |
-| [guide-cowork-easter-eggs](guide-cowork-easter-eggs/) | Status-aware CoWork feature compendium: Deep Research, Extended Thinking, governed file upload, live chart/table Artifacts versus static shared conversations, three-tier chart customization, Preview User Skills and Automations, admin-configured MCP connectors, PDF/PowerPoint generation, CoCo Skill Catalog, iOS, Teams/M365 Copilot, and credit-based cost controls. Includes prerequisites, limitations, and Common Misconceptions for demo prep | CoWork, Deep Research, Artifacts, Vega-Lite, chart customization, User Skills, MCP, Automations, document generation, cost controls, mobile, Teams |
-| [guide-snowflake-splunk-ingestion](guide-snowflake-splunk-ingestion/) | Four patterns for ingesting Snowflake audit logs into Splunk: Federated Search (GA July 2026, Cloud AWS), DB Connect JDBC pull with Rising Column configs for LOGIN/QUERY/ACCESS_HISTORY, External Stage export via COPY INTO, and Sentry detection-push to HEC. Decision flowchart, pattern comparison table, working SQL for all four | ACCOUNT_USAGE, DB Connect, JDBC, Federated Search, Splunk HEC, External Stage, Sentry, MITRE, security monitoring |
-| [guide-cortex-agent-image-tool](guide-cortex-agent-image-tool/) | How to give a Cortex Agent the ability to generate images: the UDF-as-bridge pattern, SPCS path (image gen model inside Snowflake), External API path (DALL-E/Stability AI), agent spec with generic tool, presigned URL vs base64 return formats, and the key gotcha that the agent can see the image URL but not the pixels | Cortex Agents, generic tool, SPCS, image generation, UDF, External Function, External Access Integration |
-| [guide-adaptive-compute](guide-adaptive-compute/) | The warehouse sizing decision is going away: what Adaptive Compute changes operationally, the two parameters you now manage (MAX_QUERY_PERFORMANCE_LEVEL + QUERY_THROUGHPUT_MULTIPLIER), conversion DDL (zero-downtime ALTER), per-query billing via QUERY_METERING_HISTORY, and post-conversion tuning recipes | Adaptive Compute, WAREHOUSE_TYPE ADAPTIVE, MAX_QUERY_PERFORMANCE_LEVEL, QUERY_THROUGHPUT_MULTIPLIER, per-query billing |
-| [guide-cortex-search-access-control](guide-cortex-search-access-control/) | Enforce per-user, per-account, or per-tenant access control on Cortex Search Services today: filter-based UBAC (`@contains` on ARRAY attribute columns, with stored procedure hardening), separate services per data boundary, and an honest roadmap for native caller's rights. Covers all query APIs (REST, Python, SQL), multi-identifier support, and the tradeoffs between patterns | Cortex Search, RBAC, UBAC, owner's rights, filter, ATTRIBUTES, @contains, per-tenant search, access control, caller's rights |
-| [guide-powerbi-oauth](guide-powerbi-oauth/) | Configure Power BI to connect to Snowflake using OAuth SSO (Microsoft Entra ID): security integration setup, DirectQuery vs Import mode, user provisioning (LOGIN_NAME = UPN), per-viewer identity for row-level security, B2B guests, Azure Government, network policies, and a full troubleshooting error table | Power BI, OAuth, DirectQuery, External OAuth, Entra ID, Azure AD, security integration, row-level security |
-| [guide-horizon-context-catalog](guide-horizon-context-catalog/) | The catalog pivot explained: Snowflake's announced agreement to acquire Select Star technology → Horizon Context (Collect/Enrich/Activate, Wave 1 connectors, OpenLineage, Apache Ossie) → Cortex Sense (CoCo context activation, ~86% internal benchmark). Separates documented Agent controls from the unresolved Sense retrieval-boundary question and distinguishes announced preview models from confirmed account availability. Validated claims only; availability table; common objections | Horizon Context, Cortex Sense, Select Star, metadata connectors, semantic view security, agent security, catalog pivot |
-| [guide-agent-to-agent-orchestration](guide-agent-to-agent-orchestration/) | Which mechanism to use when one Cortex Agent calls another: same-account wrapper + `DATA_AGENT_RUN`, inter-app agents (RCR + `GRANT CALLER`), MCP as the interop fabric, CoWork. Honest about what isn't native (no Google A2A). Includes a working same-account agent→agent spec and the caller-grants-don't-chain gotcha | Cortex Agents, DATA_AGENT_RUN, inter-app agents, RCR, MCP, CoWork |
-| [guide-cortex-agent-versioning](guide-cortex-agent-versioning/) | How to version Cortex Agents with GitHub: the commit-based model (`LIVE` → `VERSION$N` → alias → default), iterate-in-Snowflake vs Git-driven compared, native Git import (`ADD VERSION FROM @repo/...`), promote/rollback, and example CI/CD. Ships a runnable ORDERS agent and the COMMIT-destroys-LIVE gotcha | Cortex Agents, agent versioning, GitHub, Git integration, CI/CD, promote/rollback |
-| [guide-claude-code-cortex-redirect](guide-claude-code-cortex-redirect/) | How to redirect `claude` CLI and Anthropic/OpenAI SDK inference to Snowflake Cortex instead of Anthropic directly — so all inference runs inside the Snowflake perimeter, governed by RBAC and billed to Snowflake. Covers `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN` setup, per-user and org-wide enforcement, SDK patterns (Python + Node, Messages API + Chat Completions), verification via `CORTEX_REST_API_USAGE_HISTORY`, and auth gotchas | Cortex REST API, ANTHROPIC_BASE_URL, SDK redirect, Claude Code, inference governance |
-| [guide-connecting-claude-snowflake](guide-connecting-claude-snowflake/) | Post-Summit-26 guide to putting Claude in front of Snowflake: context over connection. Why raw text-to-SQL is ~24% accurate, how Horizon Context + Cortex Sense reach ~86%, CoWork/CoCo surfaces, Natoma governed MCP gateway; legacy OAuth/Entra MCP demoted | CoWork, CoCo, Cortex Sense, Horizon Context, Natoma, governed MCP |
-| [guide-universal-data-sharing](guide-universal-data-sharing/) | What you missed at Summit 2026: Open Data Sharing (non-Snowflake consumers via IRC + PAT), Open Table Format Sharing (Iceberg/Delta cross-cloud GA), multi-party Clean Rooms (symmetric Collaboration API), universal governance (Scan Plan API enforces policies on external engines), and AI-powered sharing (auto-gen agents for listings). Decision tree for which mechanism to use | Open Data Sharing, Iceberg REST Catalog, External Consumer, PAT, Cross-Cloud Auto-Fulfillment, Collaboration API, multi-party DCR, Scan Plan API, Agent Sharing |
-| [guide-model-agnostic-accuracy](guide-model-agnostic-accuracy/) | Best practices for configuring semantic views and Cortex Agents to achieve consistent accuracy regardless of which LLM is used for orchestration. Covers descriptions-as-model-behavior, verified queries, custom instructions, tool description frameworks, the GPA evaluation loop, model selection as a performance decision, and CI/CD iteration patterns. Grounded in official docs + Snowflake Builders Blog practitioner posts | Semantic View, Cortex Agent, model-agnostic, VQR, custom instructions, GPA evaluation, Cortex Analyst, accuracy |
-| [guide-snowflake-cost-visibility](guide-snowflake-cost-visibility/) | Foundational cost governance: Budget object (predictive spend alerts), METERING_DAILY_HISTORY attribution queries, Resource Monitors (warehouse guardrails), and AI_FUNCTIONS_USER RBAC for new BU governance. Read this first, then [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) for AI-specific enforcement patterns | Budget object, ACCOUNT_USAGE, resource monitors, AI_FUNCTIONS_USER, RBAC, cost visibility |
-| [guide-vscode-copilot-cortex](guide-vscode-copilot-cortex/) | Connect VS Code GitHub Copilot to Snowflake Cortex: managed MCP for Copilot Chat, subagent skill for Copilot CLI, and the CoCo CLI (formerly Cortex Code) in the integrated terminal. Post-Summit-26, with the shared semantic-view accuracy foundation | Snowflake MCP, OAuth, PAT, subagent-cortex-code, CoCo CLI |
-| [guide-connecting-copilot-studio-snowflake](guide-connecting-copilot-studio-snowflake/) | Four patterns for connecting Microsoft Copilot Studio to Snowflake — from no-code Knowledge Source (~5 min) to full Cortex Agent delegation via MCP (recommended for production). Decision framework, governance comparison table, and real-world evaluation data showing 93% structural-error reduction from semantic-model grounding | Copilot Studio, MCP Server, Cortex Agent, Cortex Analyst, Power Automate, Entra ID, External OAuth, Snowflake OAuth |
-| [guide-coco-setup](guide-coco-setup/) | Curated on-ramp for Cortex Code (Desktop + CLI): install, connect, understand the configuration hierarchy, build your first custom skill with Snowflake SQL standards. Covers Desktop, CLI, and in-editor (VS Code, Zed, JetBrains) surfaces. Includes template skill and CLAUDE.md snippet with `{PLACEHOLDER}` values | Cortex Code, CoCo Desktop, CoCo CLI, skills, CLAUDE.md, configuration hierarchy, plugins |
-| [guide-cowork-only-users](guide-cowork-only-users/) | Admin runbook for giving a group of users access to only Snowflake CoWork without broader Snowsight access: CORTEX_AGENT_USER role, ALLOWED_INTERFACES lock, CoWork object curation, single and bulk provisioning, SCIM attribute, private connectivity (PrivateLink), IdP redirect. Full verification and revocation scripts included | CoWork, RBAC, ALLOWED_INTERFACES, SCIM, PrivateLink, CORTEX_AGENT_USER, bulk provisioning |
-| [guide-snowflake-firewall-allowlist](guide-snowflake-firewall-allowlist/) | Network admin guide for allowlisting Snowflake traffic in edge firewalls. Covers both directions: outbound (FQDN-based via `SYSTEM$ALLOWLIST()`), inbound (stable egress CIDRs via `SYSTEM$GET_SNOWFLAKE_EGRESS_IP_RANGES()` with expiry-aware automation). Includes PrivateLink escape hatch, decision matrix, and FAQ written for firewall engineers who have never used Snowflake | SYSTEM$ALLOWLIST, egress IP, firewall, FQDN, CIDR, PrivateLink, network security, OCSP |
-| [guide-cortex-code-access-control](guide-cortex-code-access-control/) | Restrict Cortex Code (Desktop, CLI, Snowsight) to a specific role: lockdown procedure, three-phase progressive rollout for the paranoid, and 11 copy-paste observability queries showing who/what/how/when CoCo is being used. Covers CORTEX_USER, USE AI FUNCTIONS, and Model RBAC layers | Cortex Code, RBAC, CORTEX_USER, observability, usage history, access control, progressive rollout |
-| [guide-org-reporting](guide-org-reporting/) | Primer on reporting across a multi-account Snowflake footprint: ORGANIZATION_USAGE two-path decision (org account vs ORGADMIN-enabled), application roles vs database roles, query discipline (time-bound, explicit columns), materialization pattern, latency tiers, and the two boundaries that surprise people (org scope, reseller billing) | ORGANIZATION_USAGE, ORGADMIN, premium views, application roles, org account, multi-account reporting |
-| [guide-debezium-to-snowflake](guide-debezium-to-snowflake/) | Log-based CDC from PostgreSQL, MySQL, or SQL Server into Snowflake using Debezium, Apache Kafka / Confluent Cloud, Snowflake Kafka Connector v4 (Snowpipe Streaming), and Dynamic Tables. All GA components. Covers source DB setup, Debezium connector configs, v4 sink configuration, RECORD_CONTENT VARIANT landing schema, Dynamic Table flattening with QUALIFY ROW_NUMBER, schema evolution, monitoring, and failure recovery. Forward reference to Snowflake Datastream (Private Preview) as the future managed-broker path. | Debezium, Kafka, Snowpipe Streaming, Kafka Connector v4, Dynamic Tables, CDC, PostgreSQL, MySQL, SQL Server |
-| [guide-cube-snowflake-semantic-layer](guide-cube-snowflake-semantic-layer/) | Operating Cube (cube.dev) as a decoupled semantic layer on Snowflake: driver config, three auth paths (password vs key pair vs OIDC workload identity), read-only privilege model, pre-aggregation cost behavior and query-tag attribution, bi-directional Semantic Views sync with its full push-limitation table, and an honest build-vs-skip decision framework. Flags a stale Snowflake doc page on network policies for External OAuth | Cube, cube.dev, semantic layer, External OAuth, OIDC, workload identity, service user, semantic views, pre-aggregations, query tag, MDX, DAX |
-| [guide-openflow-shopify-multistore](guide-openflow-shopify-multistore/) | Landing dozens of Shopify stores in Snowflake daily with Openflow as a third-party ELT replacement. Opens with an options table and a "Before you commit" section: Shopify connector is Preview and gen 1 only (per-store canvas install, no SQL/IaC), always-on Management Services cost floor, no per-runtime cost attribution, no schema evolution, 60-day order window. SQL-created gen 2 deployment + runtime, registry-driven per-store schemas (`ADD_STORE`), generated UNION ALL Dynamic Tables, daily shop-activity model, per-store runbook, error classifier, store-by-store cutover | Openflow, Shopify, gen 2, Dynamic Tables, Snowpipe Streaming, external access integration, network rule, ELT replacement, multi-tenant |
-| [guide-shopify-bulk-api-coco](guide-shopify-bulk-api-coco/) | CoCo Desktop as the build-and-operations interface for a deterministic Snowflake-native Shopify pipeline: Python stored procedure + EAI + SECRET + Bulk API + internal stage/COPY + Dynamic Tables. Includes proof-before-promotion deployment gates, generated store/secret bindings, pilot qualification and reconciliation, conversational troubleshooting, lifecycle playbooks, and read-only daily/weekly/monthly CoCo automations | CoCo Desktop, Shopify Bulk API, Python stored procedure, Snowflake Tasks, Secrets, external access, Dynamic Tables, automations, qualification, troubleshooting |
-
-### Demos
-
-| Directory | Description | Features |
-| --- | --- | --- |
-| [demo-streams-cdc-workshop](demo-streams-cdc-workshop/) | Hands-on Snowflake-native CDC workshop with deterministic insert, update, and delete changes; transactional audit plus current-state MERGE; exact reconciliation; Stream retention and staleness operations; and an optional triggered Task exercise. | Streams, Tasks, CDC, change tracking, MERGE, stream staleness, data engineering |
-| [demo-cortex-ai-cost-controls](demo-cortex-ai-cost-controls/) | Next.js dashboard on App Runtime: AI credit attribution by user and agent, native per-user quota status (SNOWFLAKE.CORE.QUOTA), trend analysis with anomaly detection. Materialized tables pre-aggregate ACCOUNT_USAGE for fast response. Read guide-snowflake-cost-visibility first. | Cortex AI, App Runtime, per-user quotas, ACCOUNT_USAGE, attribution, Recharts |
-
-## First-Time Setup
-
-Run once on your machine. Configures pre-commit to run automatically on every commit in **every git repository** that has a `.pre-commit-config.yaml` — no per-repo setup required after this.
-
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/setup-dev.sh)
-```
-
-What it does: installs `pre-commit` (if missing) and sets `git config --global core.hooksPath` to a dispatcher that runs pre-commit in any repo with a config file. Idempotent — safe to re-run.
-
-To add this protection to a repo that does not yet have a config, copy the standard template:
-
-```bash
-cp shared/pre-commit-config-template.yaml /path/to/repo/.pre-commit-config.yaml
-cd /path/to/repo && detect-secrets scan > .secrets.baseline
-```
+| **Connect an external tool to Snowflake** | [Integration guides](#integrations) | Pick your tool; guides are standalone. |
+| **Build Snowflake data pipelines** | [Streams CDC workshop](demo-streams-cdc-workshop/) | Then [OpenTelemetry](guide-otel-to-snowflake/) or [AI spend ingestion](guide-ai-spend-consolidation/). |
+| **Build a production Cortex Agent** | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | [Versioning](guide-cortex-agent-versioning/), [orchestration](guide-agent-to-agent-orchestration/), then [specialized tools](guide-cortex-agent-image-tool/). |
+| **Govern Snowflake costs and usage** | [Cost visibility](guide-snowflake-cost-visibility/) | [AI controls](demo-cortex-ai-cost-controls/), [compute](guide-adaptive-compute/), [organization reporting](guide-org-reporting/), or [cross-platform AI spend](guide-ai-spend-consolidation/). |
+| **Secure Snowflake and build an audit trail** | [Security guides](#security) | Pick the access boundary or audit requirement you need. |
+| **Understand new Snowflake capabilities** | [Capability guides](#capabilities) | Pick a topic; check availability and review dates in the guide. |
 
 ## Quick Start
 
-### Develop with AI Assistance
+**Reading needs no installation.** Open a guide below or try the
+[AI spend planning workbook](https://sfc-gh-miwhitaker.github.io/sfe-public/guide-ai-spend-consolidation/workbook.html)
+in your browser.
+
+**To work with the files**, clone the repository:
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh) <project-name>
-cd sfe-public/<project-name>
+git clone https://github.com/sfc-gh-miwhitaker/sfe-public.git
+cd sfe-public
 ```
 
-Then open the project with your AI assistant of choice:
+For just one project, use the helper instead. It requires Bash and Git, not a
+Snowflake connection. Review [the script](shared/get-project.sh) before running it:
 
-- **Cortex Code:** `cortex`
-- **Claude Code:** `claude`
-- **Cursor:** Open the folder in Cursor
+```bash
+curl --fail --silent --show-error --location https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh -o get-project.sh
+bash get-project.sh --list
+bash get-project.sh demo-streams-cdc-workshop
+```
 
-Tell the AI: *"Help me get started with this project"*
+Open the selected project in your editor and follow its README. If using an AI
+assistant, ask it to read the project's `AGENTS.md` where present, then say:
+*"Help me get started with this project."* Developer hooks are optional and
+separate; see [Contributing](CONTRIBUTING.md).
 
-Every project includes an `AGENTS.md` that any Claude-compatible tool reads automatically.
+## Projects
 
-### Guides
+Each project is listed once below. Some serve more than one goal in Start Here.
 
-Open the guide directory and follow the README.
+### Integrations
+
+| Guide | What it helps you do | Topics |
+| --- | --- | --- |
+| [Cortex Code setup](guide-coco-setup/) | Install and configure Cortex Code, then build a first skill. | Cortex Code, skills |
+| [Claude Desktop and Snowflake](guide-connecting-claude-snowflake/) | Understand connection and context options for Claude with Snowflake. | Claude, MCP |
+| [Claude Code and SDK redirect](guide-claude-code-cortex-redirect/) | Route compatible CLI and SDK inference through Cortex REST APIs. | Claude Code, Cortex REST |
+| [VS Code and Copilot](guide-vscode-copilot-cortex/) | Connect Copilot workflows to Snowflake tools and context. | VS Code, Copilot |
+| [Microsoft Copilot Studio](guide-connecting-copilot-studio-snowflake/) | Choose among knowledge sources, Analyst, MCP, and REST integration. | Copilot Studio, MCP |
+| [Power BI OAuth](guide-powerbi-oauth/) | Configure OAuth SSO and troubleshoot per-viewer identity. | Power BI, OAuth |
+| [Salesforce zero copy](guide-salesforce-v2-zero-copy/) | Choose the right direction and connector for Salesforce zero-copy access. | Salesforce, zero copy |
+| [Splunk audit ingestion](guide-snowflake-splunk-ingestion/) | Compare four patterns for getting Snowflake audit data into Splunk. | Splunk, audit logs |
+| [Cube semantic layer](guide-cube-snowflake-semantic-layer/) | Configure Cube authentication, pre-aggregations, and semantic-view synchronization. | Cube, semantic layer |
+| [Advertising platforms](guide-ad-platform-integrations/) | Separate Google and Meta outbound activation from inbound reporting. | Google Ads, Meta Ads |
+| [Shopify through Openflow](guide-openflow-shopify-multistore/) | Plan multi-store ingestion with explicit connector limitations and cost considerations. | Shopify, Openflow |
+| [Shopify Bulk API with Cortex Code](guide-shopify-bulk-api-coco/) | Build and qualify a deterministic Shopify ingestion pipeline. | Shopify, Bulk API |
+
+### Pipelines and Cost Governance
+
+| Guide | What it helps you do | Topics |
+| --- | --- | --- |
+| [Debezium to Snowflake](guide-debezium-to-snowflake/) | Land database changes through Kafka and model them in Snowflake. | Debezium, Kafka, CDC |
+| [OpenTelemetry to Snowflake](guide-otel-to-snowflake/) | Choose an ingestion path for external logs, metrics, and traces. | OpenTelemetry, observability |
+| [AI spend consolidation](guide-ai-spend-consolidation/) | Model cross-platform AI spend and adoption without mixing incompatible billing measures. | AI FinOps, identity, workbook |
+| [Snowflake cost visibility](guide-snowflake-cost-visibility/) | Use budgets, usage views, and resource monitors appropriately. | Credits, budgets |
+| [Adaptive compute](guide-adaptive-compute/) | Configure adaptive warehouses and evaluate their workload fit. | Warehouses, performance |
+| [Organization reporting](guide-org-reporting/) | Choose the correct access path for cross-account reporting. | Organization usage, credits |
+
+### Cortex Agents
+
+| Guide | What it helps you do | Topics |
+| --- | --- | --- |
+| [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | Improve answer quality through semantic models, instructions, and evaluation. | Accuracy, semantic views |
+| [Cortex Agent versioning](guide-cortex-agent-versioning/) | Promote and roll back agent configurations with versions and aliases. | Versioning, GitHub |
+| [Agent-to-agent orchestration](guide-agent-to-agent-orchestration/) | Choose supported mechanisms for delegating work between agents. | Orchestration, MCP |
+| [Image-generation tools](guide-cortex-agent-image-tool/) | Understand the custom-tool bridge for agent-driven image generation. | Custom tools, images |
+
+### Security
+
+| Guide | What it helps you do | Topics |
+| --- | --- | --- |
+| [MCP role controls](guide-snowflake-mcp-role-controls/) | Separate primary-role OAuth boundaries from secondary-role restrictions. | MCP, OAuth, roles |
+| [Cortex Search access control](guide-cortex-search-access-control/) | Choose filtering or service-isolation patterns for search access. | Cortex Search, RBAC |
+| [CoWork-only users](guide-cowork-only-users/) | Provision business users with constrained interfaces and access. | CoWork, provisioning |
+| [Firewall allowlisting](guide-snowflake-firewall-allowlist/) | Distinguish outbound hostname rules from Snowflake egress IP rules. | Firewalls, networking |
+| [Cortex Code access control](guide-cortex-code-access-control/) | Restrict access and inspect usage during a progressive rollout. | Cortex Code, roles |
+
+### Capabilities
+
+| Guide | What it helps you do | Topics |
+| --- | --- | --- |
+| [Horizon Context and Cortex Sense](guide-horizon-context-catalog/) | Understand the context stack and its documented boundaries. | Catalog, context |
+| [Universal data sharing](guide-universal-data-sharing/) | Compare sharing capabilities for different partners and engines. | Sharing, interoperability |
+| [CoWork features](guide-cowork-easter-eggs/) | Find less-visible CoWork capabilities, prerequisites, and limitations. | CoWork, productivity |
+
+### Demos
+
+| Demo | What you build | Topics |
+| --- | --- | --- |
+| [Streams CDC workshop](demo-streams-cdc-workshop/) | Practice transactional change processing, reconciliation, and stream recovery. | Streams, Tasks, CDC |
+| [Cortex AI cost controls](demo-cortex-ai-cost-controls/) | Explore credit attribution and native quota status in a dashboard. | Cortex AI, quotas |
+
+## First-Time Setup
+
+No setup is required to read the guides. Contributor tooling and optional Git hooks
+are documented in [Contributing](CONTRIBUTING.md#developer-setup).
 
 ## License
 

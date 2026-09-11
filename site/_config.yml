@@ -1,0 +1,27 @@
+# Pair-programmed by SE Community + Cortex Code
+title: Snowflake SE Guides
+description: Community guides and runnable examples
+url: https://sfc-gh-miwhitaker.github.io
+baseurl: /sfe-public
+theme: just-the-docs
+search_enabled: false
+heading_anchors: true
+enable_copy_code_button: true
+color_scheme: light
+nav_enabled: true
+back_to_top: true
+back_to_top_text: Back to top
+aux_links:
+  View on GitHub:
+    - https://github.com/sfc-gh-miwhitaker/sfe-public
+plugins:
+  - jekyll-seo-tag
+  - jekyll-include-cache
+exclude:
+  - publication-inventory.json
+defaults:
+  - scope:
+      path: "pages"
+    values:
+      layout: default
+      render_with_liquid: false

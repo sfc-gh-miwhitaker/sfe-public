@@ -165,16 +165,28 @@ capability rather than configuring or building something.
 
 ## Maintenance Rules
 
+### Reader site and retrieval
+
+Keep guide Markdown authoritative. `site/build.mjs` generates the Pages presentation;
+never hand-edit `site/.build/`. `site/publication.json` controls reader-only publishing
+and the three-guide search pilot. Run the site build, link checks, and browser tests
+documented in `site/README.md` when changing navigation or publication rules.
+Do not add agent instructions or hidden tooling to the published artifact.
+Project retrieval discovers top-level guide/demo READMEs without a static allowlist.
+Contributor setup belongs in CONTRIBUTING.md and must never run during retrieval.
+Archive operations must record retirement routes in `site/retired.json` before moving
+files; never remove old URLs without a reader-facing notice.
+
 ### When you add a new guide or demo
 
 1. Determine which path(s) above it belongs to. A guide can appear in multiple paths
    if it genuinely serves multiple reader intents (e.g., `guide-cortex-search-access-control`
    belongs in both Path 3 and Path 5).
 2. Add it to the **Current members** list in the relevant path section(s) above.
-3. Add it to the `## Start Here` routing table in `README.md` in the appropriate row(s),
-   with a linked guide name and brief description of where it fits in the reading order.
+3. Ensure the `## Start Here` routing table leads to its catalog category; add a direct
+   link only when the project changes a recommended reading sequence.
 4. Add it to the `## Projects` table in `README.md` with the standard row format:
-   `| [guide-name](guide-name/) | Description with key features and gotchas | Comma-separated feature tags |`
+   `| [Readable title](guide-name/) | One-sentence purpose | Comma-separated topic tags |`
 5. Update the `![Projects](...)` badge count in `README.md`.
 
 ### When you remove or archive a guide

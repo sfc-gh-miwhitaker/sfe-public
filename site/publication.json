@@ -1,0 +1,13 @@
+{
+  "attribution": "Pair-programmed by SE Community + Cortex Code",
+  "baseurl": "/sfe-public",
+  "pilot": ["guide-cortex-agent-versioning", "guide-universal-data-sharing", "guide-ai-spend-consolidation"],
+  "readerPatterns": ["*.md", "docs/**/*.md", "diagrams/**/*.md", "sql/**/*.sql", "deploy_all.sql", "teardown_all.sql"],
+  "excludedNames": ["AGENTS.md", "CLAUDE.md", "SKILL.md"],
+  "extraFiles": [
+    "guide-ai-spend-consolidation/workbook.html",
+    "guide-cortex-agent-versioning/specs/agent_spec.yaml",
+    "guide-cortex-agent-versioning/github-actions/deploy-agent.yml",
+    "guide-openflow-shopify-multistore/config/shopify_object_override.json"
+  ]
+}
