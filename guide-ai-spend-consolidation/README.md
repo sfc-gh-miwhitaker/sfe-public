@@ -76,15 +76,19 @@ Pair-programmed by SE Community + Cortex Code
 
 ### Build your implementation brief
 
-Use the [interactive workbook](workbook.html) to turn this guide into a scoped plan:
+[**Open interactive workbook**](https://sfc-gh-miwhitaker.github.io/sfe-public/guide-ai-spend-consolidation/workbook.html)
+| [View source](https://github.com/sfc-gh-miwhitaker/sfe-public/blob/main/guide-ai-spend-consolidation/workbook.html)
+
+Use the workbook to turn this guide into a scoped plan:
 choose reporting outcomes and platforms, settle billing and identity decisions, then export
 the pilot sequence, open questions, and acceptance checklist. It covers all 12 registry entries,
 including the OpenAI API Platform separately from ChatGPT Enterprise.
 
-Open `guide-ai-spend-consolidation/workbook.html` in a browser from your local repository copy.
-No installation, login, or Snowflake connection is needed. GitHub shows HTML source rather than
-running the workbook; download the file to open it locally. Keeping it beside this README
-preserves its relative links to the guide and SQL files.
+The interactive link opens the workbook on GitHub Pages; **View source** opens the repository's
+HTML file viewer. No installation, login, or Snowflake connection is needed.
+For offline use, open `guide-ai-spend-consolidation/workbook.html` in a browser from your local
+repository copy. Keeping it beside this README preserves its relative links to the guide and
+SQL files. Answers stay in your browser page and are not submitted to GitHub.
 
 - **Save / Load** preserves answers in a local JSON file. There is no autosave; unsaved answers
   are lost when the page closes. Incomplete drafts, including invalid field values, can be saved.
