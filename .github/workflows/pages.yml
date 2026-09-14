@@ -32,7 +32,7 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref }}
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -66,7 +66,7 @@ jobs:
           done
           npm --prefix site run test:browser
           if [ -f guide-ai-spend-consolidation/tests/workbook.test.cjs ]; then
-            node --test guide-ai-spend-consolidation/tests/workbook.test.cjs
+            node --test guide-ai-spend-consolidation/tests/*.test.cjs
             node guide-ai-spend-consolidation/tests/workbook.browser.cjs
           fi
       - uses: actions/upload-pages-artifact@v4

@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const {pathToFileURL} = require('node:url');
+const {cleanupBrowser} = require('./browser-cleanup.cjs');
 const chromePath = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const profile = fs.mkdtempSync(path.join(os.tmpdir(),'ai-workbook-browser-'));
 const chrome = spawn(chromePath,['--headless=new','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-sync','--remote-debugging-port=0',`--user-data-dir=${profile}`,'about:blank'],{stdio:['ignore','ignore','pipe']});
@@ -185,7 +186,5 @@ async function main() {
 }
 main().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
   if (socket) socket.close();
-  chrome.kill();
-  await new Promise(resolve => { if (chrome.exitCode !== null) resolve(); else { chrome.once('exit',resolve); setTimeout(resolve,3000); } });
-  fs.rmSync(profile,{recursive:true,force:true});
-});
+  await cleanupBrowser(chrome, profile);
+}).catch(error => { console.error(error); process.exitCode = 1; });
