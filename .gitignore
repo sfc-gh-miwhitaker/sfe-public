@@ -78,6 +78,11 @@ yarn-debug.log*
 .pnpm-debug.log*
 package-lock.json
 !site/package-lock.json
+!demo-ai-spend-adoption/app/package-lock.json
+demo-ai-spend-adoption/app/snowflake.yml
+demo-ai-spend-adoption/app/.next/
+demo-ai-spend-adoption/app/*.tsbuildinfo
+demo-ai-spend-adoption/local/
 
 # ---- Documentation build (source lives in site/) ----
 site/.build/

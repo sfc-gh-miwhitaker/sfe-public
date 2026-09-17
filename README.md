@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-32-blue)
+![Projects](https://img.shields.io/badge/Projects-35-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -80,6 +80,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | Guide | What it helps you do | Topics |
 | --- | --- | --- |
 | [Debezium to Snowflake](guide-debezium-to-snowflake/) | Land database changes through Kafka and model them in Snowflake. | Debezium, Kafka, CDC |
+| [Delta Sharing behind an IP allowlist](guide-delta-sharing-ip-allowlist/) | Consume a Delta Sharing feed when the provider only accepts allowlisted IP addresses. | Delta Sharing, SPCS, egress IPs |
 | [OpenTelemetry to Snowflake](guide-otel-to-snowflake/) | Choose an ingestion path for external logs, metrics, and traces. | OpenTelemetry, observability |
 | [AI spend consolidation](guide-ai-spend-consolidation/) | Model cross-platform AI spend and adoption without mixing incompatible billing measures. | AI FinOps, identity, workbook |
 | [Snowflake cost visibility](guide-snowflake-cost-visibility/) | Use budgets, usage views, and resource monitors appropriately. | Credits, budgets |
@@ -118,7 +119,9 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | Demo | What you build | Topics |
 | --- | --- | --- |
 | [Streams CDC workshop](demo-streams-cdc-workshop/) | Practice transactional change processing, reconciliation, and stream recovery. | Streams, Tasks, CDC |
+| [Delta Sharing ingestion on SPCS](demo-delta-sharing-spcs/) | Run a provider-free Delta snapshot example through SPCS, an internal stage, and native-table publication. | SPCS, Delta Sharing, snapshots |
 | [Cortex AI cost controls](demo-cortex-ai-cost-controls/) | Explore credit attribution and native quota status in a dashboard. | Cortex AI, quotas |
+| [AI spend and adoption](demo-ai-spend-adoption/) | Compare ChatGPT Enterprise, OpenAI API, and Cortex usage in a sample-first React Snowflake App. | AI FinOps, React, App Runtime |
 
 ## First-Time Setup
 

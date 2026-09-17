@@ -55,6 +55,7 @@ authenticate and communicate with Snowflake.
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake bidirectional zero copy: V2 Data Share, query/file federation, legacy V1/BYOL, Openflow and MCP boundaries
 - `guide-cube-snowflake-semantic-layer` — Cube (cube.dev) semantic layer: driver config, three auth paths, OIDC workload identity, pre-aggregation cost
 - `guide-debezium-to-snowflake` — Debezium CDC pipeline: Debezium + Kafka + Snowflake Kafka Connector v4 + Dynamic Table flattening (all GA)
+- `guide-delta-sharing-ip-allowlist` — Databricks Delta Sharing feeds whose provider restricts access to allowlisted IPs: the native `CATALOG_SOURCE = DELTA_SHARING` catalog integration (GA, two statements, but no documented allowlistable egress IP) versus an SPCS-hosted Delta Sharing client (which does get one), plus the shared-`/24` and expiry realities and a customer-NAT alternative
 - `guide-ad-platform-integrations` — Advertising data by direction: Google Ads Data Manager outbound (Snowflake as native first-party source, PAT auth, Customer Match), the Meta ads MCP + Conversions API skill pairing (CAPI skill public on GitHub, MCP by request), and the Openflow connectors for Meta Ads and Google Ads inbound (Preview connectors on a GA platform)
 - `guide-openflow-shopify-multistore` — Shopify (dozens of stores) into Snowflake via Openflow Snowflake Deployment: gen 2 SQL deployment/runtime, gen 1 canvas-installed Shopify connector per store, registry-driven per-store schemas, generated Dynamic Table analytics layer, honest readiness and cost-floor section, ELT cutover pattern
 - `guide-shopify-bulk-api-coco` — Shopify Bulk API into Snowflake with CoCo Desktop as the lifecycle interface: deterministic Python procedure/Task data path, SECRET + EAI security, generated multi-store bindings, proof-before-promotion qualification, Dynamic Tables, conversational troubleshooting, and read-only operations automations
@@ -74,11 +75,16 @@ capture, orchestration, and incremental processing.
 
 - `demo-streams-cdc-workshop` — hands-on CDC with Streams and Tasks, including
   transactional change handling, staleness, monitoring, and recovery
+- `demo-delta-sharing-spcs` — provider-free synthetic Delta snapshots through an SPCS job,
+  internal stage, and native-table publication; separate provider adapter and EAI extension
 - `guide-otel-to-snowflake` — inbound OpenTelemetry pipelines: four ingestion patterns, the
   shared OTLP shredding layer, and a Dynamic Table gold layer (also in Path 1 and Path 6)
 - `guide-ai-spend-consolidation` — multi-vendor admin-API ingestion: watermarked Python
   procedures, registry-driven adapters, VARIANT landing with SQL shredding, short-retention
   feed handling, and a Dynamic Table gold layer (also in Path 1 and Path 4)
+- `guide-delta-sharing-ip-allowlist` — batch pull from a Delta Sharing provider into native
+  tables: job service on a compute pool, freshness gating on the provider's own refresh marker,
+  full-refresh overwrite-and-swap publication (also in Path 1 and Path 5)
 
 **Belongs here if:** the project's primary job is building or operating a
 Snowflake-native data pipeline rather than configuring an external integration.
@@ -102,6 +108,10 @@ Reading order within this path matters.
 extending a Cortex Agent or its supporting objects (semantic views, tools, search).
 
 ### Path 4 — Govern Snowflake Costs and Usage
+
+`demo-ai-spend-adoption` adds a runnable, sample-first React App Runtime dashboard
+for ChatGPT CSV, OpenAI API usage/costs, and selected Cortex attribution sources.
+It also belongs to Path 2 for its transactional metadata ingestion examples.
 
 Guides covering credit visibility, AI service governance, warehouse controls, and
 compute rightsizing. Reading order within this path matters.
@@ -138,6 +148,7 @@ Each guide in this path is standalone — no required reading order.
 - `guide-cowork-only-users` — CoWork-only interface restriction via ALLOWED_INTERFACES (also in Path 3)
 - `guide-snowflake-firewall-allowlist` — Edge firewall allowlisting (FQDN outbound + stable egress CIDR inbound)
 - `guide-cortex-code-access-control` — Restrict CoCo to specific roles, progressive rollout, usage observability queries
+- `guide-delta-sharing-ip-allowlist` — stable egress IP allowlisting for a third-party data feed: which Snowflake features have an allowlistable egress range and which do not, the shared-`/24` disclosure, and the credential-retrieval versus data-plane allowlist distinction (also in Path 1 and Path 2)
 
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
 identity federation, or feeding an audit or SIEM system.
