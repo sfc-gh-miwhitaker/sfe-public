@@ -56,13 +56,49 @@ GRANT ROLE SPLUNK_DBCONNECT_ROLE TO USER SPLUNK_DBX_USER;
 USE ROLE SYSADMIN;
 CREATE OR REPLACE WAREHOUSE SPLUNK_DBX_WH
   WAREHOUSE_SIZE  = 'XSMALL'
-  AUTO_SUSPEND    = 60
+  AUTO_SUSPEND    = 45          -- see "Sizing AUTO_SUSPEND for a poller" below
   AUTO_RESUME     = TRUE
   INITIALLY_SUSPENDED = TRUE
   COMMENT = 'Splunk DB Connect compute (Expires: 2026-10-30)';
 
 GRANT USAGE, OPERATE ON WAREHOUSE SPLUNK_DBX_WH TO ROLE SPLUNK_DBCONNECT_ROLE;
 ```
+
+### Sizing AUTO_SUSPEND for a poller
+
+Snowflake bills warehouses per-second **with a 60-second minimum charged on every
+resume**, and the minimum restarts each time the warehouse resumes. A poller resumes
+once per interval, so every poll costs at least 60 seconds no matter how fast the
+queries are.
+
+That makes the billed cost of one cycle `MAX(run_duration, 60s)`, where
+`run_duration = query_burst + AUTO_SUSPEND`. For a burst of roughly 10–15 seconds:
+
+| `AUTO_SUSPEND` | Run duration | Billed | Notes |
+| --- | --- | --- | --- |
+| 30 | ~42 s | 60 s | Pays the minimum, discards ~18 s already paid for |
+| **45** | **~57 s** | **60 s** | **Consumes the minimum without exceeding it** |
+| 60 | ~72 s | 72 s | 20% more than necessary |
+| 300 | ~312 s | 312 s | Warehouse effectively never suspends |
+
+So the sweet spot is roughly `60s − your burst duration`. Setting it lower saves
+nothing; setting it higher costs real credits on every poll. Measure your own burst
+length before tuning:
+
+```sql
+SELECT
+    COUNT(*)                                        AS polls,
+    ROUND(AVG(TOTAL_ELAPSED_TIME) / 1000, 1)        AS avg_query_seconds,
+    ROUND(MAX(TOTAL_ELAPSED_TIME) / 1000, 1)        AS max_query_seconds
+FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+WHERE WAREHOUSE_NAME = 'SPLUNK_DBX_WH'
+  AND START_TIME >= DATEADD('day', -7, CURRENT_TIMESTAMP());
+```
+
+> **The bigger lever is interval, not `AUTO_SUSPEND`.** Because every poll pays a
+> 60-second floor, halving the poll frequency halves that floor. Going from a
+> 5-minute to a 30-minute interval removes roughly five-sixths of the minimum-billing
+> overhead — far more than any `AUTO_SUSPEND` tuning can.
 
 ### Generate a PAT (Programmatic Access Token)
 
@@ -196,17 +232,26 @@ SELECT
     PARTITIONS_SCANNED,
     PARTITIONS_TOTAL
 FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
-WHERE START_TIME::TIMESTAMP_NTZ > ?
-ORDER BY START_TIME_NTZ ASC
+WHERE START_TIME::TIMESTAMP_NTZ >= ?
+ORDER BY START_TIME_NTZ ASC, QUERY_ID ASC
 LIMIT 10000
 ```
 
 > **Important:** Add `LIMIT 10000` (or your batch size). `QUERY_HISTORY` can have millions of rows. The `LIMIT` prevents a single poll from overwhelming both Snowflake and Splunk. Tune based on your query rate.
 
+> **Why `>=` and not `>` here.** `START_TIME` is **not unique** — many statements share
+> the same millisecond. If the `LIMIT` happens to cut through the middle of a group of
+> rows sharing one timestamp `T`, the checkpoint advances to `T` and the next poll's
+> `> T` predicate silently skips every remaining row at `T`. Using `>=` re-reads the
+> boundary timestamp instead of skipping past it, which means you **must** deduplicate
+> on `QUERY_ID` downstream. Prefer re-reading a few rows over losing them. The
+> `QUERY_ID` tiebreaker in `ORDER BY` makes the page boundary deterministic.
+
 In DB Connect Input settings:
 
 - Rising Column: `START_TIME_NTZ`
 - Schedule: `*/30 * * * *` (every 30 minutes; ACCOUNT_USAGE lag is ~45 min)
+- Splunk-side dedupe: key on `QUERY_ID`
 
 ---
 
@@ -257,6 +302,10 @@ ORDER BY SESSION_ID ASC
 | `ACCESS_HISTORY.QUERY_START_TIME` checkpoint stuck | Same timezone issue | Same fix: cast + alias |
 | Re-ingesting rows already seen | Checkpoint value lost or reset | Check DB Connect checkpoint storage; do not change the rising column name |
 | Empty results despite rows existing | ACCOUNT_USAGE lag — rows not yet available | Normal behavior; do not poll faster than 15 minutes |
+| Rows missing at `LIMIT` boundaries | Non-unique rising column (`START_TIME`) combined with `>` and a `LIMIT` — the batch cuts mid-timestamp and the checkpoint steps over the remainder | Use `>=`, add a unique `ORDER BY` tiebreaker, and dedupe downstream on `QUERY_ID` |
+| Rows missing with no obvious pattern | Query uses a **bounded** window (`ts >= ? AND ts <= ?`) rather than an open-ended rising column. Once the window closes, rows that land late are never re-read | Never bound the upper end. Use `col > ?` / `col >= ?` so late arrivals are still picked up on a later poll |
+| Rows missing or duplicated across pages | `LIMIT ? OFFSET ?` pagination over a non-unique `ORDER BY` — there is no guaranteed total order, so page boundaries shift between calls | Add a unique tiebreaker to `ORDER BY`, or switch to keyset pagination (`WHERE col > last_seen`) instead of `OFFSET` |
+| Grant revocations never appear | `GRANTS_TO_ROLES` / `GRANTS_TO_USERS` filtered on `CREATED_ON` only see grants being **added** | Also select `DELETED_ON` and ingest the full daily snapshot — see the note in the README view table |
 
 ---
 
@@ -268,6 +317,60 @@ ORDER BY SESSION_ID ASC
 | Splunk ingest | Per-GB pricing varies by license. `QUERY_HISTORY` at a busy org: 1–5 GB/day. `ACCESS_HISTORY`: can be 5–20 GB/day. `LOGIN_HISTORY`: small (<100 MB/day). |
 
 **Recommendation:** Start with `LOGIN_HISTORY` only. Add `QUERY_HISTORY` with a tight `LIMIT` and `WHERE` filter. Add `ACCESS_HISTORY` only if explicitly needed for compliance.
+
+---
+
+## Anti-Patterns Seen in the Field
+
+These are the failure modes that show up in real deployments, including vendor-built
+connectors you do not control. Every one of them is silent — the integration reports
+healthy while dropping data.
+
+| Anti-pattern | Why it looks fine | What it actually does |
+| --- | --- | --- |
+| Polling every 1–5 minutes | Feels like "near real-time" | ACCOUNT_USAGE latency is 45 min–3 hr. The cursor outruns the data, and a short bounded window orphans rows permanently. Latency is structural — you cannot poll your way past it |
+| Bounded window (`ts BETWEEN ? AND ?`) | Looks tidy and idempotent | Any row that materialises after the window closes is never collected |
+| `SELECT *` on `QUERY_HISTORY` | Fewer config decisions | Ships `QUERY_TEXT` (up to 100K chars) off-platform — which can contain literals, identifiers, or pasted secrets. Also breaks when Snowflake adds columns; the docs advise against it explicitly |
+| `LIMIT ? OFFSET ?` over `ORDER BY <non-unique>` | Standard pagination idiom | No stable total order between pages; rows skipped or duplicated at boundaries |
+| Statement timeout set just above observed max | Looks like a safety net | Leaves no headroom. An ACCOUNT_USAGE slowdown then fails the poll, and unless the connector retries, that window is lost |
+| Enabling every view on day one | "Complete coverage" | Low-churn object views (`STAGES`, `GRANTS_TO_*`, `DATA_TRANSFER_HISTORY`) polled at high frequency burn credits to return nothing. Match cadence to churn |
+
+### Verify your own ingest completeness
+
+Do not assume the connector is keeping up. Compare what it read against what actually
+happened, over a window old enough that all latency has settled:
+
+```sql
+-- Rows the connector's own queries returned vs events that actually occurred.
+-- Run for a window at least 24 hours in the past so ACCOUNT_USAGE has caught up.
+SET window_start = '2026-09-09'::TIMESTAMP_NTZ;
+SET window_end   = '2026-09-16'::TIMESTAMP_NTZ;
+
+WITH delivered AS (
+    SELECT COALESCE(SUM(ROWS_PRODUCED), 0) AS rows_delivered
+    FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+    WHERE WAREHOUSE_NAME = 'SPLUNK_DBX_WH'
+      AND START_TIME >= $window_start
+      AND START_TIME <  $window_end
+      AND QUERY_TEXT ILIKE '%ACCOUNT_USAGE.LOGIN_HISTORY%'
+),
+actual AS (
+    SELECT COUNT(*) AS events_occurred
+    FROM SNOWFLAKE.ACCOUNT_USAGE.LOGIN_HISTORY
+    WHERE EVENT_TIMESTAMP >= $window_start
+      AND EVENT_TIMESTAMP <  $window_end
+)
+SELECT
+    a.events_occurred,
+    d.rows_delivered,
+    ROUND(d.rows_delivered / NULLIF(a.events_occurred, 0) * 100, 1) AS pct_captured
+FROM actual a CROSS JOIN delivered d;
+```
+
+A healthy incremental feed lands at or slightly above 100% — slightly above is normal
+and expected when you use `>=` with downstream dedupe. Anything meaningfully below 100%
+means rows are being dropped, and the cause is almost always poll interval, a bounded
+window, or `OFFSET` pagination.
 
 ---
 
