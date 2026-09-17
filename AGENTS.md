@@ -75,8 +75,6 @@ capture, orchestration, and incremental processing.
 
 - `demo-streams-cdc-workshop` — hands-on CDC with Streams and Tasks, including
   transactional change handling, staleness, monitoring, and recovery
-- `demo-delta-sharing-spcs` — provider-free synthetic Delta snapshots through an SPCS job,
-  internal stage, and native-table publication; separate provider adapter and EAI extension
 - `guide-otel-to-snowflake` — inbound OpenTelemetry pipelines: four ingestion patterns, the
   shared OTLP shredding layer, and a Dynamic Table gold layer (also in Path 1 and Path 6)
 - `guide-ai-spend-consolidation` — multi-vendor admin-API ingestion: watermarked Python
@@ -108,10 +106,6 @@ Reading order within this path matters.
 extending a Cortex Agent or its supporting objects (semantic views, tools, search).
 
 ### Path 4 — Govern Snowflake Costs and Usage
-
-`demo-ai-spend-adoption` adds a runnable, sample-first React App Runtime dashboard
-for ChatGPT CSV, OpenAI API usage/costs, and selected Cortex attribution sources.
-It also belongs to Path 2 for its transactional metadata ingestion examples.
 
 Guides covering credit visibility, AI service governance, warehouse controls, and
 compute rightsizing. Reading order within this path matters.
