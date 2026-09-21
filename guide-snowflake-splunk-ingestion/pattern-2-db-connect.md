@@ -313,7 +313,7 @@ ORDER BY SESSION_ID ASC
 
 | Component | Cost Driver |
 | --- | --- |
-| Snowflake warehouse | SPLUNK_DBX_WH: XSMALL at $0.02/credit (Standard). Spins up per poll, auto-suspends. Estimate ~2 credits/day for 30-min polling intervals. |
+| Snowflake warehouse | `SPLUNK_DBX_WH`: XSMALL, which consumes 1 credit per hour while running. Spins up per poll, auto-suspends, billed per second after a 60-second minimum per resume. At 30-minute polling that is 48 resumes/day, so a floor of ~0.8 credits/day and roughly 1–2 credits/day in practice depending on how long each poll runs. Measure your own. Convert to currency at your contract rate. |
 | Splunk ingest | Per-GB pricing varies by license. `QUERY_HISTORY` at a busy org: 1–5 GB/day. `ACCESS_HISTORY`: can be 5–20 GB/day. `LOGIN_HISTORY`: small (<100 MB/day). |
 
 **Recommendation:** Start with `LOGIN_HISTORY` only. Add `QUERY_HISTORY` with a tight `LIMIT` and `WHERE` filter. Add `ACCESS_HISTORY` only if explicitly needed for compliance.
@@ -342,9 +342,10 @@ happened, over a window old enough that all latency has settled:
 
 ```sql
 -- Rows the connector's own queries returned vs events that actually occurred.
--- Run for a window at least 24 hours in the past so ACCOUNT_USAGE has caught up.
-SET window_start = '2026-09-09'::TIMESTAMP_NTZ;
-SET window_end   = '2026-09-16'::TIMESTAMP_NTZ;
+-- Window ends 24 hours ago so ACCOUNT_USAGE latency has settled; adjust the
+-- 7-day span to match how far back you want to reconcile.
+SET window_end   = DATEADD('day', -1, CURRENT_TIMESTAMP())::TIMESTAMP_NTZ;
+SET window_start = DATEADD('day', -7, $window_end);
 
 WITH delivered AS (
     SELECT COALESCE(SUM(ROWS_PRODUCED), 0) AS rows_delivered

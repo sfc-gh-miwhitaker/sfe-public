@@ -141,22 +141,50 @@ ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'AWS_GLOBAL';
 
 ---
 
-### Fix #2: Check Model Allowlist
+### Fix #2: Check Model Access (RBAC, not the allowlist)
+
+> **`CORTEX_MODELS_ALLOWLIST` no longer controls model access.** Snowflake retired it in phases through 2026: from August 5 the only permitted change was setting it to `'None'`; from September 8 the 2026_07 behavior change bundle removed allowlist-based authorization entirely; full retirement lands November 18, 2026. Model **RBAC** is now the only mechanism. Any older instruction to set the allowlist to a model list will fail.
+
+First, see which models the role you're using can actually reach:
 
 ```sql
-SHOW PARAMETERS LIKE 'CORTEX_MODELS_ALLOWLIST' IN ACCOUNT;
+-- Models visible to the current role, with lifecycle status
+SHOW CORTEX BASE MODELS IN SCHEMA SNOWFLAKE.MODELS;
 ```
 
-- **Value = `ALL`** → No action needed. All models are available.
-- **Value = specific model list** → Ensure it includes at least one CoCo model:
+Run this as the role CoCo will use, not as ACCOUNTADMIN — ACCOUNTADMIN always has access to
+every model, so it cannot reproduce a user's problem. Add `USE SECONDARY ROLES NONE;` first, since
+an inherited secondary role can mask a missing grant.
+
+If the model picker is empty or a specific model is missing, check whether the account still has
+the default all-models bootstrap grant:
 
 ```sql
--- Comma-separated string (not a SQL array)
-ALTER ACCOUNT SET CORTEX_MODELS_ALLOWLIST = 'claude-opus-4-6,claude-sonnet-4-6';
+USE ROLE ACCOUNTADMIN;
 
--- Or restore full access:
-ALTER ACCOUNT SET CORTEX_MODELS_ALLOWLIST = 'ALL';
+-- The bootstrap grant lives on the SNOWFLAKE.PUBLIC application role,
+-- NOT on the account-level PUBLIC role. Look for CORTEX-MODEL-ROLE-ALL.
+SHOW GRANTS TO APPLICATION ROLE SNOWFLAKE.PUBLIC;
+
+-- List the model application roles available to grant
+SHOW APPLICATION ROLES LIKE 'CORTEX-MODEL%' IN APPLICATION SNOWFLAKE;
 ```
+
+Then grant what the role needs. Take the exact role name from the `SHOW APPLICATION ROLES` output
+above rather than typing a model name from memory — the identifiers are quoted and case-sensitive,
+and the model lineup changes:
+
+```sql
+-- All current and future models
+GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-ALL" TO ROLE <coco_role>;
+
+-- Or a specific model, named exactly as SHOW APPLICATION ROLES reports it
+GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-<MODEL>" TO ROLE <coco_role>;
+```
+
+> **Granting to `PUBLIC` is not sufficient in every context.** Sessions that run `USE SECONDARY ROLES NONE` and Native App execution contexts may not activate PUBLIC's grants. Grant to the specific role in those cases.
+
+> **To restrict rather than restore access,** don't use a raw `REVOKE APPLICATION ROLE ... FROM ROLE PUBLIC` — that does not clear the bootstrap grant and does not persist across upgrades. Use `CALL SNOWFLAKE.LOCAL.REVOKE_FROM_PUBLIC_APPLICATION_ROLE('APP_ROLE', 'CORTEX-MODEL-ROLE-ALL');` instead.
 
 ---
 
@@ -250,7 +278,7 @@ ORDER BY total_credits DESC;
 | Cap daily spend per user | Set all three `*_DAILY_EST_CREDIT_LIMIT_PER_USER` params |
 | Block one surface entirely | Set that surface's param to `0` |
 | Allow only specific users on Desktop | Account = `0`, then per-user positive values |
-| Use cheaper models only | `ALTER ACCOUNT SET CORTEX_MODELS_ALLOWLIST = 'claude-sonnet-4-6';` |
+| Use cheaper models only | Grant only that model's application role: `GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-<MODEL>" TO ROLE <coco_role>;`, and revoke the all-models bootstrap with `SNOWFLAKE.LOCAL.REVOKE_FROM_PUBLIC_APPLICATION_ROLE`. The `CORTEX_MODELS_ALLOWLIST` parameter no longer controls access |
 | See who's spending the most | Query the per-surface usage views above |
 
 ---

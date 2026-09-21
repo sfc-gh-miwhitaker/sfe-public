@@ -79,6 +79,13 @@ yarn-debug.log*
 package-lock.json
 !site/package-lock.json
 !demo-ai-spend-adoption/app/package-lock.json
+!demo-restaurant-recovery-explorer/app/package-lock.json
+demo-restaurant-recovery-explorer/app/.next/
+demo-restaurant-recovery-explorer/app/*.tsbuildinfo
+demo-restaurant-recovery-explorer/app/test-results/
+demo-restaurant-recovery-explorer/app/playwright-report/
+demo-restaurant-recovery-explorer/app/snowflake.yml
+demo-restaurant-recovery-explorer/app/app.yml
 demo-ai-spend-adoption/app/snowflake.yml
 demo-ai-spend-adoption/app/.next/
 demo-ai-spend-adoption/app/*.tsbuildinfo

@@ -5,7 +5,7 @@
 
 # Consuming a Delta Sharing Feed Behind an IP Allowlist
 
-Your vendor delivers data through Databricks Delta Sharing. Their security model restricts access to IP addresses you register with them in advance. You are a Snowflake shop with no Databricks workspace. This guide covers how to get that data into Snowflake, which of the three available paths actually satisfies the IP requirement, and what the IP allowlist will and will not buy you.
+Your vendor delivers data through Databricks Delta Sharing. Their security model restricts access to IP addresses you register with them in advance. You are a Snowflake shop with no Databricks workspace. This guide covers how to get that data into Snowflake, which of the four available paths actually satisfies the IP requirement, and what the IP allowlist will and will not buy you.
 
 **Audience:** Snowflake account administrators and data engineers who have been handed a vendor onboarding form asking for "a list of IP addresses to whitelist" and need to decide what to put in that field.
 
@@ -17,7 +17,7 @@ Pair-programmed by SE Community + Cortex Code
 
 > **No support provided.** Reference only; validate before production use.
 
-> **Directional guide.** The SQL in this document is syntax-checked against Snowflake. The container image, the Delta Sharing client call, and end-to-end connectivity through a provider firewall are **not validated** — that requires a live provider endpoint and a real allowlist entry. Treat the SPCS section as a design you must prove in your own environment, not a recipe that is known to run.
+> **Directional guide.** The SQL in this document is syntax-checked against Snowflake where the authoring account permitted it. The container image, the Delta Sharing client call, the cloud-side NAT and IAM configuration, and end-to-end connectivity through a provider firewall are **not validated** — that requires a live provider endpoint and a real allowlist entry. Treat the SPCS and customer-NAT sections as designs you must prove in your own environment, not recipes that are known to run. The [verification table](#what-was-verified-in-this-guide) states exactly what was checked.
 
 ---
 
@@ -43,38 +43,45 @@ Everything that follows is about closing that gap honestly.
 - Want the simplest thing, and willing to ask the provider one question first? → [Section 1](#section-1-choosing-a-connection-path)
 - Provider will not budge on IP allowlisting, need a design? → [Section 2](#section-2-the-spcs-client-architecture)
 - Need to tell your security team what you are actually asking them to approve? → [Section 3](#section-3-what-stable-egress-ips-really-give-you)
-- Building the runbook? → [Section 4](#section-4-operations-and-lifecycle)
+- Provider wants one address and will not accept a shared range? → [Section 4](#section-4-the-customer-nat-path)
+- Building the runbook? → [Section 5](#section-5-operations-and-lifecycle)
 
 ---
 
 ## Section 1: Choosing a Connection Path
 
-### The three options
+### The four options
 
 ```mermaid
 flowchart TD
   start["Provider uses Delta Sharing Open Sharing<br>with IP allowlisting"]
   q1{"Do you have a Databricks<br>workspace with Unity Catalog?"}
   q2{"Will the provider accept a<br>Snowflake regional egress CIDR,<br>or support OIDC federation?"}
+  q3{"Is your account on AWS or Azure,<br>and will the provider accept<br>a shared /24?"}
   pathA["Path A: provider-to-provider<br>direct sharing"]
   pathB["Path B: native DELTA_SHARING<br>catalog integration"]
   pathC["Path C: Delta Sharing client<br>hosted on SPCS"]
+  pathD["Path D: client behind your own<br>static NAT address"]
 
   start --> q1
   q1 -->|Yes| pathA
   q1 -->|No| q2
   q2 -->|Yes| pathB
-  q2 -->|No| pathC
+  q2 -->|No| q3
+  q3 -->|Yes| pathC
+  q3 -->|No| pathD
 ```
 
-| | Path A: direct sharing | Path B: native catalog integration | Path C: SPCS client |
-| --- | --- | --- | --- |
-| Effort | Provider-side config | Two SQL statements | Container build, compute pool, orchestration |
-| Bearer token to manage | No | Yes, unless OIDC | Yes |
-| Allowlistable egress IP | Not needed | **Not documented** | Yes — via external access integration |
-| Data lands as | Tables in your Databricks | Read-only catalog-linked database | Native Snowflake tables you own |
-| Snowflake-only shop | No | Yes | Yes |
-| Ongoing operational load | Low | Low | Moderate |
+| | Path A: direct sharing | Path B: native catalog integration | Path C: SPCS client | Path D: customer NAT |
+| --- | --- | --- | --- | --- |
+| Effort | Provider-side config | Two SQL statements | Container build, compute pool, orchestration | Cloud infra, client host, stage load |
+| Bearer token to manage | No | Yes, unless OIDC | Yes | Yes |
+| Allowlistable egress IP | Not needed | **Not documented** | Shared regional `/24` | **One address you control** |
+| Needs the provider to accept something new | Yes — their config | Yes — a range they cannot be given | Yes — a shared `/24` | **No** |
+| Data lands as | Tables in your Databricks | Read-only catalog-linked database | Native Snowflake tables you own | Native Snowflake tables you own |
+| Snowflake-only shop | No | Yes | Yes | No — infra outside Snowflake |
+| Works on GCP-hosted Snowflake | Yes | Yes, if allowlist waived | **No** | Yes |
+| Ongoing operational load | Low | Low | Moderate | Moderate |
 
 ### Path A: provider-to-provider direct sharing
 
@@ -168,6 +175,16 @@ If the provider holds firm on IP allowlisting and bearer tokens, this is the pat
 
 You are trading two SQL statements for a container image, a compute pool, an orchestration layer, and a standing operational obligation. Go in knowing that. [Section 2](#section-2-the-spcs-client-architecture) is the design; [Section 3](#section-3-what-stable-egress-ips-really-give-you) is the part to read before you promise your security team anything.
 
+Note the dependency that is easy to miss: Path C still requires the provider to say yes. The range it produces is a shared `/24`, and a provider whose form asks for one to three addresses may decline it. **Confirm they will accept a shared range before you build the container**, not after.
+
+### Path D: a client behind your own static address
+
+If the provider holds at a small number of specific addresses — or your Snowflake account is on GCP, where Path C yields no allowlistable range at all — run the Delta Sharing client in your own cloud account behind a NAT gateway or Elastic IP, and land the output in Snowflake through an external stage.
+
+This is the only path that requires nothing new from the provider: you give them one address, permanently, which is what they asked for. Provider guidance for this scenario frequently recommends it explicitly — *use a gateway to limit IP addresses, or use a staging environment to stage the data.*
+
+The cost is that you leave the all-in-Snowflake posture and take on a small piece of infrastructure to own, patch, and monitor. [Section 4](#section-4-the-customer-nat-path) is the design.
+
 ### Per-cloud availability
 
 Stable egress IPs are not uniformly available, and this determines whether Path C works at all.
@@ -176,7 +193,7 @@ Stable egress IPs are not uniformly available, and this determines whether Path 
 | --- | --- | --- |
 | **AWS commercial** | Generally available | Works as documented |
 | **Azure** | **Preview** | Works, with preview caveats; output format differs — see [Section 3](#azure-output-has-an-extra-field-that-matters) |
-| **GCP** | Not documented as supported | **Path C does not produce an allowlistable IP.** Use Path A, or the customer-NAT pattern in [Section 3](#the-alternative-that-actually-gives-the-provider-one-ip) |
+| **GCP** | Not documented as supported | **Path C does not produce an allowlistable IP.** Use Path A, or Path D in [Section 4](#section-4-the-customer-nat-path) |
 
 Confirm your own account before designing around this:
 
@@ -705,58 +722,342 @@ The `usage` array is the part to read carefully. Some ranges are marked only as 
 
 ### The alternative that actually gives the provider one IP
 
-If the shared-`/24` conversation goes badly — or you are on GCP, where Path C does not produce an allowlistable range at all — there is a pattern that satisfies the provider's stated preference precisely. Vendor guidance for this scenario often recommends it explicitly: *use a gateway to limit IP addresses, or use a staging environment to stage the data.*
+If the shared-`/24` conversation goes badly — or you are on GCP, where Path C does not produce an allowlistable range at all — Path D satisfies the provider's stated preference precisely. Vendor guidance for this scenario often recommends it explicitly: *use a gateway to limit IP addresses, or use a staging environment to stage the data.*
 
-```mermaid
-flowchart LR
-  subgraph you ["Your cloud account"]
-    nat["Static IP<br>NAT gateway or Elastic IP"]
-    client["Small VM or container task<br>delta-sharing client"]
-  end
-  subgraph prov ["Provider network"]
-    fw["IP allowlist<br>single address"]
-    ds["Delta Sharing server"]
-  end
-  subgraph sf ["Snowflake"]
-    stage["External stage"]
-    tbl["Native tables"]
-  end
-
-  client --> nat
-  nat -->|"one dedicated IP"| fw
-  fw --> ds
-  ds -.->|"Parquet"| client
-  client --> stage
-  stage -->|"COPY INTO"| tbl
-```
-
-| | SPCS client | Customer-NAT client |
+| | Path C: SPCS client | Path D: customer NAT |
 | --- | --- | --- |
 | IPs given to provider | Shared regional `/24` | **One address you control** |
-| Address rotation | Snowflake-driven, expires | None — yours until you change it |
+| Address rotation | Snowflake-driven, expires | None — yours until you release it |
 | Works on GCP-hosted Snowflake | No | Yes |
 | Infrastructure to own | None outside Snowflake | A VM or task, a NAT gateway, IAM |
-| Credential lives in | Snowflake secret | Your secrets manager |
+| Credential lives in | Snowflake secret | Your cloud secrets manager |
 | Compute billing | Snowflake credits | Cloud provider |
+| Requires provider assent | Yes — to a shared range | **No** |
 
 The trade is real and goes both ways: you give up staying entirely inside Snowflake, and you take on a small piece of infrastructure to patch and monitor. In exchange you hand the provider exactly what they asked for, permanently, and the expiry treadmill disappears.
 
 Which side that lands on depends on whether your organisation would rather run a NAT gateway or renew a vendor support case on a schedule. Both are legitimate answers. Decide it deliberately rather than by default.
 
+The build is [Section 4](#section-4-the-customer-nat-path).
+
 ---
 
-## Section 4: Operations and Lifecycle
+## Section 4: The Customer-NAT Path
+
+> **Directional, and less validated than Path C.** The Snowflake-side load pattern here is ordinary external-stage work. The cloud infrastructure is deliberately described at the shape level rather than as Terraform — the specifics differ enough per cloud and per organisation that prescriptive IaC would be wrong more often than right. Treat this as the design to take to your cloud team, not a script.
+
+### Shape of the solution
+
+```mermaid
+flowchart LR
+  subgraph you ["Your cloud account"]
+    sched["Scheduler<br>cron, EventBridge, Cloud Scheduler"]
+    client["Client host<br>VM or container task"]
+    sec["Secrets manager<br>recipient profile"]
+    nat["NAT gateway<br>static egress address"]
+    obj["Object storage<br>Parquet plus _SUCCESS"]
+  end
+  subgraph prov ["Provider network"]
+    fw["IP allowlist<br>one address"]
+    ds["Delta Sharing server"]
+    store["Pre-signed<br>object storage"]
+  end
+  subgraph sf ["Snowflake"]
+    stg["External stage<br>directory table"]
+    task["Task<br>polls for marker"]
+    land["Staging tables"]
+    tgt["Published tables"]
+  end
+
+  sched --> client
+  sec --> client
+  client --> nat
+  nat -->|"one dedicated IP"| fw
+  fw --> ds
+  fw --> store
+  client --> obj
+  obj --> stg
+  task --> stg
+  stg -->|"COPY INTO"| land
+  land -->|"swap"| tgt
+```
+
+The important structural difference from Path C: **orchestration splits across two schedulers.** Your cloud scheduler drives the pull; Snowflake drives the load. That is the main new failure surface this path introduces, and Step 5 is how to keep it from biting.
+
+### Step 1: The static address
+
+Give the provider the **NAT gateway's address, not the client host's.** This is the whole design point — it lets you rebuild, resize, or replace the client without opening a vendor support case to change the allowlist.
+
+| Cloud | Components |
+| --- | --- |
+| AWS | Client in a private subnet, NAT Gateway with an allocated Elastic IP |
+| Azure | Client in a VNet subnet, NAT Gateway with a static Public IP |
+| GCP | Client in a VPC subnet, Cloud NAT with a reserved static external IP |
+
+Two things to get right before you submit the address:
+
+- **Multi-AZ NAT means one address per zone.** A NAT gateway per availability zone is the resilient default, and each has its own address. Either pin the client to a single zone and register one address, or register all of them — a client that fails over to an unregistered zone produces an intermittent connection failure that looks like a provider outage.
+- **Do not release the Elastic IP on teardown.** It is yours until you release it, and releasing it means a new support case. Tag it so nobody cleans it up.
+
+### Step 2: Where the credential lives
+
+The client is no longer running inside Snowflake, so the Snowflake secret from Path C does not apply. The recipient profile goes in your cloud secrets manager, read by the client's instance role or workload identity.
+
+Two rules from Path C still hold, and both are provider-side facts rather than Snowflake ones:
+
+- The credential file is typically downloadable **once**. Treat the download as the only chance.
+- The download link is usually **IP-restricted on the same allowlist**, so the human fetching it needs their corporate egress address registered alongside the NAT address. Submit both, labelled, in the initial form.
+
+### Step 3: The client
+
+This is the Path C container with two changes: it no longer authenticates back to Snowflake, and it writes Parquet to object storage instead of calling Snowpark. Reuse the share-reading half of [Step 5 of Section 2](#step-5-the-container) — the profile loading, the leading-underscore table filter, and the fail-loudly-on-partial behaviour all carry over unchanged.
+
+**One part does not carry over.** Section 2's freshness gate compares the provider's marker against `LOAD_AUDIT` *through a Snowflake session* — and Path D's client has no Snowflake session, which is the point of the design. Do not reintroduce Snowflake credentials into the client to preserve it.
+
+Drop the comparison instead: have the client read the provider's marker, write everything to the prefix for that feed date, and let the Snowflake side decide whether the date is new. Because the prefix is date-keyed, a re-pull of a date you already loaded overwrites its own prefix harmlessly and the Step 5 gate simply does not re-offer it. You trade one wasted pull for removing Snowflake credentials from your cloud account — the right trade here.
+
+```python
+"""Write path for the customer-NAT variant.
+
+Replaces the Snowpark session in the SPCS version. Profile loading and the table
+filter are identical; the freshness comparison against LOAD_AUDIT is dropped --
+the Snowflake-side gate in Step 5 owns that decision now.
+
+Call mark_complete() exactly where Section 2 inserts its audit row: after the
+`if failures: raise`, so it cannot run on a partial set. Never in a `finally`.
+"""
+
+import os
+
+import pyarrow as pa
+import pyarrow.parquet as pq
+import s3fs
+
+BUCKET = os.environ["LANDING_BUCKET"]
+PREFIX = os.environ["LANDING_PREFIX"]
+
+
+def write_table(frame, table_name: str, feed_date) -> None:
+    """Write one share table as Parquet under a date-partitioned prefix.
+
+    Partitioning by feed date means a failed run never overwrites the last good
+    one, and the Snowflake side can COPY a single complete prefix.
+    """
+    fs = s3fs.S3FileSystem()
+    target = f"{BUCKET}/{PREFIX}/feed_date={feed_date}/{table_name.upper()}.parquet"
+    with fs.open(target, "wb") as handle:
+        pq.write_table(pa.Table.from_pandas(frame), handle)
+
+
+def mark_complete(feed_date, table_count: int) -> None:
+    """Write the marker Snowflake polls for.
+
+    Written only after every table has landed. Its absence is what stops the
+    Snowflake side from loading a partial prefix.
+    """
+    fs = s3fs.S3FileSystem()
+    target = f"{BUCKET}/{PREFIX}/feed_date={feed_date}/_SUCCESS"
+    with fs.open(target, "wb") as handle:
+        handle.write(f"{table_count}".encode("utf-8"))
+```
+
+Run it on whatever your organisation already operates — a scheduled ECS or Cloud Run task, a Container App job, or a small always-on VM with cron. The pull is a short daily batch, so a task that exits beats a VM that idles.
+
+### Step 4: Landing in Snowflake
+
+Nothing here is Delta-specific; it is the standard external-stage pattern.
+
+```sql
+USE ROLE ACCOUNTADMIN;
+
+CREATE OR REPLACE STORAGE INTEGRATION DELTA_FEED_STAGE_INT
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'S3'
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = '<arn_of_role_snowflake_will_assume>'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://<landing_bucket>/<prefix>/');
+
+-- Retrieve STORAGE_AWS_IAM_USER_ARN and STORAGE_AWS_EXTERNAL_ID, then add them
+-- to the trust policy of the role above. The integration does not work until
+-- this round trip is complete, and the failure mode is an opaque access denial.
+DESC INTEGRATION DELTA_FEED_STAGE_INT;
+```
+
+```sql
+CREATE OR REPLACE STAGE DELTA_FEED.INGEST.PROVIDER_LANDING
+  STORAGE_INTEGRATION = DELTA_FEED_STAGE_INT
+  URL = 's3://<landing_bucket>/<prefix>/'
+  DIRECTORY = (ENABLE = TRUE)
+  FILE_FORMAT = (TYPE = PARQUET);
+```
+
+```sql
+-- TRUNCATE first, and not only for tidiness. Two failure modes need it:
+--
+--   1. SWAP exchanges contents, so after yesterday's publish this staging table
+--      holds yesterday's published rows. COPY INTO appends -- without TRUNCATE
+--      you publish yesterday's data plus today's, every day.
+--   2. TRUNCATE also clears the table's load metadata. Without that, a retry
+--      after a failed swap SKIPS the file as already-loaded, loads zero rows,
+--      and republishes whatever was left in staging. Silently, with no error.
+TRUNCATE TABLE DELTA_FEED.INGEST.PATIENTS_STG;
+
+-- Column names come from the Parquet schema, so MATCH_BY_COLUMN_NAME avoids
+-- restating them -- but see the gotchas: it NULL-fills on schema drift rather
+-- than failing, so pair it with a post-load assertion on regulated feeds.
+-- The trailing slash on the FROM path is load-bearing: FILES is concatenated
+-- onto it. PURGE stays FALSE, because the landed files are your only record of
+-- what the provider actually sent and are worth keeping for a dispute.
+COPY INTO DELTA_FEED.INGEST.PATIENTS_STG
+FROM @DELTA_FEED.INGEST.PROVIDER_LANDING/feed_date=<feed_date>/
+FILES = ('PATIENTS.parquet')
+MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+PURGE = FALSE;
+```
+
+Publication follows the same overwrite-and-swap rule as [Step 8 of Section 2](#step-8-publish-by-swapping-not-by-loading-in-place) — that rule is a property of the feed being a full historical refresh, not of how the data arrived. Step 5 below gives the statement ordering, which matters more here than on Path C because the retry semantics depend on it.
+
+### Step 5: Keep the two schedulers from lying to each other
+
+The risk this path adds is Snowflake loading a prefix the client has not finished writing. Do not solve it with a time offset — "the client is usually done by 07:00" fails the first time the provider is slow.
+
+Gate on the `_SUCCESS` marker the client writes last. The stage's directory table makes it visible to SQL:
+
+```sql
+ALTER STAGE DELTA_FEED.INGEST.PROVIDER_LANDING REFRESH;
+
+-- Complete, unloaded feed dates. The marker is written only after every table has
+-- landed, so its presence is the signal that the prefix is safe to COPY.
+--
+-- Three deliberate choices here:
+--   ENDSWITH, not LIKE '%/_SUCCESS' -- underscore is a single-character wildcard
+--     in LIKE, so that pattern also matches a stray '/XSUCCESS' and would load a
+--     prefix the client never finished writing.
+--   TRY_TO_DATE with an anchored [0-9]{4}-[0-9]{2}-[0-9]{2} pattern -- a hard
+--     ::DATE cast on a looser [0-9-]+ lets one malformed prefix error the whole
+--     query, which stops every feed until someone cleans the bucket. The explicit
+--     character class is used rather than \d on purpose: backslash is an escape
+--     character in Snowflake string literals, so the escaping is a trap in a
+--     block people copy and paste.
+--   NOT EXISTS against the audit ledger, not > MAX(date) -- a high-water mark
+--     permanently hides a date the provider later re-publishes as a correction.
+WITH complete_feeds AS (
+    SELECT TRY_TO_DATE(
+               REGEXP_SUBSTR(d.RELATIVE_PATH, 'feed_date=([0-9]{4}-[0-9]{2}-[0-9]{2})', 1, 1, 'e', 1),
+               'YYYY-MM-DD'
+           ) AS feed_date
+    FROM DIRECTORY(@DELTA_FEED.INGEST.PROVIDER_LANDING) AS d
+    WHERE ENDSWITH(d.RELATIVE_PATH, '/_SUCCESS')
+)
+SELECT c.feed_date
+FROM complete_feeds AS c
+WHERE c.feed_date IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM DELTA_FEED.INGEST.LOAD_AUDIT AS a
+      WHERE a.feed_execution_date = c.feed_date
+  )
+ORDER BY c.feed_date;
+```
+
+A Snowflake Task drives that query, then `TRUNCATE`, `COPY INTO`, the swap, and the audit insert. That is several statements, so the Task body needs a `BEGIN ... END` scripting block or a stored procedure — unlike Section 2's Task, which works as a bare body only because `EXECUTE JOB SERVICE` is a single statement.
+
+The `LOAD_AUDIT` table from [Section 2](#step-7-orchestrate-on-the-feeds-own-signals-not-the-clock) carries over unchanged, and the ordering inside the block is what makes a retry safe:
+
+1. `TRUNCATE` the staging tables — this is what restores idempotency, for both reasons in the `COPY INTO` comment above.
+2. `COPY INTO` each staging table.
+3. Assert what you care about — at minimum a row count, and on a regulated feed a non-NULL count on a column you know must be populated.
+4. Swap each table.
+5. Insert the audit row **last**.
+
+Step 5 goes last deliberately: no audit row means the gate re-offers the same date, which is what you want after any failure above it. Note that the swap itself is not atomic across multiple tables — a failure partway through step 4 leaves some tables at the new feed date and some at the previous one, and nothing detects that on its own. If mixed vintage across tables is unacceptable for your consumers, the only reliable fix is to publish through views you repoint after all swaps succeed.
+
+Alternative if you would rather not poll: Snowpipe with auto-ingest on a storage notification. For a daily full refresh the polling Task is simpler to reason about and cheaper to debug, and it gives you one place to enforce the marker rule.
+
+### The failure this gate does not catch
+
+The gate fails closed, which is the right direction: a prefix with no marker is skipped. But that means a cloud-side scheduler that dies mid-run produces **silence, not an error** — Snowflake sees nothing new and reports success forever. Alert on it explicitly:
+
+```sql
+-- A feed-date prefix that has existed for hours with no completion marker means
+-- the cloud-side client started and never finished. Nothing else surfaces this.
+WITH prefixes AS (
+    SELECT
+        REGEXP_SUBSTR(d.RELATIVE_PATH, 'feed_date=([0-9]{4}-[0-9]{2}-[0-9]{2})', 1, 1, 'e', 1) AS feed_tag,
+        MAX(d.LAST_MODIFIED) AS newest_file,
+        COUNT_IF(ENDSWITH(d.RELATIVE_PATH, '/_SUCCESS')) AS marker_count
+    FROM DIRECTORY(@DELTA_FEED.INGEST.PROVIDER_LANDING) AS d
+    GROUP BY 1
+)
+SELECT p.feed_tag, p.newest_file
+FROM prefixes AS p
+WHERE p.feed_tag IS NOT NULL
+  AND p.marker_count = 0
+  AND p.newest_file < DATEADD('hour', -4, CURRENT_TIMESTAMP());
+```
+
+### What this path costs you relative to Path C
+
+| | Path C | Path D |
+| --- | --- | --- |
+| Provider-facing risk | They may reject a shared `/24` | None — one address, as asked |
+| Snowflake objects | Compute pool, image repo, service, EAI, network rules | Storage integration, stage, task |
+| Outside Snowflake | Nothing | VPC, NAT, client host, secrets, IAM, scheduler |
+| Schedulers to reason about | One | **Two** |
+| Egress expiry obligation | Every range rotation | None |
+| Who fixes a 3 a.m. failure | Data platform team | Data platform **and** cloud team |
+
+The last row is the one people underweight. Splitting the pipeline across two organisations' operational surfaces is a real cost, and it is worth naming in the design review rather than discovering during an incident.
+
+### Gotchas specific to this path
+
+**Addressing and networking**
+
+- **Register the NAT address, not the host address.** Registering the instance's own address couples the allowlist to a machine you will eventually replace.
+- **Multi-AZ NAT has one address per zone.** Pin the client or register every zone.
+- **The pre-signed storage hostnames still matter.** The client still follows redirects to a second host — but now your own security group and egress rules govern that, not Snowflake network rules. If you run a restrictive egress policy on the subnet, both hostnames need allowing there.
+- **Cross-region egress is billable.** A landing bucket in a different region from your Snowflake account adds cloud egress charges on every load.
+
+**Stage and integration**
+
+- **The storage integration trust policy is a round trip.** `DESC INTEGRATION` after creation, then update the cloud role. Skipping it produces an access denial with nothing useful in the Snowflake error.
+- **Re-running `CREATE OR REPLACE STORAGE INTEGRATION` can invalidate that trust policy.** The external ID is not guaranteed stable across a recreate. Prefer `CREATE ... IF NOT EXISTS` once it works, and re-run `DESC INTEGRATION` after any recreate. Confirm the current behaviour before relying on either reading.
+- **A directory table does not refresh itself here.** The stage sets no `AUTO_REFRESH`, which defaults to false, so `ALTER STAGE ... REFRESH` before the gate query is required, not hygiene.
+
+**Load semantics**
+
+- **`TRUNCATE` before every `COPY INTO`.** It prevents both the append-onto-swapped-contents duplication and the skipped-file-on-retry silent failure. See the comment on the `COPY INTO` block.
+- **`MATCH_BY_COLUMN_NAME` NULL-fills rather than failing.** If the provider renames or drops a column, the load succeeds and the column arrives entirely NULL. If the file is restructured wholesale you can load a full set of all-NULL rows and still succeed. Assert a row count and a non-NULL count before the swap, especially on regulated data.
+- **Parquet plus `MATCH_BY_COLUMN_NAME` errors on empty string values.** An empty column value produces an error under `CASE_SENSITIVE` or `CASE_INSENSITIVE`. Plausible in a real provider feed.
+- **`PURGE = TRUE` destroys your evidence.** The landed Parquet is the only record of what the provider actually sent. Keep it under a lifecycle policy instead.
+- **The trailing slash on the `COPY INTO` path is load-bearing.** `FILES` is concatenated onto it, so dropping it produces `feed_date=XPATIENTS.parquet`. It fails loudly, but it is invisible in a diff.
+
+**Marker and orchestration**
+
+- **`ENDSWITH` is case-sensitive.** A client writing `_success` produces a feed that never loads and never errors. Keep the marker name identical on both sides.
+- **Use `[0-9]`, not `\d`, in these regexes.** Backslash is an escape character in Snowflake string literals, so a pattern that looks right in a document can arrive at the regex engine meaning something else and silently match nothing. The character class has no such ambiguity. This one bit the guide itself.
+- **The multi-table swap is not atomic.** A failure partway through leaves some tables at the new feed date and some at the previous one. Publish through repointed views if mixed vintage is unacceptable.
+- **Insert the audit row last.** It is the only thing telling the gate a date is done; writing it before the swap means a failure mid-publish is never retried.
+- **A multi-statement Task body needs a scripting block.** Unlike Section 2's single-statement Task, this one requires `BEGIN ... END` or a stored procedure.
+- **The audit table must exist before the first run**, exactly as in Path C.
+
+---
+
+## Section 5: Operations and Lifecycle
 
 ### Dated obligations
 
-Neither of these is enforced by tooling. Both break the feed silently when missed.
+None of these is enforced by tooling. All break the feed silently when missed.
 
-| Obligation | Typical cadence | Failure mode |
-| --- | --- | --- |
-| Rotate the bearer token | Provider-set, often 1 year after issue; a short-lived token is common for initial validation | Ingest fails on auth; no warning beforehand |
-| Resubmit egress ranges | Whenever a new range is published, at least 60 days ahead of effective | Ingest fails on connect after the provider's firewall stops matching |
+| Obligation | Applies to | Typical cadence | Failure mode |
+| --- | --- | --- | --- |
+| Rotate the bearer token | B, C, D | Provider-set, often 1 year after issue; a short-lived token is common for initial validation | Ingest fails on auth; no warning beforehand |
+| Resubmit egress ranges | **C only** | Whenever a new range is published, at least 60 days ahead of effective | Ingest fails on connect after the provider's firewall stops matching |
+| Patch and monitor the client host | **D only** | Your organisation's normal cadence | Not a feed failure at first — a security finding, then an outage when it is remediated urgently |
 
-Put both in a shared calendar with the ticket-raising instructions attached, and record the token expiry where the on-call engineer will find it:
+Path D trades the second obligation for the third. That is the honest summary of the choice: a recurring vendor support case versus a small piece of infrastructure in your patching scope. Neither is free, and the expiry treadmill is the one more likely to be forgotten, because nothing in your existing operational tooling will flag it.
+
+Put the dated items in a shared calendar with the ticket-raising instructions attached, and record the token expiry where the on-call engineer will find it:
 
 ```sql
 ALTER SECRET DELTA_FEED.INGEST.PROVIDER_SHARE_CREDENTIAL
@@ -765,7 +1066,11 @@ ALTER SECRET DELTA_FEED.INGEST.PROVIDER_SHARE_CREDENTIAL
 
 Rotation itself is a `CREATE OR REPLACE SECRET` with the new profile. Because the spec mounts the secret by `directoryPath`, running containers pick up the change without a redeploy.
 
+On Path D the equivalent is a new version in your cloud secrets manager. Have the client read the secret at start-up rather than baking it into an image, and rotation needs no redeploy there either.
+
 ### Gotchas
+
+These are Path C gotchas unless marked otherwise. Path D has its own set in [Section 4](#gotchas-specific-to-this-path).
 
 **Network and egress**
 
@@ -822,13 +1127,23 @@ Being specific about this matters more than usual, because the parts that cannot
 | `hideAnnotations` argument is Azure-only | **Confirmed live** — errors on AWS |
 | Egress range monitoring view logic | Compiles |
 | Delta Sharing catalog integration DDL | Taken verbatim from current Snowflake reference documentation; not executed |
-| Network rule, secret, EAI, compute pool DDL | Taken from current reference documentation; **not compile-checked** — the session used to write this guide was privilege-scoped in a way that rejects `CREATE` statements before syntax validation runs |
+| Storage integration DDL (Path D) | **Syntax validated** — a deliberate omission was rejected as a compilation error, the corrected form reached the privilege check |
+| Compute pool DDL | **Syntax validated** — reached the privilege check without a compilation error |
+| External stage DDL (Path D) | **Syntax validated** — requalified to an existing database, reached the privilege check |
+| Network rule, secret, EAI DDL | Taken from current reference documentation; **not syntax-validated**, because they are schema-qualified and the guide's placeholder database does not exist in the authoring account |
+| `COPY INTO` (Path D) | **Not syntax-validated** — cannot be compiled without an existing target table. Option validity checked against the current `COPY INTO <table>` reference |
+| Directory-table marker query (Path D) | **Logic executed** against mock rows: correctly excluded an already-loaded date, a data file, a malformed `feed_date`, a path with no `feed_date` segment, a lowercase `_success`, and an `XSUCCESS` decoy. Not run against a real stage |
+| Marker-query regex, exactly as printed | **Executed live.** An earlier draft used `\\d` and matched nothing; the `[0-9]` form printed here was verified character-for-character against the file |
+| Stuck-prefix alert query (Path D) | **Logic executed** against mock rows: flagged a marker-less stale prefix, ignored a complete one. Not run against a real stage |
 | Task-invokes-job pattern | Matches the documented serverless form; not executed |
 | Python ingest module | Parses; **never run against a live Delta Sharing endpoint** |
+| Path D write-path Python | Parses; **never run**; `s3fs` is one reasonable choice, not a requirement |
+| Path D load-gate idempotency and swap atomicity | **Reasoned through, not executed.** The `TRUNCATE` requirement and the non-atomic multi-table swap were identified by review against documented `COPY INTO` load-metadata and `SWAP` behaviour |
 | Service specification YAML | Parses as YAML; never deployed |
+| Cloud-side NAT, IAM, and scheduler configuration | **Not verified and deliberately not prescribed.** Described at the shape level for your cloud team to implement |
 | End-to-end connectivity through a provider firewall | **Not verified.** Requires a live provider endpoint and a real allowlist entry |
 
-Before you commit to Path C in a plan or a design review, run the DDL in a scratch database in your own account. It is cheap, and it is the step that turns this from a direction into a design.
+Before you commit to Path C or Path D in a plan or a design review, run the DDL in a scratch database in your own account. Syntax validation runs *before* the privilege check, so a privilege error on a `CREATE` statement is itself useful evidence that the syntax is sound — but it is not evidence the object will work.
 
 ---
 
@@ -837,6 +1152,7 @@ Before you commit to Path C in a plan or a design review, run the DDL in a scrat
 - [Snowpark Container Services: service networking](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/service-network-communications)
 - [Securing ingress of Snowflake requests with egress IP addresses](https://docs.snowflake.com/en/user-guide/egress-ip/network-egress)
 - [Configure a catalog integration for Delta Sharing](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-delta-sharing)
+- [Configuring secure access to Amazon S3](https://docs.snowflake.com/en/user-guide/data-load-s3-config-storage-integration)
 - [Delta Sharing open-source project](https://delta.io/sharing/)
 
 ## External References
@@ -850,4 +1166,7 @@ Before you commit to Path C in a plan or a design review, run the DDL in a scrat
 - [Private connectivity for outbound network traffic](https://docs.snowflake.com/en/user-guide/private-connectivity-outbound)
 - [Data Connectivity Proxy](https://docs.snowflake.com/en/user-guide/data-connectivity-proxy)
 - [CREATE NETWORK RULE](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule)
+- [CREATE STAGE](https://docs.snowflake.com/en/sql-reference/sql/create-stage)
+- [COPY INTO ‹table›](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table)
+- [Directory tables](https://docs.snowflake.com/en/user-guide/data-load-dirtables)
 - [Delta Sharing protocol REST API](https://github.com/delta-io/delta-sharing/blob/main/PROTOCOL.md#rest-apis)

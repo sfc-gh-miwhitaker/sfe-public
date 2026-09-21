@@ -56,7 +56,10 @@ Grant `SNOWFLAKE.CORTEX_AGENT_USER` (Cortex Agents API only). Do **not** grant `
 
 ### Optional: revoke broad Cortex access from all users
 
-By default, `CORTEX_USER` is granted to the `PUBLIC` role, which means every user in the account has access to all Cortex features. If you want strict control over who can use Cortex at all, three statements are required — revoking only one leaves the others in place:
+By default, `CORTEX_USER` is granted to the `PUBLIC` role, which means every user in the account has access to all Cortex features. Revoking it is the primary control, but on its own it is not always sufficient — two mechanisms can leave Cortex access in place afterwards:
+
+- **Secondary roles.** A user with `DEFAULT_SECONDARY_ROLES = ALL` inherits privileges from every role they hold. If any of those still has `CORTEX_USER`, access survives.
+- **Imported privileges.** A role granted `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE` inherits *all* database roles in the SNOWFLAKE database, `CORTEX_USER` among them — so that role keeps Cortex access even after the revoke from `PUBLIC`.
 
 ```sql
 -- Revoke all-users Cortex access (optional — test in non-prod first)
@@ -65,16 +68,28 @@ USE ROLE ACCOUNTADMIN;
 -- 1. Revoke the database role that gates Cortex features
 REVOKE DATABASE ROLE SNOWFLAKE.CORTEX_USER FROM ROLE PUBLIC;
 
--- 2. Revoke imported privileges on the SNOWFLAKE database
---    (required alongside the database role revocation)
-REVOKE IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE FROM ROLE PUBLIC;
-
--- 3. Revoke the account-level AI function privilege
+-- 2. Revoke the account-level AI function privilege
 --    (controls access to SNOWFLAKE.CORTEX.COMPLETE, AI_CLASSIFY, etc.)
 REVOKE USE AI FUNCTIONS ON ACCOUNT FROM ROLE PUBLIC;
 ```
 
-> **Before revoking from PUBLIC:** Check whether any existing notebooks, worksheets, or stored procedures call Cortex functions (`SNOWFLAKE.CORTEX.COMPLETE`, `AI_CLASSIFY`, etc.). All three revocations together lock down Cortex access completely for non-explicitly-granted roles.
+Then close the two bypass paths. For imported privileges, target the specific roles that should not
+have broad Cortex access rather than revoking from `PUBLIC`:
+
+```sql
+-- Find which roles hold IMPORTED PRIVILEGES on the SNOWFLAKE database
+SHOW GRANTS ON DATABASE SNOWFLAKE;
+
+-- Revoke from the roles that should not inherit CORTEX_USER through it
+REVOKE IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE FROM ROLE <role_name>;
+
+-- Optionally pin specific users to their primary role only
+ALTER USER <username> SET DEFAULT_SECONDARY_ROLES = ();
+```
+
+> **Do not reach for `REVOKE IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE FROM ROLE PUBLIC` as a shortcut.** Snowflake documents it as an *optional* companion to the `CORTEX_USER` revoke, and it removes PUBLIC's access to everything else in the shared SNOWFLAKE database — including the ACCOUNT_USAGE views your monitoring and cost queries depend on. Run it only if you intend to restrict all of that access and are prepared to re-grant ACCOUNT_USAGE selectively.
+
+> **Before revoking from PUBLIC:** Check whether any existing notebooks, worksheets, or stored procedures call Cortex functions (`SNOWFLAKE.CORTEX.COMPLETE`, `AI_CLASSIFY`, etc.). Verify the result by calling a Cortex function directly from a test role with `USE SECONDARY ROLES NONE` — ACCOUNTADMIN always retains access, so testing as ACCOUNTADMIN proves nothing.
 
 ---
 
@@ -346,7 +361,7 @@ DROP ROLE COWORK_USER;  -- revokes from all members automatically
 | Agent not added to CoWork object | Users with correct role still see no agents in the list | `ALTER SNOWFLAKE INTELLIGENCE ... ADD AGENT <db.schema.agent>` |
 | `ALLOWED_INTERFACES` not set | Users can reach Snowsight and run SQL — not actually CoWork-only | `ALTER USER <name> SET ALLOWED_INTERFACES = (SNOWFLAKE_INTELLIGENCE)` |
 | `CORTEX_USER` still on PUBLIC | Other users retain full Cortex access outside CoWork | Three revocations required — see [Optional: revoke section](#optional-revoke-broad-cortex-access-from-all-users) |
-| Partial PUBLIC revocation | `CORTEX_USER` revoked but `IMPORTED PRIVILEGES` or `USE AI FUNCTIONS` still granted — Cortex access remains | All three revocations must be applied together |
+| Partial PUBLIC revocation | `CORTEX_USER` revoked but `USE AI FUNCTIONS` still granted, or a role still holds `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE`, or secondary roles are active — Cortex access remains | Revoke `CORTEX_USER` and `USE AI FUNCTIONS` from `PUBLIC`, then close the imported-privileges and secondary-role bypass paths per role. Verify with `USE SECONDARY ROLES NONE` as a non-ACCOUNTADMIN role |
 | Bulk script run twice | Idempotent: `CREATE USER IF NOT EXISTS` and `GRANT ROLE` skip duplicates | Safe to re-run |
 | SSO account + PASSWORD set | May conflict with IdP auth flow | For SSO accounts, omit `PASSWORD` entirely in `CREATE USER` |
 | Private connectivity URL includes region | Connection fails | Use regionless format: `si-<org-acct>.privatelink.snowflakecomputing.com` |

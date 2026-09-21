@@ -55,7 +55,7 @@ authenticate and communicate with Snowflake.
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake bidirectional zero copy: V2 Data Share, query/file federation, legacy V1/BYOL, Openflow and MCP boundaries
 - `guide-cube-snowflake-semantic-layer` — Cube (cube.dev) semantic layer: driver config, three auth paths, OIDC workload identity, pre-aggregation cost
 - `guide-debezium-to-snowflake` — Debezium CDC pipeline: Debezium + Kafka + Snowflake Kafka Connector v4 + Dynamic Table flattening (all GA)
-- `guide-delta-sharing-ip-allowlist` — Databricks Delta Sharing feeds whose provider restricts access to allowlisted IPs: the native `CATALOG_SOURCE = DELTA_SHARING` catalog integration (GA, two statements, but no documented allowlistable egress IP) versus an SPCS-hosted Delta Sharing client (which does get one), plus the shared-`/24` and expiry realities and a customer-NAT alternative
+- `guide-delta-sharing-ip-allowlist` — Databricks Delta Sharing feeds whose provider restricts access to allowlisted IPs: the native `CATALOG_SOURCE = DELTA_SHARING` catalog integration (GA, two statements, but no documented allowlistable egress IP), an SPCS-hosted Delta Sharing client (which does get one, though only a shared regional `/24` the provider may refuse), and a fully designed customer-NAT path that hands the provider the single permanent address their form actually asks for, plus the shared-`/24` and expiry realities and the two-allowlist-entry onboarding trap
 - `guide-ad-platform-integrations` — Advertising data by direction: Google Ads Data Manager outbound (Snowflake as native first-party source, PAT auth, Customer Match), the Meta ads MCP + Conversions API skill pairing (CAPI skill public on GitHub, MCP by request), and the Openflow connectors for Meta Ads and Google Ads inbound (Preview connectors on a GA platform)
 - `guide-openflow-shopify-multistore` — Shopify (dozens of stores) into Snowflake via Openflow Snowflake Deployment: gen 2 SQL deployment/runtime, gen 1 canvas-installed Shopify connector per store, registry-driven per-store schemas, generated Dynamic Table analytics layer, honest readiness and cost-floor section, ELT cutover pattern
 - `guide-shopify-bulk-api-coco` — Shopify Bulk API into Snowflake with CoCo Desktop as the lifecycle interface: deterministic Python procedure/Task data path, SECRET + EAI security, generated multi-store bindings, proof-before-promotion qualification, Dynamic Tables, conversational troubleshooting, and read-only operations automations
@@ -82,7 +82,9 @@ capture, orchestration, and incremental processing.
   feed handling, and a Dynamic Table gold layer (also in Path 1 and Path 4)
 - `guide-delta-sharing-ip-allowlist` — batch pull from a Delta Sharing provider into native
   tables: job service on a compute pool, freshness gating on the provider's own refresh marker,
-  full-refresh overwrite-and-swap publication (also in Path 1 and Path 5)
+  full-refresh overwrite-and-swap publication, plus the customer-NAT variant's external-stage
+  landing, `_SUCCESS`-marker gating across two schedulers, and `COPY INTO` load
+  (also in Path 1 and Path 5)
 
 **Belongs here if:** the project's primary job is building or operating a
 Snowflake-native data pipeline rather than configuring an external integration.
@@ -142,7 +144,7 @@ Each guide in this path is standalone — no required reading order.
 - `guide-cowork-only-users` — CoWork-only interface restriction via ALLOWED_INTERFACES (also in Path 3)
 - `guide-snowflake-firewall-allowlist` — Edge firewall allowlisting (FQDN outbound + stable egress CIDR inbound)
 - `guide-cortex-code-access-control` — Restrict CoCo to specific roles, progressive rollout, usage observability queries
-- `guide-delta-sharing-ip-allowlist` — stable egress IP allowlisting for a third-party data feed: which Snowflake features have an allowlistable egress range and which do not, the shared-`/24` disclosure, and the credential-retrieval versus data-plane allowlist distinction (also in Path 1 and Path 2)
+- `guide-delta-sharing-ip-allowlist` — stable egress IP allowlisting for a third-party data feed: which Snowflake features have an allowlistable egress range and which do not, the shared-`/24` disclosure, the credential-retrieval versus data-plane allowlist distinction, and the customer-controlled NAT address as the alternative when a provider will not accept a shared range (also in Path 1 and Path 2)
 
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
 identity federation, or feeding an audit or SIEM system.
@@ -159,6 +161,7 @@ order — pick based on area of interest.
 - `guide-universal-data-sharing` — Open Data Sharing, OTF sharing, Collaboration API (Summit 2026)
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake zero-copy directions, V2 migration, and connector decision framework (also in Path 1)
 - `guide-cowork-easter-eggs` — status-aware CoWork feature surface: Deep Research, Artifacts and shared conversations, chart policies, User Skills, Automations, MCP, document generation, mobile, and cost controls
+- `demo-restaurant-recovery-explorer` — local-first application example: fictional restaurant loss attribution, same-market pre-period peers, clickable map, and template-generated evidence briefs; Snowflake deployment remains separately gated
 - `guide-org-reporting` — ORGANIZATION_USAGE primer: two access paths, premium vs non-premium, query discipline
 - `guide-cube-snowflake-semantic-layer` — bi-directional Snowflake Semantic Views sync with Cube, push limitations, decoupled vs warehouse-native decision (also in Path 1)
 - `guide-otel-to-snowflake` — observability data in Snowflake: what event tables are and are not, why the collector-contrib Snowflake component points the wrong way, and Observe as the first-party buy-side option (also in Path 1 and Path 2)

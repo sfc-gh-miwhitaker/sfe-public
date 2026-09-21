@@ -75,10 +75,14 @@ Splunk's Snowflake connector uses username + password auth. Use a Programmatic A
 ```sql
 USE ROLE SECURITYADMIN;
 
--- If your account has a network policy, create one that allows Splunk Cloud IPs
--- (check Splunk documentation for current egress IP ranges)
+-- Restrict this user to Splunk Cloud's egress ranges. Look up the current
+-- ranges in Splunk's documentation for your Splunk Cloud region and list them
+-- explicitly — Splunk publishes these and they change, so re-check on a schedule.
 CREATE OR REPLACE NETWORK POLICY SPLUNK_FEDERATED_NP
-    ALLOWED_IP_LIST = ('0.0.0.0/0')  -- tighten to Splunk Cloud egress IPs in prod
+    ALLOWED_IP_LIST = (
+        '198.51.100.0/24',   -- replace: Splunk Cloud egress range 1
+        '203.0.113.0/24'     -- replace: Splunk Cloud egress range 2
+    )
     COMMENT = 'Network policy for Splunk Federated Search (Expires: 2026-10-30)';
 
 ALTER USER SPLUNK_FEDERATED_USER SET NETWORK_POLICY = SPLUNK_FEDERATED_NP;
@@ -86,6 +90,10 @@ ALTER USER SPLUNK_FEDERATED_USER SET NETWORK_POLICY = SPLUNK_FEDERATED_NP;
 -- Generate PAT — copy the secret value shown; this is your Splunk "password"
 ALTER USER SPLUNK_FEDERATED_USER ADD PROGRAMMATIC ACCESS TOKEN SPLUNK_FEDERATED_PAT;
 ```
+
+> **Never ship `ALLOWED_IP_LIST = ('0.0.0.0/0')`.** An open list is not a starting point you tighten later — it is a policy object that grants the PAT unrestricted network reach, and it survives into production because nothing fails to remind you. If you do not yet know Splunk's ranges, get them before you create the policy. The placeholder CIDRs above are documentation ranges and will not work.
+
+> **A `TYPE = SERVICE` user requires a network policy to use a PAT at all.** If you created `SPLUNK_FEDERATED_USER` as a service user, the network policy is a prerequisite rather than a hardening step. `TYPE = SERVICE_AGENT` avoids that requirement — see the Google Ads discussion in the advertising-platform guide for the same trade-off.
 
 ### Step 3: Add Snowflake as a federated data source in Splunk
 
@@ -161,7 +169,7 @@ If you need sub-minute visibility, query `SNOWFLAKE.INFORMATION_SCHEMA` views in
 
 ## Cost Profile
 
-- **Snowflake:** You pay for the warehouse executing the federated queries. XSMALL at $0.02/credit (Standard). Queries are ad-hoc; warehouse auto-suspends.
+- **Snowflake:** You pay for the warehouse executing the federated queries. An XSMALL warehouse consumes 1 credit per hour while running, billed per second after a 60-second minimum on each resume. Queries are ad-hoc and the warehouse auto-suspends, so cost tracks query time rather than wall-clock time. Convert credits to currency using your own contract rate — it varies by edition, region, and agreement.
 - **Splunk:** No ingest or storage cost for federated data. You pay for the search compute.
 
 ---

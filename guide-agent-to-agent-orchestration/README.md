@@ -74,7 +74,7 @@ flowchart TD
 | One agent hands work to another, **in the same account** | A small saved procedure (using `DATA_AGENT_RUN`) exposed as a tool | **GA** building blocks ([walkthrough](same-account-agent-to-agent.md)) |
 | Agents across **Native Apps / data products** | Inter-app agents: RCR + `GRANT CALLER` | **Preview (Open)** — all accounts |
 | Agent reaches an **external system**, or exposes itself | MCP: `CREATE MCP SERVER` / `CREATE CUSTOM MCP SERVER` / MCP connectors | **GA** (managed server) |
-| End user **"just ask, it coordinates"** | Snowflake CoWork + Cortex Sense | **GA** |
+| End user **"just ask, it coordinates"** | Snowflake CoWork + Cortex Sense | CoWork is **GA**; **Cortex Sense maturity is unconfirmed** — verify before you cite it |
 | Interop with **non-Snowflake** agent frameworks | MCP today; Google A2A **only via custom bridge** | No native A2A |
 
 > **The first row (same account) is the only one most demos need.** Start there — the [working example](same-account-agent-to-agent.md) drops straight into a Snowflake SQL worksheet.
@@ -131,7 +131,9 @@ Because an agent can be *wrapped as* an MCP tool **and** *consume* MCP tools, "a
 
 ### 5. CoWork (GA) — what business users actually see
 
-**Snowflake CoWork** is the finished product for non-technical users: a personal assistant that quietly breaks a request into pieces and coordinates the right specialist agents behind the scenes (using **Cortex Sense** for business context) — the user never picks an agent or sees any wiring. Agents and MCP tools you've set up show up here automatically. This is the "Snowflake coordinates it for you" answer for business users; layers 2–4 are the plumbing underneath that makes it work.
+**Snowflake CoWork** is the finished product for non-technical users: a personal assistant that quietly breaks a request into pieces and coordinates the right specialist agents behind the scenes — the user never picks an agent or sees any wiring. Agents and MCP tools you've set up show up here automatically. This is the "Snowflake coordinates it for you" answer for business users; layers 2–4 are the plumbing underneath that makes it work.
+
+> **On Cortex Sense specifically:** it is the service intended to hand your business definitions to an agent at answer time, and it was announced around mid-2026. As of September 2026 there is no Snowflake GA release note or product documentation page for it, so treat its availability as unconfirmed and do not assume it is automatically injected into every Cortex Agent. Confirm current status with your account team before designing around it.
 
 ---
 

@@ -301,9 +301,21 @@ SELECT AI_COMPLETE('llama3.1-70b', 'test');
 
 Cortex Agents evaluate permissions against the user's **default role**, not their active session role. If a user's default role lacks CORTEX_USER, agent calls fail — even if the user switches to a privileged role in their session. Ensure the CoCo role is either set as users' default role or granted to it.
 
-### Don't revoke IMPORTED PRIVILEGES on SNOWFLAKE unless you mean it
+### Don't revoke IMPORTED PRIVILEGES on SNOWFLAKE from PUBLIC unless you mean it
 
-You may see guidance elsewhere to run `REVOKE IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE FROM ROLE PUBLIC`. This removes PUBLIC access to **everything** in the shared SNOWFLAKE database — including the ACCOUNT_USAGE views these observability queries depend on. Revoking `CORTEX_USER` from PUBLIC is sufficient to block CoCo; don't revoke IMPORTED PRIVILEGES unless you're prepared to selectively re-grant ACCOUNT_USAGE access to every role that needs it.
+You may see guidance elsewhere to run `REVOKE IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE FROM ROLE PUBLIC`. Snowflake documents this as an **optional** companion to the `CORTEX_USER` revoke, not a required one. It removes PUBLIC access to **everything** in the shared SNOWFLAKE database — including the ACCOUNT_USAGE views these observability queries depend on. Don't run it unless you're prepared to selectively re-grant ACCOUNT_USAGE access to every role that needs it.
+
+That said, imported privileges do matter here, because a role granted `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE` inherits **all** database roles in that database — `CORTEX_USER` included. So revoking `CORTEX_USER` from PUBLIC does not block CoCo for such a role. Close that path per role rather than account-wide:
+
+```sql
+-- Find which roles hold IMPORTED PRIVILEGES on the SNOWFLAKE database
+SHOW GRANTS ON DATABASE SNOWFLAKE;
+
+-- Revoke only from roles that should not inherit CORTEX_USER through it
+REVOKE IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE FROM ROLE <role_name>;
+```
+
+Secondary roles are the other bypass — see the verification note above on `USE SECONDARY ROLES NONE`.
 
 ### View latency
 

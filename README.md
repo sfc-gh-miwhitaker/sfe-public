@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-33-blue)
+![Projects](https://img.shields.io/badge/Projects-34-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -25,7 +25,7 @@ Pick a goal. Each project's README has its prerequisites and next steps.
 | **Build a production Cortex Agent** | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | [Versioning](guide-cortex-agent-versioning/), [orchestration](guide-agent-to-agent-orchestration/), then [specialized tools](guide-cortex-agent-image-tool/). |
 | **Govern Snowflake costs and usage** | [Cost visibility](guide-snowflake-cost-visibility/) | [AI controls](demo-cortex-ai-cost-controls/), [compute](guide-adaptive-compute/), [organization reporting](guide-org-reporting/), or [cross-platform AI spend](guide-ai-spend-consolidation/). |
 | **Secure Snowflake and build an audit trail** | [Security guides](#security) | Pick the access boundary or audit requirement you need. |
-| **Understand new Snowflake capabilities** | [Capability guides](#capabilities) | Pick a topic; check availability and review dates in the guide. |
+| **Understand new Snowflake capabilities** | [Capability guides](#capabilities) | Pick a topic, or explore a [working application demo](#demos); check availability and review dates. |
 
 ## Quick Start
 
@@ -120,6 +120,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | --- | --- | --- |
 | [Streams CDC workshop](demo-streams-cdc-workshop/) | Practice transactional change processing, reconciliation, and stream recovery. | Streams, Tasks, CDC |
 | [Cortex AI cost controls](demo-cortex-ai-cost-controls/) | Explore credit attribution and native quota status in a dashboard. | Cortex AI, quotas |
+| [Restaurant Recovery Explorer](demo-restaurant-recovery-explorer/) | Explore synthetic guest losses, matched restaurants, and evidence-backed action briefs through a clickable map. | Applications, synthetic data, operations |
 
 ## First-Time Setup
 

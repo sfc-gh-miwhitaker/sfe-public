@@ -1,0 +1,122 @@
+[
+  {
+    "apiType": "orders",
+    "tableName": "ORDERS",
+    "gidTypeName": "Order",
+    "supportsBulk": true,
+    "supportsIncremental": true,
+    "incrementalField": "updatedAt",
+    "sortKeys": ["UPDATED_AT", "ID"],
+    "supportsDeletes": false,
+    "graphqlFields": [
+      "id",
+      "name",
+      "createdAt",
+      "updatedAt",
+      "processedAt",
+      "cancelledAt",
+      "closedAt",
+      "displayFinancialStatus",
+      "displayFulfillmentStatus",
+      "currencyCode",
+      "test",
+      "customer { id }",
+      "totalPriceSet { shopMoney { amount currencyCode } }",
+      "subtotalPriceSet { shopMoney { amount currencyCode } }",
+      "totalTaxSet { shopMoney { amount currencyCode } }",
+      "totalShippingPriceSet { shopMoney { amount currencyCode } }",
+      "totalDiscountsSet { shopMoney { amount currencyCode } }",
+      "totalRefundedSet { shopMoney { amount currencyCode } }",
+      "shippingAddress { city provinceCode countryCodeV2 zip }",
+      "lineItems(first: 250) { edges { node { id title sku quantity currentQuantity vendor product { id } variant { id } originalUnitPriceSet { shopMoney { amount currencyCode } } discountedTotalSet { shopMoney { amount currencyCode } } } } }",
+      "fulfillments { id status createdAt updatedAt deliveredAt estimatedDeliveryAt trackingInfo { company number } }"
+    ],
+    "promotedColumns": [
+      { "name": "ORDER_NAME",                "path": "$.name",                                    "type": "string"    },
+      { "name": "CREATED_AT",                "path": "$.createdAt",                               "type": "timestamp" },
+      { "name": "UPDATED_AT",                "path": "$.updatedAt",                               "type": "timestamp" },
+      { "name": "PROCESSED_AT",              "path": "$.processedAt",                             "type": "timestamp" },
+      { "name": "CANCELLED_AT",              "path": "$.cancelledAt",                             "type": "timestamp" },
+      { "name": "FINANCIAL_STATUS",          "path": "$.displayFinancialStatus",                  "type": "string"    },
+      { "name": "FULFILLMENT_STATUS",        "path": "$.displayFulfillmentStatus",                "type": "string"    },
+      { "name": "CURRENCY_CODE",             "path": "$.currencyCode",                            "type": "string"    },
+      { "name": "IS_TEST",                   "path": "$.test",                                    "type": "boolean"   },
+      { "name": "CUSTOMER_ID",               "path": "$.customer.id",                             "type": "id"        },
+      { "name": "TOTAL_PRICE",               "path": "$.totalPriceSet.shopMoney.amount",          "type": "money"     },
+      { "name": "SUBTOTAL_PRICE",            "path": "$.subtotalPriceSet.shopMoney.amount",       "type": "money"     },
+      { "name": "TOTAL_TAX",                 "path": "$.totalTaxSet.shopMoney.amount",            "type": "money"     },
+      { "name": "TOTAL_SHIPPING",            "path": "$.totalShippingPriceSet.shopMoney.amount",  "type": "money"     },
+      { "name": "TOTAL_DISCOUNTS",           "path": "$.totalDiscountsSet.shopMoney.amount",      "type": "money"     },
+      { "name": "TOTAL_REFUNDED",            "path": "$.totalRefundedSet.shopMoney.amount",       "type": "money"     },
+      { "name": "SHIP_COUNTRY",              "path": "$.shippingAddress.countryCodeV2",           "type": "string"    },
+      { "name": "SHIP_PROVINCE",             "path": "$.shippingAddress.provinceCode",            "type": "string"    }
+    ],
+    "childFields": [
+      {
+        "fieldName": "lineItems",
+        "tableName": "ORDER_LINE_ITEMS",
+        "gidTypeName": "LineItem",
+        "connectionType": "edges",
+        "pageSize": 250,
+        "promotedColumns": [
+          { "name": "TITLE",              "path": "$.title",                                       "type": "string"  },
+          { "name": "SKU",                "path": "$.sku",                                         "type": "string"  },
+          { "name": "VENDOR",             "path": "$.vendor",                                      "type": "string"  },
+          { "name": "QUANTITY",           "path": "$.quantity",                                    "type": "integer" },
+          { "name": "CURRENT_QUANTITY",   "path": "$.currentQuantity",                             "type": "integer" },
+          { "name": "PRODUCT_ID",         "path": "$.product.id",                                  "type": "id"      },
+          { "name": "VARIANT_ID",         "path": "$.variant.id",                                  "type": "id"      },
+          { "name": "UNIT_PRICE",         "path": "$.originalUnitPriceSet.shopMoney.amount",       "type": "money"   },
+          { "name": "DISCOUNTED_TOTAL",   "path": "$.discountedTotalSet.shopMoney.amount",         "type": "money"   }
+        ]
+      },
+      {
+        "fieldName": "fulfillments",
+        "tableName": "ORDER_FULFILLMENTS",
+        "gidTypeName": "Fulfillment",
+        "connectionType": "array",
+        "promotedColumns": [
+          { "name": "STATUS",                 "path": "$.status",                 "type": "string"    },
+          { "name": "CREATED_AT",             "path": "$.createdAt",              "type": "timestamp" },
+          { "name": "UPDATED_AT",             "path": "$.updatedAt",              "type": "timestamp" },
+          { "name": "DELIVERED_AT",           "path": "$.deliveredAt",            "type": "timestamp" },
+          { "name": "ESTIMATED_DELIVERY_AT",  "path": "$.estimatedDeliveryAt",    "type": "timestamp" },
+          { "name": "TRACKING_COMPANY",       "path": "$.trackingInfo[0].company","type": "string"    },
+          { "name": "TRACKING_NUMBER",        "path": "$.trackingInfo[0].number", "type": "string"    }
+        ]
+      }
+    ]
+  },
+  {
+    "apiType": "fulfillmentOrders",
+    "tableName": "FULFILLMENT_ORDERS",
+    "gidTypeName": "FulfillmentOrder",
+    "supportsBulk": true,
+    "supportsIncremental": true,
+    "incrementalField": "updatedAt",
+    "supportsDeletes": false,
+    "graphqlFields": [
+      "id",
+      "createdAt",
+      "updatedAt",
+      "status",
+      "requestStatus",
+      "fulfillAt",
+      "fulfillBy",
+      "order { id }",
+      "assignedLocation { name location { id } }",
+      "deliveryMethod { methodType }"
+    ],
+    "promotedColumns": [
+      { "name": "CREATED_AT",       "path": "$.createdAt",                    "type": "timestamp" },
+      { "name": "UPDATED_AT",       "path": "$.updatedAt",                    "type": "timestamp" },
+      { "name": "STATUS",           "path": "$.status",                       "type": "string"    },
+      { "name": "REQUEST_STATUS",   "path": "$.requestStatus",                "type": "string"    },
+      { "name": "FULFILL_BY",       "path": "$.fulfillBy",                    "type": "timestamp" },
+      { "name": "ORDER_ID",         "path": "$.order.id",                     "type": "id"        },
+      { "name": "LOCATION_NAME",    "path": "$.assignedLocation.name",        "type": "string"    },
+      { "name": "LOCATION_ID",      "path": "$.assignedLocation.location.id", "type": "id"        },
+      { "name": "DELIVERY_METHOD",  "path": "$.deliveryMethod.methodType",    "type": "string"    }
+    ]
+  }
+]

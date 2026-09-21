@@ -524,7 +524,7 @@ signatures:
 | `Invalid search field` | `incrementalField` not filterable | `supportsIncremental=false`, `refreshStrategy=FULL_PERIODIC` |
 | `first cannot exceed 250` | `pageSize` > 250 | Fix override JSON |
 | Object Registry service INVALID | Malformed override JSON | Validate with the python one-liner |
-| Bulk operation already in progress | Another integration on the same shop holds the slot | Wait; Shopify allows one per shop |
+| Bulk operation already in progress | Your app already has its concurrent bulk-query operations in flight for that shop | On API version 2026-01 and higher each app gets **five** concurrent bulk query operations per shop (earlier versions: one of each type). The limit is per *app* per shop, so another vendor's integration does not consume your slots — a second app on the same store has its own allowance. List your own in-flight operations with the `bulkOperations` query, then back off and retry |
 
 **Schema change runbook.** Shopify changes a field → the connector will not adapt. Stop
 the process group, disable controller services, open **Shopify State Service → View state**,

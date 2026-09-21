@@ -6,6 +6,8 @@ This page turns the Horizon Context and Cortex Sense announcements into actions 
 
 > **No support provided.** Reference only; validate before production use.
 
+**Prerequisite:** this page assumes you already know how to build a good semantic view — scoping, descriptions, relationships, metrics, reusable filters, verified queries, and Cortex Search for high-cardinality literal matching. That modeling work is out of scope here.
+
 ## Start Here
 
 Choose the outcome you need:
@@ -14,86 +16,48 @@ Choose the outcome you need:
 | --- | --- | --- |
 | Improve natural-language analytics accuracy | Build or refine native Semantic Views | Semantic Views and Semantic View Autopilot are GA |
 | Reuse existing BI business logic | Ingest supported Tableau or Power BI files with Semantic View Autopilot | Power BI ingestion became GA on August 18, 2026 |
-| Make Cortex Agents safer to operate | Tighten the querying user's default role, require declared tools when appropriate, and apply Restricted Session Scope | Verify RSS support for the client and execution path you use |
-| Extend lineage into Horizon Catalog | Send lineage from an OpenLineage producer such as Apache Airflow | OpenLineage API was announced in Public Preview |
-| Pull metadata from external databases and BI tools | Request Horizon Context metadata connector access | The first five connectors were announced in Private Preview |
-| Evaluate Cortex Sense | Ask the Snowflake account team to confirm current access and behavior | Announced for Private Preview in mid-July 2026 |
+| Author and debug semantic views conversationally | Use Semantic Studio in Workspaces | Public Preview since August 26, 2026; available to all accounts |
+| Make Cortex Agents safer to operate | Tighten the querying user's default role, require declared tools when appropriate, and apply Restricted Session Scope | See the parent guide's agent security-boundary section |
+| Extend lineage into Horizon Catalog | Send OpenLineage events from dbt, Apache Airflow, or your own producer | External lineage is GA as of September 3, 2026; requires Enterprise Edition |
+| Pull metadata from external databases and BI tools | Request Horizon Context metadata connector access | Announced private preview; no documentation page — confirm per account |
+| Evaluate Cortex Sense | Ask the Snowflake account team to confirm current access and behavior | Maturity unconfirmed; no GA release note or documentation page |
 
-## 1. Strengthen Semantic Views
+## 1. Extend Lineage With OpenLineage
 
-Semantic Views remain the authoritative source for governed, repeatable business definitions. Start here when the questions and metrics are known.
-
-1. Pick one business domain and an initial set of fewer than 10 tables or views.
-2. Define clear descriptions, relationships, metrics, and reusable filters.
-3. Add verified queries for common questions and known edge cases.
-4. Create an evaluation set and measure SQL correctness before broad rollout.
-5. Review user feedback and add verified queries or model refinements as usage grows.
-
-Use Cortex Search for literal matching when users refer to high-cardinality values such as customer or product names. Do not use verified queries to compensate for missing relationships or weak business definitions.
-
-## 2. Import Existing BI Logic
-
-Semantic View Autopilot can reuse models your organization already maintains instead of rebuilding every definition manually.
-
-| Source | Supported input | Important limits |
-| --- | --- | --- |
-| Tableau | `.twb`, `.twbx`, `.tds`, `.tdsx` | Snowflake connections only; LOD calculations and Tableau virtual connections are not supported |
-| Power BI | `.pbit`, `.pbix` | Report-level measures and time-intelligence functions are not yet fully supported |
-| SQL | Question-and-query pairs in the UI or a two-column CSV | Queries are validated; accepted examples can become verified queries |
-
-After import, review generated relationships, metrics, descriptions, and verified queries. Treat the generated view as a starting point that still needs domain-owner validation.
-
-## 3. Put Explicit Controls Around Cortex Agents
-
-Do not use Cortex Sense or tool configuration as a substitute for least-privilege execution controls.
-
-1. Give each user who calls the agent a purpose-built default role with only the required object privileges.
-2. Grant that default role access to the agent, its warehouse, and each configured tool and underlying resource.
-3. Set `orchestration.tool_not_accessible: reject` when a run must not begin unless every named Cortex Analyst, Cortex Search, MCP, or skill tool is accessible.
-4. Use the default `accept` mode only when degraded operation with accessible tools is intentional and the client surfaces warnings.
-5. Apply Restricted Session Scope when agent-active sessions need a privilege ceiling below the user's RBAC grants.
-6. Review Agent observability events for inaccessible-tool warnings and unexpected execution paths.
-
-Explicit Cortex Analyst and Cortex Search resources narrow those tools. They are not a universal sandbox: SQL execution, code execution, functions, and generic tools follow their own definitions and the default role's privileges. Restricted Session Scope intersects with RBAC and can constrain agent activity, but it does not document or determine Cortex Sense's retrieval boundary.
-
-## 4. Extend Lineage With OpenLineage
-
-If Apache Airflow or another OpenLineage-compatible system already emits lineage events, evaluate sending those events to Horizon Catalog.
+This is the Collect-phase path that is GA today. If Apache Airflow, dbt, or another OpenLineage-compatible system already emits lineage events, you can send them to Horizon Catalog now.
 
 Before rollout:
 
-- Confirm that the OpenLineage API is available in the target account and region.
-- Start with a bounded pipeline or domain.
-- Verify that external and Snowflake-native column lineage stitches together as expected.
-- Define ownership for failed events, schema changes, and stale lineage.
-- Keep the Public Preview status visible in production-readiness reviews.
+- Confirm the account is Enterprise Edition or higher, and grant `INGEST LINEAGE` on the account to the sending role (plus `DELETE LINEAGE` if you need to remove edges).
+- Make that role the sending user's **default role**. Snowflake resolves payload objects using the default role, not another granted role, and it must be able to resolve every Snowflake object your events name — one unresolvable object rejects the entire event with HTTP 400 and error 394919.
+- If your pipeline recreates the tables it reports lineage for, use schema-level `GRANT SELECT ON FUTURE TABLES` or `COPY GRANTS` on `CREATE OR REPLACE TABLE`, or the role loses access on each replace.
+- Start with a bounded pipeline or domain and verify that external and Snowflake-native column lineage stitch together as expected.
+- Budget against the 20,000-edge-per-account cap and the one-year event retention period.
+- Expect HTTP 400 for `START` and `FAIL` events; Snowflake accepts only `COMPLETE`. That is normal for tools emitting a full event lifecycle.
 
-## 5. Request Horizon Context Connector Access
+## 2. Request Horizon Context Connector Access
 
-The first metadata connectors announced for Horizon Context cover PostgreSQL, Microsoft SQL Server, Tableau, Power BI, and dbt. They were announced in Private Preview.
+The first metadata connectors announced for Horizon Context cover PostgreSQL, Microsoft SQL Server, Tableau, Power BI, and dbt. They were announced in private preview and have no documentation page.
 
 Prepare the following before requesting access:
 
-- The systems and environments to connect.
-- The metadata required: schemas, query logs, dashboard definitions, measures, or model lineage.
+- The systems and environments to connect, and the metadata required from each: schemas, query logs, dashboard definitions, measures, or model lineage.
 - The service identity and least-privilege access available in each source.
 - Data residency, network, and metadata-governance requirements.
-- A small validation scope with expected lineage and business definitions.
-- Success criteria for discovery quality, lineage coverage, and semantic reuse.
+- A small validation scope with expected lineage and business definitions, plus success criteria for discovery quality, lineage coverage, and semantic reuse.
 
 Do not represent connector access, supported versions, or regional coverage as guaranteed until the account team confirms them for the target account.
 
-## 6. Evaluate Cortex Sense Deliberately
+## 3. Evaluate Cortex Sense Deliberately
 
-Cortex Sense was announced for Private Preview in mid-July 2026. Public material demonstrates CoCo grounded by Cortex Sense, but it does not establish transparent injection into every Cortex Agent or third-party agent.
+Public material demonstrates CoCo grounded by Cortex Sense. It does not establish transparent injection into every Cortex Agent or third-party agent, and there is no product documentation page or GA release note.
 
 Ask the account team to confirm:
 
-- Whether Cortex Sense is enabled for the target account and region.
-- Which CoCo surfaces and data sources are supported.
+- Whether Cortex Sense is enabled for the target account and region, and which CoCo surfaces and data sources are supported.
 - How initial indexing, refresh cadence, and ongoing consumption are measured.
 - Which role receives access and whether per-role contexts are available.
-- Whether retrieval for a configured Cortex Agent is bounded by that agent's declared tools or by another scope.
+- **Whether retrieval for a configured Cortex Agent is bounded by that agent's declared tools or by the calling user's full role scope.** Get this in writing for your account and release; it is still unanswered publicly.
 - How conflicts, corrections, evaluations, and deletion are administered.
 
 Run an evaluation with representative business questions and a known-good answer set. Track SQL correctness, refusal behavior, latency, cost, and the sources used. Treat Snowflake's published 24.1% to 86.3% accuracy and $1.76 to $0.59 per-query results as internal benchmark evidence, not a customer forecast.
@@ -110,18 +74,17 @@ Run an evaluation with representative business questions and a known-good answer
 ## Decision Rule
 
 - Use a **Semantic View** when the business definition must be explicit, repeatable, and auditable.
-- Use **OpenLineage or a metadata connector** when the missing input is cross-system context.
-- Evaluate **Cortex Sense** when CoCo must answer across data that is not fully modeled, and accept that its current access and retrieval behavior require confirmation.
+- Use **external lineage or a metadata connector** when the missing input is cross-system context.
+- Evaluate **Cortex Sense** when CoCo must answer across data that is not fully modeled, and accept that its access and retrieval behavior require confirmation.
 - Use **least-privilege RBAC and Restricted Session Scope** to control execution. Do not treat context retrieval as a security boundary.
 
 ## External References
 
 - [Snowflake Horizon Catalog](https://docs.snowflake.com/en/user-guide/snowflake-horizon)
-- [Creating semantic views with Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/creating-with-snowsight)
-- [Best practices for semantic views](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices)
-- [Power BI ingestion for Semantic View Autopilot — GA release note](https://docs.snowflake.com/en/release-notes/2026/other/2026-08-18-semantic-views-power-bi-ingestion-ga)
+- [Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot)
+- [Semantic Studio](https://docs.snowflake.com/en/user-guide/views-semantic/semantic-studio)
+- [External lineage](https://docs.snowflake.com/en/user-guide/external-lineage)
 - [Cortex Agents access control and authentication](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-setup)
-- [Cortex Agents inaccessible tool handling](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-inaccessible-tool-handling)
 - [Restricted Session Scope for agents](https://docs.snowflake.com/en/user-guide/restricted-session-scope)
 - [Horizon Context announcement](https://www.snowflake.com/en/blog/horizon-context-governed-context/)
 - [Cortex Sense announcement](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/)

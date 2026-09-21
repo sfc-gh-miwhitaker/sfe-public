@@ -12,9 +12,9 @@ Think of the vendor as a warehouse that only opens its loading dock for trucks w
 
 Snowflake has a wonderfully simple way to collect from that warehouse. It is two lines of paperwork and it works beautifully — but Snowflake will not tell you which truck it sends. There is no plate number to register. The collection method is fine; the guard is the problem.
 
-So you have three ways out. Ask the warehouse to accept a whole fleet's worth of plates, or a different kind of ID entirely. Or, if you happen to own a depot of the same brand as the warehouse, arrange a back-of-house transfer that skips the loading dock. Or run your own small truck, which does have a fixed plate, drive it to the dock yourself, and unload into Snowflake afterwards.
+So you have four ways out. Ask the warehouse to accept a whole fleet's worth of plates, or a different kind of ID entirely. Or, if you happen to own a depot of the same brand as the warehouse, arrange a back-of-house transfer that skips the loading dock. Or run your own small truck inside Snowflake's yard — it does get a plate, but the plate belongs to a whole fleet and changes on a schedule. Or park your own truck at your own address, with a plate that is yours permanently, drive it to the dock, and unload into Snowflake afterwards.
 
-The third option is the one most people end up building. It works. It is also considerably more truck than you were hoping to own.
+Most people assume the third is the answer because it stays inside Snowflake. But the warehouse asked for one or two plates, and the third option hands them 256 — so they may simply say no. The fourth is the one that gives them exactly what they asked for, and it is what warehouse guidance usually recommends anyway. It is also considerably more truck than you were hoping to own.
 
 ## The Cast
 
@@ -24,6 +24,7 @@ The third option is the one most people end up building. It works. It is also co
 - **Catalog integration** — Snowflake's two-line method of reading the vendor's data directly. Simple, and no registered address.
 - **Snowpark Container Services** — Snowflake's way of running your own small program inside Snowflake. Programs run this way *do* get a registered address.
 - **Stable egress IP** — the address range Snowflake will use. Published, and it changes on a schedule.
+- **NAT gateway** — a single fixed address in your own cloud account that everything behind it appears to come from. Yours permanently.
 - **Full historical refresh** — the vendor resends everything every day, not just what changed. This changes how you load it.
 
 ## What Changed
@@ -44,12 +45,16 @@ The third option is the one most people end up building. It works. It is also co
 
 **The vendor sends you to two different buildings.** The first request goes to the vendor's front desk, which then points you at a separate storage location for the actual files. Both addresses need permission, and you must ask the vendor for the second one. If the file listing works but the download fails, this is why.
 
-**If your Snowflake account runs on Google Cloud, this approach does not work.** Snowflake does not publish a registerable address there. You will need one of the other two routes.
+**Running the program inside Snowflake still needs the vendor to agree.** This is the trap. The address block is shared and 256 wide, so it is not a technical solution that bypasses the vendor — it is still a request they can refuse. Ask them whether they will accept it *before* building anything, not after.
 
-**Much of this is unproven.** The address-checking commands were run for real. The setup instructions come from current Snowflake documentation but were not executed, because the account used to write the guide was not permitted to create those objects. The program itself has never talked to a real vendor. The guide says all of this plainly and lists exactly which parts were tested — read that table before you promise anyone a delivery date.
+**If your Snowflake account runs on Google Cloud, the inside-Snowflake approach does not work.** Snowflake does not publish a registerable address there. Use your own address instead.
+
+**Splitting the work across two places means two things that can break.** If you run the program in your own cloud account, one schedule fetches the data and a different one loads it into Snowflake. The fix is a small "finished" marker file: the loader waits for it and never reads a half-written batch. Do not rely on the second schedule simply starting later.
+
+**Much of this is unproven.** The address-checking commands were run for real, and some of the setup commands were checked for correct spelling but never actually run. The program has never talked to a real vendor, and none of the cloud-network setup was built. The guide says all of this plainly and lists exactly which parts were tested — read that table before you promise anyone a delivery date.
 
 ## The One Thing to Remember
 
-Before building anything, ask the vendor three questions — will you accept a shared address range, will you accept a different kind of login, will you drop the address check for that login. One yes saves weeks of work, and asking costs nothing.
+Before building anything, ask the vendor three questions — will you accept a shared address range, will you accept a different kind of login, will you drop the address check for that login. One yes saves weeks of work, and asking costs nothing. If all three are no, the answer is your own fixed address, not a cleverer arrangement inside Snowflake.
 
 > For the full technical details, see the source document.

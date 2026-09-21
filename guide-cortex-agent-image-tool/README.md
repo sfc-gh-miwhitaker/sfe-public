@@ -82,7 +82,7 @@ Functions), so your Flask app must speak that protocol.
 ```python
 # image_service.py
 from flask import Flask, request, make_response
-import base64, os
+import base64, io, os
 
 app = Flask(__name__)
 

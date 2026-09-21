@@ -474,9 +474,9 @@ GRANT DATABASE ROLE SNOWFLAKE.AI_FUNCTIONS_USER TO ROLE limited_bu_role;
 
 Per-function privileges and the blanket `USE AI FUNCTIONS` have an OR relationship — a role with the blanket privilege can call all functions regardless of per-function grants. Only use per-function if you're intentionally restricting to a subset.
 
-### Model RBAC (new Aug 2026 — control which models roles can use)
+### Model RBAC — control which models roles can use
 
-As of August 2026, `CORTEX_MODELS_ALLOWLIST` is being deprecated — you can no longer change it to a new value. The replacement is **model-level RBAC** via application roles in `SNOWFLAKE.MODELS`:
+`CORTEX_MODELS_ALLOWLIST` has been retired in phases. From August 5, 2026 the only permitted change was setting it to `'None'`. From September 8, 2026 the 2026_07 behavior change bundle removed allowlist-based authorization entirely, and full retirement lands November 18, 2026. **Model-level RBAC** via application roles in `SNOWFLAKE.MODELS` is now the only mechanism, and it is also enforced for embedding models (`AI_EMBED`, `AI_SIMILARITY`, `EMBED_TEXT_768`, `EMBED_TEXT_1024`) and Cortex Search:
 
 ```sql
 USE ROLE ACCOUNTADMIN;
@@ -484,18 +484,25 @@ USE ROLE ACCOUNTADMIN;
 -- Refresh model objects (runs daily automatically; call on-demand if needed)
 CALL SNOWFLAKE.MODELS.CORTEX_BASE_MODELS_REFRESH();
 
--- See available models
+-- See available models. Take exact role names from this and SHOW APPLICATION ROLES;
+-- the identifiers are quoted and case-sensitive.
 SHOW CORTEX BASE MODELS IN SCHEMA SNOWFLAKE.MODELS;
+SHOW APPLICATION ROLES LIKE 'CORTEX-MODEL%' IN APPLICATION SNOWFLAKE;
 
 -- Grant a specific model to a role
-GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-LLAMA3.1-70B" TO ROLE analyst_role;
+GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-<MODEL>" TO ROLE analyst_role;
 
--- Or grant access to all models
+-- Or grant access to all current and future models
 GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-ALL" TO ROLE data_eng_role;
 
--- Disable the legacy allowlist (forces RBAC-only)
+-- Setting the allowlist to 'None' is the one transition still permitted.
+-- It is a no-op once the 2026_07 bundle is enabled in your account.
 ALTER ACCOUNT SET CORTEX_MODELS_ALLOWLIST = 'None';
 ```
+
+> **Removing broad access takes a stored procedure, not a REVOKE.** Accounts that had the allowlist set to `'All'` received an automatic `CORTEX-MODEL-ROLE-ALL` bootstrap grant on the `SNOWFLAKE.PUBLIC` *application* role — which is not the account-level `PUBLIC` role. A raw `REVOKE APPLICATION ROLE ... FROM ROLE PUBLIC` neither clears it nor persists across upgrades. Audit with `SHOW GRANTS TO APPLICATION ROLE SNOWFLAKE.PUBLIC;` and revoke with `CALL SNOWFLAKE.LOCAL.REVOKE_FROM_PUBLIC_APPLICATION_ROLE('APP_ROLE', 'CORTEX-MODEL-ROLE-ALL');`.
+
+> **Verify with a non-ACCOUNTADMIN role and `USE SECONDARY ROLES NONE`.** ACCOUNTADMIN always reaches every model, and an inherited secondary role will mask a missing grant — so testing as ACCOUNTADMIN tells you nothing about whether a restriction works.
 
 This gives per-role, per-model control — useful for restricting expensive frontier models to specific teams while allowing smaller models broadly. Combine with `AI_FUNCTIONS_USER` RBAC for complete AI governance: who can call AI functions (database roles), which functions they can call (per-function privileges), and which models they can use (model RBAC).
 

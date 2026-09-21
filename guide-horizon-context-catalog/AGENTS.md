@@ -20,9 +20,12 @@ Files:
 ## Conventions
 
 - All factual claims must trace to a public Snowflake source (blog post, docs page, or clearly attributed third-party)
-- Claims about product availability must include the exact status word Snowflake uses: GA / Public Preview / Private Preview
+- Claims about product availability must include the exact status word Snowflake uses (GA / Public Preview / Private Preview) **and** the dated release note or documentation page that establishes it. Where no such source exists, the status must read "unconfirmed — verify with your account team" rather than asserting a maturity level.
 - Benchmark figures must carry the internal-test label from the source blog
-- No claims about Select Star standalone product roadmap (unconfirmed)
+- Cortex Sense must never be labeled GA: it has no GA release note and no product documentation page
+- The Cortex Sense tool-scope retrieval question must be re-verified, not merely restated, on every revision, and carry the date it was last checked
+- Use "CoWork" in prose for the interface formerly called Snowflake Intelligence; keep `SNOWFLAKE_INTELLIGENCE` unchanged in any DDL
+- This guide does not carry competitive positioning, vendor comparisons, or objection-handling content
 - No pricing claims for Cortex Sense beyond documented indexing and per-query cost discussion
 
 ## Key Commands

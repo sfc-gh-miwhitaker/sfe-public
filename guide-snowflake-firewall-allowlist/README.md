@@ -128,6 +128,7 @@ Snowflake provides **stable egress IP CIDR ranges** that you can add to your fir
 Ask your Snowflake admin to run:
 
 ```sql
+-- On Azure, pass hideAnnotations => TRUE. See the note below before running.
 SELECT
     value:"ipv4_prefix"::VARCHAR   AS ip_cidr_range,
     value:"effective"::TIMESTAMP   AS effective_date,
@@ -135,12 +136,19 @@ SELECT
 FROM TABLE(FLATTEN(INPUT => PARSE_JSON(SYSTEM$GET_SNOWFLAKE_EGRESS_IP_RANGES())));
 ```
 
+> **The `hideAnnotations` argument is cloud-specific and not optional-by-taste.** On Azure the parameterless form returns output that `PARSE_JSON` fails on, so you must call `SYSTEM$GET_SNOWFLAKE_EGRESS_IP_RANGES(hideAnnotations => TRUE)`. On AWS, passing that argument **errors**. A single cross-cloud script written against one form breaks on the other — branch on the deployment.
+
 ### What the Output Looks Like
+
+Illustrative shape only — the ranges and dates below are **not** current values, and the real ones
+change. Always read them from the function, never from a document:
 
 | IP CIDR Range | Effective | Expires |
 | --------------- | ----------- | --------- |
-| 153.45.34.0/24 | 2025-08-01 | 2026-05-06 |
-| 153.45.77.0/24 | 2025-08-01 | 2026-05-06 |
+| 198.51.100.0/24 | *(effective date)* | *(expiry date)* |
+| 203.0.113.0/24 | *(effective date)* | *(expiry date)* |
+
+> **These are shared regional ranges, not your account's IPs.** The `/24` blocks returned here carry outbound traffic for **all Snowflake accounts in that region**, not just yours. Allowlisting them admits any of those accounts' egress traffic, not only your own. Say this out loud in a security review before someone else discovers it — it is usually the first question a network security team asks, and presenting these as "our IPs" damages your credibility for the rest of the conversation.
 
 ### Supported Use Cases
 
@@ -154,7 +162,10 @@ These egress IPs are used when Snowflake calls out via:
 ### Deployment Availability
 
 - **AWS Commercial:** GA (Generally Available)
-- **Azure / GCP:** Check with your Snowflake account team for current status
+- **Azure:** Preview — and requires the `hideAnnotations` argument described above
+- **GCP:** Not documented as supported; confirm with your account team before promising it
+
+> **Not every Snowflake feature that makes an outbound call has an allowlistable egress range.** The supported uses above are the documented ones. Catalog integrations, in particular, are not among them — which is why a workload that Snowflake can read natively sometimes has to be containerized on SPCS just to obtain an allowlistable source IP. Check that your specific feature is on the list before you design an allowlist around it.
 
 ### Critical: These IPs Expire
 
