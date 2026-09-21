@@ -1,5 +1,7 @@
 # Weekly Shopify Pipeline Cost And Hygiene Review
 
+Pair-programmed by SE Community + Cortex Code
+
 Read-only. Query per-store `QUERY_ATTRIBUTION_HISTORY` using `SHOPIFY_NATIVE:*` query
 tags, stage inventory, registry/schedule consistency, qualification status, and seven-day
 freshness. Compare native-pipeline credits with the incumbent cost baseline when one is recorded.

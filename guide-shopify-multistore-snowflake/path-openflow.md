@@ -40,7 +40,7 @@ most of the per-store toil.
 
 **Consequence for "dozens of stores":** one canvas install, one parameter dialog, and one
 Shopify dev app per store, plus every store domain in the network rule.
-[Phase 5](#phase-5--scale-to-dozens-of-stores) makes this repeatable and reasonably quick.
+[Phase 5](#phase-5-scale-to-dozens-of-stores) makes this repeatable and reasonably quick.
 It does not make it scripted.
 
 ---

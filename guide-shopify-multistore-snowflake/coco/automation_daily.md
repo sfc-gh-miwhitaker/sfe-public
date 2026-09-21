@@ -1,5 +1,7 @@
 # Daily Shopify Pipeline Supervision
 
+Pair-programmed by SE Community + Cortex Code
+
 This is a read-only supervision run. Do not call the pull procedure, alter tasks, update
 stores, or retrieve secrets.
 

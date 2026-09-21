@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Pair-programmed by SE Community + Cortex Code
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

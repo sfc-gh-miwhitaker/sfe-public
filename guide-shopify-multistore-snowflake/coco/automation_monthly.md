@@ -1,5 +1,7 @@
 # Monthly Shopify API And Security Review
 
+Pair-programmed by SE Community + Cortex Code
+
 Read-only. Verify the pinned Shopify API version and every GraphQL field against current
 first-party documentation. Review package/runtime support, secret metadata (never values),
 EAI rules, procedure/task ownership, grants, task timeout, stage retention, and Dynamic
