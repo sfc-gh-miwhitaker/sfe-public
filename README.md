@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-34-blue)
+![Projects](https://img.shields.io/badge/Projects-32-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -22,7 +22,7 @@ Pick a goal. Each project's README has its prerequisites and next steps.
 | --- | --- | --- |
 | **Connect an external tool to Snowflake** | [Integration guides](#integrations) | Pick your tool; guides are standalone. |
 | **Build Snowflake data pipelines** | [Streams CDC workshop](demo-streams-cdc-workshop/) | Then [OpenTelemetry](guide-otel-to-snowflake/) or [AI spend ingestion](guide-ai-spend-consolidation/). |
-| **Build a production Cortex Agent** | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | [Versioning](guide-cortex-agent-versioning/), [orchestration](guide-agent-to-agent-orchestration/), then [specialized tools](guide-cortex-agent-image-tool/). |
+| **Build a production Cortex Agent** | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | [Versioning](guide-cortex-agent-versioning/), then [orchestration and custom tools](guide-agent-to-agent-orchestration/). |
 | **Govern Snowflake costs and usage** | [Cost visibility](guide-snowflake-cost-visibility/) | [AI controls](demo-cortex-ai-cost-controls/), [compute](guide-adaptive-compute/), [organization reporting](guide-org-reporting/), or [cross-platform AI spend](guide-ai-spend-consolidation/). |
 | **Secure Snowflake and build an audit trail** | [Security guides](#security) | Pick the access boundary or audit requirement you need. |
 | **Understand new Snowflake capabilities** | [Capability guides](#capabilities) | Pick a topic, or explore a [working application demo](#demos); check availability and review dates. |
@@ -73,8 +73,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | [Splunk audit ingestion](guide-snowflake-splunk-ingestion/) | Compare four patterns for getting Snowflake audit data into Splunk. | Splunk, audit logs |
 | [Cube semantic layer](guide-cube-snowflake-semantic-layer/) | Configure Cube authentication, pre-aggregations, and semantic-view synchronization. | Cube, semantic layer |
 | [Advertising platforms](guide-ad-platform-integrations/) | Separate Google and Meta outbound activation from inbound reporting. | Google Ads, Meta Ads |
-| [Shopify through Openflow](guide-openflow-shopify-multistore/) | Plan multi-store ingestion with explicit connector limitations and cost considerations. | Shopify, Openflow |
-| [Shopify Bulk API with Cortex Code](guide-shopify-bulk-api-coco/) | Build and qualify a deterministic Shopify ingestion pipeline. | Shopify, Bulk API |
+| [Dozens of Shopify stores into Snowflake](guide-shopify-multistore-snowflake/) | Land orders, line items, shipments, and fulfillments from many stores via either the Openflow connector or a native Bulk API pipeline, publishing one shared analytics contract. | Shopify, Openflow, Bulk API, Dynamic Tables |
 
 ### Pipelines and Cost Governance
 
@@ -94,7 +93,6 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | Improve answer quality through semantic models, instructions, and evaluation. | Accuracy, semantic views |
 | [Cortex Agent versioning](guide-cortex-agent-versioning/) | Promote and roll back agent configurations with versions and aliases. | Versioning, GitHub |
 | [Agent-to-agent orchestration](guide-agent-to-agent-orchestration/) | Choose supported mechanisms for delegating work between agents. | Orchestration, MCP |
-| [Image-generation tools](guide-cortex-agent-image-tool/) | Understand the custom-tool bridge for agent-driven image generation. | Custom tools, images |
 
 ### Security
 
@@ -104,7 +102,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | [Cortex Search access control](guide-cortex-search-access-control/) | Choose filtering or service-isolation patterns for search access. | Cortex Search, RBAC |
 | [CoWork-only users](guide-cowork-only-users/) | Provision business users with constrained interfaces and access. | CoWork, provisioning |
 | [Firewall allowlisting](guide-snowflake-firewall-allowlist/) | Distinguish outbound hostname rules from Snowflake egress IP rules. | Firewalls, networking |
-| [Cortex Code access control](guide-cortex-code-access-control/) | Restrict access and inspect usage during a progressive rollout. | Cortex Code, roles |
+| [Cortex AI access control](guide-cortex-access-control/) | Decide who gets which part of the Cortex surface, apply and verify the grants, and monitor usage. | Cortex, RBAC, roles, models, spend limits |
 
 ### Capabilities
 
@@ -120,7 +118,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | --- | --- | --- |
 | [Streams CDC workshop](demo-streams-cdc-workshop/) | Practice transactional change processing, reconciliation, and stream recovery. | Streams, Tasks, CDC |
 | [Cortex AI cost controls](demo-cortex-ai-cost-controls/) | Explore credit attribution and native quota status in a dashboard. | Cortex AI, quotas |
-| [Restaurant Recovery Explorer](demo-restaurant-recovery-explorer/) | Explore synthetic guest losses, matched restaurants, and evidence-backed action briefs through a clickable map. | Applications, synthetic data, operations |
+| [Restaurant recovery explorer](demo-restaurant-recovery-explorer/) | Attribute revenue loss against same-market peers with a clickable map and generated evidence briefs. | Local-first app, analytics |
 
 ## First-Time Setup
 

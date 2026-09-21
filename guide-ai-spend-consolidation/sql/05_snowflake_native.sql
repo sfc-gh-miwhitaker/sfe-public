@@ -30,6 +30,14 @@
        Cast explicitly or the UNION resolves types in a way you did not choose.
      - COCO exposes a first-class INTERFACE column; Agent and CoWork carry the
        equivalent inside METADATA. Do not look for INTERFACE on the others.
+     - SNOWFLAKE_COCO_USAGE_HISTORY is the UNIFIED CoCo view and already covers
+       every billable surface -- cli, desktop, and snowsight -- so no enumeration
+       of surfaces is needed here. If you ever swap to the per-interface views or
+       filter a SERVICE_TYPE list, match on LIKE 'CORTEX_CODE%' rather than
+       hand-listing surfaces. Hand-written lists routinely omit
+       CORTEX_CODE_DESKTOP, which is a first-class billable surface with its own
+       usage view and credit-limit parameter, and the omission silently
+       under-reports CoCo spend instead of failing.
 */
 
 USE ROLE AI_SPEND_RL;
@@ -42,8 +50,12 @@ USE WAREHOUSE AI_SPEND_WH;
 -- materializing here would duplicate storage and add a staleness window for no
 -- benefit. The SHAPED Dynamic Table in sql/06 does the materialization.
 --
--- ACCOUNT_USAGE views carry latency measured in hours. That is why
--- EXPECTED_LAG_HOURS for this platform is 24 in the registry, not 1.
+-- ACCOUNT_USAGE latency varies by view -- commonly ~45 minutes to 3 hours, and
+-- some views up to 24 hours -- so check the documented latency for each view
+-- rather than assuming one number. The four read here are each documented at up
+-- to 1 hour, except CORTEX_AI_FUNCTIONS_USAGE_HISTORY, which publishes no single
+-- figure. EXPECTED_LAG_HOURS for this platform is still 24 in the registry: it is
+-- a tolerance that must hold for every source, not a claim about the fastest one.
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE VIEW AI_SPEND.RAW.V_SNOWFLAKE_NATIVE_USAGE

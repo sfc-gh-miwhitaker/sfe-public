@@ -38,6 +38,11 @@ When these conditions are met, model changes are less likely to change behavior.
 
 Accurate SQL against the wrong or unofficial source is still the wrong answer. For official business metrics, prefer a governed semantic view or another trusted data product that your organization has reviewed for ownership, provenance, metric definitions, and access controls. Snowflake's `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` tag provides a standard way to mark an object as `CERTIFIED`; certification is a trust signal, not a substitute for evaluation. The legacy `SNOWFLAKE.CORE.CERTIFICATION_STATUS` tag remains supported but is planned for deprecation. See [Snowflake-provided tags](https://docs.snowflake.com/en/user-guide/object-tagging/snowflake-provided-tags).
 
+**Status of the successor tag (verified 2026-09-21).** The `SNOWFLAKE.TAGS` schema — which is where `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` lives — reached **public preview on 2026-08-31**, and Snowflake recommends it as the replacement for `SNOWFLAKE.CORE.CERTIFICATION_STATUS`. Two things follow from that:
+
+- **This is not yet a clean migration.** The successor is preview, not GA, while the tag it replaces is still supported. If your governance process cannot depend on a preview object, staying on `SNOWFLAKE.CORE.CERTIFICATION_STATUS` for now is defensible — just track the deprecation.
+- **The allowed values are fixed and cannot be changed, even by an account admin.** `CERTIFICATION_STATUS` accepts exactly `DRAFT`, `TO BE REVIEWED`, `IN REVIEW`, `CERTIFIED`, `REJECTED`, and `DEPRECATED`. Unlike the other Snowflake-provided tags, the `OOB_TAG_ADMIN` application role does *not* grant the ability to modify its definition or value list. The fixed vocabulary is deliberate: it lets governance and AI workflows interpret certification consistently across accounts. Plan your review workflow around these six values rather than expecting to add your own.
+
 Before modeling or attaching a source:
 
 - State its grain, refresh expectations, owner, and intended business domain.
@@ -242,7 +247,11 @@ Semantic views are tightly coupled systems. Changing one description can shift h
 
 ### Pin versions for reproducible comparisons
 
-Evaluate a committed Agent version such as `VERSION$3`, not mutable `LIVE`, when results must be comparable across CI/CD runs. Pin the same exact metric version, such as `v3_0`, to freeze the judge family, prompt, rubric, and thresholds. A major-only version such as `v3` adopts the latest `v3` minor release. As of this review, `v3` uses current large-context judges, while `v1` depends on legacy `claude-4-sonnet` and may be unavailable to accounts that did not use it before August 12, 2026. See [Cortex Agent evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
+Evaluate a committed Agent version such as `VERSION$3`, not mutable `LIVE`, when results must be comparable across CI/CD runs. Pin the same exact metric version, such as `v3_0`, to freeze the judge family, prompt, rubric, and thresholds. A major-only version such as `v3` adopts the latest `v3` minor release.
+
+**On metric version `v1` — the grace window has closed.** `v1` depends on `claude-4-sonnet`, which entered Snowflake's legacy model state on **2026-08-12**. That date has passed, so the rule is now settled rather than pending: only accounts that had already used `claude-4-sonnet` before 2026-08-12 can run `v1`. Every other account must pin `v2` or `v3`; a run that resolves to `v1` fails outright rather than substituting another judge.
+
+This has a trap worth naming: `v1` is still the **default** version, so an unversioned metric (or `version: "auto"`) resolves to `v1` today. An account with no prior `claude-4-sonnet` usage therefore fails on metrics it never explicitly versioned. Pin `v2` or `v3` explicitly rather than relying on the default. Confirm which judge models your account can actually use before pinning. `SHOW CORTEX BASE MODELS IN SCHEMA SNOWFLAKE.MODELS;` returns each model's `lifecycle_status` (`GA`, `PUPR`, `PRPR`, `LEGACY`, `EOL`) along with `legacy_date` and `eol_date` — look for `claude-4-sonnet` at `LEGACY`. Include the `IN SCHEMA SNOWFLAKE.MODELS` clause: Cortex Base Models exist only in that schema, so an unqualified command returns zero rows whenever another database is current, which reads misleadingly like "no access." `v3` (`claude-sonnet-4-6` at 1M, or `openai-gpt-5.4` at 1.05M) is also the right choice for long traces, since `logical_consistency` sends the whole trace to its judge. See [Cortex Agent evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
 
 Upgrade exact metric versions deliberately when judge changes or model deprecations are announced, then establish a new baseline.
 

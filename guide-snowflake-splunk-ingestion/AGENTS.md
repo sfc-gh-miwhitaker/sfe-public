@@ -27,7 +27,7 @@ This is a documentation-only guide. No Snowflake objects are deployed from this 
 - SQL objects in pattern files use `SNOWFLAKE_EXAMPLE` database and `SPLUNK_EXPORT` schema to match monorepo naming conventions — update for real accounts
 - PATs (Programmatic Access Tokens) are used as passwords for service accounts; key-pair auth is not supported by DB Connect
 - Every SQL object has a `COMMENT` with expiration date per project standards
-- Expiration: 2026-10-30
+- Expiration: 2027-03-21
 
 ## Key Commands
 

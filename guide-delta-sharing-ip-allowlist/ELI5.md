@@ -4,7 +4,7 @@
 
 ## One-Sentence Version
 
-A vendor will only hand over your data if the request arrives from an address you registered with them in advance, and Snowflake's easiest way of fetching that data cannot tell you what address it will use — so you either talk the vendor out of the requirement or build a small delivery service that does have a registered address.
+A vendor will only hand over your data if the request arrives from an address you registered with them in advance, and Snowflake's easiest way of fetching that data cannot tell you what address it will use — so the answer is almost always to run a small delivery service in your own cloud account, which does have a fixed address, and hand the data to Snowflake afterwards.
 
 ## The Story
 
@@ -12,9 +12,11 @@ Think of the vendor as a warehouse that only opens its loading dock for trucks w
 
 Snowflake has a wonderfully simple way to collect from that warehouse. It is two lines of paperwork and it works beautifully — but Snowflake will not tell you which truck it sends. There is no plate number to register. The collection method is fine; the guard is the problem.
 
-So you have four ways out. Ask the warehouse to accept a whole fleet's worth of plates, or a different kind of ID entirely. Or, if you happen to own a depot of the same brand as the warehouse, arrange a back-of-house transfer that skips the loading dock. Or run your own small truck inside Snowflake's yard — it does get a plate, but the plate belongs to a whole fleet and changes on a schedule. Or park your own truck at your own address, with a plate that is yours permanently, drive it to the dock, and unload into Snowflake afterwards.
+**So the answer is to run your own truck.** Park it at your own address, with a plate that is yours permanently, drive it to the dock, collect the goods, and unload into Snowflake afterwards. It is the only arrangement that gives the guard exactly what the clipboard asks for, and it is what warehouse guidance usually recommends anyway.
 
-Most people assume the third is the answer because it stays inside Snowflake. But the warehouse asked for one or two plates, and the third option hands them 256 — so they may simply say no. The fourth is the one that gives them exactly what they asked for, and it is what warehouse guidance usually recommends anyway. It is also considerably more truck than you were hoping to own.
+Before you buy a truck, though, ask the warehouse three questions. They might accept a different kind of ID, or drop the plate check entirely for a better one. Any single yes and you are back to the two lines of paperwork. Asking costs nothing and the answer arrives in days.
+
+There is one more option people reach for: running the truck inside Snowflake's own yard. Snowflake will give you a plate for that — but it belongs to a fleet of 256 shared with other customers, and it changes on a schedule. A guard who asked for one or two plates may simply refuse. It is worth trying only if they say in advance that they will accept it.
 
 ## The Cast
 
@@ -55,6 +57,6 @@ Most people assume the third is the answer because it stays inside Snowflake. Bu
 
 ## The One Thing to Remember
 
-Before building anything, ask the vendor three questions — will you accept a shared address range, will you accept a different kind of login, will you drop the address check for that login. One yes saves weeks of work, and asking costs nothing. If all three are no, the answer is your own fixed address, not a cleverer arrangement inside Snowflake.
+Run your own truck with your own permanent plate — that is the answer, and everything else is an attempt to avoid it. Before building it, ask the vendor three questions: will you accept a shared address range, will you accept a different kind of login, will you drop the address check for that login. One yes saves weeks of work, and asking costs nothing.
 
 > For the full technical details, see the source document.

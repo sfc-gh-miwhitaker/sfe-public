@@ -53,7 +53,7 @@ Next.js App (querySnowflake, owner's rights) ─── Recharts UI (4 pages)
 1. **SNOWFLAKE_COCO_USAGE_HISTORY** is the unified CoCo view (CLI + Desktop + Snowsight). If it doesn't exist in the target account, fall back to the 3 individual views.
 2. **Quota methods** require the `QUOTA_CREATOR` database role — the setup script is exception-guarded.
 3. **Refresh task ships SUSPENDED** — users must explicitly `ALTER TASK ... RESUME`.
-4. **ACCOUNT_USAGE latency**: All AI views have ~1 hour lag. Materialized tables won't show data from the last hour.
+4. **ACCOUNT_USAGE latency**: varies by view (commonly ~45 minutes to 3 hours, some views up to 24 hours) — check the specific view, do not assume one number. Agents, CoWork, and CoCo are each documented at up to 1 hour; AI Functions publishes no single figure (in-flight rows refresh every 2 minutes, 5-minute SLA). Materialized tables cannot show data the source views have not published yet.
 5. **App uses owner's rights** — the service role needs `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE`.
 6. **Model names in seed script**: Always verify with `SHOW CORTEX BASE MODELS` before changing. Pick cheapest GA model with broadest region availability.
 

@@ -296,7 +296,7 @@ USING (
   SELECT * FROM VALUES
     ('SNOWFLAKE_CORTEX', 'Snowflake Cortex', 'SNOWFLAKE_ACCOUNT', 'METERED',
      'CREDITS', 'SNOWFLAKE_USER_ID', NULL, TRUE, TRUE, 24,
-     'ACCOUNT_USAGE only, no external credential. Four views with inconsistent columns: Cortex Code reports USAGE_TIME not START_TIME and carries no USER_NAME.'),
+     'ACCOUNT_USAGE only, no external credential. Four views with inconsistent columns: Cortex Code reports USAGE_TIME not START_TIME, as TIMESTAMP_TZ not TIMESTAMP_LTZ. It does carry USER_NAME; CORTEX_AI_FUNCTIONS_USAGE_HISTORY is the view that does not and must be joined to USERS.'),
     ('GITHUB_COPILOT', 'GitHub Copilot', 'GITHUB_ENTERPRISE', 'METERED',
      'AI_CREDITS', 'GITHUB_LOGIN', 'AI_SPEND.CONTROL.GITHUB_COPILOT_CREDENTIALS', TRUE, TRUE, 48,
      'User-level NDJSON usage report includes per-user AI credits. Seats come from the separate user-management API. Legacy metrics API retired April 2026.'),

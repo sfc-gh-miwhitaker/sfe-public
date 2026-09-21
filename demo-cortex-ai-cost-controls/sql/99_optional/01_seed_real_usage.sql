@@ -91,9 +91,13 @@ FROM seed_text;
 
 -- ---------------------------------------------------------------------------
 -- Result: 40 total function calls across 2 models + 2 built-in functions.
--- Usage appears in CORTEX_AI_FUNCTIONS_USAGE_HISTORY within ~1 hour.
+-- Usage lands in CORTEX_AI_FUNCTIONS_USAGE_HISTORY on that view's own schedule.
+-- ACCOUNT_USAGE latency varies by view (commonly ~45 minutes to 3 hours, some
+-- views up to 24 hours), so check the documented latency for the view you are
+-- waiting on. This view publishes no single latency figure; it refreshes
+-- in-flight rows every 2 minutes on a 5-minute SLA.
 -- The dashboard will show cost differentiation by model in the attribution page.
 -- ---------------------------------------------------------------------------
 SELECT 'Seed complete: 40 AI function calls across 4 function/model combinations. '
-    || 'Data appears in ACCOUNT_USAGE within 1 hour. '
+    || 'Data lands on the source view''s own ACCOUNT_USAGE publication schedule; latency varies by view. '
     || 'Run SP_REFRESH_COST_MATERIALIZATION() after data lands.' AS status;

@@ -280,7 +280,9 @@ LIMIT 50;
 -- and it is also the number someone will eventually ask for. The QUERY_TAG set by
 -- every adapter is what makes this possible.
 --
--- ACCOUNT_USAGE latency is hours, so today will look understated.
+-- ACCOUNT_USAGE latency varies by view (commonly ~45 minutes to 3 hours, some
+-- views up to 24 hours), so today will look understated by a different amount
+-- per source. Check the specific view before treating a gap as a real shortfall.
 -- ---------------------------------------------------------------------------
 
 SELECT

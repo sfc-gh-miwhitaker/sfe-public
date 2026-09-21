@@ -53,7 +53,8 @@ A read-only dashboard for monitoring Cortex AI credit consumption, per-user attr
 1. `SNOWFLAKE_COCO_USAGE_HISTORY` is the **unified** CoCo view (CLI + Desktop + Snowsight). If it doesn't exist in the account, fall back to the 3 individual views.
 2. Quota methods (`!ADD_SHARED_RESOURCE`, `!SET_PER_USER_LIMIT`, etc.) require the `QUOTA_CREATOR` database role — the setup script is exception-guarded.
 3. The refresh task ships **SUSPENDED** for demo safety. Users must explicitly resume it.
-4. `ACCOUNT_USAGE` views have latency: AI Functions = 1hr, Agents = 1hr, CoWork = 1hr, CoCo = 1hr.
+4. `ACCOUNT_USAGE` latency varies by view (commonly ~45 minutes to 3 hours, some views up to 24 hours) — always check the specific view's documented latency rather than assuming one number. For the four views this demo reads: Agents, CoWork, and CoCo are each documented at up to 1 hour; `CORTEX_AI_FUNCTIONS_USAGE_HISTORY` publishes no single latency figure and refreshes in-flight rows every 2 minutes on a 5-minute SLA.
+5. `SNOWFLAKE_COCO_USAGE_HISTORY` carries `USER_NAME` and a first-class `INTERFACE` column directly — do not join to `USERS` or dig through `METADATA` for them. The view that lacks `USER_NAME` is `CORTEX_AI_FUNCTIONS_USAGE_HISTORY`. `USAGE_TIME` is `TIMESTAMP_TZ` while the other three views use `TIMESTAMP_LTZ`; cast explicitly. Exclude `USER_ID = 0` (Snowflake-internal, not a person).
 
 ## Extension Ideas
 

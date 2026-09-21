@@ -55,10 +55,9 @@ authenticate and communicate with Snowflake.
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake bidirectional zero copy: V2 Data Share, query/file federation, legacy V1/BYOL, Openflow and MCP boundaries
 - `guide-cube-snowflake-semantic-layer` — Cube (cube.dev) semantic layer: driver config, three auth paths, OIDC workload identity, pre-aggregation cost
 - `guide-debezium-to-snowflake` — Debezium CDC pipeline: Debezium + Kafka + Snowflake Kafka Connector v4 + Dynamic Table flattening (all GA)
-- `guide-delta-sharing-ip-allowlist` — Databricks Delta Sharing feeds whose provider restricts access to allowlisted IPs: the native `CATALOG_SOURCE = DELTA_SHARING` catalog integration (GA, two statements, but no documented allowlistable egress IP), an SPCS-hosted Delta Sharing client (which does get one, though only a shared regional `/24` the provider may refuse), and a fully designed customer-NAT path that hands the provider the single permanent address their form actually asks for, plus the shared-`/24` and expiry realities and the two-allowlist-entry onboarding trap
+- `guide-delta-sharing-ip-allowlist` — Databricks Delta Sharing feeds whose provider restricts access to allowlisted IPs and asks for one to three addresses. Answer-first: run the Delta Sharing client in your own cloud account behind a NAT gateway with a static IP and land via external stage, because it is the only design needing nothing new from the provider. Then the four provider questions (accept a shared CIDR, OIDC federation, OAuth2 client credentials, waive the allowlist for a federated recipient) that collapse it to the native `CATALOG_SOURCE = DELTA_SHARING` integration's two statements, the protocol-version-1 credential-vending failure and its external-volume fallback, why outbound private connectivity is documented for Iceberg REST but not Delta Sharing, Data Connectivity Proxy as the answer to the inverse problem, the SPCS client as the inside-Snowflake alternative if they accept a shared `/24`, the shared-`/24` and expiry realities, and the two-allowlist-entry onboarding trap
 - `guide-ad-platform-integrations` — Advertising data by direction: Google Ads Data Manager outbound (Snowflake as native first-party source, PAT auth, Customer Match), the Meta ads MCP + Conversions API skill pairing (CAPI skill public on GitHub, MCP by request), and the Openflow connectors for Meta Ads and Google Ads inbound (Preview connectors on a GA platform)
-- `guide-openflow-shopify-multistore` — Shopify (dozens of stores) into Snowflake via Openflow Snowflake Deployment: gen 2 SQL deployment/runtime, gen 1 canvas-installed Shopify connector per store, registry-driven per-store schemas, generated Dynamic Table analytics layer, honest readiness and cost-floor section, ELT cutover pattern
-- `guide-shopify-bulk-api-coco` — Shopify Bulk API into Snowflake with CoCo Desktop as the lifecycle interface: deterministic Python procedure/Task data path, SECRET + EAI security, generated multi-store bindings, proof-before-promotion qualification, Dynamic Tables, conversational troubleshooting, and read-only operations automations
+- `guide-shopify-multistore-snowflake` — Shopify (dozens of stores) into Snowflake by either of two paths: the Preview Openflow Shopify connector on a GA Openflow Snowflake Deployment, or a deterministic native Bulk API pipeline (Python procedure + Task + SECRET/EAI) operated through CoCo. Shared store registry, one reconciled `DAILY_SHOP_ACTIVITY` analytics contract published under a single view name so a path switch touches no report, honest readiness and cost-floor section, ELT cutover pattern
 - `guide-otel-to-snowflake` — External OpenTelemetry logs, metrics, and traces into Snowflake: four ingestion patterns (Openflow ListenOTLP, Collector→Kafka→Connector v4, custom exporter→Snowpipe Streaming HP, files→stage→COPY/Iceberg) plus the shared event-table-shaped shredding layer and Dynamic Table reporting gold layer
 - `guide-ai-spend-consolidation` — Cross-platform AI usage and cost consolidation at user-level grain: pluggable adapter contract over vendor admin APIs (GitHub Copilot fully worked; ChatGPT Enterprise, Box AI, M365 Copilot, Anthropic Claude Enterprise and Claude Console, Cursor, and the three Google surfaces — Workspace Gemini, Code Assist, Vertex AI — as build specifications), Snowflake-native ACCOUNT_USAGE adapter needing no credentials, cost-model-aware unified fact distinguishing pure seat from seat-includes-usage from seat-includes-nothing, per-platform revision windows so restated feeds are not appended, identity spine, gold layer for five leadership decisions, semantic view and Cortex Agent, plus designed-in extensions for per-agent cost attribution and joining usage to operational outcomes
 
@@ -85,6 +84,10 @@ capture, orchestration, and incremental processing.
   full-refresh overwrite-and-swap publication, plus the customer-NAT variant's external-stage
   landing, `_SUCCESS`-marker gating across two schedulers, and `COPY INTO` load
   (also in Path 1 and Path 5)
+- `guide-shopify-multistore-snowflake` — multi-store Shopify ingestion: registry-driven
+  per-store extraction on either path, watermarked Bulk API pulls with SECRET + EAI on the
+  native path, and a Dynamic Table analytics layer conforming to one shared column contract
+  (also in Path 1 and Path 6)
 
 **Belongs here if:** the project's primary job is building or operating a
 Snowflake-native data pipeline rather than configuring an external integration.
@@ -99,7 +102,6 @@ Reading order within this path matters.
 1. `guide-model-agnostic-accuracy` — semantic view and agent configuration foundations
 2. `guide-cortex-agent-versioning` — deployment lifecycle (LIVE → VERSION → alias)
 3. `guide-agent-to-agent-orchestration` — multi-agent patterns (DATA_AGENT_RUN, MCP)
-4. `guide-cortex-agent-image-tool` — custom generic tool pattern (optional, specialized)
 5. `guide-cortex-search-access-control` — RBAC for Cortex Search (add when agent uses search)
 6. `guide-connecting-copilot-studio-snowflake` — exposing a Cortex Agent via MCP to Microsoft Copilot Studio
 7. `guide-cowork-only-users` — admin provisioning for CoWork-only user cohorts (RBAC, interface lock, SCIM)
@@ -143,7 +145,7 @@ Each guide in this path is standalone — no required reading order.
 - `guide-snowflake-splunk-ingestion` — Splunk SIEM ingestion (also in Path 1)
 - `guide-cowork-only-users` — CoWork-only interface restriction via ALLOWED_INTERFACES (also in Path 3)
 - `guide-snowflake-firewall-allowlist` — Edge firewall allowlisting (FQDN outbound + stable egress CIDR inbound)
-- `guide-cortex-code-access-control` — Restrict CoCo to specific roles, progressive rollout, usage observability queries
+- `guide-cortex-access-control` — Who gets which part of the Cortex surface: `CORTEX_USER` vs `AI_FUNCTIONS_USER` vs `CORTEX_AGENT_USER` vs per-function grants vs model application roles, the secondary-role and IMPORTED PRIVILEGES bypasses, progressive rollout, per-surface spend limits, usage observability queries
 - `guide-delta-sharing-ip-allowlist` — stable egress IP allowlisting for a third-party data feed: which Snowflake features have an allowlistable egress range and which do not, the shared-`/24` disclosure, the credential-retrieval versus data-plane allowlist distinction, and the customer-controlled NAT address as the alternative when a provider will not accept a shared range (also in Path 1 and Path 2)
 
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
@@ -161,10 +163,13 @@ order — pick based on area of interest.
 - `guide-universal-data-sharing` — Open Data Sharing, OTF sharing, Collaboration API (Summit 2026)
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake zero-copy directions, V2 migration, and connector decision framework (also in Path 1)
 - `guide-cowork-easter-eggs` — status-aware CoWork feature surface: Deep Research, Artifacts and shared conversations, chart policies, User Skills, Automations, MCP, document generation, mobile, and cost controls
-- `demo-restaurant-recovery-explorer` — local-first application example: fictional restaurant loss attribution, same-market pre-period peers, clickable map, and template-generated evidence briefs; Snowflake deployment remains separately gated
 - `guide-org-reporting` — ORGANIZATION_USAGE primer: two access paths, premium vs non-premium, query discipline
 - `guide-cube-snowflake-semantic-layer` — bi-directional Snowflake Semantic Views sync with Cube, push limitations, decoupled vs warehouse-native decision (also in Path 1)
 - `guide-otel-to-snowflake` — observability data in Snowflake: what event tables are and are not, why the collector-contrib Snowflake component points the wrong way, and Observe as the first-party buy-side option (also in Path 1 and Path 2)
+- `guide-shopify-multistore-snowflake` — the Openflow Shopify connector is Preview while
+  Openflow Snowflake Deployments are GA; covers what that split means for a production
+  commitment, the always-on cost floor, and why no non-CDC sizing heuristic exists
+  (also in Path 1 and Path 2)
 
 **Belongs here if:** the guide's primary job is explaining a new Snowflake feature or
 capability rather than configuring or building something.

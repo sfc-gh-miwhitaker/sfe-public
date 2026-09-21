@@ -5,7 +5,8 @@
 
 # Connect Power BI to Snowflake Using Your Microsoft Login
 
-**Pair-programmed by:** SE Community + Cortex Code
+Pair-programmed by SE Community + Cortex Code
+
 **Created:** 2026-07-20 | **Expires:** 2027-02-19 | **Status:** ACTIVE
 
 Power BI needs to verify who each person is before it shows them Snowflake data. Right now it probably uses a shared password — meaning everyone looks the same to Snowflake. This guide switches it to use your organization's Microsoft login instead, so each person is identified individually.
@@ -72,7 +73,7 @@ This creates a trust agreement: "Snowflake, accept Microsoft's word for who Powe
 ```sql
 USE ROLE ACCOUNTADMIN;
 
-CREATE SECURITY INTEGRATION powerbi
+CREATE OR REPLACE SECURITY INTEGRATION powerbi
     TYPE = external_oauth
     ENABLED = true
     EXTERNAL_OAUTH_TYPE = azure
@@ -96,7 +97,11 @@ EXTERNAL_OAUTH_ISSUER = 'https://sts.windows.net/a828b821-f44f-4698-85b2-3c67493
 
 Don't change anything else — the URLs, the audience list, the token mapping are all fixed values that Microsoft and Snowflake expect.
 
+> **`CREATE OR REPLACE` is deliberate, and it is re-runnable.** A bare `CREATE SECURITY INTEGRATION` fails on the second run, and you will need a second run: if the issuer URL is wrong (a missing trailing `/` is the usual culprit), Snowflake cannot fix it with `ALTER` — the integration has to be recreated. `CREATE OR REPLACE` also matches Block B below. The trade-off: replacing the integration resets properties you added later with `ALTER`, including `NETWORK_POLICY`. If you have attached a network policy (see "IP restrictions on Snowflake" under Special cases), re-apply it after any re-run.
+
 > **The trailing `/` on the issuer URL is required.** Without it, every login fails with a misleading error.
+
+> **On `login.windows.net` vs `login.microsoftonline.com`.** `login.windows.net` is Microsoft's legacy identity domain; Microsoft's own current guidance points at `login.microsoftonline.com`. Snowflake's [Power BI SSO documentation](https://docs.snowflake.com/en/user-guide/oauth-powerbi) still publishes `https://login.windows.net/common/discovery/keys` as the value for `EXTERNAL_OAUTH_JWS_KEYS_URL` (verified 2026-09-21), so that is what this guide uses. Both hosts currently serve the same JWKS document. If Snowflake updates the documented value, switch with `ALTER SECURITY INTEGRATION powerbi SET EXTERNAL_OAUTH_JWS_KEYS_URL = ...` — for `EXTERNAL_OAUTH_TYPE = azure` the property also accepts a list of up to three endpoints, so you can carry both during a cutover.
 
 ### Block B: Allow Microsoft Entra to sync users automatically
 
@@ -375,7 +380,7 @@ In Block A, Microsoft identifies regular users by their `upn` — the User Princ
 ```sql
 USE ROLE ACCOUNTADMIN;
 
-CREATE SECURITY INTEGRATION powerbi_b2b
+CREATE OR REPLACE SECURITY INTEGRATION powerbi_b2b
     TYPE = external_oauth
     ENABLED = true
     EXTERNAL_OAUTH_TYPE = azure
@@ -390,6 +395,8 @@ CREATE SECURITY INTEGRATION powerbi_b2b
 ```
 
 Guest users still need Snowflake accounts with a `LOGIN_NAME` matching their email — the same Path A/B/C logic applies.
+
+The `login.windows.net` caveat from Block A applies to this integration too.
 
 ### US Government cloud
 
@@ -431,6 +438,8 @@ ALTER SECURITY INTEGRATION powerbi SET NETWORK_POLICY = powerbi_allowed_ips;
 ```
 
 This is the recommended pattern when other Snowflake connections (CLI, JDBC, etc.) need different IP allowlists.
+
+> **This works, despite a contradiction in Snowflake's own docs.** The [Power BI SSO page](https://docs.snowflake.com/en/user-guide/oauth-powerbi) states that network policies cannot be added to an External OAuth security integration. That statement is wrong: `NETWORK_POLICY` is a documented property of both [CREATE SECURITY INTEGRATION (External OAuth)](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external) and [ALTER SECURITY INTEGRATION (External OAuth)](https://docs.snowflake.com/en/sql-reference/sql/alter-security-integration-oauth-external), and the [External OAuth overview](https://docs.snowflake.com/en/user-guide/oauth-ext-overview) documents it under "Restricting network traffic for External OAuth." Verified working 2026-09-21. Note that an integration-level policy **overrides** policies attached to the user or the account, so the list here must be complete for Power BI.
 
 ---
 

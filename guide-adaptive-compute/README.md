@@ -18,6 +18,10 @@ Pair-programmed by SE Community + Cortex Code
 
 ---
 
+> **Read this first if you came here for cost savings.** Adaptive Compute is a **performance and operational-simplicity** feature, not a cost-reduction feature. Snowflake positions it as delivering generally better performance at *similar* cost to Gen2 — not lower cost. Some workloads do get cheaper (notably anything paying separate Query Acceleration Service charges, since QAS is folded into compute credits), but do not plan a migration on the assumption that the bill drops. If cost reduction is the goal, start with warehouse rightsizing and idle-time analysis instead.
+
+---
+
 ## What Changed
 
 Standard warehouses (Gen1 and Gen2) use a fixed-size compute model. You pick a size, optionally enable multi-cluster scaling, and manage QAS separately. Adaptive replaces all of that.
@@ -71,7 +75,7 @@ Think of this as replacing multi-cluster configuration. Higher values allow more
 
 > **Note on HTAP:** Adaptive Warehouses support occasional HTAP queries within a primarily-analytical workload. Only warehouses where HTAP is the dominant access pattern (most queries are point lookups) should stay on standard Gen2.
 
-**Performance framing:** Adaptive delivers generally better performance at similar costs to Gen2. It is a performance and simplicity improvement — not a cost-reduction feature.
+**Performance framing:** Adaptive delivers generally better performance at similar costs to Gen2. It is a performance and simplicity improvement — not a cost-reduction feature (see the callout at the top of this guide).
 
 ---
 
@@ -289,4 +293,4 @@ What remains:
 | Set performance cap | `ALTER WAREHOUSE x SET MAX_QUERY_PERFORMANCE_LEVEL = XLARGE;` |
 | Set throughput multiplier | `ALTER WAREHOUSE x SET QUERY_THROUGHPUT_MULTIPLIER = 4;` |
 | Check current config | `SHOW WAREHOUSES LIKE 'x';` |
-| Per-query credits | `SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_METERING_HISTORY WHERE warehouse_name = 'X';` |
+| Per-query credits | `SELECT query_id, credits_used FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_METERING_HISTORY WHERE warehouse_name = 'X' AND query_start_time >= DATEADD('day', -7, CURRENT_DATE());` |

@@ -1,6 +1,6 @@
 ![Guide](https://img.shields.io/badge/Type-Guide-blue)
 ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey)
-![Expires](https://img.shields.io/badge/Expires-2026--10--30-orange)
+![Expires](https://img.shields.io/badge/Expires-2027--03--21-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake Logs → Splunk: Integration Guide
@@ -16,7 +16,7 @@ This guide covers all four, with working SQL, decision criteria, and what each p
 > Rising Column and anti-pattern sections regardless of which SIEM you run.
 
 **Audience:** SEs, security architects, Splunk administrators setting up Snowflake monitoring.
-**Created:** 2026-07-30 | **Expires:** 2026-10-30 | **Status:** ACTIVE
+**Created:** 2026-07-30 | **Expires:** 2027-03-21 | **Status:** ACTIVE
 
 Pair-programmed by SE Community + Cortex Code
 
@@ -33,7 +33,7 @@ Pair-programmed by SE Community + Cortex Code
 | **Rising Column** | The DB Connect technique for incremental ingest — a monotonically increasing column (like `EVENT_ID`) that tells Splunk "only fetch rows newer than this checkpoint." Must be open-ended (`> ?`), never a bounded window. |
 | **Splunk HEC** | HTTP Event Collector — Splunk's REST endpoint for receiving JSON events. External systems push events to it. Requires a token for auth. |
 | **DB Connect** | A Splunk add-on that runs SQL queries against external databases via JDBC and ingests the results as Splunk events. The traditional Snowflake→Splunk integration path. |
-| **Federated Search** | A newer Splunk capability (GA July 2026, Cloud AWS only) that lets Splunk query Snowflake in-place without ingesting data. No SIEM storage cost for Snowflake data. |
+| **Federated Search** | A newer Splunk capability (GA July 2026; still Splunk Cloud Platform on AWS only as of 2026-09-21) that lets Splunk query Snowflake in-place without ingesting data. No SIEM storage cost for Snowflake data. |
 | **Sentry** | Snowflake's open-source security monitoring framework. Pre-built MITRE-mapped detection queries you deploy inside Snowflake, exporting only findings to your SIEM. |
 | **PAT** | Programmatic Access Token — Snowflake's preferred credential for service accounts. Used as a password by tools (like DB Connect) that don't support key-pair auth. |
 
@@ -48,7 +48,7 @@ flowchart TD
     Q1 -->|"Yes"| Q2{"Want logs\nin Splunk index\nfor correlation rules?"}
     Q1 -->|"No (Enterprise\nor other cloud)"| Q3{"High-volume tables\nor tight SIEM\nbudget?"}
 
-    Q2 -->|"No — query in-place\nis fine"| P1["Pattern 1: Federated Search\nGA July 2026; Splunk Cloud AWS only\nNo data movement, no ingest cost"]
+    Q2 -->|"No — query in-place\nis fine"| P1["Pattern 1: Federated Search\nGA July 2026; Splunk Cloud on AWS only\nNo data movement, no ingest cost"]
     Q2 -->|"Yes — need\nlogs indexed"| P2["Pattern 2: DB Connect\nJDBC pull from ACCOUNT_USAGE\nIncremental via Rising Column"]
 
     Q3 -->|"Yes"| Q4{"Only need\nalerts/findings\nnot raw logs?"}
@@ -67,7 +67,7 @@ flowchart TD
 | **Data moves to Splunk?** | No — queried in-place | Yes — ingested as events | Yes — via cloud storage | Findings only |
 | **Splunk ingest cost** | None | Per-GB of audit log volume | Per-GB (scope to what you need) | Minimal (findings only) |
 | **Latency** | ACCOUNT_USAGE lag (45min–3hr) | ACCOUNT_USAGE lag (45min–3hr) | Configurable (task schedule) | Configurable (task schedule) |
-| **Splunk edition** | Cloud AWS only (July 2026) | Cloud + Enterprise | Cloud + Enterprise | Cloud + Enterprise |
+| **Splunk edition** | Cloud on AWS only (still true as of 2026-09-21) | Cloud + Enterprise | Cloud + Enterprise | Cloud + Enterprise |
 | **Complexity** | Low (add data source in UI) | Medium (JDBC driver, config) | Medium (SQL task + S3 config) | Medium-High (Sentry deploy) |
 | **Best for** | Splunk Cloud teams wanting zero ingest cost | Most orgs; correlation rules requiring indexed data | High-cardinality tables, budget-constrained | Minimizing SIEM costs; detection-in-place |
 | **Strategic direction?** | Yes | Mature / widely deployed | Complementary | Yes (Snowflake-preferred) |
@@ -125,7 +125,7 @@ All views are in `SNOWFLAKE.ACCOUNT_USAGE`:
 
 ## Pattern Guides
 
-1. [Splunk Federated Search](pattern-1-federated-search.md) — Query Snowflake from Splunk without moving data (Splunk Cloud AWS, GA July 2026)
+1. [Splunk Federated Search](pattern-1-federated-search.md) — Query Snowflake from Splunk without moving data (Splunk Cloud on AWS, GA July 2026)
 2. [Splunk DB Connect](pattern-2-db-connect.md) — JDBC pull with Rising Column incremental ingest (most widely deployed)
 3. [External Stage Export](pattern-3-external-stage.md) — COPY INTO cloud storage + Splunk S3 Add-on (high-volume / cost-sensitive)
 4. [Sentry Detection Push](pattern-4-sentry.md) — Run detections in Snowflake, push only findings to Splunk HEC

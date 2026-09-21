@@ -91,7 +91,7 @@ USE ROLE SECURITYADMIN;
 CREATE OR REPLACE SECRET SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.SPLUNK_HEC_TOKEN
   TYPE = GENERIC_STRING
   SECRET_STRING = 'Splunk-<your-hec-token-here>'  -- pragma: allowlist secret
-  COMMENT = 'Splunk HEC token for Sentry finding push (Expires: 2026-10-30)';
+  COMMENT = 'Splunk HEC token for Sentry finding push (Expires: 2027-03-21)';
 ```
 
 ---
@@ -107,13 +107,13 @@ CREATE OR REPLACE NETWORK RULE SPLUNK_HEC_NETWORK_RULE
   MODE        = EGRESS
   TYPE        = HOST_PORT
   VALUE_LIST  = ('<your-splunk-hec-host>:8088')  -- replace with your HEC endpoint
-  COMMENT     = 'Allow Snowflake tasks to reach Splunk HEC (Expires: 2026-10-30)';
+  COMMENT     = 'Allow Snowflake tasks to reach Splunk HEC (Expires: 2027-03-21)';
 
 CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION SPLUNK_HEC_EAI
   ALLOWED_NETWORK_RULES   = (SPLUNK_HEC_NETWORK_RULE)
   ALLOWED_AUTHENTICATION_SECRETS = (SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.SPLUNK_HEC_TOKEN)
   ENABLED                 = TRUE
-  COMMENT                 = 'External access for Splunk HEC push (Expires: 2026-10-30)';
+  COMMENT                 = 'External access for Splunk HEC push (Expires: 2027-03-21)';
 ```
 
 ---
@@ -132,7 +132,7 @@ CREATE OR REPLACE PROCEDURE PUSH_SENTRY_FINDINGS_TO_SPLUNK()
   HANDLER = 'push_findings'
   EXTERNAL_ACCESS_INTEGRATIONS = (SPLUNK_HEC_EAI)
   SECRETS = ('hec_token' = SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.SPLUNK_HEC_TOKEN)
-  COMMENT = 'Push Sentry findings to Splunk HEC (Expires: 2026-10-30)'
+  COMMENT = 'Push Sentry findings to Splunk HEC (Expires: 2027-03-21)'
 AS $$
 import requests
 import _snowflake
@@ -214,7 +214,7 @@ $$;
 CREATE OR REPLACE TASK SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.PUSH_SENTRY_TO_SPLUNK
   WAREHOUSE = SPLUNK_EXPORT_WH
   SCHEDULE  = '15 MINUTE'
-  COMMENT   = 'Push Sentry findings to Splunk HEC every 15 min (Expires: 2026-10-30)'
+  COMMENT   = 'Push Sentry findings to Splunk HEC every 15 min (Expires: 2027-03-21)'
 AS
   CALL SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.PUSH_SENTRY_FINDINGS_TO_SPLUNK();
 

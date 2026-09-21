@@ -18,9 +18,14 @@ Pair-programmed by SE Community + Cortex Code
 
 ### 1. Deploy the SQL data layer
 
+Open Snowsight → New Worksheet → paste the contents of `deploy_all.sql` → Run All.
+
+Once the Git repository object exists, you can also re-run it from the stage. Bare
+relative paths do not work — Snowflake has no local filesystem, so the stage form
+is the only one that resolves:
+
 ```sql
--- In Snowsight or SnowSQL, from a git stage or local file:
-EXECUTE IMMEDIATE FROM 'deploy_all.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-cortex-ai-cost-controls/deploy_all.sql';
 ```
 
 This creates:
@@ -44,10 +49,16 @@ snow app open
 If your account has no AI usage history yet:
 
 ```sql
-EXECUTE IMMEDIATE FROM 'sql/99_optional/01_seed_real_usage.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-cortex-ai-cost-controls/sql/99_optional/01_seed_real_usage.sql';
 ```
 
-Wait ~1 hour for data to appear in ACCOUNT_USAGE views, then:
+Then wait for the data to publish. ACCOUNT_USAGE latency varies by view (commonly
+~45 minutes to 3 hours, and some views up to 24 hours), so check the documented
+latency for the specific view you are waiting on. The four views this demo reads
+are on the faster end: `CORTEX_AGENT_USAGE_HISTORY`, `SNOWFLAKE_COWORK_USAGE_HISTORY`,
+and `SNOWFLAKE_COCO_USAGE_HISTORY` are each documented at up to 1 hour, while
+`CORTEX_AI_FUNCTIONS_USAGE_HISTORY` publishes no single figure and updates
+in-flight rows every 2 minutes on a 5-minute SLA. Then:
 
 ```sql
 CALL SNOWFLAKE_EXAMPLE.CORTEX_AI_COST_CONTROLS.SP_REFRESH_COST_MATERIALIZATION();
@@ -100,7 +111,7 @@ SNOWFLAKE.CORE.QUOTA ───────────────────�
 ## Teardown
 
 ```sql
-EXECUTE IMMEDIATE FROM 'teardown_all.sql';
+EXECUTE IMMEDIATE FROM '@SNOWFLAKE_EXAMPLE.GIT_REPOS.SFE_DEMOS_REPO/branches/main/demo-cortex-ai-cost-controls/teardown_all.sql';
 ```
 
 ```bash

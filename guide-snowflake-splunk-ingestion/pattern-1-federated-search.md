@@ -1,10 +1,10 @@
 # Pattern 1: Splunk Federated Search for Snowflake
 
-**GA as of July 2026 — Splunk Cloud AWS commercial customers only.**
+**GA since July 2026 — Splunk Cloud Platform on AWS commercial customers only. Re-checked 2026-09-21: both still hold.**
 
 Splunk Federated Search lets you write SPL queries that reach into Snowflake without copying data into Splunk. Snowflake executes the heavy lifting; Splunk receives only the results. No ingestion cost, no storage growth in your SIEM index.
 
-> **Critical constraint.** As of July 2026, this is available only for Splunk Cloud on AWS (commercial accounts). Splunk Enterprise on-prem and non-AWS Splunk Cloud deployments are not yet supported. Verify your Splunk edition before recommending this path.
+> **Critical constraint.** Splunk's own documentation for creating a Snowflake connection still requires a Splunk Cloud Platform deployment hosted on AWS (verified 2026-09-21). Splunk Enterprise on-prem and non-AWS Splunk Cloud deployments are not supported. Verify your Splunk edition before recommending this path.
 
 ---
 
@@ -43,16 +43,19 @@ USE ROLE SECURITYADMIN;
 
 -- Dedicated role for Splunk federated queries
 CREATE OR REPLACE ROLE SPLUNK_FEDERATED_ROLE
-  COMMENT = 'Read-only role for Splunk Federated Search (Expires: 2026-10-30)';
+  COMMENT = 'Read-only role for Splunk Federated Search (Expires: 2027-03-21)';
 
 -- Grant access to the audit log views
 GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE SPLUNK_FEDERATED_ROLE;
 
 -- Create service user
+-- NOTE: TYPE = SERVICE means this user CANNOT use a PAT unless it is subject to
+-- a network policy. Step 2 sets one -- do not remove it, or the PAT stops working.
+-- TYPE = SERVICE_AGENT carries no network-policy requirement.
 CREATE OR REPLACE USER SPLUNK_FEDERATED_USER
   DEFAULT_ROLE = SPLUNK_FEDERATED_ROLE
   TYPE = 'service'
-  COMMENT = 'Splunk Federated Search service account (Expires: 2026-10-30)';
+  COMMENT = 'Splunk Federated Search service account (Expires: 2027-03-21)';
 
 GRANT ROLE SPLUNK_FEDERATED_ROLE TO USER SPLUNK_FEDERATED_USER;
 
@@ -63,7 +66,7 @@ CREATE OR REPLACE WAREHOUSE SPLUNK_FEDERATED_WH
   AUTO_SUSPEND = 60
   AUTO_RESUME = TRUE
   INITIALLY_SUSPENDED = TRUE
-  COMMENT = 'Splunk Federated Search compute (Expires: 2026-10-30)';
+  COMMENT = 'Splunk Federated Search compute (Expires: 2027-03-21)';
 
 GRANT USAGE, OPERATE ON WAREHOUSE SPLUNK_FEDERATED_WH TO ROLE SPLUNK_FEDERATED_ROLE;
 ```
@@ -83,7 +86,7 @@ CREATE OR REPLACE NETWORK POLICY SPLUNK_FEDERATED_NP
         '198.51.100.0/24',   -- replace: Splunk Cloud egress range 1
         '203.0.113.0/24'     -- replace: Splunk Cloud egress range 2
     )
-    COMMENT = 'Network policy for Splunk Federated Search (Expires: 2026-10-30)';
+    COMMENT = 'Network policy for Splunk Federated Search (Expires: 2027-03-21)';
 
 ALTER USER SPLUNK_FEDERATED_USER SET NETWORK_POLICY = SPLUNK_FEDERATED_NP;
 
@@ -93,7 +96,7 @@ ALTER USER SPLUNK_FEDERATED_USER ADD PROGRAMMATIC ACCESS TOKEN SPLUNK_FEDERATED_
 
 > **Never ship `ALLOWED_IP_LIST = ('0.0.0.0/0')`.** An open list is not a starting point you tighten later — it is a policy object that grants the PAT unrestricted network reach, and it survives into production because nothing fails to remind you. If you do not yet know Splunk's ranges, get them before you create the policy. The placeholder CIDRs above are documentation ranges and will not work.
 
-> **A `TYPE = SERVICE` user requires a network policy to use a PAT at all.** If you created `SPLUNK_FEDERATED_USER` as a service user, the network policy is a prerequisite rather than a hardening step. `TYPE = SERVICE_AGENT` avoids that requirement — see the Google Ads discussion in the advertising-platform guide for the same trade-off.
+> **A `TYPE = SERVICE` user requires a network policy to use a PAT at all.** Because `SPLUNK_FEDERATED_USER` is a service user, the network policy above is a prerequisite, not just a hardening step — drop it and the PAT stops authenticating, which reads as a credential failure rather than a policy one. `TYPE = SERVICE_AGENT` carries no such requirement.
 
 ### Step 3: Add Snowflake as a federated data source in Splunk
 

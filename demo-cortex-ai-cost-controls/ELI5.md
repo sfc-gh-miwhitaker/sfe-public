@@ -34,7 +34,7 @@ The old version also used Streamlit. The new version uses Snowflake App Runtime 
 
 ## Watch-outs
 
-- Data takes ~1 hour to show up after AI calls are made (ACCOUNT_USAGE lag)
+- Data does not appear instantly. ACCOUNT_USAGE latency varies by view (commonly ~45 minutes to 3 hours, some views up to 24 hours), so check the specific view's documented latency. The four views here are each documented at up to 1 hour, except AI Functions, which publishes no single figure.
 - The refresh task ships turned off — you have to flip the switch yourself
 - Quota setup requires a special role (QUOTA_CREATOR) — the script handles failure gracefully
 - The app is read-only — to change quota limits, use Snowsight or SQL

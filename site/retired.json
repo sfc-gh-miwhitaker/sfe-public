@@ -1,4 +1,42 @@
 {
   "attribution": "Pair-programmed by SE Community + Cortex Code",
-  "projects": {}
+  "_comment": "Retirement routes for projects that once had a public URL. Record routes BEFORE moving files so old links land on a tombstone page instead of a 404. Schema per project: date (YYYY-MM-DD) and routes (array of absolute paths, each must start with /<project>/). 'reason' and 'successor' are documentation for maintainers; build.mjs ignores them.",
+  "projects": {
+    "guide-openflow-shopify-multistore": {
+      "date": "2026-09-21",
+      "routes": [
+        "/guide-openflow-shopify-multistore/README.html",
+        "/guide-openflow-shopify-multistore/README.md"
+      ],
+      "reason": "Merged with guide-shopify-bulk-api-coco. Both defined the same DAILY_SHOP_ACTIVITY metric and had already drifted apart.",
+      "successor": "guide-shopify-multistore-snowflake"
+    },
+    "guide-shopify-bulk-api-coco": {
+      "date": "2026-09-21",
+      "routes": [
+        "/guide-shopify-bulk-api-coco/README.html",
+        "/guide-shopify-bulk-api-coco/README.md"
+      ],
+      "reason": "Merged with guide-openflow-shopify-multistore. The Bulk API path is now path-native-coco.md in the successor.",
+      "successor": "guide-shopify-multistore-snowflake"
+    },
+    "guide-cortex-agent-image-tool": {
+      "date": "2026-09-21",
+      "routes": [
+        "/guide-cortex-agent-image-tool/README.html",
+        "/guide-cortex-agent-image-tool/README.md"
+      ],
+      "reason": "Taught the type:\"generic\" custom-tool pattern a second time. Folded in as a chapter of the orchestration guide.",
+      "successor": "guide-agent-to-agent-orchestration"
+    },
+    "guide-cortex-code-access-control": {
+      "date": "2026-09-21",
+      "routes": [
+        "/guide-cortex-code-access-control/README.html",
+        "/guide-cortex-code-access-control/README.md"
+      ],
+      "reason": "Renamed. Scope widened from Cortex Code to the whole Cortex surface after absorbing the AI-function RBAC material from guide-snowflake-cost-visibility.",
+      "successor": "guide-cortex-access-control"
+    }
+  }
 }

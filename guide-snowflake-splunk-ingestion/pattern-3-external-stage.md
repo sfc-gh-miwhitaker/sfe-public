@@ -52,7 +52,7 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS SFE_S3_STORAGE_INTEGRATION
   ENABLED = TRUE
   STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::<account-id>:role/<role-name>'
   STORAGE_ALLOWED_LOCATIONS = ('s3://<your-bucket>/snowflake-audit-export/')
-  COMMENT = 'S3 integration for Splunk audit log export (Expires: 2026-10-30)';
+  COMMENT = 'S3 integration for Splunk audit log export (Expires: 2027-03-21)';
 
 -- After creating, retrieve the IAM values to configure the trust relationship
 DESC INTEGRATION SFE_S3_STORAGE_INTEGRATION;
@@ -64,7 +64,7 @@ CREATE STAGE IF NOT EXISTS SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.AUDIT_STAGE
   STORAGE_INTEGRATION = SFE_S3_STORAGE_INTEGRATION
   URL = 's3://<your-bucket>/snowflake-audit-export/'
   FILE_FORMAT = (TYPE = 'JSON' COMPRESSION = 'AUTO')
-  COMMENT = 'Splunk audit log export stage (Expires: 2026-10-30)';
+  COMMENT = 'Splunk audit log export stage (Expires: 2027-03-21)';
 ```
 
 > For Azure and GCS, replace `STORAGE_PROVIDER` and the corresponding ARN/URL fields. Syntax is identical in structure — see [Snowflake external stage docs](https://docs.snowflake.com/en/sql-reference/sql/create-stage) for cloud-specific parameters.
@@ -78,14 +78,14 @@ USE ROLE SYSADMIN;
 USE DATABASE SNOWFLAKE_EXAMPLE;
 
 CREATE SCHEMA IF NOT EXISTS SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT
-  COMMENT = 'Splunk audit export tasks and views (Expires: 2026-10-30)';
+  COMMENT = 'Splunk audit export tasks and views (Expires: 2027-03-21)';
 
 CREATE OR REPLACE WAREHOUSE SPLUNK_EXPORT_WH
   WAREHOUSE_SIZE  = 'XSMALL'
   AUTO_SUSPEND    = 120
   AUTO_RESUME     = TRUE
   INITIALLY_SUSPENDED = TRUE
-  COMMENT = 'Splunk audit export compute (Expires: 2026-10-30)';
+  COMMENT = 'Splunk audit export compute (Expires: 2027-03-21)';
 ```
 
 ---
@@ -100,7 +100,7 @@ The key to incremental export is a time window: each task run exports a fixed lo
 CREATE OR REPLACE TASK SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.EXPORT_LOGIN_HISTORY
   WAREHOUSE = SPLUNK_EXPORT_WH
   SCHEDULE  = 'USING CRON */30 * * * * UTC'
-  COMMENT   = 'Export LOGIN_HISTORY to S3 for Splunk (Expires: 2026-10-30)'
+  COMMENT   = 'Export LOGIN_HISTORY to S3 for Splunk (Expires: 2027-03-21)'
 AS
 COPY INTO @SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.AUDIT_STAGE/login_history/
 FROM (
@@ -133,7 +133,7 @@ ALTER TASK SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.EXPORT_LOGIN_HISTORY RESUME;
 CREATE OR REPLACE TASK SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.EXPORT_QUERY_HISTORY
   WAREHOUSE = SPLUNK_EXPORT_WH
   SCHEDULE  = '60 MINUTE'
-  COMMENT   = 'Export QUERY_HISTORY to S3 for Splunk (Expires: 2026-10-30)'
+  COMMENT   = 'Export QUERY_HISTORY to S3 for Splunk (Expires: 2027-03-21)'
 AS
 COPY INTO @SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.AUDIT_STAGE/query_history/
 FROM (
@@ -171,7 +171,7 @@ ALTER TASK SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.EXPORT_QUERY_HISTORY RESUME;
 CREATE OR REPLACE TASK SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.EXPORT_ACCESS_HISTORY
   WAREHOUSE = SPLUNK_EXPORT_WH
   SCHEDULE  = '60 MINUTE'
-  COMMENT   = 'Export ACCESS_HISTORY to S3 for Splunk (Expires: 2026-10-30)'
+  COMMENT   = 'Export ACCESS_HISTORY to S3 for Splunk (Expires: 2027-03-21)'
 AS
 COPY INTO @SNOWFLAKE_EXAMPLE.SPLUNK_EXPORT.AUDIT_STAGE/access_history/
 FROM (

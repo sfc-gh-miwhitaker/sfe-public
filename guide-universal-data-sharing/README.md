@@ -16,7 +16,7 @@ The answer is no longer "create a reader account." It's a collection of capabili
 
 Pair-programmed by SE Community + Cortex Code
 
-> **No support provided.** Reference only; test before you rely on it. Features in Preview may change — re-verify before quoting. To refresh: check the [Feature Status Matrix](#feature-status-matrix-july-2026) against [Snowflake release notes](https://docs.snowflake.com/en/release-notes).
+> **No support provided.** Reference only; test before you rely on it. Features in Preview may change — re-verify before quoting. To refresh: check the [Feature Status Matrix](#feature-status-matrix-september-2026) against [Snowflake release notes](https://docs.snowflake.com/en/release-notes).
 
 ---
 
@@ -31,7 +31,7 @@ Pair-programmed by SE Community + Cortex Code
 
 | # | Section | One-Line Summary |
 | --- | --------- | ----------------- |
-| 1 | [Open Data Sharing](#1-open-data-sharing-private-preview) | Non-Snowflake consumers access shares via Iceberg REST Catalog APIs + access token |
+| 1 | [Open Data Sharing](#1-open-data-sharing-public-preview) | Non-Snowflake consumers access shares via Iceberg REST Catalog APIs + access token |
 | 2 | [Open Table Format Sharing](#2-open-table-format-sharing-generally-available) | Share Iceberg/Delta across clouds with auto-fulfillment (consumer has Snowflake) |
 | 3 | [Multi-Party Clean Rooms](#3-multi-party-clean-rooms--collaboration-api-generally-available) | Symmetric N-party collaboration replacing the old 2-party model |
 | ↳ | [Cross-Cloud Clean Rooms](#cross-cloud-clean-rooms-im-on-aws-my-partner-is-on-azure) | "I'm on AWS, my partner is on Azure" — solved |
@@ -40,7 +40,7 @@ Pair-programmed by SE Community + Cortex Code
 
 **Reference:**
 
-- [Feature Status Matrix](#feature-status-matrix-july-2026) — what's generally available vs Preview
+- [Feature Status Matrix](#feature-status-matrix-september-2026) — what's generally available vs Preview
 - [Further Reading](#further-reading) — official docs links
 
 ---
@@ -73,11 +73,11 @@ flowchart TD
 
 | Your Situation | Solution | Details |
 | --- | --- | --- |
-| Partners don't use Snowflake | Open Data Sharing — any Iceberg REST Catalog-compatible engine connects with an access token. No account needed. Governance preserved. | [Section 1](#1-open-data-sharing-private-preview) |
+| Partners don't use Snowflake | Open Data Sharing — any Iceberg REST Catalog-compatible engine connects with an access token. No account needed. Governance preserved. | [Section 1](#1-open-data-sharing-public-preview) |
 | Need 3+ parties in a clean room | Collaboration API — fully symmetric, any party brings data or runs analysis. Generally available since April. | [Section 3](#3-multi-party-clean-rooms--collaboration-api-generally-available) |
 | Run Spark + Snowflake and need consistent policies | Snowflake Connector for Apache Spark enforces Horizon policies today (generally available). Scan Plan API coming for all engines. | [Section 4](#4-universal-governance--policies-follow-the-data) |
 | Business partners aren't technical enough for SQL | Auto-gen Agents create a conversational interface over any share — no SQL needed. | [Section 5](#5-ai-powered-sharing--the-last-mile) |
-| Currently using reader accounts | Open Data Sharing eliminates reader account maintenance. Partners use their own tools with an access token. | [Section 1](#1-open-data-sharing-private-preview) |
+| Currently using reader accounts | Open Data Sharing eliminates reader account maintenance. Partners use their own tools with an access token. | [Section 1](#1-open-data-sharing-public-preview) |
 | Partners are on a different cloud (AWS vs Azure vs GCP) | Cross-Cloud Auto-Fulfillment handles this — no data movement required. Must be planned at collaboration creation time. | [Cross-Cloud Clean Rooms](#cross-cloud-clean-rooms-im-on-aws-my-partner-is-on-azure) |
 
 ---
@@ -104,7 +104,7 @@ flowchart LR
 
 ---
 
-## 1. Open Data Sharing (Private Preview)
+## 1. Open Data Sharing (Public Preview)
 
 > **TL;DR:** Non-Snowflake consumers access your shared data via standard Iceberg REST Catalog APIs. No Snowflake account. No reader accounts. No data movement.
 
@@ -168,13 +168,13 @@ All governance defined in Horizon Catalog travels with the data:
 - Dynamic data masking policies
 - Projection, aggregation, and join policies
 
-### Current Limitations (Private Preview)
+### Current Limitations (Public Preview)
 
-> **Status note (Aug 2026):** Open Data Sharing is in **Private Preview** — available to selected accounts only. If you cannot find the relevant SQL commands in your account, contact your Snowflake representative to request access.
+> **Status note (verified 2026-09-21):** Open Data Sharing has moved to **Public Preview and is available to all accounts** — it is no longer gated to selected accounts, and you no longer need to ask your Snowflake representative for access. Per the [Open Data Sharing docs](https://docs.snowflake.com/en/user-guide/open-data-sharing).
 
 - Programmatic Access Tokens are the only authentication method (more coming)
 - Read-only access for external consumers
-- Region-locked to the provider's region during Private Preview (no cross-region yet)
+- Region-locked to the provider's region during Public Preview — the only supported target region for shared data is the provider account's own region (no cross-region yet)
 
 > **Reference:** [Open Data Sharing Docs](https://docs.snowflake.com/en/user-guide/open-data-sharing)
 
@@ -215,7 +215,7 @@ Both use Iceberg underneath. Open Data Sharing builds on top of Open Table Forma
 
 ## 3. Multi-Party Clean Rooms — Collaboration API (Generally Available)
 
-> **TL;DR:** The Collaboration API replaces the legacy 2-party model with fully symmetric, N-party collaboration. Any participant provides data, contributes logic, or runs analysis. **Migrate before Oct 2026.**
+> **TL;DR:** The Collaboration API replaces the legacy 2-party model with fully symmetric, N-party collaboration. Any participant provides data, contributes logic, or runs analysis. **Legacy clean rooms are being retired in phases through Jun 2027 — plan migration accordingly.**
 
 ### What Changed
 
@@ -286,12 +286,12 @@ This was previously a hard blocker. It's now solved — with caveats.
 1. The collaboration must be **created as cross-cloud from the start** (you cannot convert a same-region collaboration later)
 2. Each collaborator in a different cloud/region enables **Cross-Cloud Auto-Fulfillment** on their account:
 
-```sql
--- Run once per account (not per collaboration)
-CALL SAMOOHA_BY_SNOWFLAKE_LOCAL_DB.LIBRARY.ENABLE_GLOBAL_DATA_SHARING_FOR_ACCOUNT();
-```
+   ```sql
+   -- Run once per account (not per collaboration)
+   CALL SAMOOHA_BY_SNOWFLAKE_LOCAL_DB.LIBRARY.ENABLE_GLOBAL_DATA_SHARING_FOR_ACCOUNT();
+   ```
 
-1. Once enabled, collaborators join normally — the platform replicates what's needed behind the scenes
+3. Once enabled, collaborators join normally — the platform replicates what's needed behind the scenes
 
 **What to know:**
 
@@ -307,12 +307,12 @@ CALL SAMOOHA_BY_SNOWFLAKE_LOCAL_DB.LIBRARY.ENABLE_GLOBAL_DATA_SHARING_FOR_ACCOUN
 
 ### Timeline
 
-> **Action required:** Legacy clean room deprecation is phased. Plan migration by Jun 2027.
+> **Action required:** Legacy clean room retirement is phased across three dates. The first, Oct 2026, is **not** an end-of-life — it only stops creation of *new* legacy rooms through the web UI. Existing legacy rooms keep working until Jun 2027. Plan migration to complete before Jun 2027.
 
 - **Apr 2026:** Collaboration API goes generally available
-- **Oct 2026:** No new legacy clean rooms via the web UI
-- **Feb 2027:** Web app UI no longer accessible; no new legacy clean rooms via Provider and Consumer API
-- **Jun 2027:** Legacy Provider and Consumer clean rooms fully decommissioned
+- **2026-10-01:** New legacy clean rooms can no longer be created via the web application UI. Existing rooms are unaffected, and the Provider and Consumer API can still create new ones.
+- **2027-02-01:** The web application UI is no longer accessible, and new legacy clean rooms can no longer be created via the Provider and Consumer API either
+- **2027-06-01:** Legacy Provider and Consumer clean rooms are no longer accessible — the real end of life
 - **Migration tool available** to convert existing legacy rooms
 
 > **Reference:** [Collaboration API Reference](https://docs.snowflake.com/en/user-guide/cleanrooms/v2/v2-api-reference) | [Migration Guide](https://docs.snowflake.com/en/user-guide/cleanrooms/getting-started) | [Cross-Cloud Auto-Fulfillment](https://docs.snowflake.com/en/user-guide/cleanrooms/laf)
@@ -390,17 +390,17 @@ This is the "last mile" — data sharing that reaches the business user, not jus
 
 ---
 
-## Feature Status Matrix (July 2026)
+## Feature Status Matrix (September 2026)
 
 | Feature | Status | Key Limitation |
 | --- | --- | --- |
-| Open Data Sharing | **Private Preview** (selected accounts) | Access tokens only; region-locked to provider region |
+| Open Data Sharing | **Public Preview** (all accounts) | PATs are the only supported external-consumer auth; target region locked to the provider's region |
 | Open Table Format Sharing (Iceberg/Delta) | Generally Available | CLDs with non-Iceberg-REST catalog integrations not yet supported |
 | Collaboration API (multi-party Data Clean Rooms) | Generally Available | Legacy deprecated (phased: Oct 2026 → Feb 2027 → Jun 2027) |
 | Iceberg REST Scan Plan API | Private Preview | No customer-facing config yet |
 | Comprehensive Auditing (external engines) | Private Preview | No customer-facing config yet |
-| Auto-gen Agents for Data Shares | Public Preview | Production-ready but preview status |
-| Cortex Agent Sharing | Public Preview | Production-ready but preview status |
+| Auto-gen Agents for Data Shares | Public Preview (all accounts) | Cannot be used if the share already contains agents, semantic views, or Cortex Search Services; regeneration discards manual semantic-view edits |
+| Cortex Agent Sharing | Public Preview (all accounts) | Only semantic view, Cortex Search Service, and function tools can be shared — agents using procedures, skills, or MCP connectors cannot; linked objects must sit in the same database |
 | Snowflake Connector for Apache Spark | **Generally Available** | Policy enforcement ready today |
 | Vended Credentials (external engine R/W) | Generally Available | Full bidirectional interop |
 
@@ -408,7 +408,7 @@ This is the "last mile" — data sharing that reaches the business user, not jus
 
 ## Further Reading
 
-> **Re-verify before 2027-01-27.** This guide covers Summit 2026 announcements. Open Data Sharing is in Private Preview (selected accounts); the Scan Plan API uses terminology that differs from public docs ("Horizon Iceberg REST Catalog API" in docs). Re-verify feature status before quoting. Check [docs.snowflake.com](https://docs.snowflake.com) against the code samples here before using in a customer conversation.
+> **Re-verify before 2027-01-27.** This guide covers Summit 2026 announcements. Statuses in the matrix above were re-verified against Snowflake docs on 2026-09-21; the Scan Plan API and Comprehensive Auditing rows were **not** re-verified and may have moved — confirm with your account team before quoting them. The Scan Plan API also uses terminology that differs from public docs ("Horizon Iceberg REST Catalog API" in docs). Check [docs.snowflake.com](https://docs.snowflake.com) against the code samples here before using in a customer conversation.
 
 - [Open Data Sharing Docs](https://docs.snowflake.com/en/user-guide/open-data-sharing)
 - [Extending Data Sharing to Open Table Formats (Blog)](https://www.snowflake.com/en/blog/data-sharing-open-table-formats/)

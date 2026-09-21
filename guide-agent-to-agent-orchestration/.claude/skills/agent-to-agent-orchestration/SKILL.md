@@ -1,6 +1,6 @@
 ---
 name: agent-to-agent-orchestration
-description: "Guide to agent-to-agent orchestration on Snowflake. Use when: a customer or builder asks how one Cortex Agent calls another, DATA_AGENT_RUN vs AGENT_RUN, inter-app agents, RCR/GRANT CALLER, MCP servers as the interop fabric, CoWork multi-agent, or Google A2A on Snowflake."
+description: "Guide to agent-to-agent orchestration on Snowflake. Use when: a customer or builder asks how one Cortex Agent calls another, DATA_AGENT_RUN vs AGENT_RUN, inter-app agents, RCR/GRANT CALLER, MCP servers as the interop fabric, CoWork multi-agent, Google A2A on Snowflake, or how to wrap custom code (an SPCS container or an external API) as a Cortex Agent generic tool."
 ---
 
 # Agent-to-Agent Orchestration on Snowflake
@@ -11,17 +11,19 @@ Help SEs position, and builders implement, one Cortex Agent invoking another on 
 
 ## Architecture
 
-Two self-contained markdown docs, no deployable objects:
+Three self-contained markdown docs, no deployable objects:
 
-- `README.md` — decision tree + "Need → Use" table; the 5 layers; honest-gaps table; customer-framing section; references.
-- `same-account-agent-to-agent.md` — illustrative working spec: child agent → `EXECUTE AS OWNER` wrapper proc → `DATA_AGENT_RUN` → parent agent `generic`/`procedure` tool, plus a gotchas table.
+- `README.md` — decision tree + "Need → Use" table; the layers; honest-gaps table; customer-framing section; references.
+- `same-account-agent-to-agent.md` — illustrative working spec: child agent → `EXECUTE AS OWNER` wrapper proc → `DATA_AGENT_RUN` → parent agent `generic`/`procedure` tool, plus a gotchas table. Canonical home for the generic-tool mechanics.
+- `custom-tools.md` — same pattern pointed at a **function**: SPCS container or external HTTP API as an agent tool (worked example: image generation), result rendering, presigned URLs, text-only orchestrator constraint.
 
 ## Key Files
 
 | File | Role |
 | --- | --- |
-| `README.md` | Router + positioning + the five layers + honest gaps |
+| `README.md` | Router + positioning + the layers + honest gaps |
 | `same-account-agent-to-agent.md` | GA same-account working spec (4 steps + gotchas) |
+| `custom-tools.md` | Wrapping your own code (SPCS / external API) as an agent tool |
 | `AGENTS.md` | Project instructions + verified-facts list |
 
 ## The mental model (lead with this)
@@ -37,6 +39,7 @@ Snowflake ships **no proprietary agent-to-agent bus**. Every path makes the chil
 | Reaching/exposing external systems | MCP (managed / SPCS / connectors) | GA (managed) |
 | End-user "just ask" | CoWork + Cortex Sense | GA |
 | Non-Snowflake framework (Google A2A) | Custom MCP bridge | No native A2A |
+| Agent must call code you wrote (container / external API) | Generic tool pointed at a function | GA |
 
 ## Extension Playbook: add a new orchestration layer or mechanism
 
@@ -54,3 +57,8 @@ Snowflake ships **no proprietary agent-to-agent bus**. Every path makes the chil
 - **RCR enforcement began June 5, 2026** — past now; pre-cutoff Native App versions are grandfathered.
 - **No native Google A2A** — never imply otherwise; it's a custom bridge only.
 - The **`AGENT_RUN` "no tool execution"** report is a community claim, not documented — say "validate in POC," don't assert.
+- **SPCS service functions speak the external-function wire format**, not plain REST — `{"data": [[row_index, ...], ...]}` in and out. Most common cause of a working container failing as a tool.
+- **The orchestrator reads tool output as text only** — it cannot see image pixels or other binary payloads. Describe, don't just link.
+- **Presigned stage URLs expire** — set the TTL longer than the longest expected conversation.
+
+Pair-programmed by SE Community + Cortex Code

@@ -9,17 +9,22 @@ Single-file reference guide (README.md) with no deployment artifacts. All SQL,
 YAML, and Python is inline in fenced blocks — nothing in this directory is
 separately runnable, by design, so nothing can be mistaken for tested code.
 
-Structure follows the reader's actual decision sequence:
+Structure is answer-first, not a decision tree. The reader does not arrive with a
+choice to make — they arrive with a vendor who has already made it for them:
 
-- Section 1: Which connection path — native catalog integration, provider-side
-  direct sharing, an SPCS-hosted client, or a client behind your own static NAT
-  address (Paths A through D)
-- Section 2: The SPCS reference architecture (Path C — the path that yields an
-  allowlistable egress IP, at the cost of it being a shared `/24`)
-- Section 3: What stable egress IPs really give you, and where they fall short
-- Section 4: The customer-NAT path (Path D — the only path that requires nothing
-  new from the provider, at the cost of infrastructure outside Snowflake)
-- Section 5: Operations, lifecycle, and gotchas
+- Section 1: **The answer.** Run the Delta Sharing client in your own cloud account
+  behind a NAT gateway with a static IP, land via external stage. Self-contained:
+  complete client module, stage DDL, marker-gated load, gotchas. Nothing in this
+  section may depend on a later section.
+- Section 2: The questions that make Section 1 unnecessary — the three provider
+  questions, the internal Databricks question, and the native catalog integration
+  DDL you get to use if any of them land
+- Section 3: The SPCS alternative, viable **only** if the provider accepts a shared
+  `/24`. Opens with the per-cloud availability gate. Its client is expressed as a
+  delta against Section 1's, not duplicated
+- Section 4: What stable egress IPs actually give you — the argument for why
+  Section 1 is the answer and Section 3 usually is not
+- Section 5: Operations, lifecycle, and SPCS gotchas
 
 ## Conventions
 
@@ -44,14 +49,21 @@ Structure follows the reader's actual decision sequence:
 - Availability status is stated per cloud every time stable egress IPs come up.
   AWS commercial is GA, Azure is Preview, GCP is undocumented. Never write
   "stable egress IPs are supported" without the qualifier.
+- **Headings must be searchable, not editorial.** A reader lands here via Ctrl+F or
+  a GitHub anchor and searches for the mechanism — `NAT`, `static IP`, `Elastic IP`,
+  `SPCS`. A heading like "The alternative that actually gives the provider one IP"
+  is a magazine subhead and hid the load-bearing content for weeks. Name the
+  mechanism in the heading.
+- **Do not reintroduce Path A/B/C/D letters as the primary naming.** They are kept
+  only as a one-line legend in Start Here for people holding old links. Sections are
+  named by mechanism.
 - Distinguish the *data plane* allowlist entry (Snowflake egress) from the
   *credential retrieval* allowlist entry (a human's corporate egress). Conflating
-  them is the single most common onboarding failure.
-- Keep the Path C / Path D comparison honest in both directions. Path C is not the
-  default just because it stays inside Snowflake: it requires the provider to accept
-  a shared `/24`, which a form asking for one to three addresses may refuse. Path D
-  is not a last resort: provider guidance for this scenario commonly recommends a
-  gateway outright. Never present either as the obvious answer.
+  them is the single most common onboarding failure, and it applies to every path,
+  so it lives in Start Here rather than inside one section.
+- Never re-add Databricks provider-to-provider sharing as a headline path. Anyone
+  with a Databricks workspace and Unity Catalog is not reading this guide. It stays
+  a one-paragraph internal question in Section 2.
 
 ## Key Commands
 

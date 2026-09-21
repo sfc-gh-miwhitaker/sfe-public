@@ -41,6 +41,9 @@ This vocabulary shows up throughout the guide. Skim the table once and the rest 
 | **MCP** (Model Context Protocol) | An open industry standard that lets AI agents and tools talk to each other — and to outside systems — through one consistent interface. |
 | **MCP server** | An endpoint that offers tools over MCP, so any MCP-aware app (Claude, ChatGPT, or another agent) can use them. |
 | **SPCS** (Snowpark Container Services) | Snowflake's way to run your own containerized code inside Snowflake. |
+| **Service function** | A Snowflake function whose body is an SPCS endpoint — calling the function calls the container. |
+| **External Access Integration** | Snowflake's permission slip letting one function reach one specific address outside Snowflake. |
+| **Presigned URL** | A temporary, time-limited web link to a file in a stage — a "view for the next hour" link. |
 | **CoWork** | Snowflake's chat experience for business users; it coordinates agents for you, with no wiring. |
 | **Cortex Sense** | The service that hands your business definitions to an agent at the moment it answers. |
 | **Google A2A** | Google's "Agent2Agent" — a *different*, non-Snowflake standard for agents to talk across vendors. |
@@ -76,6 +79,7 @@ flowchart TD
 | Agent reaches an **external system**, or exposes itself | MCP: `CREATE MCP SERVER` / `CREATE CUSTOM MCP SERVER` / MCP connectors | **GA** (managed server) |
 | End user **"just ask, it coordinates"** | Snowflake CoWork + Cortex Sense | CoWork is **GA**; **Cortex Sense maturity is unconfirmed** — verify before you cite it |
 | Interop with **non-Snowflake** agent frameworks | MCP today; Google A2A **only via custom bridge** | No native A2A |
+| Agent must call **code you wrote** — a container or an external API — not another agent | The same generic-tool pattern, pointed at a function | **GA** ([walkthrough](custom-tools.md)) |
 
 > **The first row (same account) is the only one most demos need.** Start there — the [working example](same-account-agent-to-agent.md) drops straight into a Snowflake SQL worksheet.
 
@@ -99,6 +103,12 @@ The actual plumbing for one agent calling another:
 The parent treats the child as just another callable tool. This is the building block the Native App pattern formalizes. **Full working spec: [same-account-agent-to-agent.md](same-account-agent-to-agent.md).**
 
 > **Two similarly named functions — don't mix them up.** `DATA_AGENT_RUN('db.schema.agent', …)` runs an agent you've already created and saved (a *named* agent). `AGENT_RUN(…)` runs a throwaway agent you define right inside the call (nothing saved). For one agent calling another, you almost always want `DATA_AGENT_RUN`, because the agent being called is a real, saved, permission-controlled object. Both are production-ready (GA) shortcuts that wrap Snowflake's underlying Cortex Agents web API. If you're building an app that needs to show the answer appear word-by-word, Snowflake suggests calling that web API directly instead — these SQL functions always return the whole answer in one piece.
+
+### 2b. The same mechanism, pointed at your own code (GA)
+
+Nothing about layer 2 is specific to agents. The generic tool wraps *a Snowflake object* — so swap the wrapper procedure for a **function** and the parent agent can call a container you host on SPCS, or a third-party HTTP API, with no new machinery. `tool_resources` says `type: function` instead of `type: procedure`; everything else is the layer-2 pattern.
+
+This is how you give an agent a capability Snowflake ships no built-in tool for. It also introduces one constraint the pure-SQL paths never hit: the orchestration model reads your tool's response **as text**, so anything it must reason about has to be *described* in the response, not merely referenced by it. **Full working spec: [custom-tools.md](custom-tools.md)** — both back ends, result rendering, and presigned-URL handling.
 
 ### 3. Agents in two different installed apps (Preview — available to all accounts)
 
@@ -167,6 +177,10 @@ Because an agent can be *wrapped as* an MCP tool **and** *consume* MCP tools, "a
 - [Use Cortex Agents and MCP servers in an app](https://docs.snowflake.com/en/developer-guide/native-apps/agents-mcp-servers)
 - [Updating Native Apps for Restricted Caller's Rights (June 5, 2026)](https://community.snowflake.com/s/article/updating-native-apps-to-support-restricted-callers-rights-for-cortex-agents)
 - [Snowflake-managed MCP server](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-mcp)
+- [Cortex Agents REST API (full agent specification schema)](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-rest-api)
+- [Snowpark Container Services: working with services](https://docs.snowflake.com/en/developer-guide/snowpark-container-services/working-with-services)
+- [External network access: network rules and secrets](https://docs.snowflake.com/en/developer-guide/external-network-access/creating-using-external-network-access)
+- [`GET_PRESIGNED_URL`](https://docs.snowflake.com/en/sql-reference/functions/get_presigned_url)
 - [Snowflake CoWork](https://www.snowflake.com/en/product/snowflake-cowork/)
 - [Snowflake-Labs orchestration-framework (Agent Gateway)](https://github.com/snowflake-labs/orchestration-framework)
 

@@ -7,10 +7,11 @@
 
 Documentation-only guide (no deploy scripts, no Snowflake objects to create). Thesis: **Snowflake has no proprietary agent-to-agent bus — it makes the child agent look like a tool** (a SQL wrapper procedure or an MCP server) inside the parent agent's normal plan→act loop.
 
-Two self-contained docs:
+Three self-contained docs:
 
-- `README.md` — Router + positioning. Decision tree, the 5-row "Need → Use" table, the five layers (single-agent loop → same-account wrapper → inter-app → MCP fabric → CoWork), the honest-gaps table, the customer-framing section.
-- `same-account-agent-to-agent.md` — Working illustrative spec for the GA same-account case: child agent → `EXECUTE AS OWNER` wrapper proc → `DATA_AGENT_RUN` → parent agent with a `generic`/`procedure` tool. Gotchas table.
+- `README.md` — Router + positioning. Decision tree, the "Need → Use" table, the layers (single-agent loop → same-account wrapper → own-code variant → inter-app → MCP fabric → CoWork), the honest-gaps table, the customer-framing section.
+- `same-account-agent-to-agent.md` — Working illustrative spec for the GA same-account case: child agent → `EXECUTE AS OWNER` wrapper proc → `DATA_AGENT_RUN` → parent agent with a `generic`/`procedure` tool. Gotchas table. **Owns the generic-tool mechanics** (`type: generic`, `input_schema`, `tool_resources` key matching, standalone testing) — other docs link here rather than re-teaching them.
+- `custom-tools.md` — Same generic-tool pattern pointed at a **function** instead of a procedure, so an agent can call an SPCS container or an external HTTP API. Worked example is image generation. Covers result rendering, presigned-URL handling, and the orchestrator-reads-text-only constraint.
 
 ## Verified facts (checked against docs 2026-06-30 — re-verify, this area moves fast)
 
@@ -21,6 +22,9 @@ Two self-contained docs:
 - App-created **managed** MCP servers are restricted to app-owned tools (no `SYSTEM_EXECUTE_SQL`).
 - **No native Google A2A endpoint** — bridge only via custom MCP / A2A Agent Card server.
 - The "`AGENT_RUN()` shows intent but never executes tools" claim is a **community blog report, NOT documented** — frame as "validate in POC," never assert.
+- A custom tool must point at a Snowflake **function or stored procedure** — an agent never issues raw HTTP. `tool_resources` takes `type: function` for a function, `type: procedure` for a procedure.
+- SPCS **service functions** use the external-function wire format (`{"data": [[row_index, ...], ...]}`) in both directions, not a plain REST body.
+- The orchestration model receives tool output **as text only**. It cannot inspect binary payloads (images, audio) — anything it must reason about has to be described in the response text.
 
 ## Conventions
 
@@ -29,7 +33,11 @@ Two self-contained docs:
 - Label maturity honestly per layer (GA vs Preview). The created-date verification note in the README header is load-bearing — keep it.
 - Each doc self-contained; cross-links use relative markdown links.
 - Agent specs use `orchestration: auto`, never a pinned model name (region availability).
+- **Never hardcode a third-party vendor model name** (image, audio, or LLM) in example code — these rot fastest of anything in the repo. Use a `<PLACEHOLDER>` plus a one-line instruction to check the provider's current model list.
+- Don't re-teach the generic-tool mechanics in a new sibling doc; link to `same-account-agent-to-agent.md` and document only the delta.
 
 ## Key Commands
 
 This is a guide — there is nothing to deploy. The only "commands" are the illustrative SQL snippets in `same-account-agent-to-agent.md` (`CREATE AGENT`, `CREATE PROCEDURE ... EXECUTE AS OWNER`, `DATA_AGENT_RUN`).
+
+Pair-programmed by SE Community + Cortex Code

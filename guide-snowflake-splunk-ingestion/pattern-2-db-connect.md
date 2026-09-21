@@ -39,7 +39,7 @@ Create a dedicated service account with least-privilege access to the audit view
 USE ROLE SECURITYADMIN;
 
 CREATE OR REPLACE ROLE SPLUNK_DBCONNECT_ROLE
-  COMMENT = 'DB Connect read-only role for Splunk (Expires: 2026-10-30)';
+  COMMENT = 'DB Connect read-only role for Splunk (Expires: 2027-03-21)';
 
 -- Grant access to all ACCOUNT_USAGE views (no extra Snowflake cost)
 GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE SPLUNK_DBCONNECT_ROLE;
@@ -47,8 +47,11 @@ GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE SPLUNK_DBCONNECT_ROLE;
 CREATE OR REPLACE USER SPLUNK_DBX_USER
   DEFAULT_WAREHOUSE = SPLUNK_DBX_WH
   DEFAULT_ROLE      = SPLUNK_DBCONNECT_ROLE
+  -- NOTE: TYPE = SERVICE means this user CANNOT use a PAT unless it is subject to
+  -- a network policy. The "Generate a PAT" step below sets one -- do not remove it,
+  -- or the PAT stops working. TYPE = SERVICE_AGENT carries no such requirement.
   TYPE              = 'service'
-  COMMENT           = 'Splunk DB Connect service account (Expires: 2026-10-30)';
+  COMMENT           = 'Splunk DB Connect service account (Expires: 2027-03-21)';
 
 GRANT ROLE SPLUNK_DBCONNECT_ROLE TO USER SPLUNK_DBX_USER;
 
@@ -59,7 +62,7 @@ CREATE OR REPLACE WAREHOUSE SPLUNK_DBX_WH
   AUTO_SUSPEND    = 45          -- see "Sizing AUTO_SUSPEND for a poller" below
   AUTO_RESUME     = TRUE
   INITIALLY_SUSPENDED = TRUE
-  COMMENT = 'Splunk DB Connect compute (Expires: 2026-10-30)';
+  COMMENT = 'Splunk DB Connect compute (Expires: 2027-03-21)';
 
 GRANT USAGE, OPERATE ON WAREHOUSE SPLUNK_DBX_WH TO ROLE SPLUNK_DBCONNECT_ROLE;
 ```
@@ -111,7 +114,7 @@ USE ROLE SECURITYADMIN;
 -- Replace with your actual Splunk server IP or range
 CREATE OR REPLACE NETWORK POLICY SPLUNK_DBX_NP
     ALLOWED_IP_LIST = ('10.0.0.0/8')   -- replace with your Splunk server CIDR
-    COMMENT = 'Splunk DB Connect network policy (Expires: 2026-10-30)';
+    COMMENT = 'Splunk DB Connect network policy (Expires: 2027-03-21)';
 
 ALTER USER SPLUNK_DBX_USER SET NETWORK_POLICY = SPLUNK_DBX_NP;
 
@@ -119,6 +122,8 @@ ALTER USER SPLUNK_DBX_USER SET NETWORK_POLICY = SPLUNK_DBX_NP;
 -- Store it in a secrets manager; it cannot be retrieved after creation
 ALTER USER SPLUNK_DBX_USER ADD PROGRAMMATIC ACCESS TOKEN SPLUNK_DBX_PAT;
 ```
+
+> **The network policy above is a prerequisite, not just hardening.** A `TYPE = SERVICE` user cannot use a PAT at all unless it is subject to a network policy. Because `SPLUNK_DBX_USER` is a service user, removing `SPLUNK_DBX_NP` breaks DB Connect authentication entirely — and it surfaces as a credential error, not a network-policy one. `TYPE = SERVICE_AGENT` carries no such requirement if you need a PAT without a network policy.
 
 ---
 

@@ -5,14 +5,15 @@
 
 # Snowflake Cost Visibility — Foundations
 
-Before you can govern spend, you have to be able to see it. That sounds obvious, but most Snowflake accounts are running without three of the four capabilities covered here — and the one that's most commonly missing (`AI_FUNCTIONS_USER` RBAC) is the one that matters most once AI usage starts growing.
+Before you can govern spend, you have to be able to see it. That sounds obvious, but most Snowflake accounts are running without at least one of the three capabilities covered here — and the gap is usually the third one, the only control that can actually stop a warehouse rather than just tell you about it.
 
-This guide covers the foundational layer of cost governance in Snowflake:
+This guide covers the foundational visibility-and-capping layer of cost governance in Snowflake:
 
 1. **[Budget object](#1-the-budget-object)** — monthly spend alerting with predictive forecasting
 2. **[ACCOUNT_USAGE cost attribution](#2-account_usage-cost-attribution)** — `METERING_DAILY_HISTORY` as the entry point to where credits are going
 3. **[Resource monitors](#3-resource-monitors)** — warehouse-level guardrails that can actually suspend warehouses
-4. **[AI_FUNCTIONS_USER RBAC](#4-ai_functions_user-rbac--new-bu-governance)** — the access control pattern for governing new teams that need AI functions but not the full Cortex surface
+
+One coherent thesis: **see your credits, then cap them.** Deciding *who* may spend credits on AI is access control, not cost visibility, and it is [explicitly out of scope](#4-what-this-guide-does-not-cover-cortex-access-control).
 
 Each section has companion SQL in `sql/`. The SQL is copy-paste ready once you substitute role names and email addresses.
 
@@ -35,11 +36,10 @@ If you're in a hurry, here's the priority order:
 | 1 | Activate the account budget and add your email | `sql/budget_setup.sql` | 5 min |
 | 2 | Run the service-type breakdown query | `sql/account_usage_queries.sql` | 2 min |
 | 3 | Create a resource monitor on your largest warehouse | `sql/resource_monitors.sql` | 10 min |
-| 4 | Audit current CORTEX_USER grants; apply RBAC if needed | `sql/ai_functions_user_rbac.sql` | 20 min |
 
-Step 4 has the most blast radius. Don't skip the audit query at the top of the file before making changes.
+All three are additive — none of them takes anything away from anyone. The step that *is* destructive is Cortex RBAC, which this guide deliberately [does not cover](#4-what-this-guide-does-not-cover-cortex-access-control); if it is on your list, sequence it last and read the warning there first.
 
-> **Reading order.** This guide is the foundational visibility layer: budget alerting, usage attribution, warehouse guardrails, and AI RBAC. For AI-specific enforcement and compute rightsizing, see the **Govern Snowflake costs and usage** row in the [Start Here index](../README.md#start-here).
+> **Reading order.** This guide is the foundational visibility layer: budget alerting, usage attribution, and warehouse guardrails. For AI-specific enforcement, AI access control, and compute rightsizing, see the **Govern Snowflake costs and usage** row in the [Start Here index](../README.md#start-here).
 
 ---
 
@@ -47,12 +47,9 @@ Step 4 has the most blast radius. Don't skip the audit query at the top of the f
 
 | Term | Plain-language meaning |
 | ------ | ---------------------- |
-| **ACCOUNT_USAGE views** | Snowflake's audit log for everything that costs credits. Lives in the `SNOWFLAKE` database. Has up to 3-hour latency — always looking at the recent past, not right now. |
+| **ACCOUNT_USAGE views** | Snowflake's audit log for everything that costs credits. Lives in the `SNOWFLAKE` database. Each view documents its own latency \u2014 there is no single account-wide figure \u2014 so you are always looking at the recent past, not right now. `METERING_DAILY_HISTORY` is up to 3 hours behind; check any other view's own doc page. |
 | **Budget object** | A first-class Snowflake object that watches spend against a threshold you set, then notifies you when projected spend is on track to exceed it. Resets monthly. Does **not** block spend. |
 | **Resource monitor** | A Snowflake object that can suspend warehouses when they reach a credit threshold. Covers warehouses only — not serverless features, not AI services. |
-| **CORTEX_USER** | The database role in the `SNOWFLAKE` database that enables access to the full Cortex surface: AI Functions, Agents, Analyst, Search, CoWork. Granted to PUBLIC by default — all users have it unless you change this. |
-| **AI_FUNCTIONS_USER** | A narrower database role, GA April 2026. Enables scalar AI Functions (AI_COMPLETE, AI_CLASSIFY, etc.) without granting access to Agents, Analyst, Search, or Fine-tuning. Not granted to PUBLIC by default. |
-| **USE AI FUNCTIONS** | An account-level privilege required to call AI Functions. Granted to PUBLIC by default. If you revoke CORTEX_USER from PUBLIC, this privilege alone is not sufficient — users also need AI_FUNCTIONS_USER or CORTEX_USER. |
 | **SERVICE_TYPE** | The column in `METERING_DAILY_HISTORY` that tells you what consumed the credits. Key values: `WAREHOUSE_METERING`, `AI_SERVICES`, `AUTO_CLUSTERING`, `SERVERLESS_TASK`, `SEARCH_OPTIMIZATION`. |
 
 ---
@@ -68,6 +65,8 @@ GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE <your_reporting_role>;
 ```
 
 Without this, every query in Section 2 returns "object does not exist or not authorized."
+
+> `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE` also carries every database role in that database, Cortex roles included. That is an access-control consideration rather than a cost one — noted here only so you know the grant above is broader than "read the usage views."
 
 **2. The Budget object requires `BUDGET_ADMIN`** or `ACCOUNTADMIN` to configure. The account root budget always exists — it just needs to be activated.
 
@@ -120,13 +119,23 @@ See `sql/budget_setup.sql` for the full setup sequence, including Slack webhook 
 | Know when total account spend is trending over budget | Budget object |
 | Stop a specific warehouse from burning credits | Resource monitor |
 | See exactly which service or warehouse spent what | ACCOUNT_USAGE views |
-| Gate which users can call AI functions | AI_FUNCTIONS_USER RBAC |
+| Cap AI credits per user | `SNOWFLAKE.CORE.QUOTA` — [out of scope here](#4-what-this-guide-does-not-cover-cortex-access-control) |
+| Gate which users can call AI functions at all | Cortex RBAC — [out of scope here](#4-what-this-guide-does-not-cover-cortex-access-control) |
 
 The Budget object answers "are we on track this month?" The ACCOUNT_USAGE views answer "where did the credits go?"
 
 ### Key gotcha
 
-The Budget object covers all credit types — warehouse compute, AI services, serverless features, storage — but it only **alerts**. If you're looking for something that suspends warehouses, see Section 3. Resource monitors can suspend warehouses but cannot touch AI or serverless spend. The Budget object is the only native governance mechanism that covers AI services spend.
+The Budget object covers all credit types — warehouse compute, AI services, serverless features, storage — but it only **alerts**. If you want something that suspends warehouses, see Section 3. Resource monitors can suspend warehouses but cannot touch AI or serverless spend.
+
+That asymmetry is why the Budget object is the broadest single lever you have over AI services spend — but it is not the only one, and it is not an enforcement mechanism. Two others cap AI spend rather than merely reporting on it:
+
+| Mechanism | What it does |
+| --- | --- |
+| `SNOWFLAKE.CORE.QUOTA` | Sets per-user AI credit limits, and can enforce rather than just notify |
+| `CORTEX_CODE_*_DAILY_EST_CREDIT_LIMIT_PER_USER` | Caps Cortex Code spend per user, per surface (CLI, Desktop, Snowsight), on a rolling 24-hour window |
+
+So the accurate statement is narrower than "the only mechanism": the Budget object is the only thing here that gives you a single **account-wide predictive alert** spanning every credit type including AI. For per-user AI ceilings, use the two above.
 
 ---
 
@@ -337,211 +346,48 @@ See `sql/resource_monitors.sql` for complete examples including multi-warehouse 
 
 ---
 
-## 4. AI_FUNCTIONS_USER RBAC — New BU Governance
+## 4. What This Guide Does Not Cover: Cortex Access Control
 
-When a new business unit gets Snowflake access, they inherit the same AI capabilities as everyone else — because `CORTEX_USER` is granted to the `PUBLIC` role by default, and `PUBLIC` is granted to every user. That's a deliberate Snowflake default designed to make it easy to get started, but it means every new user in your account can immediately call `AI_COMPLETE`, spin up Cortex Agents, query with Cortex Analyst, and more.
+Seeing and capping credits is one problem. Deciding *who is allowed to spend them on
+AI in the first place* is a different one, and it is out of scope here.
 
-For accounts where AI usage is governed and attributed by team, that default needs to change.
+For the record, the mechanisms are:
 
-### The default state (and why it's a problem)
+| Mechanism | What it gates |
+| --- | --- |
+| `SNOWFLAKE.CORTEX_USER` database role | The full Cortex surface — AI functions, Agents, Analyst, Search, CoWork, Cortex Code. Granted to `PUBLIC` by default, so every user has it until you change that. |
+| `SNOWFLAKE.AI_FUNCTIONS_USER` database role | Scalar AI functions only — no Agents, Analyst, Search, or Fine-tuning. Not granted by default. |
+| `USE AI FUNCTIONS` account privilege | AI function calls. Required *in addition to* a qualifying database role, with per-function variants available. |
+| Model application roles (`SNOWFLAKE."CORTEX-MODEL-ROLE-*"`) | Which specific LLMs a role may use. Independent of the two above. |
 
-```text
-PUBLIC role → SNOWFLAKE.CORTEX_USER database role
-           → all users get: AI Functions, Agents, Analyst, Search, CoWork
-```
-
-`CORTEX_USER` is broad. It covers:
-
-- All Cortex AI Functions (AI_COMPLETE, AI_CLASSIFY, AI_EXTRACT, AI_FILTER, AI_SENTIMENT, AI_EMBED, AI_PARSE_DOCUMENT, AI_REDACT, AI_TRANSLATE, AI_TRANSCRIBE)
-- Cortex Agents
-- Cortex Analyst
-- Cortex Search
-- Snowflake CoWork
-
-If you want a new business unit to use AI Functions — but not run Agents, spin up Search services, or access CoWork — granting `CORTEX_USER` is too broad. `AI_FUNCTIONS_USER` is the right scope.
-
-### AI_FUNCTIONS_USER: what it gates
-
-`AI_FUNCTIONS_USER` (GA April 2, 2026) enables the scalar AI functions listed above. It does **not** grant access to:
-
-- Cortex Agents
-- Cortex Analyst
-- Cortex Search
-- Cortex Fine-tuning
-- Snowflake CoWork
-- `AI_AGG` and `AI_SUMMARIZE_AGG` (aggregate variants — these require `CORTEX_USER`)
-
-It also **requires** the `USE AI FUNCTIONS` account-level privilege, which is granted to `PUBLIC` by default. So the database role alone is not sufficient without the account privilege.
-
-### The two-grant requirement
-
-A user needs **both**:
-
-1. The `USE AI FUNCTIONS` account-level privilege (or a per-function variant)
-2. The `AI_FUNCTIONS_USER` (or `CORTEX_USER`) database role
-
-If the account privilege is still on `PUBLIC` (the default), step 2 is the only change you need for the new BU. If you've locked down the account privilege, you'll need to grant both.
-
-### The new BU governance pattern
-
-This is the recommended sequence for an account that currently has `CORTEX_USER` on `PUBLIC` and wants to apply tighter controls to new business units without disrupting existing users:
-
-```text
-STEP 1  Audit: who currently has CORTEX_USER (directly or via PUBLIC)?
-STEP 2  Decide: should existing roles keep CORTEX_USER, or do they only need AI_FUNCTIONS_USER?
-STEP 3  For new BU roles: grant AI_FUNCTIONS_USER instead of CORTEX_USER
-STEP 4  If locking down PUBLIC: revoke CORTEX_USER from PUBLIC; grant selectively
-STEP 5  Verify: confirm the right roles have the right database roles
-```
-
-The audit in Step 1 is critical before revoking anything from `PUBLIC`. Existing workflows that depend on Agents or Analyst will break if `CORTEX_USER` is removed without a replacement grant.
-
-**Minimal pattern — new BU gets AI Functions only, existing users unchanged:**
-
-```sql
-USE ROLE ACCOUNTADMIN;
-
--- Grant AI_FUNCTIONS_USER to the new BU's functional role
--- USE AI FUNCTIONS is still on PUBLIC, so no change needed there
-GRANT DATABASE ROLE SNOWFLAKE.AI_FUNCTIONS_USER TO ROLE new_bu_role;
-```
-
-**Full lockdown pattern — remove CORTEX_USER from PUBLIC, grant selectively:**
-
-```sql
-USE ROLE ACCOUNTADMIN;
-
--- Step 1: Remove the broad default
-REVOKE DATABASE ROLE SNOWFLAKE.CORTEX_USER FROM ROLE PUBLIC;
-
--- Step 2: Grant full Cortex access to roles that need it
-GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE trusted_data_eng_role;
-GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE cortex_agents_role;
-
--- Step 3: Grant AI Functions only to the new BU
-GRANT DATABASE ROLE SNOWFLAKE.AI_FUNCTIONS_USER TO ROLE new_bu_role;
-GRANT DATABASE ROLE SNOWFLAKE.AI_FUNCTIONS_USER TO ROLE analyst_role;
-```
-
-### Applying at scale: multiple roles and BUs
-
-When you have many roles to update, manual grants don't scale. Use a pattern that generates and executes grants from `SHOW ROLES`:
-
-```sql
--- Identify all roles that should get AI_FUNCTIONS_USER
--- Replace the IN clause with your actual role naming pattern
-SHOW ROLES LIKE 'BU_%';
-
--- For each row returned, execute:
--- GRANT DATABASE ROLE SNOWFLAKE.AI_FUNCTIONS_USER TO ROLE <name>;
-
--- Alternatively, use a stored procedure or scripted loop
--- to apply grants programmatically from a role inventory table
-```
-
-For organizations with dozens of roles across multiple BUs, build a governance table:
-
-```sql
--- Example governance table structure
-CREATE TABLE IF NOT EXISTS your_db.your_schema.cortex_role_grants (
-    role_name       VARCHAR,
-    cortex_level    VARCHAR,  -- 'FULL' (CORTEX_USER) or 'AI_FUNCTIONS' (AI_FUNCTIONS_USER)
-    granted_by      VARCHAR,
-    granted_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-    justification   VARCHAR
-);
-```
-
-Then drive grants from this table instead of ad-hoc `GRANT` statements. This gives you an auditable record of who has what Cortex access and why.
-
-### Per-function privileges (optional, for surgical control)
-
-If a BU only needs `AI_COMPLETE` and `AI_CLASSIFY` but not the full AI Functions surface, use per-function privileges:
-
-```sql
-USE ROLE ACCOUNTADMIN;
-
--- Revoke blanket USE AI FUNCTIONS from PUBLIC (optional — only if you want full lockdown)
-REVOKE USE AI FUNCTIONS ON ACCOUNT FROM ROLE PUBLIC;
-
--- Grant only specific functions to the BU role
-GRANT USE AI FUNCTION AI_COMPLETE  ON ACCOUNT TO ROLE limited_bu_role;
-GRANT USE AI FUNCTION AI_CLASSIFY  ON ACCOUNT TO ROLE limited_bu_role;
-
--- Still need the database role
-GRANT DATABASE ROLE SNOWFLAKE.AI_FUNCTIONS_USER TO ROLE limited_bu_role;
-```
-
-Per-function privileges and the blanket `USE AI FUNCTIONS` have an OR relationship — a role with the blanket privilege can call all functions regardless of per-function grants. Only use per-function if you're intentionally restricting to a subset.
-
-### Model RBAC — control which models roles can use
-
-`CORTEX_MODELS_ALLOWLIST` has been retired in phases. From August 5, 2026 the only permitted change was setting it to `'None'`. From September 8, 2026 the 2026_07 behavior change bundle removed allowlist-based authorization entirely, and full retirement lands November 18, 2026. **Model-level RBAC** via application roles in `SNOWFLAKE.MODELS` is now the only mechanism, and it is also enforced for embedding models (`AI_EMBED`, `AI_SIMILARITY`, `EMBED_TEXT_768`, `EMBED_TEXT_1024`) and Cortex Search:
-
-```sql
-USE ROLE ACCOUNTADMIN;
-
--- Refresh model objects (runs daily automatically; call on-demand if needed)
-CALL SNOWFLAKE.MODELS.CORTEX_BASE_MODELS_REFRESH();
-
--- See available models. Take exact role names from this and SHOW APPLICATION ROLES;
--- the identifiers are quoted and case-sensitive.
-SHOW CORTEX BASE MODELS IN SCHEMA SNOWFLAKE.MODELS;
-SHOW APPLICATION ROLES LIKE 'CORTEX-MODEL%' IN APPLICATION SNOWFLAKE;
-
--- Grant a specific model to a role
-GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-<MODEL>" TO ROLE analyst_role;
-
--- Or grant access to all current and future models
-GRANT APPLICATION ROLE SNOWFLAKE."CORTEX-MODEL-ROLE-ALL" TO ROLE data_eng_role;
-
--- Setting the allowlist to 'None' is the one transition still permitted.
--- It is a no-op once the 2026_07 bundle is enabled in your account.
-ALTER ACCOUNT SET CORTEX_MODELS_ALLOWLIST = 'None';
-```
-
-> **Removing broad access takes a stored procedure, not a REVOKE.** Accounts that had the allowlist set to `'All'` received an automatic `CORTEX-MODEL-ROLE-ALL` bootstrap grant on the `SNOWFLAKE.PUBLIC` *application* role — which is not the account-level `PUBLIC` role. A raw `REVOKE APPLICATION ROLE ... FROM ROLE PUBLIC` neither clears it nor persists across upgrades. Audit with `SHOW GRANTS TO APPLICATION ROLE SNOWFLAKE.PUBLIC;` and revoke with `CALL SNOWFLAKE.LOCAL.REVOKE_FROM_PUBLIC_APPLICATION_ROLE('APP_ROLE', 'CORTEX-MODEL-ROLE-ALL');`.
-
-> **Verify with a non-ACCOUNTADMIN role and `USE SECONDARY ROLES NONE`.** ACCOUNTADMIN always reaches every model, and an inherited secondary role will mask a missing grant — so testing as ACCOUNTADMIN tells you nothing about whether a restriction works.
-
-This gives per-role, per-model control — useful for restricting expensive frontier models to specific teams while allowing smaller models broadly. Combine with `AI_FUNCTIONS_USER` RBAC for complete AI governance: who can call AI functions (database roles), which functions they can call (per-function privileges), and which models they can use (model RBAC).
-
-### Verification
-
-After any RBAC change, verify the actual grant state before assuming it took effect:
-
-```sql
--- Check what database roles PUBLIC has
-SHOW GRANTS TO ROLE PUBLIC;
-
--- Check grants on a specific role
-SHOW GRANTS TO ROLE new_bu_role;
-
--- Find all roles that have CORTEX_USER
-SHOW GRANTS OF DATABASE ROLE SNOWFLAKE.CORTEX_USER;
-
--- Find all roles that have AI_FUNCTIONS_USER
-SHOW GRANTS OF DATABASE ROLE SNOWFLAKE.AI_FUNCTIONS_USER;
-```
-
-See `sql/ai_functions_user_rbac.sql` for the complete pattern including audit queries, the full lockdown sequence, and the governance table template.
+> **If you do go on to change any of this, treat it as the highest-blast-radius step
+> in your whole cost-governance sequence — higher than anything in sections 1-3.** Every
+> other control in this guide either alerts or throttles; revoking `CORTEX_USER` from
+> `PUBLIC` breaks live workflows the moment it lands, and the roles it breaks are not
+> obvious in advance. Audit who currently holds it *before* you revoke anything, and
+> be aware that the revoke alone does not fully restrict access — secondary roles and
+> `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE` both survive it. Do that work from a
+> guide that covers it properly; the **Govern Snowflake costs and usage** row in the
+> [Start Here index](../README.md#start-here) points at the right one.
 
 ---
 
 ## Putting It Together
 
-These four capabilities complement each other — they don't overlap. Here's the decision table:
+These three capabilities complement each other — they don't overlap. Here's the decision table:
 
 | You want to… | Use… | SQL file |
 | --- | --- | --- |
 | Know when total monthly spend is trending over budget | Budget object | `budget_setup.sql` |
 | See where credits went (by service, warehouse, user) | ACCOUNT_USAGE queries | `account_usage_queries.sql` |
 | Stop a specific warehouse at a credit limit | Resource monitor | `resource_monitors.sql` |
-| Control which teams can call AI Functions | AI_FUNCTIONS_USER RBAC | `ai_functions_user_rbac.sql` |
 
-The one thing that doesn't fit neatly here: **stopping runaway AI Function calls** (e.g., `AI_COMPLETE` running against a million-row table without a WHERE clause). That's covered in the companion cost-controls demo — see the **Govern Snowflake costs and usage** row in the [Start Here index](../README.md#start-here) for the link and reading order.
+Two things sit outside this guide on purpose:
 
-A complete cost governance stack combines the foundational visibility layer in this guide with the AI-specific enforcement patterns in that demo.
+- **Stopping runaway AI function calls** — for example `AI_COMPLETE` running against a million-row table with no `WHERE` clause. Neither a budget nor a resource monitor catches that in time.
+- **Deciding who may call AI at all** — Cortex RBAC, covered in section 4's [scope note](#4-what-this-guide-does-not-cover-cortex-access-control).
+
+Both have homes in the **Govern Snowflake costs and usage** row of the [Start Here index](../README.md#start-here). A complete stack combines this guide's visibility-and-capping layer with those.
 
 ---
 
@@ -551,5 +397,21 @@ For guides that work alongside this one, see the [**Start Here** index](../READM
 
 - [Snowflake docs: Monitor credit usage with budgets](https://docs.snowflake.com/en/user-guide/budgets)
 - [Snowflake docs: Working with resource monitors](https://docs.snowflake.com/en/user-guide/resource-monitors)
-- [Snowflake docs: AI_FUNCTIONS_USER database role](https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql-privileges-and-access)
-- [Snowflake docs: METERING_DAILY_HISTORY view](https://docs.snowflake.com/en/sql-reference/account-usage/metering_daily_history)
+- [Snowflake docs: Understanding overall cost](https://docs.snowflake.com/en/user-guide/cost-understanding-overall)
+
+---
+
+## External References
+
+- [`METERING_DAILY_HISTORY` view](https://docs.snowflake.com/en/sql-reference/account-usage/metering_daily_history)
+- [`WAREHOUSE_METERING_HISTORY` view](https://docs.snowflake.com/en/sql-reference/account-usage/warehouse_metering_history)
+- [`QUERY_HISTORY` view](https://docs.snowflake.com/en/sql-reference/account-usage/query_history)
+- [ACCOUNT_USAGE schema (per-view latency and retention)](https://docs.snowflake.com/en/sql-reference/account-usage)
+- [Budgets](https://docs.snowflake.com/en/user-guide/budgets)
+- [Resource monitors](https://docs.snowflake.com/en/user-guide/resource-monitors)
+- [Controlling cost with quotas (`SNOWFLAKE.CORE.QUOTA`)](https://docs.snowflake.com/en/user-guide/cost-controlling-quotas)
+- [Cortex AI privileges and model access](https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql-privileges-and-access)
+
+---
+
+Pair-programmed by SE Community + Cortex Code

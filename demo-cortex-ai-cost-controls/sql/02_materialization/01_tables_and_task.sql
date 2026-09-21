@@ -124,11 +124,21 @@ BEGIN
         FROM SNOWFLAKE.ACCOUNT_USAGE.SNOWFLAKE_COWORK_USAGE_HISTORY c
         WHERE c.START_TIME >= DATEADD('day', -90, CURRENT_TIMESTAMP())
     ),
+    -- Column quirks on SNOWFLAKE_COCO_USAGE_HISTORY. Every one of these silently
+    -- produces NULLs if you assume it matches the other three views:
+    --   * Time column is USAGE_TIME, not START_TIME, and it is TIMESTAMP_TZ where
+    --     the others are TIMESTAMP_LTZ. Cast explicitly or the UNION resolves the
+    --     type for you.
+    --   * USER_NAME is carried directly -- no join to ACCOUNT_USAGE.USERS needed.
+    --     (CORTEX_AI_FUNCTIONS_USAGE_HISTORY is the view that lacks it.)
+    --   * The interface is a first-class INTERFACE column ('cli', 'desktop',
+    --     'snowsight') covering every CoCo surface. Agent and CoWork bury the
+    --     equivalent inside METADATA; do not look for INTERFACE on those.
     coco AS (
         SELECT
             'CORTEX_CODE' AS service_type,
             cc.USER_ID,
-            NULL AS user_name,
+            cc.USER_NAME AS user_name,
             cc.TOKEN_CREDITS AS credits,
             cc.TOKENS,
             cc.USAGE_TIME::TIMESTAMP_LTZ AS usage_time,
@@ -136,9 +146,18 @@ BEGIN
             cc.METADATA:role_name::VARCHAR AS role_name,
             cc.USER_TAGS,
             'CoCo' AS entity_name,
-            NULL AS interaction_interface
+            cc.INTERFACE AS interaction_interface
         FROM SNOWFLAKE.ACCOUNT_USAGE.SNOWFLAKE_COCO_USAGE_HISTORY cc
         WHERE cc.USAGE_TIME >= DATEADD('day', -90, CURRENT_TIMESTAMP())
+          -- USER_ID 0 is a Snowflake-internal subject, not a person: it has no
+          -- ACCOUNT_USAGE.USERS entry and can carry a large share of requests and
+          -- credits. Left in, it becomes the top "user" in every attribution
+          -- chart. Its credits are real account spend, so if a total must
+          -- reconcile to the invoice, report it separately as non-attributable
+          -- system usage rather than treating this exclusion as a correction.
+          -- Compared as NUMBER, matching the view's column type, so the
+          -- predicate stays sargable and needs no cast.
+          AND cc.USER_ID <> 0
     )
     SELECT service_type, user_id, user_name, credits, tokens, usage_time,
            request_id, role_name, user_tags, entity_name, interaction_interface
