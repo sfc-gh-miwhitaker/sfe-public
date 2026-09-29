@@ -19,7 +19,7 @@ Choose the outcome you need:
 | Author and debug semantic views conversationally | Use Semantic Studio in Workspaces | Public Preview since August 26, 2026; available to all accounts |
 | Make Cortex Agents safer to operate | Tighten the querying user's default role, require declared tools when appropriate, and apply Restricted Session Scope | See the parent guide's agent security-boundary section |
 | Extend lineage into Horizon Catalog | Send OpenLineage events from dbt, Apache Airflow, or your own producer | External lineage is GA as of September 3, 2026; requires Enterprise Edition |
-| Pull metadata from external databases and BI tools | Request Horizon Context metadata connector access | Announced private preview; no documentation page — confirm per account |
+| Pull metadata from external databases and BI tools | Request Horizon Context metadata connector access | Announced private preview; Snowsight documents a Metadata connections tab, but not the individual connectors — confirm per account |
 | Evaluate Cortex Sense | Ask the Snowflake account team to confirm current access and behavior | Maturity unconfirmed; no GA release note or documentation page |
 
 ## 1. Extend Lineage With OpenLineage
@@ -37,7 +37,7 @@ Before rollout:
 
 ## 2. Request Horizon Context Connector Access
 
-The first metadata connectors announced for Horizon Context cover PostgreSQL, Microsoft SQL Server, Tableau, Power BI, and dbt. They were announced in private preview and have no documentation page.
+The first metadata connectors announced for Horizon Context cover PostgreSQL, Microsoft SQL Server, Tableau, Power BI, and dbt. They were announced in private preview. Snowsight now documents where they live (**Horizon Catalog » Catalog » Connections » Metadata connections**), but no page yet documents the individual connectors or their status.
 
 Prepare the following before requesting access:
 

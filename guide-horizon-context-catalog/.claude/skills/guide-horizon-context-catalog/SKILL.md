@@ -48,7 +48,7 @@ None. Documentation-only guide.
 
 ## Gotchas
 
-- Cortex Sense has **no GA release note and no product documentation page** (re-verified 2026-09-21). Never label it GA. The announced initial model used one designated role with per-role contexts as future work. Do not claim transparent Sense injection into every agent or AI request.
+- Cortex Sense has **no GA release note and no product documentation page** (re-verified 2026-09-29). Never label it GA. The announced initial model used one designated role with per-role contexts as future work. Do not claim transparent Sense injection into every agent or AI request.
 - Benchmark numbers (24% → 86%, $1.76 → $0.59) are Snowflake's *internal* test results. Always include that qualifier.
 - The question "is Sense retrieval for a configured agent further bounded by its declared tools" is still unanswered publicly. Do not assert either way, and re-verify rather than restate it on each revision. Separately, Agent execution uses the querying user's default role, configured tools require privileges, and Restricted Session Scope can impose an agent-session privilege ceiling.
 - External lineage (the OpenLineage path) is **GA since 2026-09-03** and Semantic Studio is **public preview since 2026-08-26**. Both were previously recorded at lower maturity; check for similar drift on the remaining rows.

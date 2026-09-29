@@ -14,7 +14,7 @@ Pair-programmed by SE Community + Cortex Code
 
 > **No support provided.** Reference only; validate before production use.
 
-> **Availability caveat.** Statuses in this guide were re-verified against Snowflake product documentation on **2026-09-21** and are recorded in [Availability Summary](#availability-summary). Several pieces of this stack have no product documentation page at all — where that is true, this guide says so rather than inferring a maturity level. Benchmark figures are from Snowflake's internal tests and do not represent guaranteed customer results.
+> **Availability caveat.** Statuses in this guide were re-verified against Snowflake product documentation on **2026-09-29** and are recorded in [Availability Summary](#availability-summary). Several pieces of this stack have no product documentation page at all — where that is true, this guide says so rather than inferring a maturity level. Benchmark figures are from Snowflake's internal tests and do not represent guaranteed customer results.
 
 ---
 
@@ -129,7 +129,7 @@ Enriched context is only valuable if it reaches the AI at the right moment:
 
 Horizon Context builds the enriched catalog. Cortex Sense is the managed layer Snowflake demonstrated activating that context for CoCo queries.
 
-Two things to hold steady when discussing it. First, public sources demonstrate Cortex Sense grounding **CoCo**; they do not establish transparent injection into every Cortex Agent, every third-party agent, or arbitrary AI requests. Second, as of 2026-09-21 Cortex Sense has **no product documentation page and no GA release note** — unlike Cortex Agents (GA 2025-11-04) and Cortex Search (GA 2024-10-04), both of which have dated GA release notes. Do not describe it as GA, and do not assume it is already active in a customer account.
+Two things to hold steady when discussing it. First, public sources demonstrate Cortex Sense grounding **CoCo**; they do not establish transparent injection into every Cortex Agent, every third-party agent, or arbitrary AI requests. Second, as of 2026-09-29 Cortex Sense has **no product documentation page and no GA release note** — unlike Cortex Agents (GA 2025-11-04) and Cortex Search (GA 2024-10-04), both of which have dated GA release notes. Do not describe it as GA, and do not assume it is already active in a customer account.
 
 ### Why It Exists
 
@@ -220,7 +220,7 @@ This gave two independently auditable checkpoints: the role's data privileges, a
 
 > *Does Cortex Sense context retrieval respect an agent's configured tool scope (for example, limited to `sv_regional_sales`), or does it operate at the calling user's full RBAC role scope?*
 
-**Status as of 2026-09-21: still unanswered, and the documentation record has not moved.** This is not a question that was asked once in June and quietly resolved since. Re-verified for this revision: Cortex Sense has no product documentation page, so there is no authoritative source that either confirms or denies tool-scoped retrieval. The June blog states access is scoped by role; it does not state that Sense context is scoped to an agent's configured tools. Those are different claims, and only the first one has been made.
+**Status as of 2026-09-29: still unanswered, and the documentation record has not moved.** This is not a question that was asked once in June and quietly resolved since. Re-verified for this revision: Cortex Sense has no product documentation page, so there is no authoritative source that either confirms or denies tool-scoped retrieval. The June blog states access is scoped by role; it does not state that Sense context is scoped to an agent's configured tools. Those are different claims, and only the first one has been made.
 
 Why this matters in practice: if a use case requires that an agent not merely be unable to *query* certain data but be unaware of its *existence* — deal rooms, pre-announcement financials, segregated client books — then role-scoped retrieval and tool-scoped retrieval are materially different security postures. Metadata leakage (a table name, a column name, a metric definition) can be the disclosure.
 
@@ -248,7 +248,7 @@ This is not a new risk introduced by Horizon Context or Cortex Sense. It is a pr
 
 ## Availability Summary
 
-Re-verified against Snowflake product documentation on **2026-09-21**. Rows marked *changed* moved since this guide's previous revision.
+Re-verified against Snowflake product documentation on **2026-09-29**. Rows marked *changed* moved since this guide's previous revision.
 
 | Feature | Status | Evidence / notes |
 | --- | --- | --- |
@@ -258,9 +258,9 @@ Re-verified against Snowflake product documentation on **2026-09-21**. Rows mark
 | Power BI ingestion for Semantic View Autopilot | **GA (August 18, 2026)** | Dated GA release note. `.pbit` and `.pbix`; report-level measures and time-intelligence functions remain limited |
 | External lineage / OpenLineage ingestion | **GA (September 3, 2026)** — *changed, was Public Preview* | Dated GA release note. Requires Enterprise Edition; needs `INGEST LINEAGE` on account; 20,000 external lineage edges per account |
 | Semantic Studio (semantic view authoring environment) | **Public Preview (August 26, 2026)** — *changed, was Private Preview* | Dated preview release note; available to all accounts |
-| Horizon Context metadata connectors (PostgreSQL, SQL Server, Tableau, Power BI, dbt) | **Announced private preview — unconfirmed** | Blog announcement only; no product documentation page found. Verify with your account team |
-| Advanced Semantics (LOD calculations, composable definitions) | **Unconfirmed — verify with your account team** | Could not confirm a status against product documentation for this revision |
-| Cortex Sense | **Unconfirmed — do not label GA** | No GA release note and no product documentation page as of 2026-09-21, unlike Cortex Agents and Cortex Search which both have dated GA release notes. Verify with your account team |
+| Horizon Context metadata connectors (PostgreSQL, SQL Server, Tableau, Power BI, dbt) | **Announced private preview — per-connector status unconfirmed** — *changed, UI surface now documented* | Snowsight now documents a **Horizon Catalog » Catalog » Connections » Metadata connections** tab for BI tools, databases, and pipelines. No page yet documents the five named connectors or their status. Verify per connector with your account team |
+| Advanced Semantics (LOD calculations, composable definitions) | **Partially documented — status unconfirmed** — *changed* | The semantic view querying reference now names LOD metrics (referenceable by bare name, not bound to one entity). No dated release note or status for LOD authoring or composable definitions. Tableau ingestion still does not import Tableau LOD calculations |
+| Cortex Sense | **Unconfirmed — do not label GA** | No GA release note and no product documentation page as of 2026-09-29, unlike Cortex Agents and Cortex Search which both have dated GA release notes. Verify with your account team |
 | Cortex Sense — per-role context differentiation | **Announced as future work — unconfirmed** | Stated as a plan in Snowflake's June 2026 blog; no documentation |
 | Power BI semantic view interop | **Unconfirmed — verify with your account team** | Named in the Summit announcement; status not confirmable against documentation |
 | Excel semantic view interop | **Unconfirmed — verify with your account team** | Named in the Summit announcement; status not confirmable against documentation |
