@@ -128,6 +128,8 @@ compute rightsizing. Reading order within this path matters.
    surfaces alongside Cortex at user-level grain, with metered-versus-seat cost modeling
    (including the two seat-plus-meter shapes that break naive totals), departmental
    allocation, and seat utilization (also in Path 1 and Path 2)
+6. `guide-snowflake-ml-lifecycle` — deployed-model cost: compute pool idle time versus service
+   scale-to-zero, warehouse inference, training, monitor refresh, storage (also in Path 6)
 
 **Belongs here if:** the guide's primary job is monitoring, alerting on, or limiting
 Snowflake credit or AI token consumption.
@@ -170,6 +172,10 @@ order — pick based on area of interest.
   Openflow Snowflake Deployments are GA; covers what that split means for a production
   commitment, the always-on cost floor, and why no non-CDC sizing heuristic exists
   (also in Path 1 and Path 2)
+- `guide-snowflake-ml-lifecycle` — Snowflake ML end to end for teams evaluating against AWS:
+  Feature Store, ML Jobs, Model Registry, warehouse and SPCS inference, task-graph retraining,
+  ML Lineage, model monitors, a serving bake-off protocol instead of parity claims, cross-cloud
+  registry patterns, and deployed-model cost drivers (also in Path 4)
 
 **Belongs here if:** the guide's primary job is explaining a new Snowflake feature or
 capability rather than configuring or building something.

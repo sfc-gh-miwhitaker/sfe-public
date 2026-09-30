@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-32-blue)
+![Projects](https://img.shields.io/badge/Projects-33-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -111,6 +111,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | [Horizon Context and Cortex Sense](guide-horizon-context-catalog/) | Understand the context stack and its documented boundaries. | Catalog, context |
 | [Universal data sharing](guide-universal-data-sharing/) | Compare sharing capabilities for different partners and engines. | Sharing, interoperability |
 | [CoWork features](guide-cowork-easter-eggs/) | Find less-visible CoWork capabilities, prerequisites, and limitations. | CoWork, productivity |
+| [Snowflake ML lifecycle](guide-snowflake-ml-lifecycle/) | Evaluate Snowflake ML end to end against an AWS stack: design, monitoring, serving bake-off, registry, and cost. | ML, Model Registry, SPCS, monitoring |
 
 ### Demos
 

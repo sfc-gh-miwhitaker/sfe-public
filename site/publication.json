@@ -10,6 +10,7 @@
     "guide-cortex-agent-versioning/specs/agent_spec.yaml",
     "guide-cortex-agent-versioning/github-actions/deploy-agent.yml",
     "guide-shopify-multistore-snowflake/config/shopify_object_override.json",
-    "guide-shopify-multistore-snowflake/config/stores.example.json"
+    "guide-shopify-multistore-snowflake/config/stores.example.json",
+    "guide-snowflake-ml-lifecycle/python/reference_pipeline.py"
   ]
 }
