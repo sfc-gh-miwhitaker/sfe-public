@@ -19,7 +19,7 @@ Pair-programmed by SE Community + Cortex Code
 1. Build a focused semantic view with explicit relationships, business descriptions, reusable metrics and filters, and representative VQRs.
 2. Prefer governed, certified sources for official metrics and document the grain and access-policy scope.
 3. Attach the view to a narrowly scoped Agent with distinct tool descriptions and orchestration instructions.
-4. Run Cortex Analyst evaluations to isolate SQL correctness before running end-to-end Cortex Agent evaluations.
+4. Run Cortex Analyst evaluations to diagnose semantic-view SQL problems, then gate releases on end-to-end Cortex Agent evaluations — an Analyst pass does not prove the Agent's SQL is correct.
 5. Pin committed Agent and exact evaluation metric versions when comparing CI/CD runs.
 6. Start with `models.orchestration: auto`, then measure quality, latency, and consumption before choosing a different model.
 
@@ -46,7 +46,7 @@ Accurate SQL against the wrong or unofficial source is still the wrong answer. F
 Before modeling or attaching a source:
 
 - State its grain, refresh expectations, owner, and intended business domain.
-- Prefer certified objects over uncertified alternatives when both answer the same question.
+- Prefer certified objects over uncertified alternatives when both answer the same question — but treat the tag as one input to review, not proof. Confirm owner, refresh, grain, lineage, and policy scope for each object, and keep any checks built on the legacy tag in place until every consumer is validated against the successor.
 - Treat the semantic view's metrics, filters, and relationships as the canonical definitions for that product.
 - Label ad hoc reconstructions and uncertified fallbacks instead of presenting them as official metrics.
 - Preserve row access and masking behavior in evaluation roles; a zero-row result can mean policy scope, not missing data.
@@ -208,6 +208,8 @@ Without measurement, you're tuning blind. A wrong answer could mean SQL generati
 
 Cortex Analyst evaluations measure SQL correctness against selected verified queries. During a run, Snowflake temporarily removes each selected VQR from the view used to generate SQL, preventing that same query from guiding its own evaluation. The results show correctness, regressions, latency, expected SQL, and generated SQL.
 
+**Treat this as a semantic-view diagnostic, not a release gate for the Agent.** Since [April 13, 2026](https://docs.snowflake.com/en/release-notes/2026/other/2026-04-13-cortex-agents-agentic-analyst), Cortex Agents generate SQL against semantic views directly rather than through the standalone Analyst path, so the SQL an Agent runs can differ from the SQL an Analyst evaluation scored. A clean Analyst baseline tells you the view is well-defined; it does not tell you the Agent will query it correctly. Gate promotion on Agent evaluations that check the SQL and results the Agent actually produced — for example, `tool_execution_accuracy` with expected SQL or result rows in `tool_output`, plus `answer_correctness` against literal values.
+
 Use this loop for structured-data failures:
 
 1. Establish a baseline with representative VQRs that use absolute dates.
@@ -249,7 +251,9 @@ Semantic views are tightly coupled systems. Changing one description can shift h
 
 Evaluate a committed Agent version such as `VERSION$3`, not mutable `LIVE`, when results must be comparable across CI/CD runs. Pin the same exact metric version, such as `v3_0`, to freeze the judge family, prompt, rubric, and thresholds. A major-only version such as `v3` adopts the latest `v3` minor release.
 
-**On metric version `v1` — the grace window has closed.** `v1` depends on `claude-4-sonnet`, which entered Snowflake's legacy model state on **2026-08-12**. That date has passed, so the rule is now settled rather than pending: only accounts that had already used `claude-4-sonnet` before 2026-08-12 can run `v1`. Every other account must pin `v2` or `v3`; a run that resolves to `v1` fails outright rather than substituting another judge.
+Pinning fixes the configuration, not the result. Each run re-invokes the Agent and scores a newly generated trace, and orchestration is non-deterministic, so the same pinned Agent version and metric version can take different tool paths and score differently from run to run. `answer_correctness` is usually the most stable; `tool_selection_accuracy`, `tool_execution_accuracy`, and `logical_consistency` read the trace and expose path variability. Before gating CI/CD on a threshold, run the same dataset several times with fixed inputs, the same role, and a stable data snapshot to learn its normal range, then gate on that range rather than a single run's score. For the committed version you gate on, Snowflake recommends naming the orchestration model rather than `auto`, so a model change behind `auto` is not mistaken for agent variance; `auto` remains the right starting point while you are still choosing a model (Section 4). See [Interpret score variance across runs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
+
+**On metric version `v1` — the grace window has closed.** `v1` depends on `claude-4-sonnet`, which entered Snowflake's legacy model state on **2026-08-12**. That date has passed, so the rule is now settled rather than pending. Per the "Versions and model deprecations" section of the evaluation documentation, only accounts that had already used `claude-4-sonnet` before 2026-08-12 can run `v1`; every other account must pin `v2` or `v3`, and a run that resolves to `v1` fails outright rather than substituting another judge. Separately, a version also fails if none of its judge models are allowed by your account's model settings or available in your cross-region scope, so check both gates in the target account before pinning.
 
 This has a trap worth naming: `v1` is still the **default** version, so an unversioned metric (or `version: "auto"`) resolves to `v1` today. An account with no prior `claude-4-sonnet` usage therefore fails on metrics it never explicitly versioned. Pin `v2` or `v3` explicitly rather than relying on the default. Confirm which judge models your account can actually use before pinning. `SHOW CORTEX BASE MODELS IN SCHEMA SNOWFLAKE.MODELS;` returns each model's `lifecycle_status` (`GA`, `PUPR`, `PRPR`, `LEGACY`, `EOL`) along with `legacy_date` and `eol_date` — look for `claude-4-sonnet` at `LEGACY`. Include the `IN SCHEMA SNOWFLAKE.MODELS` clause: Cortex Base Models exist only in that schema, so an unqualified command returns zero rows whenever another database is current, which reads misleadingly like "no access." `v3` (`claude-sonnet-4-6` at 1M, or `openai-gpt-5.4` at 1.05M) is also the right choice for long traces, since `logical_consistency` sends the whole trace to its judge. See [Cortex Agent evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
 
@@ -385,7 +389,7 @@ For practitioners who have read the guide and want a reminder during implementat
 
 ### Semantic View
 
-- [ ] Official metrics use governed sources certified with `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` where available
+- [ ] Official metrics use governed sources reviewed per object for certification tag, owner, refresh, grain, lineage, and policy scope (`SNOWFLAKE.TAGS.CERTIFICATION_STATUS` is Preview; `SNOWFLAKE.CORE.CERTIFICATION_STATUS` remains supported)
 - [ ] Grain, owner, freshness, business domain, and access-policy scope are documented
 - [ ] Ad hoc reconstructions and uncertified fallbacks are clearly labeled
 - [ ] Every logical table and business-relevant column has a clear description
@@ -416,9 +420,11 @@ For practitioners who have read the guide and want a reminder during implementat
 - [ ] Evaluation dataset created with absolute dates
 - [ ] Ground truth includes expected values with tolerance
 - [ ] Ground truth includes what response should NOT contain
-- [ ] Semantic view has a Cortex Analyst SQL-correctness baseline
+- [ ] Semantic view has a Cortex Analyst SQL-correctness baseline (diagnostic only)
+- [ ] Release gate uses Agent evaluations that check the Agent's own SQL and results
 - [ ] Applicable Agent metrics are enabled; TSA and TEA are treated as Public Preview
 - [ ] Comparable runs target a committed Agent version and pin the same exact metric version (for example, `v3_0`)
+- [ ] CI/CD thresholds are set from the score range of repeated runs, not a single run
 - [ ] Baseline evaluation run completed
 - [ ] Evaluations automated in CI/CD pipeline
 - [ ] MCP, skill, code-file, and session-attribute paths are tested outside native evaluations
