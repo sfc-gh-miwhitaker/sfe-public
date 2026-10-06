@@ -1,0 +1,27 @@
+{
+  // Prose in this repo wraps at ~90-100 chars; tables and long URLs exceed any limit.
+  "MD013": false,
+
+  // Headings are reused across path sections (e.g. "Current members") by design.
+  "MD024": { "siblings_only": true },
+
+  // Bare URLs appear inside code fences and reference lists.
+  "MD034": false,
+
+  // Collapsible sections and line breaks are intentional in guide READMEs.
+  "MD033": { "allowed_elements": ["details", "summary", "strong", "br", "img", "a"] },
+
+  // Emphasis is used intentionally as inline callouts (**Not a writable target.**).
+  "MD036": false,
+
+  // First line is a badge block, not always an H1.
+  "MD041": false,
+
+  // Adjacent callouts separated by a blank line are intentional and render as
+  // distinct blockquotes on GitHub. The alternative is 19 <!-- --> spacers.
+  "MD028": false,
+
+  // Tables are written compact (single space around pipes). Pinning this avoids
+  // re-padding every cell in a table whenever one cell's text changes.
+  "MD060": { "style": "compact" }
+}

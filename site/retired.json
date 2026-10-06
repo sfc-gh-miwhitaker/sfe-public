@@ -1,0 +1,272 @@
+{
+  "attribution": "Pair-programmed by SE Community + Cortex Code",
+  "_comment": "Retirement routes for projects that once had a public URL. Record routes BEFORE moving files so old links land on a tombstone page instead of a 404. Schema per project: date (YYYY-MM-DD) and routes (array of absolute paths, each must start with /<project>/). 'reason' and 'successor' are documentation for maintainers; build.mjs ignores them.",
+  "projects": {
+    "demo-streams-cdc-workshop": {
+      "date": "2026-09-21",
+      "reason": "Removed previously; stale catalog references cleaned up October 6.",
+      "routes": ["/demo-streams-cdc-workshop/", "/demo-streams-cdc-workshop/README.html", "/demo-streams-cdc-workshop/README.md"]
+    },
+    "demo-cortex-ai-cost-controls": {
+      "date": "2026-09-21",
+      "reason": "Removed previously; stale catalog references cleaned up October 6.",
+      "routes": ["/demo-cortex-ai-cost-controls/", "/demo-cortex-ai-cost-controls/README.html", "/demo-cortex-ai-cost-controls/README.md"]
+    },
+    "demo-restaurant-recovery-explorer": {
+      "date": "2026-09-21",
+      "reason": "Removed previously; stale catalog references cleaned up October 6.",
+      "routes": ["/demo-restaurant-recovery-explorer/", "/demo-restaurant-recovery-explorer/README.html", "/demo-restaurant-recovery-explorer/README.md"]
+    },
+    "guide-openflow-shopify-multistore": {
+      "date": "2026-09-21",
+      "routes": [
+        "/guide-openflow-shopify-multistore/README.html",
+        "/guide-openflow-shopify-multistore/README.md"
+      ],
+      "reason": "Merged with guide-shopify-bulk-api-coco. Both defined the same DAILY_SHOP_ACTIVITY metric and had already drifted apart.",
+      "successor": "guide-shopify-multistore-snowflake"
+    },
+    "guide-shopify-bulk-api-coco": {
+      "date": "2026-09-21",
+      "routes": [
+        "/guide-shopify-bulk-api-coco/README.html",
+        "/guide-shopify-bulk-api-coco/README.md"
+      ],
+      "reason": "Merged with guide-openflow-shopify-multistore. The Bulk API path is now path-native-coco.md in the successor.",
+      "successor": "guide-shopify-multistore-snowflake"
+    },
+    "guide-cortex-agent-image-tool": {
+      "date": "2026-09-21",
+      "routes": [
+        "/guide-cortex-agent-image-tool/README.html",
+        "/guide-cortex-agent-image-tool/README.md"
+      ],
+      "reason": "Taught the type:\"generic\" custom-tool pattern a second time. Folded in as a chapter of the orchestration guide.",
+      "successor": "guide-agent-to-agent-orchestration"
+    },
+    "guide-cortex-code-access-control": {
+      "date": "2026-09-21",
+      "routes": [
+        "/guide-cortex-code-access-control/README.html",
+        "/guide-cortex-code-access-control/README.md"
+      ],
+      "reason": "Renamed. Scope widened from Cortex Code to the whole Cortex surface after absorbing the AI-function RBAC material from guide-snowflake-cost-visibility.",
+      "successor": "guide-cortex-access-control"
+    },
+    "guide-adaptive-compute": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-adaptive-compute/",
+        "/guide-adaptive-compute/README.html",
+        "/guide-adaptive-compute/README.md"
+      ]
+    },
+    "guide-agent-to-agent-orchestration": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-agent-to-agent-orchestration/",
+        "/guide-agent-to-agent-orchestration/ELI5.html",
+        "/guide-agent-to-agent-orchestration/ELI5.md",
+        "/guide-agent-to-agent-orchestration/README.html",
+        "/guide-agent-to-agent-orchestration/README.md",
+        "/guide-agent-to-agent-orchestration/custom-tools.html",
+        "/guide-agent-to-agent-orchestration/custom-tools.md",
+        "/guide-agent-to-agent-orchestration/same-account-agent-to-agent.html",
+        "/guide-agent-to-agent-orchestration/same-account-agent-to-agent.md"
+      ]
+    },
+    "guide-claude-code-cortex-redirect": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-claude-code-cortex-redirect/",
+        "/guide-claude-code-cortex-redirect/ELI5.html",
+        "/guide-claude-code-cortex-redirect/ELI5.md",
+        "/guide-claude-code-cortex-redirect/README.html",
+        "/guide-claude-code-cortex-redirect/README.md",
+        "/guide-claude-code-cortex-redirect/authentication.html",
+        "/guide-claude-code-cortex-redirect/authentication.md",
+        "/guide-claude-code-cortex-redirect/claude-code-redirect.html",
+        "/guide-claude-code-cortex-redirect/claude-code-redirect.md",
+        "/guide-claude-code-cortex-redirect/sdk-redirect.html",
+        "/guide-claude-code-cortex-redirect/sdk-redirect.md"
+      ]
+    },
+    "guide-coco-setup": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-coco-setup/",
+        "/guide-coco-setup/README.html",
+        "/guide-coco-setup/README.md",
+        "/guide-coco-setup/diagrams/guidance-hierarchy.html",
+        "/guide-coco-setup/diagrams/guidance-hierarchy.md",
+        "/guide-coco-setup/reference/claudemd-snippet.html",
+        "/guide-coco-setup/reference/claudemd-snippet.md",
+        "/guide-coco-setup/reference/first-skill/references/standards.html",
+        "/guide-coco-setup/reference/first-skill/references/standards.md"
+      ]
+    },
+    "guide-connecting-claude-snowflake": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-connecting-claude-snowflake/",
+        "/guide-connecting-claude-snowflake/ELI5.html",
+        "/guide-connecting-claude-snowflake/ELI5.md",
+        "/guide-connecting-claude-snowflake/README.html",
+        "/guide-connecting-claude-snowflake/README.md",
+        "/guide-connecting-claude-snowflake/coco.html",
+        "/guide-connecting-claude-snowflake/coco.md",
+        "/guide-connecting-claude-snowflake/context-layer.html",
+        "/guide-connecting-claude-snowflake/context-layer.md",
+        "/guide-connecting-claude-snowflake/governed-mcp.html",
+        "/guide-connecting-claude-snowflake/governed-mcp.md"
+      ]
+    },
+    "guide-connecting-copilot-studio-snowflake": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-connecting-copilot-studio-snowflake/",
+        "/guide-connecting-copilot-studio-snowflake/README.html",
+        "/guide-connecting-copilot-studio-snowflake/README.md",
+        "/guide-connecting-copilot-studio-snowflake/cortex-analyst-connector.html",
+        "/guide-connecting-copilot-studio-snowflake/cortex-analyst-connector.md",
+        "/guide-connecting-copilot-studio-snowflake/knowledge-source.html",
+        "/guide-connecting-copilot-studio-snowflake/knowledge-source.md",
+        "/guide-connecting-copilot-studio-snowflake/mcp-server.html",
+        "/guide-connecting-copilot-studio-snowflake/mcp-server.md"
+      ]
+    },
+    "guide-cortex-agent-versioning": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-cortex-agent-versioning/",
+        "/guide-cortex-agent-versioning/ELI5.html",
+        "/guide-cortex-agent-versioning/ELI5.md",
+        "/guide-cortex-agent-versioning/README.html",
+        "/guide-cortex-agent-versioning/README.md",
+        "/guide-cortex-agent-versioning/github-actions/deploy-agent.yml",
+        "/guide-cortex-agent-versioning/specs/agent_spec.yaml",
+        "/guide-cortex-agent-versioning/sql/01_setup.sql",
+        "/guide-cortex-agent-versioning/sql/02_create_agent.sql",
+        "/guide-cortex-agent-versioning/sql/03_iterate_commit_promote.sql",
+        "/guide-cortex-agent-versioning/sql/04_git_driven_import.sql",
+        "/guide-cortex-agent-versioning/sql/05_promote_rollback.sql",
+        "/guide-cortex-agent-versioning/sql/06_inspect.sql",
+        "/guide-cortex-agent-versioning/sql/99_teardown.sql"
+      ]
+    },
+    "guide-cortex-search-access-control": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-cortex-search-access-control/",
+        "/guide-cortex-search-access-control/ELI5.html",
+        "/guide-cortex-search-access-control/ELI5.md",
+        "/guide-cortex-search-access-control/README.html",
+        "/guide-cortex-search-access-control/README.md",
+        "/guide-cortex-search-access-control/filter-attribute-ubac.html",
+        "/guide-cortex-search-access-control/filter-attribute-ubac.md",
+        "/guide-cortex-search-access-control/separate-services.html",
+        "/guide-cortex-search-access-control/separate-services.md"
+      ]
+    },
+    "guide-cowork-only-users": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-cowork-only-users/",
+        "/guide-cowork-only-users/ELI5.html",
+        "/guide-cowork-only-users/ELI5.md",
+        "/guide-cowork-only-users/README.html",
+        "/guide-cowork-only-users/README.md",
+        "/guide-cowork-only-users/sql/provision_bulk.sql",
+        "/guide-cowork-only-users/sql/provision_user.sql",
+        "/guide-cowork-only-users/sql/revoke_access.sql",
+        "/guide-cowork-only-users/sql/setup_role.sql",
+        "/guide-cowork-only-users/sql/verify.sql"
+      ]
+    },
+    "guide-powerbi-oauth": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-powerbi-oauth/",
+        "/guide-powerbi-oauth/ELI5.html",
+        "/guide-powerbi-oauth/ELI5.md",
+        "/guide-powerbi-oauth/README.html",
+        "/guide-powerbi-oauth/README.md",
+        "/guide-powerbi-oauth/sql/01_security_integration.sql",
+        "/guide-powerbi-oauth/sql/02_provision_users.sql",
+        "/guide-powerbi-oauth/sql/03_validate.sql"
+      ]
+    },
+    "guide-snowflake-firewall-allowlist": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-snowflake-firewall-allowlist/",
+        "/guide-snowflake-firewall-allowlist/ELI5.html",
+        "/guide-snowflake-firewall-allowlist/ELI5.md",
+        "/guide-snowflake-firewall-allowlist/README.html",
+        "/guide-snowflake-firewall-allowlist/README.md"
+      ]
+    },
+    "guide-snowflake-splunk-ingestion": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-snowflake-splunk-ingestion/",
+        "/guide-snowflake-splunk-ingestion/ELI5.html",
+        "/guide-snowflake-splunk-ingestion/ELI5.md",
+        "/guide-snowflake-splunk-ingestion/README.html",
+        "/guide-snowflake-splunk-ingestion/README.md",
+        "/guide-snowflake-splunk-ingestion/pattern-1-federated-search.html",
+        "/guide-snowflake-splunk-ingestion/pattern-1-federated-search.md",
+        "/guide-snowflake-splunk-ingestion/pattern-2-db-connect.html",
+        "/guide-snowflake-splunk-ingestion/pattern-2-db-connect.md",
+        "/guide-snowflake-splunk-ingestion/pattern-3-external-stage.html",
+        "/guide-snowflake-splunk-ingestion/pattern-3-external-stage.md",
+        "/guide-snowflake-splunk-ingestion/pattern-4-sentry.html",
+        "/guide-snowflake-splunk-ingestion/pattern-4-sentry.md"
+      ]
+    },
+    "guide-universal-data-sharing": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-universal-data-sharing/",
+        "/guide-universal-data-sharing/ELI5.html",
+        "/guide-universal-data-sharing/ELI5.md",
+        "/guide-universal-data-sharing/README.html",
+        "/guide-universal-data-sharing/README.md",
+        "/guide-universal-data-sharing/sql/01_open_data_sharing.sql",
+        "/guide-universal-data-sharing/sql/02_open_table_format_sharing.sql",
+        "/guide-universal-data-sharing/sql/03_collaboration_api_dcr.sql",
+        "/guide-universal-data-sharing/sql/04_universal_governance.sql"
+      ]
+    },
+    "guide-vscode-copilot-cortex": {
+      "date": "2026-10-06",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-vscode-copilot-cortex/",
+        "/guide-vscode-copilot-cortex/ELI5.html",
+        "/guide-vscode-copilot-cortex/ELI5.md",
+        "/guide-vscode-copilot-cortex/README.html",
+        "/guide-vscode-copilot-cortex/README.md",
+        "/guide-vscode-copilot-cortex/path-1-vscode-extension.html",
+        "/guide-vscode-copilot-cortex/path-1-vscode-extension.md",
+        "/guide-vscode-copilot-cortex/path-2-subagent-skill.html",
+        "/guide-vscode-copilot-cortex/path-2-subagent-skill.md",
+        "/guide-vscode-copilot-cortex/path-3-mcp.html",
+        "/guide-vscode-copilot-cortex/path-3-mcp.md"
+      ]
+    }
+  }
+}

@@ -1,0 +1,123 @@
+# =============================================================================
+# SFE-Public Repository .gitignore
+# Defense-in-depth: protects contributors who lack the team's global gitignore.
+# =============================================================================
+
+# ---- Operating System ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---- IDE / Editor State ----
+.cursor/
+.vscode/
+.idea/
+*.code-workspace
+
+# ---- Cortex Code (personal state only; .cortex/skills/ tracked on purpose) ----
+.cortex/conversations/
+.cortex/permissions.json
+.cortex/settings.json
+.cortex/settings.local.json
+.cortex/mcp.json
+.cortex/logs/
+.cortex/mcp_oauth/
+.cortex/memory/
+
+# ---- Claude Code personal state (.claude/skills/ remains tracked) ----
+.claude/settings.json
+.claude/settings.local.json
+.claude/projects/
+.claude/conversations/
+.claude/logs/
+.claude/memory/
+
+# ---- Snowflake CLI / Cortex Code plans ----
+.snowflake/cortex/plans/
+
+# ---- Secrets & Credentials (CRITICAL) ----
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.sample
+.envrc
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.cer
+*.crt
+*.der
+*.csr
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+secrets.yaml
+secrets.yml
+secrets.json
+*.secret
+*-secret.*
+.apikey
+apikey.txt
+*.token
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+.venv-*/
+venv/
+env/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- Node.js ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+.pnpm-debug.log*
+package-lock.json
+!site/package-lock.json
+!demo-restaurant-recovery-explorer/app/package-lock.json
+demo-restaurant-recovery-explorer/app/.next/
+demo-restaurant-recovery-explorer/app/*.tsbuildinfo
+demo-restaurant-recovery-explorer/app/test-results/
+demo-restaurant-recovery-explorer/app/playwright-report/
+demo-restaurant-recovery-explorer/app/snowflake.yml
+demo-restaurant-recovery-explorer/app/app.yml
+
+# ---- Documentation build (source lives in site/) ----
+site/.build/
+site/.bundle/
+site/vendor/
+site/.cache/
+
+# ---- Build State (local-only, contains paths and usernames) ----
+.builddemo-state.json
+.demo-config
+
+# ---- Logs & Temp ----
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ---- Archive (local only — not pushed to remote) ----
+_archive/
+
+# ---- Lifecycle (local analysis, not tracked) ----
+lifecycle.md
+
+# ---- Audit Output (applyrules --monorepo) ----
+audit_reports/
+AUDIT_REPORT.md

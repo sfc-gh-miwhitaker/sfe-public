@@ -1,0 +1,27 @@
+{
+  "attribution": "Pair-programmed by SE Community + Cortex Code",
+  "baseurl": "/sfe-public",
+  "pilot": [
+    "guide-ai-spend-consolidation"
+  ],
+  "readerPatterns": [
+    "*.md",
+    "docs/**/*.md",
+    "diagrams/**/*.md",
+    "sql/**/*.sql",
+    "deploy_all.sql",
+    "teardown_all.sql"
+  ],
+  "excludedNames": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "SKILL.md"
+  ],
+  "extraFiles": [
+    "guide-cowork-easter-eggs/WHAT-CAN-I-DO-NOW.md",
+    "guide-ai-spend-consolidation/workbook.html",
+    "guide-shopify-multistore-snowflake/config/shopify_object_override.json",
+    "guide-shopify-multistore-snowflake/config/stores.example.json",
+    "guide-snowflake-ml-lifecycle/python/reference_pipeline.py"
+  ]
+}
