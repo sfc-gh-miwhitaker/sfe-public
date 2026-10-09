@@ -1,7 +1,18 @@
 {
   "attribution": "Pair-programmed by SE Community + Cortex Code",
-  "_comment": "Retirement routes for projects that once had a public URL. Record routes BEFORE moving files so old links land on a tombstone page instead of a 404. Schema per project: date (YYYY-MM-DD) and routes (array of absolute paths, each must start with /<project>/). 'reason' and 'successor' are documentation for maintainers; build.mjs ignores them.",
+  "_comment": "Retirement routes for projects that once had a public URL. Record routes BEFORE moving files so old links land on a tombstone page instead of a 404. Schema per project: date (YYYY-MM-DD) and routes (array of absolute paths, each must start with /<project>/). 'reason' and singular 'successor' are documentation only. Optional 'successors' is an array of active project slugs rendered as replacement links.",
   "projects": {
+    "guide-external-harness-coco": {
+      "date": "2026-10-09",
+      "successors": ["guide-claude-code-coco", "guide-codex-coco"],
+      "routes": [
+        "/guide-external-harness-coco/",
+        "/guide-external-harness-coco/README.html",
+        "/guide-external-harness-coco/README.md",
+        "/guide-external-harness-coco/ELI5.html",
+        "/guide-external-harness-coco/ELI5.md"
+      ]
+    },
     "demo-streams-cdc-workshop": {
       "date": "2026-09-21",
       "reason": "Removed previously; stale catalog references cleaned up October 6.",

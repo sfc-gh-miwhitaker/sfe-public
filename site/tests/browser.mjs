@@ -102,12 +102,14 @@ try {
     assert(await page.locator('.reader-diagram svg').count() >= 3);
     await page.locator('.reader-diagram').first().screenshot({path: path.join(screenshots, 'diagram.png')});
   }
-  if (active.includes('guide-external-harness-coco')) {
+  for (const project of ['guide-claude-code-coco', 'guide-codex-coco'].filter(project => active.includes(project))) {
     for (const theme of ['light', 'dark']) {
       await page.emulateMedia({colorScheme: theme});
       for (const width of [360, 390, 768, 1440]) {
         await page.setViewportSize({width, height: 1000});
-        await page.goto(base + 'guide-external-harness-coco/');
+        await page.goto(base + project + '/');
+        assert(await page.locator('main a[href="https://marketplace.visualstudio.com/items?itemName=snowflake.snowflake-vsc"]').count() > 0, 'Official VS Code extension link missing');
+        assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${project} ${width}px page overflows`);
         const diagram = page.locator('.reader-diagram');
         assert.equal(await diagram.locator('svg .node').count(), 5, 'Handoff diagram must contain five roles/stages');
         assert(await diagram.evaluate(element => element.scrollWidth <= element.clientWidth + 1), `${theme} ${width}px handoff diagram clips internally`);
@@ -153,10 +155,13 @@ try {
   const retired = JSON.parse(fs.readFileSync(new URL('../retired.json', import.meta.url), 'utf8')).projects;
   for (const [project, record] of Object.entries(retired)) {
     if (active.includes(project)) continue;
-    for (const route of record.routes.filter(route => route.endsWith('/') || route.endsWith('README.html'))) {
+    for (const route of record.routes.filter(route => route.endsWith('/') || route.endsWith('README.html') || (record.successors && route.endsWith('.html')))) {
       await page.goto(base + route.slice(1));
       assert.match(await page.locator('main').innerText(), /retired|archived/i, `Missing retirement notice: ${route}`);
       assert.equal(await page.locator(`.site-nav a[href="${new URL(base).pathname}${project}/"]`).count(), 0);
+      for (const successor of (record.successors || []).filter(successor => active.includes(successor))) {
+        assert.equal(await page.locator(`main a[href="${new URL(base).pathname}${successor}/"]`).count(), 1, `Missing replacement guide on ${route}`);
+      }
     }
   }
   assert.deepEqual(external, [], 'Unexpected external requests');

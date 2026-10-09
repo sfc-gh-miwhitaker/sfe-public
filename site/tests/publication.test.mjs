@@ -51,6 +51,30 @@ test('real publication boundary excludes hidden and agent files', () => {
   assert(discover().length > 0);
 });
 
+test('client guides use host-specific defaults and preserve the VS Code direct path', () => {
+  const root = path.join(site, '..');
+  const expected = [
+    ['guide-claude-code-coco', '## Recommended: AI Kit Plugin', '## Alternative: Native MCP'],
+    ['guide-codex-coco', '## Recommended: Native MCP', '## Alternative: AI Kit Routing'],
+  ];
+  for (const [project, recommended, alternative] of expected) {
+    const markdown = fs.readFileSync(path.join(root, project, 'README.md'), 'utf8');
+    assert(markdown.indexOf(recommended) > 0);
+    assert(markdown.indexOf(alternative) > markdown.indexOf(recommended));
+    assert.match(markdown, /marketplace\.visualstudio\.com\/items\?itemName=snowflake\.snowflake-vsc/);
+    assert.match(markdown, /not automatic delegation/);
+    assert.match(markdown, /\*\*Last verified:\*\* 2026-10-08/);
+    assert.match(markdown, /\*\*Expires:\*\* 2026-12-07/);
+    assert(fs.existsSync(path.join(root, project, 'ELI5.md')));
+  }
+  const codex = fs.readFileSync(path.join(root, 'guide-codex-coco/README.md'), 'utf8');
+  assert(codex.indexOf('--dangerously-allow-all-tool-calls') < codex.indexOf('codex plugin marketplace add'));
+  const retired = JSON.parse(fs.readFileSync(path.join(site, 'retired.json'), 'utf8')).projects;
+  assert.deepEqual(retired['guide-external-harness-coco'].successors, expected.map(entry => entry[0]));
+  assert.equal(retired['guide-external-harness-coco'].routes.length, 5);
+  assert(!discover().includes('guide-external-harness-coco'));
+});
+
 test('Pages publication is gated and handles archive completion explicitly', () => {
   const workflow = fs.readFileSync(path.join(site, '../.github/workflows/pages.yml'), 'utf8');
   assert.match(workflow, /workflow_run:/);

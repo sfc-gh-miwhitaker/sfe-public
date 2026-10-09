@@ -261,11 +261,16 @@ async function main() {
     }
     for (const [project, entry] of Object.entries(retired)) {
       if (projects.includes(project)) continue;
+      const successors = (entry.successors || []).filter(successor => projects.includes(successor)).map(successor => {
+        return {title: catalog.get(successor).title, url: `${config.baseurl}/${successor}/`};
+      });
+      const successorHtml = successors.length ? `<p>This guide has been split into client-specific guides:</p><ul>${successors.map(successor => `<li><a href="${escapeHtml(successor.url)}">${escapeHtml(successor.title)}</a></li>`).join('')}</ul>` : '';
+      const successorText = successors.map(successor => `${successor.title}: ${successor.url}`).join('\n');
       for (const retiredRoute of entry.routes) {
         if (!retiredRoute.startsWith(`/${project}/`) || retiredRoute.includes('..')) throw new Error(`Invalid retired route: ${retiredRoute}`);
         const output = retiredRoute.endsWith('/') ? `${retiredRoute}index.html` : retiredRoute;
-        if (output.endsWith('.html')) page(output.slice(1), 'Guide retired', `<h1>Guide retired</h1><p>${escapeHtml(project)} was retired on ${escapeHtml(entry.date)}. It is no longer maintained.</p><p><a href="${config.baseurl}/#projects">Browse current guides</a></p>`, {permalink: retiredRoute});
-        else write(output.slice(1), `Guide retired on ${entry.date}. Browse ${config.baseurl}/ for current guides.\n`);
+        if (output.endsWith('.html')) page(output.slice(1), 'Guide retired', `<h1>Guide retired</h1><p>${escapeHtml(project)} was retired on ${escapeHtml(entry.date)}. It is no longer maintained.</p>${successorHtml}<p><a href="${config.baseurl}/#projects">Browse current guides</a></p>`, {permalink: retiredRoute});
+        else write(output.slice(1), `Guide retired on ${entry.date}.\n${successorText ? `${successorText}\n` : ''}Browse ${config.baseurl}/ for current guides.\n`);
       }
     }
     page('404.html', 'Page not found', `<h1>Page not found</h1><p>This link may refer to a moved or retired example.</p><p><a href="${config.baseurl}/">Browse current guides</a></p>`, {permalink: '/404.html'});

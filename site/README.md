@@ -83,6 +83,9 @@ The archive workflow records old routes in `retired.json` before moving a projec
 The Pages workflow listens for successful archive-workflow completion and rebuilds
 the latest main commit, rather than relying on a bot push to trigger another build.
 Retired routes display a notice and disappear from active navigation and search.
+When a guide splits, an optional `successors` array in its retirement record links
+to the active replacement guides from both rendered notices and text downloads.
+Replacements that later retire are omitted; the catalog link remains available.
 
 ## Adding Content
 
