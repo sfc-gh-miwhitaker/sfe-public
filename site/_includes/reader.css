@@ -33,7 +33,7 @@ a, .main-content a { color: var(--link); }
 .reader-diagram { overflow-x: auto; background: white; color: #1e293b; padding: 1rem; }
 .reader-diagram svg { min-width: 38rem; }
 /* This narrow handoff flow fits phones without the architecture-diagram minimum. */
-.main-content:has(#use-claude-code-with-coco-for-snowflake-work, #use-codex-with-coco-for-snowflake-work) .reader-diagram svg { display: block; min-width: 0; margin-inline: auto; }
+.main-content:has(#use-claude-code-with-coco-for-snowflake-work, #use-codex-with-coco-for-snowflake-work, #use-claude-desktop-with-coco-for-snowflake-work) .reader-diagram svg { display: block; min-width: 0; margin-inline: auto; }
 :focus-visible { outline: 3px solid var(--link); outline-offset: 3px; }
 @media (prefers-color-scheme: dark) {
   :root { --paper: #16202f; --ink: #edf2f7; --link: #70ddff; --line: #475569; --panel: #1e293b; }

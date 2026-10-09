@@ -102,7 +102,7 @@ try {
     assert(await page.locator('.reader-diagram svg').count() >= 3);
     await page.locator('.reader-diagram').first().screenshot({path: path.join(screenshots, 'diagram.png')});
   }
-  for (const project of ['guide-claude-code-coco', 'guide-codex-coco'].filter(project => active.includes(project))) {
+  for (const project of ['guide-claude-code-coco', 'guide-codex-coco', 'guide-claude-desktop-coco'].filter(project => active.includes(project))) {
     for (const theme of ['light', 'dark']) {
       await page.emulateMedia({colorScheme: theme});
       for (const width of [360, 390, 768, 1440]) {

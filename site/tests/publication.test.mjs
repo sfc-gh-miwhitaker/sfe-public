@@ -75,6 +75,19 @@ test('client guides use host-specific defaults and preserve the VS Code direct p
   assert(!discover().includes('guide-external-harness-coco'));
 });
 
+test('Desktop guide uses local config and publishes only its reader helper', () => {
+  const root = path.join(site, '..');
+  const guide = fs.readFileSync(path.join(root, 'guide-claude-desktop-coco/README.md'), 'utf8');
+  assert.match(guide, /Developer > Edit Config/);
+  assert.match(guide, /claude_desktop_config\.json/);
+  assert.match(guide, /Merge only the generated/);
+  assert.match(guide, /bypass=false and disallowed_tools/);
+  assert.match(guide, /not approving each inner CoCo action/);
+  assert.match(guide, /marketplace\.visualstudio\.com\/items\?itemName=snowflake\.snowflake-vsc/);
+  assert(publicationFiles().includes('guide-claude-desktop-coco/tools/generate_config.py'));
+  assert(!publicationFiles().includes('guide-claude-desktop-coco/tests/test_generate_config.py'));
+});
+
 test('Pages publication is gated and handles archive completion explicitly', () => {
   const workflow = fs.readFileSync(path.join(site, '../.github/workflows/pages.yml'), 'utf8');
   assert.match(workflow, /workflow_run:/);

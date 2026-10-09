@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-19-blue)
+![Projects](https://img.shields.io/badge/Projects-20-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -24,7 +24,7 @@ Pick a goal. Each project's README has its prerequisites and next steps.
 
 | I need to... | Start with | Next steps |
 | --- | --- | --- |
-| **Connect an external tool to Snowflake** | [Integration guides](#integrations) | [Claude Code](guide-claude-code-coco/) or [Codex](guide-codex-coco/); for VS Code itself, start with the [official Snowflake extension](https://marketplace.visualstudio.com/items?itemName=snowflake.snowflake-vsc). |
+| **Connect an external tool to Snowflake** | [Integration guides](#integrations) | [Claude Code](guide-claude-code-coco/), [Codex](guide-codex-coco/), or [Claude Desktop](guide-claude-desktop-coco/); for VS Code itself, start with the [official Snowflake extension](https://marketplace.visualstudio.com/items?itemName=snowflake.snowflake-vsc). |
 | **Build Snowflake data pipelines** | [Debezium CDC](guide-debezium-to-snowflake/) | Or [OpenTelemetry](guide-otel-to-snowflake/) and [AI spend ingestion](guide-ai-spend-consolidation/), depending on your source. |
 | **Build a production Cortex Agent** | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | Then [AI access control](guide-cortex-access-control/) for access and usage boundaries. |
 | **Govern Snowflake costs and usage** | [Cost visibility](guide-snowflake-cost-visibility/) | [AI access and limits](guide-cortex-access-control/), [organization reporting](guide-org-reporting/), or [cross-platform AI spend](guide-ai-spend-consolidation/). |
@@ -68,6 +68,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | --- | --- | --- |
 | [Claude Code with CoCo](guide-claude-code-coco/) | Route bounded Snowflake assignments from Claude Code with AI Kit first, or use native MCP as a direct alternative. | CoCo, Claude Code, AI Kit, delegation |
 | [Codex with CoCo](guide-codex-coco/) | Delegate bounded Snowflake assignments from Codex with native MCP first and evaluate AI Kit's Codex-specific controls separately. | CoCo, Codex, MCP, delegation |
+| [Claude Desktop with CoCo](guide-claude-desktop-coco/) | Call CoCo from Claude Desktop through local MCP, with a print-only configuration helper and explicit approval boundaries. | CoCo, Claude Desktop, MCP, delegation |
 | [Salesforce zero copy](guide-salesforce-v2-zero-copy/) | Choose the right direction and connector for Salesforce zero-copy access. | Salesforce, zero copy |
 | [Delta Sharing behind an IP allowlist](guide-delta-sharing-ip-allowlist/) | Consume a vendor Delta Sharing feed when the provider only accepts allowlisted IP addresses. | Delta Sharing, egress IPs |
 | [Cube semantic layer](guide-cube-snowflake-semantic-layer/) | Configure Cube authentication, pre-aggregations, and semantic-view synchronization. | Cube, semantic layer |

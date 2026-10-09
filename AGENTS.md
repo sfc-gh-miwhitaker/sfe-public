@@ -46,6 +46,7 @@ authenticate and communicate with Snowflake.
 
 - `guide-claude-code-coco` — Claude Code delegation: AI Kit first, native CoCo MCP alternative, bounded context, permissions, sessions, and evidence-based completion; VS Code users default to the official Snowflake extension
 - `guide-codex-coco` — Codex delegation: native CoCo MCP first, AI Kit alternative with Codex-specific approval and child-MCP limitations, bounded context and evidence; VS Code users default to the official Snowflake extension
+- `guide-claude-desktop-coco` — Claude Desktop chat delegation through local CoCo MCP: print-only configuration helper, absolute executable paths, independent child calls, approval boundaries, and official VS Code extension routing
 - `guide-snowflake-mcp-role-controls` — Snowflake-managed MCP primary-role OAuth controls and secondary-role session-policy restrictions
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake bidirectional zero copy: V2 Data Share, query/file federation, legacy V1/BYOL, Openflow and MCP boundaries
 - `guide-cube-snowflake-semantic-layer` — Cube (cube.dev) semantic layer: driver config, three auth paths, OIDC workload identity, pre-aggregation cost

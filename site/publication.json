@@ -18,6 +18,7 @@
     "SKILL.md"
   ],
   "extraFiles": [
+    "guide-claude-desktop-coco/tools/generate_config.py",
     "guide-cowork-easter-eggs/WHAT-CAN-I-DO-NOW.md",
     "guide-ai-spend-consolidation/workbook.html",
     "guide-shopify-multistore-snowflake/config/shopify_object_override.json",
