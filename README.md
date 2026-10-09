@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-17-blue)
+![Projects](https://img.shields.io/badge/Projects-18-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -66,6 +66,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 
 | Guide | What it helps you do | Topics |
 | --- | --- | --- |
+| [External coding harnesses with CoCo](guide-external-harness-coco/) | Delegate bounded Snowflake work from Claude Code or Codex through native MCP or AI Kit, with explicit authority and evidence. | CoCo, Claude Code, Codex, MCP, delegation |
 | [Salesforce zero copy](guide-salesforce-v2-zero-copy/) | Choose the right direction and connector for Salesforce zero-copy access. | Salesforce, zero copy |
 | [Delta Sharing behind an IP allowlist](guide-delta-sharing-ip-allowlist/) | Consume a vendor Delta Sharing feed when the provider only accepts allowlisted IP addresses. | Delta Sharing, egress IPs |
 | [Cube semantic layer](guide-cube-snowflake-semantic-layer/) | Configure Cube authentication, pre-aggregations, and semantic-view synchronization. | Cube, semantic layer |

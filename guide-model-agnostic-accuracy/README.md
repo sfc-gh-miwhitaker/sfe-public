@@ -16,12 +16,11 @@ Pair-programmed by SE Community + Cortex Code
 
 ## Quick Start
 
-1. Build a focused semantic view with explicit relationships, business descriptions, reusable metrics and filters, and representative VQRs.
-2. Prefer governed, certified sources for official metrics and document the grain and access-policy scope.
-3. Attach the view to a narrowly scoped Agent with distinct tool descriptions and orchestration instructions.
+1. Choose governed, certified sources for official metrics and document their grain and access-policy scope.
+2. Build a focused semantic view with explicit relationships, business descriptions, reusable metrics and filters, and representative verified queries (VQRs).
+3. Attach the view to a narrowly scoped Agent with distinct tool descriptions and orchestration instructions; start with `models.orchestration: auto`.
 4. Run Cortex Analyst evaluations to diagnose semantic-view SQL problems, then gate releases on end-to-end Cortex Agent evaluations — an Analyst pass does not prove the Agent's SQL is correct.
-5. Pin committed Agent and exact evaluation metric versions when comparing CI/CD runs.
-6. Start with `models.orchestration: auto`, then measure quality, latency, and consumption before choosing a different model.
+5. Compare committed Agent and exact evaluation metric versions, measuring quality, latency, and consumption across repeated runs.
 
 ## The Mental Model
 
@@ -206,7 +205,7 @@ Without measurement, you're tuning blind. A wrong answer could mean SQL generati
 
 ### Evaluate the semantic view first
 
-Cortex Analyst evaluations measure SQL correctness against selected verified queries. During a run, Snowflake temporarily removes each selected VQR from the view used to generate SQL, preventing that same query from guiding its own evaluation. The results show correctness, regressions, latency, expected SQL, and generated SQL.
+[Cortex Analyst evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst-evaluations) measure SQL correctness against selected verified queries. Snowflake creates a temporary semantic-view copy with all selected VQRs removed together; unselected VQRs remain available to guide SQL generation. Keep the selected evaluation set fixed when comparing runs, because changing that set also changes the examples available during generation. The results show correctness, regressions, latency, expected SQL, and generated SQL.
 
 **Treat this as a semantic-view diagnostic, not a release gate for the Agent.** Since [April 13, 2026](https://docs.snowflake.com/en/release-notes/2026/other/2026-04-13-cortex-agents-agentic-analyst), Cortex Agents generate SQL against semantic views directly rather than through the standalone Analyst path, so the SQL an Agent runs can differ from the SQL an Analyst evaluation scored. A clean Analyst baseline tells you the view is well-defined; it does not tell you the Agent will query it correctly. Gate promotion on Agent evaluations that check the SQL and results the Agent actually produced — for example, `tool_execution_accuracy` with expected SQL or result rows in `tool_output`, plus `answer_correctness` against literal values.
 
@@ -227,12 +226,12 @@ Snowflake's evaluation metrics follow the Goal-Plan-Action (GPA) framework. Inst
 
 | Metric | What it measures | What a failure tells you |
 | -------- | ----------------- | -------------------------- |
-| **Tool Selection Accuracy** (Public Preview) | Did the agent pick the expected tools? | Routing failed — inspect tool descriptions and orchestration instructions |
+| **Tool Selection Accuracy** (Public Preview) | Did the agent pick the expected tools? | Compare expected and actual calls; inspect routing instructions and whether ground truth allows valid alternatives |
 | **Tool Execution Accuracy** (Public Preview) | Did supported tools get appropriate input and output? | Inspect tool input, semantic view, search configuration, or tool result |
-| **Answer Correctness** | Does the final response match expected ground truth? | Response synthesis failed — fix response instructions or ground truth |
-| **Logical Consistency** | Is the reasoning internally consistent? (reference-free) | Agent contradicted itself — usually indicates instruction conflicts |
+| **Answer Correctness** | Does the final response match expected ground truth? | Inspect ground truth, retrieval, SQL, tool results, and synthesis to locate the mismatch |
+| **Logical Consistency** | Is reasoning consistent across instructions, planning, and tool calls? (reference-free) | Inspect contradictions in the trace rather than assuming an instruction conflict |
 
-This decomposition is what makes the framework diagnostic rather than just pass/fail.
+These metrics identify where to investigate, not a unique root cause. Tool Selection Accuracy scores supported tool-call matches deterministically, without an LLM judge; the other system metrics use judges. See [Cortex Agent evaluation metrics](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
 
 ### Ground truth design is where most teams under-invest
 
@@ -253,9 +252,13 @@ Evaluate a committed Agent version such as `VERSION$3`, not mutable `LIVE`, when
 
 Pinning fixes the configuration, not the result. Each run re-invokes the Agent and scores a newly generated trace, and orchestration is non-deterministic, so the same pinned Agent version and metric version can take different tool paths and score differently from run to run. `answer_correctness` is usually the most stable; `tool_selection_accuracy`, `tool_execution_accuracy`, and `logical_consistency` read the trace and expose path variability. Before gating CI/CD on a threshold, run the same dataset several times with fixed inputs, the same role, and a stable data snapshot to learn its normal range, then gate on that range rather than a single run's score. For the committed version you gate on, Snowflake recommends naming the orchestration model rather than `auto`, so a model change behind `auto` is not mistaken for agent variance; `auto` remains the right starting point while you are still choosing a model (Section 4). See [Interpret score variance across runs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
 
-**On metric version `v1` — the grace window has closed.** `v1` depends on `claude-4-sonnet`, which entered Snowflake's legacy model state on **2026-08-12**. That date has passed, so the rule is now settled rather than pending. Per the "Versions and model deprecations" section of the evaluation documentation, only accounts that had already used `claude-4-sonnet` before 2026-08-12 can run `v1`; every other account must pin `v2` or `v3`, and a run that resolves to `v1` fails outright rather than substituting another judge. Separately, a version also fails if none of its judge models are allowed by your account's model settings or available in your cross-region scope, so check both gates in the target account before pinning.
+**Evaluation-default transition (as of 2026-10-06).** [Snowflake's announced behavior change](https://docs.snowflake.com/en/release-notes/bcr-bundles/un-bundled/bcr-2442) is expected to take effect starting **2026-10-13**, subject to change. Unversioned system metrics, including Analyst SQL correctness, and `version: "auto"` change from `v1` to `v3`. Custom metrics with an omitted model or `model: auto` change their default judge from `claude-4-sonnet` to `claude-sonnet-4-6`, with `openai-gpt-5.4` used when the latter is not allowed or available. Explicit version and model settings do not change.
 
-This has a trap worth naming: `v1` is still the **default** version, so an unversioned metric (or `version: "auto"`) resolves to `v1` today. An account with no prior `claude-4-sonnet` usage therefore fails on metrics it never explicitly versioned. Pin `v2` or `v3` explicitly rather than relying on the default. Confirm which judge models your account can actually use before pinning. `SHOW CORTEX BASE MODELS IN SCHEMA SNOWFLAKE.MODELS;` returns each model's `lifecycle_status` (`GA`, `PUPR`, `PRPR`, `LEGACY`, `EOL`) along with `legacy_date` and `eol_date` — look for `claude-4-sonnet` at `LEGACY`. Include the `IN SCHEMA SNOWFLAKE.MODELS` clause: Cortex Base Models exist only in that schema, so an unqualified command returns zero rows whenever another database is current, which reads misleadingly like "no access." `v3` (`claude-sonnet-4-6` at 1M, or `openai-gpt-5.4` at 1.05M) is also the right choice for long traces, since `logical_consistency` sends the whole trace to its judge. See [Cortex Agent evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
+The old judge, `claude-4-sonnet`, reaches **end-of-life on 2026-10-14**. Metrics pinned to `v1` or that judge stop working at end-of-life. Before then, its legacy restriction already excludes accounts that had not used it before **2026-08-12**. Until the default transition takes effect, those accounts must explicitly choose a supported metric version rather than rely on the `v1` default.
+
+Test and baseline a supported exact system metric version, such as `v3_0`, before changing release gates. Scores from different judge versions are not directly comparable; recalibrate thresholds and check consumption. Review custom-metric model settings separately. Tool Selection Accuracy uses no judge, so the default judge change does not change its scoring. Keep the earlier baseline for comparison, but do not plan a rollback to `v1` after end-of-life.
+
+Confirm that the target account and evaluation role can use the required judge through an approved cross-region scope. `SHOW CORTEX BASE MODELS IN SCHEMA SNOWFLAKE.MODELS;` reports lifecycle status, `legacy_date`, and `eol_date`; catalog visibility alone does not prove permission to run a model. Keep the schema qualifier so the command searches the model catalog rather than the session's current schema. Snowflake recommends `v3` for long traces because its judges have roughly one-million-token context windows; use an exact minor version for controlled comparisons. See [Cortex Agent evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
 
 Upgrade exact metric versions deliberately when judge changes or model deprecations are announced, then establish a new baseline.
 
@@ -421,10 +424,12 @@ For practitioners who have read the guide and want a reminder during implementat
 - [ ] Ground truth includes expected values with tolerance
 - [ ] Ground truth includes what response should NOT contain
 - [ ] Semantic view has a Cortex Analyst SQL-correctness baseline (diagnostic only)
+- [ ] Analyst comparison runs select the same VQR set; all selected VQRs are withheld together
 - [ ] Release gate uses Agent evaluations that check the Agent's own SQL and results
 - [ ] Applicable Agent metrics are enabled; TSA and TEA are treated as Public Preview
 - [ ] Comparable runs target a committed Agent version and pin the same exact metric version (for example, `v3_0`)
 - [ ] CI/CD thresholds are set from the score range of repeated runs, not a single run
+- [ ] System metric versions and custom-metric judges remain supported; judge upgrades get a new baseline
 - [ ] Baseline evaluation run completed
 - [ ] Evaluations automated in CI/CD pipeline
 - [ ] MCP, skill, code-file, and session-attribute paths are tested outside native evaluations
@@ -439,6 +444,10 @@ For practitioners who have read the guide and want a reminder during implementat
 - [ ] Changes validated incrementally
 
 ---
+
+## Development Tools
+
+Cortex Code and other coding assistants can use [AGENTS.md](AGENTS.md) for this guide's editing conventions and the project skill in [.claude/skills/](.claude/skills/guide-model-agnostic-accuracy/SKILL.md) for its maintenance workflow. The guide deploys no Snowflake objects and requires no cleanup. See [CONTRIBUTING.md](../CONTRIBUTING.md) for repository checks and [site/README.md](../site/README.md) for reader-site validation.
 
 ## Related Guides
 
@@ -456,6 +465,8 @@ For practitioners who have read the guide and want a reminder during implementat
 | Semantic view best practices (dev pipeline) | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/views-semantic/best-practices-dev) |
 | Build agents | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-cowork/build-agents) |
 | Cortex Agent evaluations | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations) |
+| Evaluation-default transition | [docs.snowflake.com](https://docs.snowflake.com/en/release-notes/bcr-bundles/un-bundled/bcr-2442) |
+| Cortex Analyst evaluations | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst-evaluations) |
 | Verified Query Repository | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/verified-query-repository) |
 | Custom instructions | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/custom-instructions) |
 | Suggestions for semantic models | [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/verified-query-suggestions) |

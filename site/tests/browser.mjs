@@ -102,6 +102,25 @@ try {
     assert(await page.locator('.reader-diagram svg').count() >= 3);
     await page.locator('.reader-diagram').first().screenshot({path: path.join(screenshots, 'diagram.png')});
   }
+  if (active.includes('guide-external-harness-coco')) {
+    for (const theme of ['light', 'dark']) {
+      await page.emulateMedia({colorScheme: theme});
+      for (const width of [360, 390, 768, 1440]) {
+        await page.setViewportSize({width, height: 1000});
+        await page.goto(base + 'guide-external-harness-coco/');
+        const diagram = page.locator('.reader-diagram');
+        assert.equal(await diagram.locator('svg .node').count(), 5, 'Handoff diagram must contain five roles/stages');
+        assert(await diagram.evaluate(element => element.scrollWidth <= element.clientWidth + 1), `${theme} ${width}px handoff diagram clips internally`);
+        assert(await diagram.locator('svg .node, svg .edgeLabel').evaluateAll(elements => elements.every(element => {
+          const bounds = element.getBoundingClientRect();
+          const container = element.closest('.reader-diagram').getBoundingClientRect();
+          return bounds.left >= container.left && bounds.right <= container.right;
+        })), `${theme} ${width}px handoff label leaves diagram`);
+      }
+    }
+    await page.emulateMedia({colorScheme: 'light'});
+    await page.setViewportSize({width: 1440, height: 1000});
+  }
   if (active.includes('guide-cortex-agent-versioning')) {
   await page.goto(base + 'guide-cortex-agent-versioning/');
   await page.locator('#reader-query').fill('promote');

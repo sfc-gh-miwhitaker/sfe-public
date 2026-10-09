@@ -32,6 +32,8 @@ a, .main-content a { color: var(--link); }
 .reader-tools { display: flex; flex-wrap: wrap; gap: 1rem; margin: .8rem 0; font-size: .85rem; }
 .reader-diagram { overflow-x: auto; background: white; color: #1e293b; padding: 1rem; }
 .reader-diagram svg { min-width: 38rem; }
+/* This narrow handoff flow fits phones without the architecture-diagram minimum. */
+.main-content:has(#use-claude-code-or-codex-with-coco-for-snowflake-work) .reader-diagram svg { display: block; min-width: 0; margin-inline: auto; }
 :focus-visible { outline: 3px solid var(--link); outline-offset: 3px; }
 @media (prefers-color-scheme: dark) {
   :root { --paper: #16202f; --ink: #edf2f7; --link: #70ddff; --line: #475569; --panel: #1e293b; }

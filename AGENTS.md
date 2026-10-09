@@ -44,6 +44,7 @@ authenticate and communicate with Snowflake.
 
 **Current members:**
 
+- `guide-external-harness-coco` — Bounded Snowflake task delegation from Claude Code or Codex: native CoCo MCP, AI Kit routing, per-host approval differences, minimal context, session ownership, and evidence-based completion
 - `guide-snowflake-mcp-role-controls` — Snowflake-managed MCP primary-role OAuth controls and secondary-role session-policy restrictions
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake bidirectional zero copy: V2 Data Share, query/file federation, legacy V1/BYOL, Openflow and MCP boundaries
 - `guide-cube-snowflake-semantic-layer` — Cube (cube.dev) semantic layer: driver config, three auth paths, OIDC workload identity, pre-aggregation cost

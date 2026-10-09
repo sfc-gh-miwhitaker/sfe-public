@@ -2,46 +2,56 @@
 
 Pair-programmed by SE Community + Cortex Code
 
-This is the non-technical companion to the full guide. If you're an AE, PM, or exec who wants to understand what this guide helps your team do — without the implementation details — this is for you.
+> Simplified from: [Model-Agnostic Accuracy: Configuring Semantic Views and Cortex Agents](README.md)
 
----
+## One-Sentence Version
 
-## What problem does this solve?
+Clear business definitions and repeatable tests help an AI assistant stay reliable when its underlying model changes.
 
-When companies build AI assistants on top of their Snowflake data, they need answers that remain reliable as models and configurations change.
+## The Story
 
-The problem: a team can get an assistant working with one model, then discover different behavior when the model changes. This guide shows how strong configuration reduces that sensitivity and makes failures measurable. It does not promise that every model will produce the same answer.
+Imagine an office where assistants answer questions by searching filing cabinets. Without clear labels, each assistant must guess which folder matters and what its numbers mean. Different assistants can make different guesses.
 
-## Why does it matter?
+Now give them a catalog that explains the folders, business terms, and calculations. Tell them which sources answer which questions. They still need judgment, but they have fewer gaps to fill themselves.
 
-- **AI models change.** Snowflake regularly upgrades which models are available. If your system only works with one specific model, you're stuck — unable to benefit from improvements or cost savings.
-- **Trust requires consistency.** Users stop using AI tools that give different answers on different days. Consistent accuracy builds adoption.
-- **Cost and speed.** Once configuration removes avoidable ambiguity, teams can evaluate faster or less expensive models against the same quality bar.
+Before trusting a new assistant, ask questions with checked answers. Test its ability to find information, calculate results, and explain them. A wrong answer tells you to investigate; it does not automatically identify which step failed.
 
-## What's the key insight?
+When you change the assistant or the test's grading system, compare results carefully. Keep the questions, data, and access permissions stable. Better organization reduces mistakes, but it does not guarantee identical answers from every assistant.
 
-Think of it like a well-organized filing cabinet versus a pile of papers:
+## The Cast
 
-- **Pile of papers** (weak configuration): You need the smartest person in the room to find anything. If that person isn't available, you get wrong answers.
-- **Well-organized filing cabinet** (strong configuration): Anyone can find the right answer because the system is labeled, sorted, and has clear instructions.
+- **Semantic view:** The catalog explaining what business data means and how to calculate the numbers people request.
+- **Cortex Agent:** The assistant that chooses tools, queries data, and explains results.
+- **Model:** The language-and-reasoning engine behind the assistant.
+- **Verified query:** A question paired with a checked database calculation, like a worked example in a training manual.
+- **Evaluation:** A test using known answers or explicit rules to assess the assistant's behavior.
+- **Judge:** The grading system that scores a test; some scores use another AI model.
+- **Certified source:** A source marked as reviewed and trusted, which still needs checks for freshness, definitions, and access.
 
-The guide teaches teams to build the "well-organized filing cabinet" so models have less room to misinterpret the data and teams can detect regressions when behavior changes.
+## What Changed
 
-## What does the guide cover?
+These are the workflow changes the guide recommends:
 
-1. **Semantic Views** — How to define business meaning so supported Snowflake AI features need less inference
-2. **Trusted Sources** — How certification, ownership, and access rules establish which data should provide official answers
-3. **Agent Configuration** — How to give clear instructions so the AI knows which tool to use
-4. **Evaluation** — How to measure whether it's working, including empty and access-limited results
-5. **Model Selection** — Why the "best" model isn't always the best choice (performance/cost tradeoffs)
-6. **Iteration** — How to keep improving over time using real user behavior
+- Replace guessed business meanings with written definitions and checked examples.
+- Replace vague tool instructions with clear boundaries about which questions each tool answers.
+- Test database calculations separately, then test the complete assistant before release.
+- Compare repeated runs instead of trusting one good answer or score.
+- Choose models using measured quality, speed, and consumption rather than reputation alone.
+- Keep improving the definitions and tests using questions people actually ask.
 
-## Who should use this?
+## What to Watch Out For
 
-- Data engineers building semantic views for the first time
-- Teams deploying Cortex Agents into production
-- Anyone who wants their AI assistant to work reliably without constant tuning
+- A correct calculation from the wrong source is still the wrong business answer.
+- No returned rows can reflect access restrictions, not missing data; test both situations.
+- Example values in the catalog are not hidden by data-masking rules, so avoid sensitive examples.
+- The database-focused test removes all selected worked examples together; changing that selection also changes the help available during testing.
+- A passing database test does not prove the complete assistant will answer correctly.
+- Native tests do not cover every connected tool or user-session setting; test unsupported paths separately.
+- When the grading model changes, scores may change even without an assistant change; establish a new baseline before enforcing thresholds.
+- Retired grading models can stop pinned tests from running; check retirement notices before depending on a fixed version.
 
-## One sentence summary
+## The One Thing to Remember
 
-> Configure and evaluate the system so thoroughly that model changes introduce less risk and regressions are visible before users find them.
+Make business meaning explicit, then test the complete assistant before trusting a change.
+
+> For the full technical details, see the source document.

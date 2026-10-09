@@ -12,6 +12,11 @@ agent configuration, evaluation, model selection strategy, and iteration practic
 plus governed-source trust guidance and an ELI5.md companion.
 No SQL scripts, no demo infrastructure, no Streamlit.
 
+## Snowflake Environment
+
+No account connection or deployment is required to read this guide. Its examples
+are configuration guidance, not an executable Agent specification.
+
 ## Conventions
 
 - All claims must link to either official Snowflake docs or a Snowflake Builders Blog post
@@ -19,19 +24,26 @@ No SQL scripts, no demo infrastructure, no Streamlit.
 - Each section has "Why this matters" framing before practices
 - Tables used for practice summaries; prose used for reasoning
 - No code samples longer than 10 lines (this is a practices guide, not a tutorial)
-- Public trust guidance uses the current `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` tag;
-  never reference internal databases, presentations, customer names, or account identifiers
+- Public trust guidance distinguishes the Preview `SNOWFLAKE.TAGS.CERTIFICATION_STATUS`
+  tag from the still-supported legacy tag
+- README metadata is the single source for the guide's review baseline and expiry
 
 ## Key Commands
 
-```bash
-# Verify links are not broken (requires network)
-grep -oP 'https?://[^\s\)]+' README.md | sort -u
+Run from the repository root:
 
-# Check line count (guide should be readable in one sitting)
-wc -l README.md  # target: 400-600 lines
+```bash
+python3 .github/scripts/expire-projects.py --check
+python3 .github/scripts/check-public-content.py
+npm --prefix site test
 ```
 
-## Expiration
+For rendered-link checks, build the reader site first using `site/README.md`, then
+run `npm --prefix site run check`. These checks validate presentation and metadata;
+technical changes also require the feature-specific documentation checks below.
 
-This guide expires 2027-03-04. Review semantic-view modeling guidance, Agent model availability, and evaluation versions against current docs before that date.
+## Review Focus
+
+Review semantic-view modeling guidance, Agent model availability, evaluation
+versions, and announced judge retirements against current documentation. Keep
+Analyst diagnostics distinct from end-to-end Agent release gates.
