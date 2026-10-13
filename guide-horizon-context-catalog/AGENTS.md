@@ -19,6 +19,8 @@ Files:
 
 ## Conventions
 
+- Reader-facing pages address customers directly. Explain capabilities, requirements, limitations, and next steps; do not coach SEs, narrate source searches or review decisions, or discuss what to promise a customer. Keep research evidence in private memory. Express uncertainty as the specific availability or access detail the reader needs to confirm
+
 - All factual claims must trace to a public Snowflake source (blog post, docs page, or clearly attributed third-party)
 - Claims about product availability must include the exact status word Snowflake uses (GA / Public Preview / Private Preview) **and** the dated release note or documentation page that establishes it. Where no such source exists, the status must read "unconfirmed — verify with your account team" rather than asserting a maturity level.
 - Benchmark figures must carry the internal-test label from the source blog

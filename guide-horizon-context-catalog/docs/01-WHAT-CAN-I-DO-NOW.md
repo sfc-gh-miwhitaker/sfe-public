@@ -2,11 +2,11 @@
 
 Pair-programmed by SE Community + Cortex Code
 
-Use this page to choose a capability, then follow its maintained Snowflake documentation. It is a decision guide, not a second copy of connector setup instructions or privilege tables.
+Choose a capability below, then follow the linked Snowflake setup instructions. For a first Horizon Context connection, start with one BI or dbt source and a dashboard your team relies on.
 
 > **No support provided.** Reference only; validate before production use.
 
-**October update: 2026-10-13.** Horizon Context connectors are open preview; Semantic Studio is GA. Neither establishes Cortex Sense availability. See the [parent guide](../README.md) for the context stack and security distinctions.
+**October update: 2026-10-13.** Horizon Context connectors are open preview; Semantic Studio is GA. Confirm Cortex Sense availability separately for your account. See the [parent guide](../README.md) for the context stack and security distinctions.
 
 ## Start Here
 
@@ -16,7 +16,7 @@ Use this page to choose a capability, then follow its maintained Snowflake docum
 - **Ingest lineage your tools already emit:** use [external lineage](https://docs.snowflake.com/en/user-guide/external-lineage), a GA path distinct from the preview connectors.
 - **Delegate documentation work:** review [metadata access control and APPLY COMMENT](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control) instead of granting broad modification privileges.
 - **Reduce repeated column descriptions:** evaluate [column comment propagation](https://docs.snowflake.com/en/user-guide/comment-propagation). It is opt-in and follows eligible unchanged values, not arbitrary transformations.
-- **Evaluate Cortex Sense:** confirm its current availability and retrieval contract separately. Public Horizon Context documentation is not a Sense enablement or security specification.
+- **Evaluate Cortex Sense:** confirm availability, supported clients, and metadata access controls with your Snowflake account team before starting.
 
 ## Before Connecting a Source
 
@@ -29,23 +29,23 @@ For an OpenLineage producer, use the [external-lineage workflow and limitations]
 
 ## Before Enabling Enrichment or Expanding Agent Access
 
-- **Comment propagation:** read its [eligibility, provenance, and disable behavior](https://docs.snowflake.com/en/user-guide/comment-propagation). Turning it off stops future propagation but does not remove existing copies. Review old-object remediation rather than recreating production dependencies casually.
+- **Comment propagation:** read its [eligibility, provenance, and disable behavior](https://docs.snowflake.com/en/user-guide/comment-propagation). Turning it off stops future propagation but does not remove existing copies. Use change control for any object recreation needed to establish eligible lineage.
 - **Lineage:** check [temporary-object preservation](https://docs.snowflake.com/en/user-guide/lineage-temporary-objects) and [October 6 expanded coverage](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-06-lineage-integrations-monitors-search). A missing historical edge does not prove there is no dependency.
 - **Agents:** review [execution identity and tool privileges](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-setup), [inaccessible-tool handling](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-inaccessible-tool-handling), and [Restricted Session Scope](https://docs.snowflake.com/en/user-guide/restricted-session-scope). `reject` checks only the documented tool set, not every execution dependency. Audit owner-rights tools separately.
 
-## Evaluate Cortex Sense Deliberately
+## Plan a Cortex Sense Evaluation
 
-The October 13 review found a [CoCo release-note reference to Sense feedback](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-desktop/release-notes/v1-21-6), but no dedicated public availability or retrieval-access documentation. Confirm with the account team:
+Cortex Sense is a separately announced capability. Before an evaluation, confirm the following with your Snowflake account team:
 
 - Supported accounts, regions, clients, and sources.
 - Indexing, refresh, consumption, and administration.
 - Who can retrieve each context, and whether retrieval for a configured agent is bounded by its declared tools.
 
-Then evaluate representative questions against known-good answers. Measure correctness, refusal behavior, latency, consumption, and retrieved sources. Keep sensitive metadata out until the retrieval boundary is established. Snowflake's published internal benchmark is not a customer forecast.
+Then evaluate representative questions against known-good answers. Measure correctness, refusal behavior, latency, consumption, and retrieved sources. Keep sensitive metadata out until the retrieval boundary is established. Use your own results to assess suitability; Snowflake's published benchmark measures its internal workload.
 
 ## Decision Rule
 
-Use semantic views for explicit business definitions, lineage or metadata connectors for cross-system context, and separate grants for metadata visibility and data access. Treat Cortex Sense as a separately qualified runtime capability, not an automatic consequence of connecting the catalog.
+Use semantic views for explicit business definitions, lineage or metadata connectors for cross-system context, and separate grants for metadata visibility and data access. Evaluate Cortex Sense separately from your catalog connections.
 
 ## External References
 

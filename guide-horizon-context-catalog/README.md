@@ -7,7 +7,7 @@
 
 [Horizon Context](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context) collects, enriches, and activates metadata across Snowflake and external systems. Its October 12, 2026 preview adds 18 metadata connectors, external metadata curation, and column description propagation. This guide separates those documented capabilities from the announced [Cortex Sense](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) runtime layer, and explains why metadata visibility, data access, and agent tool configuration are different controls.
 
-**Audience:** SEs and platform owners who have deployed Cortex Agents or semantic views and need to know what the context layer does to their existing access-control model.
+**Audience:** Data engineers, data stewards, and platform owners connecting their data estate and evaluating context for AI applications.
 **Created:** 2026-07-09 | **Last updated:** 2026-10-13 | **Expires:** 2026-11-28 | **Status:** ACTIVE
 
 **Last verified:** 2026-10-13 (October release changes below); full-guide review: 2026-09-29.
@@ -16,21 +16,18 @@ Pair-programmed by SE Community + Cortex Code
 
 > **No support provided.** Reference only; validate before production use.
 
-> **October update:** **2026-10-13** — Horizon Context preview, connector access and security, metadata curation, lineage updates, Semantic Studio GA, and agent-control qualifications. See [Availability Summary](#availability-summary) for feature-specific evidence. Cortex Sense availability is not established by Horizon Context's release. Benchmark figures are from Snowflake's internal tests, not guaranteed customer results.
+> **Available now:** Horizon Context's October 12 public preview adds external metadata connectors and curation. Semantic Studio and temporary-object lineage preservation are GA. See [Availability Summary](#availability-summary) for supported regions, requirements, and separately announced capabilities.
 
 ---
 
 ## Start Here
 
-Use this guide in three passes:
+Start with one supported BI or dbt source and a dashboard your team relies on. Check the connector's region, network, and permission requirements, then trace a known dependency and validate its descriptions and metadata visibility before expanding collection.
 
-1. Read **The Three-Layer Stack** to separate Horizon Catalog, Horizon Context, and Cortex Sense. These are three different things and customers routinely conflate them.
-2. Read **The Agent Security Boundary** before discussing regulated or least-privilege deployments. This is the durable core of the guide.
-3. Check **Availability Summary** and the connector security prerequisites before choosing a dependency. Open preview does not mean every cloud, region, or source configuration is supported.
-
-Treat announced roadmap behavior, current product availability, and documented Cortex Agent controls as three separate categories of fact. This guide marks the boundaries between them explicitly.
-
-Ready to act? Use [What Can I Do Now?](docs/01-WHAT-CAN-I-DO-NOW.md) for decision checkpoints and links to maintained setup instructions.
+- **Connect your first source:** [What Can I Do Now?](docs/01-WHAT-CAN-I-DO-NOW.md) links to setup instructions and a validation checklist.
+- **Understand the architecture:** [The Three-Layer Stack](#the-three-layer-stack) explains Horizon Catalog, Horizon Context, and Cortex Sense.
+- **Plan access controls:** [The Agent Security Boundary](#the-agent-security-boundary) separates metadata visibility, data access, and tool permissions.
+- **Check feature availability:** [Availability Summary](#availability-summary) lists release status and requirements.
 
 ---
 
@@ -42,7 +39,7 @@ Ready to act? Use [What Can I Do Now?](docs/01-WHAT-CAN-I-DO-NOW.md) for decisio
 | **Horizon Context** | Collects, enriches, and activates metadata, including external BI tools, databases, and pipelines. Preview release dated October 12, 2026. |
 | **Metadata Connector** | A built-in integration that ingests schemas, query logs, and dashboard definitions from an external system into Horizon Catalog. |
 | **Semantic View** | A Snowflake object defining business metrics, dimensions, and relationships over raw tables. Used by Cortex Analyst to answer natural-language questions. |
-| **Cortex Sense** | Announced as a managed runtime context layer, demonstrated with CoCo. Dedicated public availability and retrieval-access documentation was not found in this review; see [Availability Summary](#availability-summary). |
+| **Cortex Sense** | Announced as a managed runtime context layer, demonstrated with CoCo. Confirm availability and access requirements for your account; see [Availability Summary](#availability-summary). |
 | **Cortex Analyst** | The Snowflake service that generates SQL from natural language using a semantic view as its business logic layer. |
 | **CoWork** | Snowflake's business-user-facing agent interface, renamed from Snowflake Intelligence at Summit 2026. The `SNOWFLAKE_INTELLIGENCE` database identifier used in DDL is unchanged. |
 | **OpenLineage** | An open standard for lineage metadata. Tools such as dbt and Apache Airflow push lineage into Horizon Catalog through Snowflake's external lineage REST endpoint. |
@@ -81,7 +78,7 @@ Each layer has a distinct job:
 - **Horizon Context** — expands that inventory to external systems and enriches raw metadata into business meaning.
 - **Cortex Sense** — the layer Snowflake demonstrated making enriched context active at query time for CoCo, retrieving relevant context instead of inspecting the estate table by table.
 
-This diagram is a conceptual separation, not a required product dependency chain. Horizon Context serves catalog users, CoCo, semantic-view-backed agents, and BI consumers without requiring a claim about Cortex Sense availability. Permissions matter at every stage: what is collected, who can see or edit metadata, and what each execution tool can read or change.
+This diagram is a conceptual separation, not a required product dependency chain. You can use Horizon Context for catalog discovery, CoCo, semantic-view-backed agents, and BI consumers without depending on Cortex Sense. Permissions matter at every stage: what is collected, who can see or edit metadata, and what each execution tool can read or change.
 
 ---
 
@@ -91,7 +88,7 @@ Horizon Context organizes its work into three phases. Its documentation distingu
 
 ### Collect
 
-The [October 12 preview](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-12-horizon-context-preview) introduced **18 metadata connectors in open preview**, covering BI tools, databases, and dbt. Use the maintained [connector catalog](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors) for the current list and source-specific setup; this guide does not duplicate it. These are metadata connections, not business-data replication pipelines, and nothing connects automatically.
+The [October 12 preview](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-12-horizon-context-preview) introduced **18 metadata connectors in open preview**, covering BI tools, databases, and dbt. Use the maintained [connector catalog](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors) for the current list and source-specific setup. These are metadata connections, not business-data replication pipelines, and nothing connects automatically.
 
 **Check eligibility before designing around a connector.** The release lists AWS/Azure commercial regions, not every Snowflake region. Source permissions and refresh behavior vary by connector. Read the [security requirements](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/security) before onboarding: they do not guarantee stable egress IPs or uniform TLS enforcement across source types. Do not broaden database network access just to complete setup.
 
@@ -107,7 +104,7 @@ Once collected, raw metadata is enriched into usable business context:
 - **Popularity signals** — query and access frequency used to distinguish authoritative assets from experimental ones.
 - **Certification status** — the explicit human signal that an asset is trusted. Note the tag moved: `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` arrived in public preview on August 31, 2026 and is now the recommended tag. `SNOWFLAKE.CORE.CERTIFICATION_STATUS` is **still supported and has not been deprecated**, but Snowflake documents it as planned for deprecation in a future release. New work should use the `SNOWFLAKE.TAGS` tag, whose allowed values are fixed by Snowflake and cannot be modified by account administrators — which is what lets governance and AI workflows interpret it consistently.
 - **AI-generated documentation** — table and column descriptions generated from metadata and optionally sample data.
-- **Metadata curation without ownership** — use [`APPLY COMMENT`](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control#apply-comment) for comment-only stewardship rather than granting broad modification rights. External assets can also be curated in the catalog; follow the source documentation for access requirements.
+- **Metadata curation without ownership** — use [`APPLY COMMENT`](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control#apply-comment) for comment-only stewardship rather than granting broad modification rights. Within Horizon Catalog, stewards can edit descriptions and apply tags and contacts to external assets such as Power BI and Tableau dashboards. Follow the [documented permissions](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control) for each operation.
 - **Column comment propagation (open preview)** — [opt-in propagation](https://docs.snowflake.com/en/user-guide/comment-propagation) reduces repeated descriptions where values pass through unchanged. It does not replace documentation for transformed metrics or overwrite manual downstream comments. Check supported objects, lineage eligibility, and disable behavior before enabling it.
 - **Semantic Views** — the governed business definition layer. [Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot) can generate a view from selected tables plus example SQL, and can ingest Tableau `.twb`, `.twbx`, `.tds`, and `.tdsx` files. [Power BI ingestion became GA on August 18, 2026](https://docs.snowflake.com/en/release-notes/2026/other/2026-08-18-semantic-views-power-bi-ingestion-ga) and supports `.pbit` and `.pbix`; report-level measures and time-intelligence functions such as `PREVIOUSMONTH` and `SAMEPERIODLASTYEAR` are not yet fully supported.
 
@@ -123,7 +120,7 @@ Enriched context is only valuable if it reaches the AI at the right moment:
 
 - **Universal Search** — CoCo's context retrieval uses hybrid keyword plus semantic search, filtered by access control policies, ranked by popularity.
 - **Automatic semantic view discovery** — when asked a data question, CoCo searches for and uses relevant semantic views, falling back to direct table access if none exist. That fallback is the behavior to understand before assuming a semantic view constrains what an agent will consult.
-- **Semantic View interoperability** — semantic views exposed via MCP allow Claude, Cursor, and other MCP clients to query Snowflake data with governed business logic. Power BI, Excel, ThoughtSpot, and Looker were all named as expanding this ecosystem; none of those four statuses could be confirmed against product documentation for this revision.
+- **Semantic View interoperability** — semantic views exposed via MCP allow Claude, Cursor, and other MCP clients to query Snowflake data with governed business logic. Power BI, Excel, ThoughtSpot, and Looker integrations were named in the Summit announcement; confirm support for your intended integration before depending on it.
 
 ---
 
@@ -131,17 +128,17 @@ Enriched context is only valuable if it reaches the AI at the right moment:
 
 Horizon Context builds the enriched catalog. Cortex Sense is the managed layer Snowflake demonstrated activating that context for CoCo queries.
 
-Two things to hold steady when discussing it. First, public sources demonstrate Cortex Sense grounding **CoCo**; they do not establish transparent injection into every Cortex Agent, every third-party agent, or arbitrary AI requests. Second, the October 13 review did **not find dedicated public Cortex Sense availability or retrieval-access documentation, or a GA release note**. The [CoCo Desktop v1.21.6 release notes](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-desktop/release-notes/v1-21-6) mention a Sense feedback fix; that establishes a documented integration reference, not general availability or a permission contract. Do not infer Sense availability from the Horizon Context preview or assume it is active in a customer account.
+Cortex Sense is a separately announced capability, demonstrated with **CoCo**. Before adopting it, confirm availability, supported clients, and metadata access controls with your Snowflake account team. The Horizon Context public preview does not confirm Sense availability for your account or integration with other agents.
 
 ### Why It Exists
 
-Snowflake's own product team found that even with Semantic View Autopilot, they had covered [fewer than 5% of their 9,685 internal tables](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) with semantic views. Any query outside that 5% got a wrong answer or no answer. Tables created two weeks ago have no semantic view. Cortex Sense is designed to fill that gap.
+Snowflake reported that [fewer than 5% of its 9,685 internal tables](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) were covered by semantic views, even with Semantic View Autopilot. Cortex Sense is designed to help supply context for questions beyond that curated coverage.
 
-That statistic is also the most useful diagnostic question to ask a customer: *what percentage of your estate is covered by semantic views today?* If the answer is low, the gap is real regardless of how any benchmark is read.
+For your own estate, identify which important business questions already have semantic-view coverage and which still depend on undocumented tables or scattered definitions.
 
 ### How It Works
 
-Cortex Sense builds a working model of the data estate from signals the organization already produces:
+The [announced Sense design](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) builds a working model of the data estate from signals your organization already produces:
 
 - Query history from Snowflake and connected external systems
 - Object metadata and table structures
@@ -152,22 +149,22 @@ Rather than injecting the full catalog into every prompt, Sense retrieves only t
 
 ### Accuracy and Cost (Snowflake Internal Benchmark)
 
-Snowflake published the following from [internal testing on their own product analytics data in June 2026](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/). These are internal benchmarks on Snowflake's own data; they are not a forecast for any customer workload.
+Snowflake published the following from [internal testing on their own product analytics data in June 2026](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/). These results measure Snowflake's workload, not expected accuracy or cost for yours.
 
 | Setup | Accuracy | Estimated cost per query |
 | --- | --- | --- |
 | Frontier coding agent with direct SQL access (no context layer) | ~24% | ~$1.76 |
 | CoCo with Cortex Sense | ~86% | ~$0.59 |
 
-Snowflake's blog states accuracy "improved from 24.1% to 86.3%." An intermediate data point for vanilla CoCo appears in the blog's chart but is not stated in the text; it is not quoted here. The cost reduction comes from eliminating the agent's need to run `DESCRIBE TABLE` across dozens of objects to discover what exists. There is also an upfront one-time indexing cost when Sense first ingests the estate, which Snowflake's blog states is recoverable over time through lower per-query cost.
+Snowflake attributes the lower per-query cost to reducing repeated metadata discovery. The blog also describes an upfront indexing cost that lower per-query costs can offset over time. Evaluate accuracy and total consumption on your own workload, including indexing.
 
 ### Self-Correcting Evaluation Loop
 
-Because Sense builds its understanding automatically rather than from hand-curated definitions, it includes a mechanism to surface and resolve conflicts:
+The announced design includes an evaluation loop to identify errors and conflicting definitions:
 
 - When evaluation queries fail, Sense reflects on why and attempts to update its own model.
 - When it detects conflicting definitions (for example, multiple teams computing "daily active users" differently), it surfaces the conflict to an admin to resolve in natural language.
-- Evaluation inputs come from three sources: the customer's gold-standard benchmark queries, end-user feedback, and Sense's own suggestions where coverage is thin.
+- Evaluation inputs come from three sources: your gold-standard benchmark queries, end-user feedback, and Sense's own suggestions where coverage is thin.
 
 ### Announced Access Model
 
@@ -181,11 +178,11 @@ From [Snowflake's blog (June 30, 2026)](https://www.snowflake.com/en/blog/enterp
 
 ## The Agent Security Boundary
 
-This is the section most customers with existing deployments will care about, and the reason to keep this guide.
+Data access, metadata visibility, and tool permissions are separate controls. Review all three when adding context to an existing AI application.
 
-### The Architecture Many Customers Built
+### Role Permissions and Configured Tools
 
-Security-conscious customers — particularly in financial services, healthcare, and regulated industries — built a deliberate two-checkpoint model:
+An agent configured with a semantic view has two distinct checkpoints:
 
 ```text
 Layer 1: RBAC
@@ -201,19 +198,19 @@ Layer 2: Semantic view as explicit tool configuration
   the agent's declared Analyst tool is the semantic view.
 ```
 
-This gave two independently auditable checkpoints: the role's data privileges, and the agent's declared tools. Tool configuration narrows the resources an agent is designed to use. It is not a replacement for least-privilege RBAC.
+You can audit the role's data privileges and the agent's declared tools independently. Tool configuration narrows the resources an agent is designed to use. It is not a replacement for least-privilege RBAC.
 
-### What Is Documented, and What Is Not
+### Execution and Tool Controls
 
-**Documented, and unchanged by the context layer:**
+Adding context does not replace execution-time access controls:
 
 - Direct SQL is constrained by its execution role and applicable policies. Audit delegated tools separately: an owner-rights procedure can act with its owner's privileges, and a search service is a separately authorized resource. The announced Sense design ingests metadata and usage patterns, not data rows; that statement does not define every connector or tool's execution boundary.
 - Semantic views are still supported as explicit tool configurations for Cortex Agents.
-- [Horizon Context documentation](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context) states that Snowflake enforces access, masking, and row-access policies at the query engine. It explicitly treats metadata visibility separately. Do not interpret query-engine enforcement as a promise that every tool uses the same identity or permission path.
+- [Horizon Context documentation](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context) states that Snowflake enforces access, masking, and row-access policies at the query engine. It explicitly treats metadata visibility separately. Tool execution identities and permission paths still need separate review.
 
-**The documented Cortex Agent controls — keep these four separate:**
+Cortex Agents provide four relevant controls:
 
-- **Execution identity:** Cortex Agents determine permissions from the querying user's **default role**, not the role currently active in the session. This is the single most commonly misunderstood control.
+- **Execution identity:** Cortex Agents determine permissions from the querying user's **default role**, not the role currently active in the session.
 - **Configured tools:** the default role needs the privileges required to invoke each tool. Explicit Analyst and Search resources narrow those tools, but tool configuration is not a universal execution ceiling. SQL, code, and custom tools have their own execution contracts; stored procedures can use owner's or caller's rights. Audit both invocation access and delegated authority.
 - **Inaccessible tools:** `orchestration.tool_not_accessible: accept` continues with accessible tools and reports inaccessible named, checked resources. `reject` gates the documented checked set, not every tool or underlying dependency. Read [which tools are checked](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-inaccessible-tool-handling) and test execution-time failures separately.
 - **Agent privilege ceiling:** [Restricted Session Scope](https://docs.snowflake.com/en/user-guide/restricted-session-scope) can limit what agent-active sessions may do, intersecting with RBAC. It does not establish or document Cortex Sense's context-retrieval boundary.
@@ -232,11 +229,11 @@ Therefore, **removing SELECT does not establish that an object's existence or de
 
 > *Does Cortex Sense context retrieval respect an agent's configured tool scope (for example, limited to `sv_regional_sales`), or does it operate at the calling user's full RBAC role scope?*
 
-**Review status as of 2026-10-13: no public source found that settles this Sense-specific question.** Horizon Context now documents metadata access separately from data access, but that does not establish how Cortex Sense filters runtime retrieval for a configured agent. The June Sense blog describes role-scoped access; it does not promise filtering by the agent's declared tools.
+**As of 2026-10-13, tool-scoped Sense retrieval remains unconfirmed.** The [Sense announcement](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) describes role-scoped access, not filtering by an agent's declared tools. Horizon Context's metadata grants alone do not answer this question.
 
 Why this matters in practice: if a use case requires that an agent not merely be unable to *query* certain data but be unaware of its *existence* — deal rooms, pre-announcement financials, segregated client books — then role-scoped retrieval and tool-scoped retrieval are materially different security postures. Metadata leakage (a table name, a column name, a metric definition) can be the disclosure.
 
-**What to do with this:** raise it explicitly with the Snowflake account team before enabling Cortex Sense on a sensitive workload, and get the answer in writing for the specific account and release. Do not promise either behavior to a customer. Until it is answered, do not treat tool configuration as a metadata boundary. Review both metadata and data grants, plus delegated tool authority, and validate actual retrieval before admitting sensitive metadata.
+Before using Sense with sensitive metadata, confirm the retrieval boundary with your Snowflake account team for your account and release. Validate it with representative roles and queries. Until that boundary is established, keep sensitive metadata out of the evaluation; an agent's tool list alone is not evidence that the metadata is hidden.
 
 ### The Related Agent Identity Risk
 
@@ -262,25 +259,25 @@ This is not a new risk introduced by Horizon Context or Cortex Sense. It is a pr
 
 Baseline snapshot: **2026-09-29**; October feature updates: **2026-10-13**. Follow the linked documentation for current availability and requirements.
 
-| Feature | Status | Evidence / notes |
+| Feature | Status | Requirements / details |
 | --- | --- | --- |
-| Horizon Catalog (base) | **GA** | Documented user guide, no preview banner |
+| Horizon Catalog (base) | **GA** | [Catalog discovery and governance](https://docs.snowflake.com/en/user-guide/snowflake-horizon) |
 | Semantic Views | **GA** | Querying semantic views reached GA in the 9.25 release (August 2025) |
 | Semantic View Autopilot | **GA** | Its Semantic Studio entry point is also GA as of September 30, 2026 |
-| Power BI ingestion for Semantic View Autopilot | **GA (August 18, 2026)** | Dated GA release note. `.pbit` and `.pbix`; report-level measures and time-intelligence functions remain limited |
+| Power BI ingestion for Semantic View Autopilot | **GA (August 18, 2026)** | Supports `.pbit` and `.pbix`; report-level measures and time-intelligence functions remain limited |
 | External lineage / OpenLineage ingestion | **GA (September 3, 2026)** | Follow the [current requirements and limits](https://docs.snowflake.com/en/user-guide/external-lineage) |
-| Semantic Studio (semantic view authoring environment) | **GA (September 30, 2026)** | October update: [dated GA release note](https://docs.snowflake.com/en/release-notes/2026/other/2026-09-30-semantic-studio-ga) |
-| Horizon Context / metadata connectors | **Preview / open preview (October 12, 2026)** | October update: 18 documented sources; AWS/Azure commercial regions, excluding government and China. See source-specific setup and security requirements |
-| Metadata access control / `APPLY COMMENT` | **Open preview** | October update: separate metadata visibility and comment-only curation privileges |
-| Column comment propagation | **Open preview** | October update: [opt-in behavior and limitations](https://docs.snowflake.com/en/user-guide/comment-propagation) |
-| Temporary-object lineage preservation | **GA (September 21, 2026)** | October update: [supported paths and limitations](https://docs.snowflake.com/en/user-guide/lineage-temporary-objects) |
-| Advanced Semantics (LOD calculations, composable definitions) | **Partially documented — status unconfirmed** | The semantic view querying reference now names LOD metrics (referenceable by bare name, not bound to one entity). No dated release note or status for LOD authoring or composable definitions. Tableau ingestion still does not import Tableau LOD calculations |
-| Cortex Sense | **Availability unconfirmed** | October review found a CoCo release-note mention, but no dedicated availability/retrieval-access documentation or GA release note. Horizon Context preview does not establish Sense status |
-| Cortex Sense — per-role context differentiation | **Announced as future work — unconfirmed** | June blog describes the plan; October review found no public permission contract establishing current behavior |
-| Power BI semantic view interop | **Unconfirmed — verify with your account team** | Named in the Summit announcement; status not confirmable against documentation |
-| Excel semantic view interop | **Unconfirmed — verify with your account team** | Named in the Summit announcement; status not confirmable against documentation |
+| Semantic Studio (semantic view authoring environment) | **GA (September 30, 2026)** | [Release details](https://docs.snowflake.com/en/release-notes/2026/other/2026-09-30-semantic-studio-ga) |
+| Horizon Context / metadata connectors | **Preview / open preview (October 12, 2026)** | 18 documented sources; AWS/Azure commercial regions, excluding government and China. See source-specific setup and security requirements |
+| Metadata access control / `APPLY COMMENT` | **Open preview** | Separate metadata visibility and comment-only curation privileges |
+| Column comment propagation | **Open preview** | [opt-in behavior and limitations](https://docs.snowflake.com/en/user-guide/comment-propagation) |
+| Temporary-object lineage preservation | **GA (September 21, 2026)** | [supported paths and limitations](https://docs.snowflake.com/en/user-guide/lineage-temporary-objects) |
+| Advanced Semantics (LOD calculations, composable definitions) | **Partially documented — status unconfirmed** | Confirm authoring support for LOD metrics and composable definitions before use. Tableau ingestion does not import Tableau LOD calculations |
+| Cortex Sense | **Availability unconfirmed** | Confirm account availability, supported clients, and metadata access controls separately from Horizon Context |
+| Cortex Sense — per-role context differentiation | **Announced as future work — unconfirmed** | Confirm support for separate role-specific contexts before planning a deployment |
+| Power BI semantic view interop | **Unconfirmed — verify with your account team** | Named in the Summit announcement; confirm support for your intended integration |
+| Excel semantic view interop | **Unconfirmed — verify with your account team** | Named in the Summit announcement; confirm support for your intended integration |
 | Cortex Agents | **GA (November 4, 2025)** | Asynchronous API reached GA August 30, 2026 |
-| Cortex Search | **GA (October 4, 2024)** | Dated GA release note |
+| Cortex Search | **GA (October 4, 2024)** | [Search service documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search/cortex-search-overview) |
 | `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` | **Public Preview (August 31, 2026)** | Recommended replacement; allowed values fixed by Snowflake and not modifiable |
 | `SNOWFLAKE.CORE.CERTIFICATION_STATUS` | **Still supported; not yet deprecated** | Documented as planned for deprecation in a future release. Migrate new work to the `SNOWFLAKE.TAGS` tag |
 
@@ -297,14 +294,6 @@ Baseline snapshot: **2026-09-29**; October feature updates: **2026-10-13**. Foll
 
 ---
 
-## Development Tools
-
-- `AGENTS.md` records project-specific claim and availability rules.
-- `.claude/skills/guide-horizon-context-catalog/SKILL.md` defines the maintenance workflow for future status updates.
-- `docs/01-WHAT-CAN-I-DO-NOW.md` translates the guide into currently actionable steps and preview-access questions.
-
----
-
 ## External References
 
 - [Horizon Context — Preview release (October 12, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-12-horizon-context-preview)
@@ -315,7 +304,6 @@ Baseline snapshot: **2026-09-29**; October feature updates: **2026-10-13**. Foll
 - [Column comment propagation](https://docs.snowflake.com/en/user-guide/comment-propagation)
 - [Temporary-object lineage preservation](https://docs.snowflake.com/en/user-guide/lineage-temporary-objects)
 - [Expanded lineage relationships (October 6, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-06-lineage-integrations-monitors-search)
-- [CoCo Desktop v1.21.6 release notes](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-desktop/release-notes/v1-21-6)
 
 - [Horizon Context blog — Snowflake (June 2, 2026)](https://www.snowflake.com/en/blog/horizon-context-governed-context/)
 - [Cortex Sense blog — Snowflake (June 30, 2026)](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/)

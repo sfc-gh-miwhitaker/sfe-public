@@ -9,7 +9,7 @@ Pair-programmed by SE Community + Cortex Code
 
 ## Purpose
 
-SE field guide explaining Snowflake's context stack: Horizon Catalog → Horizon Context → Cortex Sense. Covers the three-layer separation, the shift from explicit to dynamic context, the verified availability status of each piece, and the agent security-boundary questions customers will ask. Carries no competitive positioning or objection-handling content by design.
+Public customer guide explaining Snowflake's context stack: Horizon Catalog → Horizon Context → Cortex Sense. Helps data engineers, stewards, and platform owners choose capabilities, connect sources, and plan access controls. Write directly to the reader; exclude presenter coaching, research narratives, competitive positioning, and objection handling. State limitations and next steps without recounting the verification process.
 
 ## Architecture
 
@@ -47,7 +47,7 @@ None. Documentation-only guide.
 
 ## Gotchas
 
-- Qualify Cortex Sense independently from Horizon Context. The October 13, 2026 review found a CoCo release-note reference, but no dedicated public availability or retrieval-access contract. Re-check rather than treating that search outcome as permanent. Do not claim transparent injection into every agent or AI request.
+- Qualify Cortex Sense independently from Horizon Context. Verify availability, supported clients, and retrieval access against current sources; a client release-note mention alone does not establish those guarantees. Keep search history in private memory, not reader-facing pages. Do not claim transparent injection into every agent or AI request.
 - Benchmark numbers (24% → 86%, $1.76 → $0.59) are Snowflake's *internal* test results. Always include that qualifier.
 - Re-check whether Sense retrieval for a configured agent is bounded by its declared tools. The documented Horizon Context metadata-access model does not settle that runtime question. Review metadata grants independently from data grants, and owner-rights execution separately from the caller's direct privileges.
 - `tool_not_accessible: reject` checks only the documented tool set, not every tool or underlying dependency. Link to the current inaccessible-tool handling documentation rather than expanding the guarantee.
