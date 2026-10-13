@@ -8,13 +8,15 @@
 [Horizon Context](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context) collects, enriches, and activates metadata across Snowflake and external systems. Its October 12, 2026 preview adds 18 metadata connectors, external metadata curation, and column description propagation. This guide separates those documented capabilities from the announced [Cortex Sense](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) runtime layer, and explains why metadata visibility, data access, and agent tool configuration are different controls.
 
 **Audience:** SEs and platform owners who have deployed Cortex Agents or semantic views and need to know what the context layer does to their existing access-control model.
-**Created:** 2026-07-09 | **Last verified:** 2026-09-29 | **Expires:** 2026-11-28 | **Status:** ACTIVE
+**Created:** 2026-07-09 | **Last updated:** 2026-10-13 | **Expires:** 2026-11-28 | **Status:** ACTIVE
+
+**Last verified:** 2026-10-13 (October release changes below); full-guide review: 2026-09-29.
 
 Pair-programmed by SE Community + Cortex Code
 
 > **No support provided.** Reference only; validate before production use.
 
-> **October update:** **2026-10-13** — Horizon Context preview, connector access and security, metadata curation, lineage updates, Semantic Studio GA, and agent-control qualifications. The full-guide verification and expiry dates above are unchanged. See [Availability Summary](#availability-summary) for feature-specific evidence. Cortex Sense availability is not established by Horizon Context's release. Benchmark figures are from Snowflake's internal tests, not guaranteed customer results.
+> **October update:** **2026-10-13** — Horizon Context preview, connector access and security, metadata curation, lineage updates, Semantic Studio GA, and agent-control qualifications. See [Availability Summary](#availability-summary) for feature-specific evidence. Cortex Sense availability is not established by Horizon Context's release. Benchmark figures are from Snowflake's internal tests, not guaranteed customer results.
 
 ---
 
