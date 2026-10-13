@@ -1,70 +1,72 @@
-/* Cross-platform AI spend consolidation — teardown
+/* Cross-platform AI spend consolidation - decommissioning only
    Pair-programmed by SE Community + Cortex Code
-   Expires: 2027-03-10
+   Expires: 2026-11-09
 
-   Removes everything sql/01 through sql/09 created, in reverse dependency order.
+   DESTRUCTIVE: this is not part of forward-only remediation. Do not run it to
+   upgrade the pipeline. It removes the deployment after an operator has approved
+   decommissioning and satisfied retention requirements.
 
-   READ THIS BEFORE RUNNING:
+   Dropping AI_SPEND removes raw payloads, stage files, completion manifests,
+   run logs, dated identity mappings, rates, coverage evidence and entitlements.
+   Vendor retention windows mean some history cannot be retrieved again.
+   ACCOUNT_USAGE and Dynamic Tables are not durable archives. The SELECTs below
+   are an explicit control-data review, NOT a complete export or recovery plan.
+   Store any required retained records only in an approved protected location.
 
-   1. THE RAW LANDING TABLE IS NOT RECOVERABLE FROM THE VENDOR.
-      Vendor admin APIs have short retention windows. Dropping AI_SPEND destroys
-      history you cannot re-pull. If there is any chance you want it, clone first:
-
-        CREATE DATABASE AI_SPEND_ARCHIVE CLONE AI_SPEND;
-
-      Zero-copy, so it costs nothing until the original diverges.
-
-   2. IDENTITY_MAP AND SEAT_ENTITLEMENT ARE HAND-CURATED.
-      They are the two tables nobody wants to rebuild. Export them before dropping
-      even if you are discarding everything else.
-
-   3. THIS DOES NOT DELETE YOUR SECRETS' UNDERLYING CREDENTIALS.
-      Dropping a Snowflake SECRET removes the stored value here. It does NOT revoke
-      the token at the vendor. Revoke each token in the vendor console separately,
-      or you leave live credentials that Snowflake no longer tracks. This is the
-      step people skip.
+   Dropping Snowflake SECRET objects does not revoke vendor credentials. Revoke
+   them separately at their issuer after dependent integrations are retired.
+   Confirm no unrelated consumers use the dedicated database, warehouse, role,
+   or account-level EAI before removal. Custom extensions need their own review.
 */
-
--- ---------------------------------------------------------------------------
--- Step 0: preserve the hand-curated tables
---
--- Run these and save the output before going further. Everything else in this
--- database can be rebuilt from an API; these two cannot.
--- ---------------------------------------------------------------------------
 
 USE ROLE AI_SPEND_RL;
 USE WAREHOUSE AI_SPEND_WH;
 
-SELECT * FROM AI_SPEND.CONTROL.IDENTITY_MAP ORDER BY PLATFORM_KEY, SUBJECT_KEY;
-SELECT * FROM AI_SPEND.CONTROL.SEAT_ENTITLEMENT ORDER BY PLATFORM_KEY, PERIOD_MONTH, PERSON_KEY;
-SELECT * FROM AI_SPEND.CONTROL.PLATFORM_RATE ORDER BY PLATFORM_KEY, VALID_FROM;
-
--- ---------------------------------------------------------------------------
--- Step 1: stop the schedule first
---
--- Suspend before dropping. A task that fires mid-teardown fails against
--- half-removed objects and writes confusing rows into a log you are about to drop.
--- ---------------------------------------------------------------------------
-
+-- Step 1: stop ingestion before reviewing/removing its dependencies.
 ALTER TASK IF EXISTS AI_SPEND.CONTROL.TASK_PULL_GITHUB_COPILOT SUSPEND;
-
--- Uncomment if the optional alert in sql/09 was created.
+-- If an optional alert was deployed, suspend it before proceeding.
 -- ALTER ALERT IF EXISTS AI_SPEND.CONTROL.ALERT_PIPELINE_UNHEALTHY SUSPEND;
 
--- ---------------------------------------------------------------------------
--- Step 2: agent and semantic view
---
--- Before the tables they depend on. Dropping a base table under a live agent
--- leaves the agent in place and broken, answering with errors.
--- ---------------------------------------------------------------------------
+-- Step 2: review the hand-maintained controls (sensitive person data).
+SELECT PLATFORM_KEY, SUBJECT_KEY, PERSON_KEY, DISPLAY_NAME, DEPARTMENT,
+       COST_CENTER, BUSINESS_UNIT, MANAGER_KEY, CONFIDENCE, VALID_FROM,
+       VALID_TO, UPDATED_AT, ENTITY_KIND
+FROM AI_SPEND.CONTROL.IDENTITY_MAP
+ORDER BY PLATFORM_KEY, SUBJECT_KEY, VALID_FROM;
 
+SELECT PLATFORM_KEY, PERSON_KEY, PERIOD_MONTH, SEAT_MONTHLY_COST,
+       CURRENCY_CODE, ASSIGNED_AT, IS_ACTIVE_IN_PERIOD, SOURCE_NAME,
+       CAPTURED_AT, SOURCE_RUN_ID
+FROM AI_SPEND.CONTROL.SEAT_ENTITLEMENT
+ORDER BY PLATFORM_KEY, PERIOD_MONTH, PERSON_KEY;
+
+SELECT PLATFORM_KEY, UNIT_COST, CURRENCY_CODE, VALID_FROM, VALID_TO,
+       SOURCE_NOTE, UPDATED_AT
+FROM AI_SPEND.CONTROL.PLATFORM_RATE
+ORDER BY PLATFORM_KEY, VALID_FROM;
+
+SELECT PLATFORM_KEY, PERIOD_MONTH, SEAT_MONTHLY_COST, CURRENCY_CODE
+FROM AI_SPEND.CONTROL.SEAT_RATE
+ORDER BY PLATFORM_KEY, PERIOD_MONTH;
+
+SELECT PLATFORM_KEY, PERIOD_MONTH, IS_COMPLETE, VERIFIED_AT, SOURCE_NOTE
+FROM AI_SPEND.CONTROL.ACTIVITY_COVERAGE
+ORDER BY PLATFORM_KEY, PERIOD_MONTH;
+
+SELECT PLATFORM_KEY, REPORT_NAME, IS_REQUIRED, SOURCE_KIND
+FROM AI_SPEND.CONTROL.REPORT_REGISTRY
+ORDER BY PLATFORM_KEY, REPORT_NAME;
+
+-- Step 3: remove entry points, scheduled callers and monitoring consumers.
 DROP AGENT IF EXISTS AI_SPEND.GOLD.AI_SPEND_AGENT;
 DROP SEMANTIC VIEW IF EXISTS AI_SPEND.GOLD.AI_SPEND_SV;
+DROP TASK IF EXISTS AI_SPEND.CONTROL.TASK_PULL_GITHUB_COPILOT;
+-- DROP ALERT IF EXISTS AI_SPEND.CONTROL.ALERT_PIPELINE_UNHEALTHY;
+DROP VIEW IF EXISTS AI_SPEND.CONTROL.V_PIPELINE_HEALTH;
+DROP VIEW IF EXISTS AI_SPEND.CONTROL.V_REPORT_HEALTH;
+DROP VIEW IF EXISTS AI_SPEND.SHAPED.V_IDENTITY_QUALITY;
 
--- ---------------------------------------------------------------------------
--- Step 3: gold layer, leaves before intermediates
--- ---------------------------------------------------------------------------
-
+-- Step 4: gold consumers before their dependencies.
 DROP DYNAMIC TABLE IF EXISTS AI_SPEND.GOLD.AI_ADOPTION_TREND;
 DROP DYNAMIC TABLE IF EXISTS AI_SPEND.GOLD.AI_SPEND_FORECAST;
 DROP DYNAMIC TABLE IF EXISTS AI_SPEND.GOLD.AI_USAGE_ANOMALIES;
@@ -73,82 +75,56 @@ DROP DYNAMIC TABLE IF EXISTS AI_SPEND.GOLD.AI_SPEND_BY_DEPARTMENT;
 DROP DYNAMIC TABLE IF EXISTS AI_SPEND.GOLD.SEAT_UTILIZATION;
 DROP DYNAMIC TABLE IF EXISTS AI_SPEND.GOLD.AI_SPEND_ALLOCATED;
 DROP DYNAMIC TABLE IF EXISTS AI_SPEND.GOLD.PERSON_DAY_USAGE;
+DROP VIEW IF EXISTS AI_SPEND.CONTROL.V_PERSON_DIRECTORY;
 
--- ---------------------------------------------------------------------------
--- Step 4: shaped layer
--- ---------------------------------------------------------------------------
-
-DROP VIEW IF EXISTS AI_SPEND.SHAPED.V_IDENTITY_QUALITY;
+-- Step 5: normalization and source views.
 DROP DYNAMIC TABLE IF EXISTS AI_SPEND.SHAPED.UNIFIED_AI_USAGE;
-
+DROP VIEW IF EXISTS AI_SPEND.SHAPED.V_EXTERNAL_USAGE;
+DROP VIEW IF EXISTS AI_SPEND.SHAPED.V_CURRENT_REPORT_PARTITIONS;
 DROP VIEW IF EXISTS AI_SPEND.SHAPED.V_SHRED_GITHUB_COPILOT;
 DROP VIEW IF EXISTS AI_SPEND.SHAPED.V_SHRED_CHATGPT_ENTERPRISE;
 DROP VIEW IF EXISTS AI_SPEND.SHAPED.V_SHRED_M365_COPILOT;
 DROP VIEW IF EXISTS AI_SPEND.SHAPED.V_SHRED_BOX_AI;
-
--- ---------------------------------------------------------------------------
--- Step 5: procedures, task, and the raw-layer view
--- ---------------------------------------------------------------------------
-
-DROP TASK IF EXISTS AI_SPEND.CONTROL.TASK_PULL_GITHUB_COPILOT;
--- DROP ALERT IF EXISTS AI_SPEND.CONTROL.ALERT_PIPELINE_UNHEALTHY;
-
-DROP VIEW IF EXISTS AI_SPEND.CONTROL.V_PIPELINE_HEALTH;
-DROP VIEW IF EXISTS AI_SPEND.CONTROL.V_PERSON_DIRECTORY;
 DROP VIEW IF EXISTS AI_SPEND.RAW.V_SNOWFLAKE_NATIVE_USAGE;
 
-DROP PROCEDURE IF EXISTS AI_SPEND.CONTROL.PULL_GITHUB_COPILOT(VARCHAR, TIMESTAMP_TZ);
+-- Step 6: orchestrator before the procedures it calls.
 DROP PROCEDURE IF EXISTS AI_SPEND.CONTROL.PULL_GITHUB_ALL();
+DROP PROCEDURE IF EXISTS AI_SPEND.CONTROL.PULL_GITHUB_COPILOT(VARCHAR, TIMESTAMP_TZ);
 DROP PROCEDURE IF EXISTS AI_SPEND.CONTROL.PROJECT_GITHUB_SEATS(DATE, NUMBER, VARCHAR);
 DROP PROCEDURE IF EXISTS AI_SPEND.CONTROL.SEED_SNOWFLAKE_IDENTITIES();
 
--- ---------------------------------------------------------------------------
--- Step 6: secrets, integration, and network rules
---
--- Order matters: a secret cannot be dropped while an integration still lists it in
--- ALLOWED_AUTHENTICATION_SECRETS, and a network rule cannot be dropped while an
--- integration references it. Integration first.
---
--- REMINDER: this removes the stored value from Snowflake. It does NOT revoke the
--- token at GitHub, OpenAI, Microsoft, or Box. Do that in each vendor console.
--- ---------------------------------------------------------------------------
-
+-- Step 7: detach account-level integration before its secrets/network rules.
 USE ROLE ACCOUNTADMIN;
-
 DROP INTEGRATION IF EXISTS AI_SPEND_EAI;
-
 DROP SECRET IF EXISTS AI_SPEND.CONTROL.GITHUB_COPILOT_CREDENTIALS;
 DROP SECRET IF EXISTS AI_SPEND.CONTROL.OPENAI_ADMIN_CREDENTIALS;
 DROP SECRET IF EXISTS AI_SPEND.CONTROL.GRAPH_API_CREDENTIALS;
 DROP SECRET IF EXISTS AI_SPEND.CONTROL.BOX_API_CREDENTIALS;
+DROP SECRET IF EXISTS AI_SPEND.CONTROL.ANTHROPIC_ANALYTICS_CREDENTIALS;
+DROP SECRET IF EXISTS AI_SPEND.CONTROL.ANTHROPIC_ADMIN_CREDENTIALS;
+DROP SECRET IF EXISTS AI_SPEND.CONTROL.CURSOR_ADMIN_CREDENTIALS;
+DROP SECRET IF EXISTS AI_SPEND.CONTROL.GOOGLE_SA_CREDENTIALS;
 
 DROP NETWORK RULE IF EXISTS AI_SPEND.CONTROL.GITHUB_API_RULE;
+DROP NETWORK RULE IF EXISTS AI_SPEND.CONTROL.GITHUB_REPORT_DOWNLOAD_RULE;
 DROP NETWORK RULE IF EXISTS AI_SPEND.CONTROL.OPENAI_API_RULE;
 DROP NETWORK RULE IF EXISTS AI_SPEND.CONTROL.MICROSOFT_GRAPH_RULE;
 DROP NETWORK RULE IF EXISTS AI_SPEND.CONTROL.BOX_API_RULE;
+DROP NETWORK RULE IF EXISTS AI_SPEND.CONTROL.ANTHROPIC_API_RULE;
+DROP NETWORK RULE IF EXISTS AI_SPEND.CONTROL.CURSOR_API_RULE;
+DROP NETWORK RULE IF EXISTS AI_SPEND.CONTROL.GOOGLE_API_RULE;
 
--- ---------------------------------------------------------------------------
--- Step 7: database, warehouse, role
---
--- Dropping the database removes the stage and every landed vendor payload with it.
--- Confirm step 0 is done.
--- ---------------------------------------------------------------------------
-
+-- Step 8: remove persistent evidence and remaining database-scoped objects.
+-- This also removes any operator-created download rules within this database.
+-- Do not proceed until retention obligations and external dependencies are settled.
 DROP DATABASE IF EXISTS AI_SPEND;
 DROP WAREHOUSE IF EXISTS AI_SPEND_WH;
 DROP ROLE IF EXISTS AI_SPEND_RL;
 
--- ---------------------------------------------------------------------------
--- Verify nothing is left behind
---
--- All four should return no rows. A surviving secret or integration is the
--- consequential leftover -- it means a credential is still stored.
--- ---------------------------------------------------------------------------
-
+-- All four should return no rows. This does not prove vendor tokens were revoked.
 SHOW DATABASES LIKE 'AI_SPEND';
 SHOW WAREHOUSES LIKE 'AI_SPEND_WH';
 SHOW ROLES LIKE 'AI_SPEND_RL';
 SHOW INTEGRATIONS LIKE 'AI_SPEND_EAI';
 
-/* Finally, outside Snowflake: revoke the tokens in each vendor console.
-   Nothing in this file can do that for you. */
+/* Finally revoke the retired vendor credentials at their issuers. */

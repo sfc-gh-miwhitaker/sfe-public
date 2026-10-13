@@ -1,6 +1,6 @@
 /* Cross-platform AI spend consolidation — adapter build specifications
    Pair-programmed by SE Community + Cortex Code
-   Expires: 2027-03-10
+   Expires: 2026-11-09
 
    ChatGPT Enterprise, Box AI, Microsoft 365 Copilot, Anthropic Claude, Cursor,
    and the three Google surfaces.
@@ -26,9 +26,40 @@
      - the trap that costs a day if you meet it cold
 
    Plug those into the shape of sql/03_pull_github_copilot.sql, which is fully
-   worked and exercises all six contract obligations. Verify endpoint paths against
-   current vendor documentation before your first run -- the response shapes here
-   are the illustrative target, not a guarantee.
+   worked for ONE organization and exercises the publication contract. Register
+   every required feed in REPORT_REGISTRY; leave its platform inactive and task
+   suspended until controlled qualification. The typed extension views in sql/06
+   return no rows until replaced by qualified parsers. A registry flag is not an
+   implementation.
+
+   Every external report must publish REPORT_SNAPSHOT manifests per COMPLETE
+   partition (including zero records), carry RUN_ID on every landing row, and
+   write SUCCEEDED only after all files/pages/partitions have loaded and reconciled.
+   Failed runs never publish partial rows. Select the latest successful partition,
+   preserving ALL records within it before aggregation, not one row per person/day.
+   Event feeds deduplicate on event identity and reconstruct complete partitions.
+   Current keys assume one source scope per platform/report per deployment.
+
+   COST_BASIS separates ACTIVITY_ONLY, BILLABLE_NATIVE, REPORTED_CURRENCY and UNKNOWN.
+   Only qualified billable-only quantities use PLATFORM_RATE; reported currency
+   bypasses rates. Missing/ambiguous rates fail closed with NULL cost and a visible
+   COST_STATUS, never a $1 conversion. Currency-bearing outputs retain currency.
+   Map identities at usage date and classify non-person subjects with ENTITY_KIND.
+   DORMANT requires closed-month, explicit complete ACTIVITY_COVERAGE, resolved
+   identity and actual billed entitlement, not a missing activity row.
+
+   GitHub's users-1-day API returns all download_links as NDJSON, not a paged bare
+   JSON user array. Signed downloads carry no API auth and only exact approved
+   hosts from sql/02 and the handler allowlist. Organization seats require complete
+   pagination/count reconciliation. The scheduler projects current-month seats
+   using exactly one SEAT_RATE; roster estimates are not invoice actuals.
+   ai_credits_used is consumption analysis, NOT invoicing.
+   https://docs.github.com/en/rest/copilot/copilot-usage-metrics
+   https://docs.github.com/en/copilot/reference/copilot-usage-metrics/copilot-usage-metrics
+
+   Verify endpoint fields, permission scopes, version and billing meaning against
+   official vendor documentation before implementation. Specifications below do
+   not claim live integration tests.
 */
 
 USE ROLE AI_SPEND_RL;
@@ -68,7 +99,7 @@ USE WAREHOUSE AI_SPEND_WH;
    Suggested reports:
      USER_ACTIVITY  per-user message and tool activity -> engagement tiers
      CREDIT_USAGE   per-user credits by product and model -> cost
-     MEMBERS        workspace roster -> seeds IDENTITY_MAP, finds inactive seats
+     MEMBERS        workspace roster -> subjects to match to IdP/HR identity
 
    Required fields for normalization:
      USER_ACTIVITY  a date and a workspace member identifier
@@ -92,15 +123,18 @@ USE WAREHOUSE AI_SPEND_WH;
 --   SECRETS         = ('openai_token' = AI_SPEND.CONTROL.OPENAI_ADMIN_CREDENTIALS)
 --   REPORTS         = USER_ACTIVITY | CREDIT_USAGE | MEMBERS
 --   REQUIRED_FIELDS per the list above
--- Everything else -- watermarking, staging, COPY, run logging, QUERY_TAG -- is
--- unchanged. That reuse is the entire point of the contract.
+-- Reuse publication, failure logging and per-statement QUERY_TAG patterns, NOT
+-- GitHub-specific envelopes, watermark policy or date grain. Qualify the actual
+-- billable credit quantity before BILLABLE_NATIVE; consumption alone is not cash.
+-- Members supply vendor subjects, not authoritative corporate identity mappings.
 
 /* ===========================================================================
    2. Box AI
    ===========================================================================
 
-   GRANULARITY: user-level rows and per-user cost are both available, and Box adds
-   a dimension most platforms do not -- cost per AGENT.
+   GRANULARITY: dated user-level chargeable quantities; currency requires a
+   qualified rate. AI Insights has agent-oriented views, but the documented CSV
+   does not promise a unique agent key.
      Registry: SUPPORTS_USER_GRAIN = TRUE, SUPPORTS_USER_COST = TRUE
      Cost model: METERED, native unit AI_UNITS
 
@@ -111,10 +145,12 @@ USE WAREHOUSE AI_SPEND_WH;
 
      AI Insights dashboard   AI Units by user, agent, and capability. Console only.
                              Good for a screenshot, not for a pipeline.
-     AI Units Admin Report   AI Units per user and per agent, monthly. EXPORT, not a
-                             JSON endpoint -- but it can be scheduled to deliver into
-                             a Box folder, which is what makes it automatable.
-                             THIS IS THE BILLING NUMBER FINANCE WANTS.
+     AI Units Admin Report   DATED CSV export, not a monthly-only JSON endpoint.
+                             Date, User, User Email, AI Capability, Product,
+                             Category, AI Units. Supports Last Day/Week/Month/Year
+                             and Custom Range; dashboard-card download is current
+                             month only. Saved reports can be scheduled to a folder.
+                             Units are not currency: qualify the contracted rate.
      Enterprise Events API   Individual AI events. Genuinely programmatic:
                              stream_type = admin_logs (1 year) or
                              admin_logs_streaming (2 weeks, near real time).
@@ -131,14 +167,20 @@ USE WAREHOUSE AI_SPEND_WH;
    THE AWKWARD SPLIT, STATED PLAINLY: the billing unit lives in a report and the
    granularity lives in an API. Two adapters, not one:
 
-     AI_UNITS_MONTHLY  poll the Box folder Box delivers the report into, fetch the
-                       file, land it. Cost-bearing. This is the one to build first.
+     AI_UNITS_REPORT   poll the scheduled report folder; retrieve ALL CSV pages for
+                       its complete date range. Preserve the original files and
+                       headers, including fractional and zero AI Units. This is
+                       the quantity source to qualify first.
      AI_EVENTS         Enterprise Events API with stream_type = admin_logs, filtered
                        to AI event types. Event granularity and agent attribution,
                        but NOT the chargeable unit.
 
-   Do not sum both into cost. Land AI_EVENTS with NATIVE_QTY = NULL and treat it as
-   activity, or you double count against the AI_UNITS report.
+   AI_EVENTS is ACTIVITY_ONLY, with no BILLABLE_NATIVE_QTY or reported money.
+   Do not price it again alongside the AI Units report. Preserve multiple events
+   and product/capability/category breakdowns; deduplicate events by event ID, not
+   by person/day. A zero-unit record is real non-chargeable activity, not missing
+   data. Use a decimal quantity, not an integer cast.
+   https://docs.box.com/en/box-admin-tools/reporting-and-insights/ai-units-report
 
    AUTH: Box Platform App with Client Credentials Grant. The service account needs
    the "Run new reports and access existing reports" permission -- without it the
@@ -146,7 +188,7 @@ USE WAREHOUSE AI_SPEND_WH;
    privilege. sql/02 has the secret template.
 
    Required fields for normalization:
-     AI_UNITS_MONTHLY  a period, a user identifier, and an AI Unit quantity
+     AI_UNITS_REPORT   Date, User Email, AI Units and the documented breakdowns
      AI_EVENTS         an event created_at and the acting user
 
    Implementation notes:
@@ -158,9 +200,13 @@ USE WAREHOUSE AI_SPEND_WH;
      - Chargeable API calls and interactive user queries are tracked as distinct
        things by Box. Keep them separable -- put them in different REPORT_NAMEs
        rather than adding them together.
-     - Box AI Units are consumed by AGENTS as well as by people. That is a genuinely
-       useful attribution axis and the base model does not carry it; see
-       "Extending the Model" in the README for the three-step change.
+     - API file downloads return a redirect, documented with dl.boxcloud.com.
+       Approve the exact HTTPS download host in sql/02 and the adapter; do not
+       forward API credentials to the signed download or auto-follow other hosts.
+       https://developer.box.com/guides/downloads/file
+     - Preserve the export's actual dimensions. The documented CSV has a Box
+       Agents capability, not a promised unique agent identifier. Agent-level
+       reporting needs a separately qualified source with an agent key.
    =========================================================================== */
 
 /* ===========================================================================
@@ -168,8 +214,8 @@ USE WAREHOUSE AI_SPEND_WH;
    ===========================================================================
 
    GRANULARITY CEILING -- READ THIS BEFORE REQUESTING A CREDENTIAL:
-     Registry: SUPPORTS_USER_GRAIN = FALSE, SUPPORTS_USER_COST = FALSE
-     Cost model: SEAT, native unit ACTIVE_DAYS
+     Registry: SUPPORTS_USER_GRAIN = TRUE, SUPPORTS_USER_COST = FALSE
+     SUPPORTS_ACTIVITY_DEPTH = TRUE; cost model SEAT, native unit PROMPTS
 
    Two hard limits, both structural rather than fixable in code:
 
@@ -182,25 +228,23 @@ USE WAREHOUSE AI_SPEND_WH;
 
        Confirm the setting with an Entra administrator FIRST. In some organizations
        concealment is deliberate and a privacy office will decline to change it.
-       That is a legitimate answer, and it removes Copilot from user-level scope
-       entirely. Finding out after ingestion wastes the credential request and
-       produces a dashboard nobody can use.
+       That removes corporate-person attribution unless an approved mapping is
+       available; anonymous per-subject activity analysis can still be useful.
+       Do not equate concealed identity with absent activity depth.
 
-   (b) THE PAYLOAD IS LAST-ACTIVITY DATES, NOT VOLUME.
-       You get per-app last-activity dates -- Teams, Word, Excel, PowerPoint,
-       Outlook, OneNote, Loop, Chat. There is no message count and no token count.
+   (b) V2 HAS ACTIVITY DEPTH, BUT AT REPORT-PERIOD GRAIN.
+       The default v2 report adds prompts submitted (all apps, Copilot Chat work
+       and web) and active usage days, as well as last-activity dates. It covers
+       licensed Microsoft 365 Copilot users, not unlicensed Copilot Chat.
+       It supports period-based activity-depth analysis, not measured token cost.
+       https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/api/admin-settings/reports/copilotreportroot-getmicrosoft365copilotusageuserdetail
 
-       Consequence: THIS PLATFORM CANNOT SUPPORT ENGAGEMENT TIERS. A light user and
-       a power user both show a recent date. Do not build a tier chart that
-       includes Copilot; say the platform cannot answer it. The registry flags
-       exist so the monitoring layer states that rather than rendering an empty
-       panel that reads like a bug.
-
-   WHAT IT IS GOOD FOR, AND IT IS NOT NOTHING: seat utilization. An assigned
-   licence with no activity in 28 days is money leaving with nothing in return, and
-   it is the cheapest saving in this entire guide. Model Copilot as SEAT cost from
-   CONTROL.SEAT_ENTITLEMENT and use the activity dates purely as a
-   touched / not-touched signal.
+   Preserve the report refresh date, version and period. Do not assign the entire
+   D28 prompt count to one daily fact, spread it across fabricated days, or sum
+   overlapping rolling reports. The current daily gold tables need a qualified
+   period-aware extension; V_SHRED_M365_COPILOT is intentionally inert meanwhile.
+   Seat fees remain in SEAT_ENTITLEMENT. A rolling D28 window is not proof of a
+   complete calendar billing month; do not mark ACTIVITY_COVERAGE complete from it.
 
    AUTH: client credentials against an Entra app registration with an
    admin-consented application permission to read usage reports. Requires the
@@ -209,21 +253,23 @@ USE WAREHOUSE AI_SPEND_WH;
    authentication failure that looks exactly like a bad credential.
 
    Suggested reports:
-     USAGE_USER_DETAIL  per-user last-activity dates -> touched / not touched
+     USAGE_USER_DETAIL  v2 per-user prompts/active days/last activity over a period
      LICENSE_DETAIL     assigned licences -> SEAT_ENTITLEMENT
 
-   Required fields: a report refresh date and a user principal name -- hashed is
-   acceptable, and the normalization layer records LOW identity confidence for it.
+   Required fields: Report Refresh Date, User Principal Name, Report Period and
+   the chosen v2 activity fields. A concealed subject remains unresolved without
+   an approved mapping: normalized IDENTITY_CONFIDENCE = NONE, not invented LOW.
 
    Implementation notes:
-     - Response defaults to CSV. Request JSON explicitly with
-       ?$format=application/json, or write a CSV branch. Do not assume JSON.
-     - Paginate on @odata.nextLink until absent.
-     - Reports are period-based (D7, D30, D90) rather than an arbitrary window, so
-       the watermark selects a PERIOD rather than a time range. This is the one
-       adapter whose watermark semantics genuinely differ -- note it in the run log
-       so a future reader does not think it is a bug.
-     - Prefer the /copilot path segment over older /reports equivalents.
+     - GET /v1.0/copilot/reports/getMicrosoft365CopilotUsageUserDetail(
+         period='D28', version='v2') returns a 200 CSV stream. Use a CSV parser;
+       do not invent a JSON format option or @odata.nextLink pagination.
+     - v2 periods: D7, D28, D90, D180, ALL. D30 belongs to v1, not v2.
+       Prefer one period per report identity; ALL contains overlapping windows.
+       Period-aware publication keys must distinguish window/version before use.
+     - Application permission Reports.Read.All requires admin consent. Verify
+       entitlement population separately from usage and retain pseudonymization
+       unless an approved privacy decision authorizes corporate identity joins.
    =========================================================================== */
 
 /* ===========================================================================
@@ -262,24 +308,33 @@ USE WAREHOUSE AI_SPEND_WH;
                                    key, org-scoped (a workspace-scoped key fails).
                                    NO USER DIMENSION AT ALL.
 
-   An Admin key cannot call the Analytics API and an Analytics key cannot call the
-   Admin API, even though both are documented under one "Admin API" heading.
+   Analytics and Console Admin key types are not interchangeable. Console usage
+   and cost reports have different grouping dimensions; do not assume cost is
+   available at every usage dimension. The separate Claude Code Analytics API
+   reports per-user estimated costs, not a measured general per-user API bill.
 
-   YOU NEED BOTH, and this is not belt-and-braces. The per-user endpoints include
-   only cost attributable to a SEAT USER; direct API-key and automation traffic is
-   excluded by design. Per-user cost will therefore not sum to the invoice, and the
-   bucketed organization-level cost report is what closes the gap. Ingest one and
-   finance finds the discrepancy for you.
+   Keep billing scopes separate. Reconcile Enterprise per-user values against
+   Enterprise organization totals from the Analytics API, not Console billing.
+   Enterprise parent organizations do not appear in Console and have no Console
+   Admin API keys. Ingest Console only for a separately identified API scope.
+   Do not add organization totals to their per-user breakdowns in the same fact.
+   https://platform.claude.com/docs/en/manage-claude/usage-cost-api
 
    THE OPERATIONAL FACT THAT DICTATES THE LOAD PATTERN:
-     A value for a given date can be REVISED FOR UP TO 30 DAYS as late events and
-     reconciliation arrive. Responses carry data_refreshed_at.
+     Cost/usage may revise until about SEVEN DAYS AFTER CALENDAR MONTH-END.
+     October 1 can change through about November 7; rolling 30 days is inadequate.
+     Reload every open month until settlement, partitioning requests to the
+     endpoint range limit. For invoicing-grade comparison, use months ended at
+     least seven days ago and reconcile to the finance statement.
+     Preserve data_refreshed_at and bound ending_at at or before a previously
+     returned value to exclude the incomplete tail.
+     https://platform.claude.com/docs/en/manage-claude/analytics-api
 
-   That makes this the one platform in the guide where append-only ingestion is
-   simply wrong. Restate a rolling 30-day window on every run, key stability on
-   data_refreshed_at rather than on the date you asked for, and treat only dates
-   older than 30 days as invoicing-grade. An append-only load here produces a
-   number that was right when captured and disagrees with the vendor a week later.
+   Plan qualification is mandatory: cost/usage endpoints represent monetary
+   amounts on usage-based Enterprise plans, but usage credits on seat-based
+   Enterprise plans. Never label the latter billed currency. Keep effective and
+   list cost distinct; use qualified reported amounts plus explicit currency,
+   not one token rate across models, products and cost types.
 
    Also hard-limiting: NO DATA EXISTS BEFORE 2026-01-01 on the Analytics API. There
    is no backfill conversation to have. A Snowflake-side accumulator is the history.
@@ -290,8 +345,8 @@ USE WAREHOUSE AI_SPEND_WH;
                     will eventually ask to see it.
      USER_USAGE     per-user tokens
      USER_ACTIVITY  per-user per-product activity -> engagement tiers
-     ORG_COST       bucketed organization cost -> the invoice reconciliation half
-     MEMBERS        roster -> seeds IDENTITY_MAP
+     ORG_COST       Enterprise organization totals -> reconciliation, not additive
+     MEMBERS        roster -> vendor subjects to match to IdP/HR
 
    Required fields for normalization:
      USER_COST   a date, a user identifier, and a cost amount
@@ -310,10 +365,9 @@ USE WAREHOUSE AI_SPEND_WH;
        range, or grouping mid-sequence returns a 400 rather than resuming. Restart.
      - The per-request row limit is not a hard row cap: cost-type and token-type
        fan-out rows do not count against it, so a page can return more than asked.
-     - Rate limit is per ORGANIZATION, not per key -- roughly 60 requests a minute
-       shared across every endpoint. Combined with a 31-day maximum range per call,
-       that sets your backfill wall-clock budget. Two adapters running concurrently
-       compete with each other.
+     - Enterprise Analytics defaults to 60 requests per minute per organization,
+       shared across its endpoints. Respect each endpoint's range/page limits;
+       do not transfer Console limits or credentials to Enterprise Analytics.
      - Engagement-endpoint rollups may use approximate distinct counts. Fine for a
        tier chart, wrong for anything reconciled.
      - There is a separate Compliance API with a separate key that returns prompts,
@@ -344,13 +398,14 @@ USE WAREHOUSE AI_SPEND_WH;
    allowance is not recoverable elsewhere -- which makes seat utilization a real
    saving here rather than a rounding note.
 
-   DO NOT SEED PLATFORM_RATE FOR THIS PLATFORM. Cursor reports cost already in
-   currency. Every other platform reports a native quantity that PLATFORM_RATE
-   converts; applying a rate here multiplies cents by a rate and produces a
-   plausible wrong number in the right column.
+   DO NOT SEED PLATFORM_RATE FOR REPORTED CURRENCY. Cursor is not the only source
+   of currency: qualified Claude cost and Cloud Billing amounts also bypass rates.
+   Cast documented decimal cents / 100 in shredding, retaining currency and the
+   billable-only meaning. Activity counters and total consumption do not qualify
+   as overage simply because a platform is METERED.
 
    THREE ENDPOINTS, THREE JOBS:
-     members             email <-> user id, and role. Seeds IDENTITY_MAP.
+     members             email <-> user id and role. Match to approved IdP/HR.
      daily-usage-data    per user per day activity. NO COST FIELDS AT ALL.
      filtered-usage-events  per REQUEST, with tokens and cost. This is the cost feed.
 
@@ -388,9 +443,9 @@ USE WAREHOUSE AI_SPEND_WH;
        attribution gaps are functional: old client versions collect no analytics,
        and removed members are omitted from the activity feed while still appearing
        in the cost feed -- which will make your two feeds disagree on population.
-     - Verify plan gating against the actual tenant. Cursor's own documentation is
-       inconsistent about whether the Admin API requires Enterprise; assume it does
-       and be pleasantly surprised.
+     - Verify endpoint entitlement, credential scope and billing fields against
+       current vendor documentation and the actual plan before activating.
+       https://cursor.com/docs/account/teams/admin-api
    =========================================================================== */
 
 /* ===========================================================================
@@ -474,9 +529,20 @@ USE WAREHOUSE AI_SPEND_WH;
        recording covers IDE interactions ONLY.
    Turning both on is step zero, weeks before the first pull.
 
-   Filter on the product label. Gemini in BigQuery writes to the same log stream
-   under a different product value, and conflating them inflates developer-AI
-   adoption with analyst activity.
+   PRIVACY FILTER BEFORE LANDING, NOT LATER IN SQL:
+     resource.type = cloudaicompanion.googleapis.com/Instance
+     labels.product = code_assist
+     jsonPayload.@type =
+       type.googleapis.com/google.cloud.cloudaicompanion.logging.v1.MetadataLog
+     logName = approved project log ending
+       cloudaicompanion.googleapis.com%2Fmetadata
+   Require both the MetadataLog type AND metadata logName, plus product. RequestLog
+   and ResponseLog streams contain prompts, responses and source-file context.
+   A product-only filter violates this pipeline's no-content boundary. Apply the
+   filter to retrieval/export and assert it again before staging every record;
+   reject unexpected types without persisting their bodies. Derive activity from
+   the qualified metadata event kinds, not a count of all log entries.
+   https://docs.cloud.google.com/gemini/docs/log-gemini
 
    ---------------------------------------------------------------------------
    6c. GOOGLE_VERTEX_AI -- metered, and per-user cost is NOT ACHIEVABLE
@@ -534,18 +600,17 @@ USE WAREHOUSE AI_SPEND_WH;
    kills projects, and finding out after the security review is the expensive
    order of operations.
 
-   STEP 8 -- Check the unresolved-identity rate BEFORE activating. A new platform
-   landing entirely in the UNRESOLVED bucket produces correct platform totals and a
-   department breakdown silently missing an entire tool:
+   QUALIFICATION -- Keep the task suspended. After registering required reports
+   and implementing the parser, activate the platform only in a qualification
+   environment for controlled pulls: inactive platforms do not publish facts.
+   Check complete/empty snapshots, pricing, coverage, and unresolved identity:
 
-     SELECT PLATFORM_KEY,
-            COUNT_IF(PERSON_KEY LIKE 'UNRESOLVED:%') / COUNT(*) AS unresolved_rate
-     FROM AI_SPEND.SHAPED.UNIFIED_AI_USAGE
-     GROUP BY PLATFORM_KEY;
+     SELECT PLATFORM_KEY, ENTITY_KIND, CURRENCY_CODE, UNRESOLVED_PCT, UNPRICED_ROWS
+     FROM AI_SPEND.SHAPED.V_IDENTITY_QUALITY;
 
-   Then, and only then:
-     UPDATE AI_SPEND.CONTROL.PLATFORM_REGISTRY
-       SET IS_ACTIVE = TRUE WHERE PLATFORM_KEY = '<platform>';
+   Then approve scheduled operation. Use V_REPORT_HEALTH for each required report
+   and V_PIPELINE_HEALTH for fact health. Do not count a registered but unimplemented
+   parser as healthy, and never use absence of usage to establish DORMANT.
    =========================================================================== */
 
 -- Show what is registered, what it can honestly deliver, and what is live.
@@ -555,6 +620,7 @@ SELECT
     NATIVE_UNIT,
     SUPPORTS_USER_GRAIN,
     SUPPORTS_USER_COST,
+    SUPPORTS_ACTIVITY_DEPTH,
     IS_ACTIVE,
     NOTES
 FROM AI_SPEND.CONTROL.PLATFORM_REGISTRY

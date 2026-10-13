@@ -1,14 +1,14 @@
 /* Cross-platform AI spend consolidation — landing layer
    Pair-programmed by SE Community + Cortex Code
-   Expires: 2027-03-10
+   Expires: 2026-11-09
 
-   Creates the role, database, four schemas, warehouse, stage, and the four control
+   Creates the role, database, four schemas, warehouse, stage, and control
    tables. Run this first. It creates no external connectivity and pulls no data.
 
    The four schemas map to the four jobs:
      CONTROL  registry, run log, identity spine, seat entitlement
-     RAW      immutable vendor payloads exactly as returned
-     SHAPED   the unified fact, one row per person per platform per day
+     RAW      immutable approved metadata records with source provenance
+     SHAPED   daily subject facts retaining report, billing context and currency
      GOLD     the reporting layer the agent and dashboards read
 */
 
@@ -83,7 +83,8 @@ CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.PLATFORM_REGISTRY (
   -- THIS DESCRIBES THE USAGE ROWS, NOT THE WHOLE CONTRACT. Several platforms here are
   -- both: a seat fee plus metered consumption. Those register as METERED, because that
   -- is what their usage rows measure, and their seat fee goes in SEAT_ENTITLEMENT.
-  -- GitHub Copilot, Cursor, and Anthropic Claude Enterprise are all in this shape.
+  -- GitHub's worked report is ACTIVITY_ONLY even though its contract can meter;
+  -- only a separately qualified billing report may contribute GitHub usage cost.
   COST_MODEL            VARCHAR(16)  NOT NULL,
   -- The vendor's own unit, preserved rather than converted: CREDITS, TOKENS,
   -- MESSAGES, AI_UNITS, INTERACTIONS, ACTIVE_DAYS, FEATURE_EVENTS, IDE_INTERACTIONS.
@@ -205,16 +206,15 @@ CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.SEAT_ENTITLEMENT (
 -- not do it (see docs/adapter-contract.md), or you end up with two rates in two
 -- places and no way to tell which produced a given number.
 --
--- No default rows are seeded. A missing rate makes COST_AMOUNT fall back to the raw
--- native quantity, which is visibly wrong in a currency column and prompts someone
--- to enter the real rate. A plausible list-price default would instead produce a
--- confidently wrong forecast that nobody questions.
+-- No default rates are seeded. Missing rates produce NULL cost and a visible
+-- MISSING_RATE status, never a native quantity labelled as USD. Reported currency
+-- bypasses this table. GitHub activity credits are not a billable-cost source.
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.PLATFORM_RATE (
   PLATFORM_KEY  VARCHAR(64)  NOT NULL,
-  -- Currency per one NATIVE_UNIT, e.g. dollars per Snowflake credit or per
-  -- GitHub AI credit. Your negotiated rate, not list price.
+  -- Currency per qualified BILLABLE_NATIVE unit, e.g. a Snowflake credit.
+  -- Your negotiated rate, not list price. Never price GitHub activity credits.
   UNIT_COST     NUMBER(38,10) NOT NULL,
   CURRENCY_CODE VARCHAR(3)   NOT NULL DEFAULT 'USD',
   VALID_FROM    DATE         NOT NULL DEFAULT '1900-01-01',
@@ -227,28 +227,28 @@ CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.PLATFORM_RATE (
 /* Populate with your actual contracted rates before presenting any currency
    figure. Example shape only -- these numbers are placeholders.
 
-   CRITICAL WHEN A RATE CHANGES: close the prior row's VALID_TO in the SAME
-   statement. VALID_TO defaults to 9999-12-31, so simply inserting a second row
-   leaves TWO rows matching every later date. sql/06 resolves that to the latest
-   row rather than fanning out, but leaving overlaps in place makes the table
-   misleading to read and one careless direct join doubles every cost.
+   CRITICAL WHEN A RATE CHANGES: close the prior row's VALID_TO and insert the
+   replacement in ONE transaction. VALID_TO defaults to 9999-12-31; inserting
+   alone leaves overlapping rates. sql/06 treats multiple matching rates as
+   INVALID_COST_INPUT with NULL cost, not as a latest-rate-wins rule.
 
      -- First rate
      INSERT INTO AI_SPEND.CONTROL.PLATFORM_RATE
        (PLATFORM_KEY, UNIT_COST, CURRENCY_CODE, VALID_FROM, SOURCE_NOTE)
      VALUES
-       ('SNOWFLAKE_CORTEX', 0.0000, 'USD', '2026-01-01', 'Effective credit rate'),
-       ('GITHUB_COPILOT',   0.0000, 'USD', '2026-01-01', 'Per AI credit, contracted');
+       ('SNOWFLAKE_CORTEX', 0.0000, 'USD', '2026-01-01', 'Effective credit rate');
 
-     -- Rate change at renewal: close the old row FIRST, then insert the new one.
+     -- Rate change at renewal: commit both edits together, or roll both back.
+     BEGIN TRANSACTION;
      UPDATE AI_SPEND.CONTROL.PLATFORM_RATE
         SET VALID_TO = '2026-06-30', UPDATED_AT = CURRENT_TIMESTAMP()
-      WHERE PLATFORM_KEY = 'GITHUB_COPILOT' AND VALID_TO = '9999-12-31';
+      WHERE PLATFORM_KEY = 'SNOWFLAKE_CORTEX' AND VALID_TO = '9999-12-31';
 
      INSERT INTO AI_SPEND.CONTROL.PLATFORM_RATE
        (PLATFORM_KEY, UNIT_COST, CURRENCY_CODE, VALID_FROM, SOURCE_NOTE)
      VALUES
-       ('GITHUB_COPILOT', 0.0000, 'USD', '2026-07-01', 'Renewal rate');
+       ('SNOWFLAKE_CORTEX', 0.0000, 'USD', '2026-07-01', 'Renewal rate');
+     COMMIT;
 
    The same discipline applies to IDENTITY_MAP when a person changes department.
 */
@@ -256,11 +256,14 @@ CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.PLATFORM_RATE (
 -- ---------------------------------------------------------------------------
 -- RAW: the landing table
 --
--- RECORD holds the vendor payload with NO transformation. Not renamed, not cast,
--- not pruned. That is what lets a shredding bug be fixed with CREATE OR REPLACE
--- instead of a re-pull from an API with short retention.
+-- RECORD preserves approved metadata field values, not byte-for-byte HTTP bodies:
+-- GitHub JSON is parsed and re-serialized. Correct shredding from retained rows
+-- rather than depending on a re-pull from an API with short retention.
+-- Privacy filtering precedes staging: Code Assist must allow only MetadataLog
+-- records for labels.product=code_assist and the approved project metadata log.
+-- Never land prompt/response/source-code streams; see docs/adapter-contract.md.
 --
--- CHANGE_TRACKING is on because the SHAPED layer is an incremental Dynamic Table.
+-- CHANGE_TRACKING is available for qualified consumers; sql/06 currently uses FULL.
 --
 -- DELIBERATELY NO CHECK CONSTRAINTS ON THIS TABLE. Snowflake enforces CHECK
 -- constraints on INSERT/UPDATE/MERGE/CTAS, but COPY INTO a table that has one
@@ -287,19 +290,30 @@ COMMENT = 'Immutable vendor admin API records, one row per vendor record';
 -- Every row ships IS_ACTIVE = FALSE. Nothing pulls until someone turns it on, so a
 -- half-configured adapter cannot start writing.
 --
--- The capability flags below are the honest answers as of the expiry date on this
--- file. Re-verify them -- these are exactly the facts vendors change.
+-- The capability flags below describe source capabilities at verification time,
+-- not implemented adapters or guarantees through the expiry date.
+-- Re-verify them -- these are exactly the facts vendors change.
 -- ---------------------------------------------------------------------------
+
+-- NULL distinguishes a new capability column from an operator's explicit FALSE.
+ALTER TABLE AI_SPEND.CONTROL.PLATFORM_REGISTRY ADD COLUMN IF NOT EXISTS SUPPORTS_ACTIVITY_DEPTH BOOLEAN;
 
 MERGE INTO AI_SPEND.CONTROL.PLATFORM_REGISTRY AS tgt
 USING (
-  SELECT * FROM VALUES
+  SELECT s.PLATFORM_KEY, s.DISPLAY_NAME, s.BILLING_CONTEXT, s.COST_MODEL,
+         s.NATIVE_UNIT, s.SUBJECT_KEY_KIND, s.CREDENTIAL_OBJECT_FQN,
+         s.SUPPORTS_USER_GRAIN, s.SUPPORTS_USER_COST, s.EXPECTED_LAG_HOURS, s.NOTES,
+         s.PLATFORM_KEY IN ('SNOWFLAKE_CORTEX', 'GITHUB_COPILOT', 'CHATGPT_ENTERPRISE',
+           'M365_COPILOT', 'BOX_AI', 'ANTHROPIC_CLAUDE_ENTERPRISE', 'CURSOR',
+           'GOOGLE_CODE_ASSIST') AS SUPPORTS_ACTIVITY_DEPTH,
+         legacy.NOTES AS LEGACY_NOTES
+  FROM VALUES
     ('SNOWFLAKE_CORTEX', 'Snowflake Cortex', 'SNOWFLAKE_ACCOUNT', 'METERED',
      'CREDITS', 'SNOWFLAKE_USER_ID', NULL, TRUE, TRUE, 24,
      'ACCOUNT_USAGE only, no external credential. Four views with inconsistent columns: Cortex Code reports USAGE_TIME not START_TIME, as TIMESTAMP_TZ not TIMESTAMP_LTZ. It does carry USER_NAME; CORTEX_AI_FUNCTIONS_USAGE_HISTORY is the view that does not and must be joined to USERS.'),
     ('GITHUB_COPILOT', 'GitHub Copilot', 'GITHUB_ENTERPRISE', 'METERED',
-     'AI_CREDITS', 'GITHUB_LOGIN', 'AI_SPEND.CONTROL.GITHUB_COPILOT_CREDENTIALS', TRUE, TRUE, 48,
-     'User-level NDJSON usage report includes per-user AI credits. Seats come from the separate user-management API. Legacy metrics API retired April 2026.'),
+     'AI_CREDITS', 'GITHUB_LOGIN', 'AI_SPEND.CONTROL.GITHUB_COPILOT_CREDENTIALS', TRUE, FALSE, 48,
+     'Usage NDJSON includes consumption AI credits, NOT invoicing amounts. The worked adapter uses one organization for usage and seats; do not sum overlapping organizations. Add a separately qualified billing report for overage.'),
     ('CHATGPT_ENTERPRISE', 'ChatGPT Enterprise', 'CHATGPT_WORKSPACE', 'METERED',
      'CREDITS', 'WORKSPACE_MEMBER_ID', 'AI_SPEND.CONTROL.OPENAI_ADMIN_CREDENTIALS', TRUE, TRUE, 48,
      'Analytics endpoints for adoption, Cost API for credits by user/product/model. Separate billing context from the OpenAI API Platform -- never sum the two.'),
@@ -307,17 +321,17 @@ USING (
      'TOKENS', 'API_KEY_OWNER', 'AI_SPEND.CONTROL.OPENAI_ADMIN_CREDENTIALS', FALSE, FALSE, 48,
      'Distinct product and contract from ChatGPT Enterprise. Registered separately so the two can never be blended by accident. Cost is attributable to an API key, not to a person -- so SUPPORTS_USER_COST is FALSE, the same shape as the Anthropic Console row. An API key owner is a plausible proxy for a person and not the same thing as one.'),
     ('M365_COPILOT', 'Microsoft 365 Copilot', 'MICROSOFT_TENANT', 'SEAT',
-     'ACTIVE_DAYS', 'PSEUDONYMIZED_UPN', 'AI_SPEND.CONTROL.GRAPH_API_CREDENTIALS', FALSE, FALSE, 72,
-     'Graph usage detail pseudonymizes UPN and display name unless the tenant disables report concealment. Returns last-activity dates, not volume. Cannot support engagement tiers or per-user cost.'),
+     'PROMPTS', 'PSEUDONYMIZED_UPN', 'AI_SPEND.CONTROL.GRAPH_API_CREDENTIALS', TRUE, FALSE, 72,
+     'Graph usage detail pseudonymizes UPN and display name unless the tenant disables report concealment. Report v2 includes prompt counts and active usage days over report periods. Keep period grain; no token cost. Corporate joins require an approved identity mapping.'),
     ('BOX_AI', 'Box AI', 'BOX_ENTERPRISE', 'METERED',
      'AI_UNITS', 'EMAIL', 'AI_SPEND.CONTROL.BOX_API_CREDENTIALS', TRUE, TRUE, 72,
      'Metered in AI Units since 2025-10-20 -- NOT a bundled seat cost. Per-user and per-agent AI Units come from the AI Units Admin Report (console export, can auto-deliver to a Box folder); the Enterprise Events API gives event granularity but retains only 2 weeks streaming / 1 year admin_logs.'),
     ('ANTHROPIC_CLAUDE_ENTERPRISE', 'Anthropic Claude Enterprise', 'CLAUDE_ENTERPRISE', 'METERED',
      'TOKENS', 'EMAIL', 'AI_SPEND.CONTROL.ANTHROPIC_ANALYTICS_CREDENTIALS', TRUE, TRUE, 24,
-     'The seat includes NO usage on current Enterprise plans -- every token bills separately at API rates, so this platform carries BOTH a seat fee and metered cost. Enterprise Analytics API returns per-user cost with both effective and list amounts. Two hard limits: no data before 2026-01-01, and a value for a given date can be REVISED for up to 30 days, so loads must restate rather than append.'),
+     'The seat includes NO usage on current Enterprise plans -- every token bills separately at API rates, so this platform carries BOTH a seat fee and metered cost. Enterprise Analytics API returns per-user cost with both effective and list amounts. Two hard limits: no data before 2026-01-01, and costs can be revised until about seven days after month-end; reload all open months through settlement, not a fixed 30-day window.'),
     ('ANTHROPIC_API_CONSOLE', 'Anthropic Claude Console (API)', 'ANTHROPIC_API_ORG', 'METERED',
      'TOKENS', 'API_KEY_ID', 'AI_SPEND.CONTROL.ANTHROPIC_ADMIN_CREDENTIALS', FALSE, FALSE, 24,
-     'Distinct product, contract, and admin key from Claude Enterprise -- registered separately so the two can never be blended. The Admin usage and cost endpoints have NO user dimension at all: grain is API key, workspace, and model. Needed anyway, because the per-user Enterprise endpoints exclude direct API-key and automation traffic and cannot reconcile to invoice alone.'),
+     'Distinct product, contract, and admin key from Claude Enterprise -- registered separately so the two can never be blended. The Admin usage and cost endpoints have NO user dimension at all: grain is API key, workspace, and model. Reconcile this separate Console billing scope independently. Enterprise parent organizations do not have Console Admin API keys; use Enterprise organization totals for Enterprise reconciliation.'),
     ('CURSOR', 'Cursor', 'CURSOR_TEAM', 'METERED',
      'TOKENS', 'EMAIL', 'AI_SPEND.CONTROL.CURSOR_ADMIN_CREDENTIALS', TRUE, TRUE, 24,
      'Seat includes a per-user usage pool, then bills on-demand in arrears -- so seat and metered cost overlap and must not be added. Use spendCents (on-demand only), never overallSpendCents, alongside SEAT_ENTITLEMENT. Cost arrives already in cents: do NOT seed PLATFORM_RATE for this platform. Activity and cost are two different endpoints; the 30-day per-request range cap sets the backfill shape.'),
@@ -333,16 +347,92 @@ USING (
   AS s(PLATFORM_KEY, DISPLAY_NAME, BILLING_CONTEXT, COST_MODEL, NATIVE_UNIT,
        SUBJECT_KEY_KIND, CREDENTIAL_OBJECT_FQN, SUPPORTS_USER_GRAIN,
        SUPPORTS_USER_COST, EXPECTED_LAG_HOURS, NOTES)
+  LEFT JOIN (SELECT column1 AS PLATFORM_KEY, column2 AS NOTES FROM VALUES
+    ('GITHUB_COPILOT', 'User-level NDJSON usage report includes per-user AI credits. Seats come from the separate user-management API. Legacy metrics API retired April 2026.'),
+    ('M365_COPILOT', 'Graph usage detail pseudonymizes UPN and display name unless the tenant disables report concealment. Returns last-activity dates, not volume. Cannot support engagement tiers or per-user cost.'),
+    ('ANTHROPIC_CLAUDE_ENTERPRISE', 'The seat includes NO usage on current Enterprise plans -- every token bills separately at API rates, so this platform carries BOTH a seat fee and metered cost. Enterprise Analytics API returns per-user cost with both effective and list amounts. Two hard limits: no data before 2026-01-01, and a value for a given date can be REVISED for up to 30 days, so loads must restate rather than append.'),
+    ('ANTHROPIC_API_CONSOLE', 'Distinct product, contract, and admin key from Claude Enterprise -- registered separately so the two can never be blended. The Admin usage and cost endpoints have NO user dimension at all: grain is API key, workspace, and model. Needed anyway, because the per-user Enterprise endpoints exclude direct API-key and automation traffic and cannot reconcile to invoice alone.')
+  ) legacy ON legacy.PLATFORM_KEY = s.PLATFORM_KEY
 ) AS src
 ON tgt.PLATFORM_KEY = src.PLATFORM_KEY
+-- Only replace recognized shipped notes; preserve custom notes, activation,
+-- credentials, scope, lag and explicit activity flags. Known shipped GitHub
+-- defaults are corrected; independently qualified custom source settings survive.
+WHEN MATCHED THEN UPDATE SET
+  tgt.NOTES = IFF(tgt.NOTES = src.LEGACY_NOTES, src.NOTES, tgt.NOTES),
+  tgt.SUPPORTS_ACTIVITY_DEPTH = COALESCE(tgt.SUPPORTS_ACTIVITY_DEPTH, src.SUPPORTS_ACTIVITY_DEPTH),
+  tgt.SUPPORTS_USER_COST = IFF(tgt.PLATFORM_KEY = 'GITHUB_COPILOT' AND tgt.NOTES = src.LEGACY_NOTES,
+                             src.SUPPORTS_USER_COST, tgt.SUPPORTS_USER_COST),
+  tgt.SUPPORTS_USER_GRAIN = IFF(tgt.PLATFORM_KEY = 'M365_COPILOT' AND tgt.NOTES = src.LEGACY_NOTES,
+                              src.SUPPORTS_USER_GRAIN, tgt.SUPPORTS_USER_GRAIN),
+  tgt.NATIVE_UNIT = IFF(tgt.PLATFORM_KEY = 'M365_COPILOT' AND tgt.NOTES = src.LEGACY_NOTES
+                      AND tgt.NATIVE_UNIT = 'ACTIVE_DAYS', src.NATIVE_UNIT, tgt.NATIVE_UNIT)
 WHEN NOT MATCHED THEN INSERT (
   PLATFORM_KEY, DISPLAY_NAME, BILLING_CONTEXT, COST_MODEL, NATIVE_UNIT,
   SUBJECT_KEY_KIND, CREDENTIAL_OBJECT_FQN, SUPPORTS_USER_GRAIN,
-  SUPPORTS_USER_COST, EXPECTED_LAG_HOURS, IS_ACTIVE, NOTES
+  SUPPORTS_USER_COST, EXPECTED_LAG_HOURS, IS_ACTIVE, NOTES, SUPPORTS_ACTIVITY_DEPTH
 ) VALUES (
   src.PLATFORM_KEY, src.DISPLAY_NAME, src.BILLING_CONTEXT, src.COST_MODEL, src.NATIVE_UNIT,
   src.SUBJECT_KEY_KIND, src.CREDENTIAL_OBJECT_FQN, src.SUPPORTS_USER_GRAIN,
-  src.SUPPORTS_USER_COST, src.EXPECTED_LAG_HOURS, FALSE, src.NOTES
+  src.SUPPORTS_USER_COST, src.EXPECTED_LAG_HOURS, FALSE, src.NOTES, src.SUPPORTS_ACTIVITY_DEPTH
+);
+
+-- Forward-only additions also upgrade existing control/landing tables.
+ALTER TABLE AI_SPEND.RAW.LANDING_AI_USAGE ADD COLUMN IF NOT EXISTS RUN_ID VARCHAR(36);
+ALTER TABLE AI_SPEND.CONTROL.IDENTITY_MAP ADD COLUMN IF NOT EXISTS ENTITY_KIND VARCHAR DEFAULT 'PERSON';
+ALTER TABLE AI_SPEND.CONTROL.SEAT_ENTITLEMENT ADD COLUMN IF NOT EXISTS SOURCE_RUN_ID VARCHAR(36);
+
+
+CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.REPORT_REGISTRY (
+  PLATFORM_KEY VARCHAR NOT NULL,
+  REPORT_NAME VARCHAR NOT NULL,
+  IS_REQUIRED BOOLEAN NOT NULL DEFAULT TRUE,
+  SOURCE_KIND VARCHAR NOT NULL DEFAULT 'EXTERNAL',
+  CONSTRAINT PK_REPORT_REGISTRY PRIMARY KEY (PLATFORM_KEY, REPORT_NAME)
+);
+MERGE INTO AI_SPEND.CONTROL.REPORT_REGISTRY target
+USING (SELECT column1 AS PLATFORM_KEY, column2 AS REPORT_NAME, column3 AS SOURCE_KIND
+       FROM VALUES ('GITHUB_COPILOT', 'USER_USAGE', 'EXTERNAL'),
+                   ('GITHUB_COPILOT', 'SEATS', 'EXTERNAL'),
+                   ('SNOWFLAKE_CORTEX', 'AI_FUNCTION', 'NATIVE'),
+                   ('SNOWFLAKE_CORTEX', 'CORTEX_AGENT', 'NATIVE'),
+                   ('SNOWFLAKE_CORTEX', 'SNOWFLAKE_COWORK', 'NATIVE'),
+                   ('SNOWFLAKE_CORTEX', 'CORTEX_CODE', 'NATIVE')) source
+ON target.PLATFORM_KEY = source.PLATFORM_KEY AND target.REPORT_NAME = source.REPORT_NAME
+WHEN NOT MATCHED THEN INSERT (PLATFORM_KEY, REPORT_NAME, SOURCE_KIND)
+VALUES (source.PLATFORM_KEY, source.REPORT_NAME, source.SOURCE_KIND);
+
+-- One manifest per complete report partition, including valid empty partitions.
+-- Only manifests belonging to a SUCCEEDED run may publish raw rows downstream.
+CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.REPORT_SNAPSHOT (
+  RUN_ID VARCHAR(36) NOT NULL,
+  PLATFORM_KEY VARCHAR NOT NULL,
+  REPORT_NAME VARCHAR NOT NULL,
+  PARTITION_DATE DATE NOT NULL,
+  RECORD_COUNT NUMBER NOT NULL,
+  CONSTRAINT PK_REPORT_SNAPSHOT PRIMARY KEY (RUN_ID, PARTITION_DATE)
+);
+
+-- Finance must supply a real seat rate before the scheduled projection can run.
+CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.SEAT_RATE (
+  PLATFORM_KEY VARCHAR NOT NULL,
+  PERIOD_MONTH DATE NOT NULL,
+  SEAT_MONTHLY_COST NUMBER(38,4) NOT NULL,
+  CURRENCY_CODE VARCHAR(3) NOT NULL,
+  CONSTRAINT PK_SEAT_RATE PRIMARY KEY (PLATFORM_KEY, PERIOD_MONTH),
+  CONSTRAINT CK_SEAT_RATE CHECK (SEAT_MONTHLY_COST >= 0)
+);
+
+-- An owner qualifies complete activity coverage explicitly, including quiet days.
+-- This is NOT inferred from MIN/MAX event dates. Only closed, accepted periods
+-- permit dormancy claims; missing coverage remains UNKNOWN.
+CREATE TABLE IF NOT EXISTS AI_SPEND.CONTROL.ACTIVITY_COVERAGE (
+  PLATFORM_KEY VARCHAR NOT NULL,
+  PERIOD_MONTH DATE NOT NULL,
+  IS_COMPLETE BOOLEAN NOT NULL DEFAULT FALSE,
+  VERIFIED_AT TIMESTAMP_TZ NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+  SOURCE_NOTE VARCHAR NOT NULL,
+  CONSTRAINT PK_ACTIVITY_COVERAGE PRIMARY KEY (PLATFORM_KEY, PERIOD_MONTH)
 );
 
 -- ---------------------------------------------------------------------------

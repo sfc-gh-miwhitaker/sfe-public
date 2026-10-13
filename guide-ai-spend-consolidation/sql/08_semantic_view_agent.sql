@@ -1,6 +1,6 @@
 /* Cross-platform AI spend consolidation — semantic view and Cortex Agent
    Pair-programmed by SE Community + Cortex Code
-   Expires: 2027-03-10
+   Expires: 2026-11-09
 
    Puts the consolidated model behind natural language, so leadership asks
    "which departments drove AI spend growth last quarter" instead of filing a
@@ -38,7 +38,9 @@ USE SCHEMA AI_SPEND.GOLD;
 -- platforms, which is exactly the arithmetic we do not want it attempting.
 -- ---------------------------------------------------------------------------
 
-CREATE OR REPLACE SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV
+-- CREATE OR ALTER preserves existing grants; COPY GRANTS is only for replacement.
+-- https://docs.snowflake.com/en/sql-reference/sql/create-semantic-view
+CREATE OR ALTER SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV
 
   TABLES (
     spend AS AI_SPEND.GOLD.AI_SPEND_ALLOCATED
@@ -130,10 +132,15 @@ CREATE OR REPLACE SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV
     seats.utilization_band AS UTILIZATION_BAND
       WITH SYNONYMS = ('utilization', 'seat usage', 'dormant', 'unused licence')
       COMMENT = 'DORMANT means billed and never used in the month -- the actionable reclaim list. NOT_BILLED means no charge for the period. UNKNOWN_NO_USAGE_SIGNAL means the platform cannot report per-user usage volume, so idleness has not been demonstrated and the seat must not be called dormant.'
-      SAMPLE_VALUES ('DORMANT', 'LIGHT', 'MODERATE', 'REGULAR', 'NOT_BILLED', 'UNKNOWN_NO_USAGE_SIGNAL')
+      SAMPLE_VALUES ('DORMANT', 'LIGHT', 'MODERATE', 'REGULAR', 'NOT_BILLED', 'UNKNOWN_NO_USAGE_SIGNAL', 'UNKNOWN_INCOMPLETE_COVERAGE', 'UNKNOWN_IDENTITY', 'UNKNOWN_BILLING_ESTIMATE')
       IS_ENUM,
     seats.seat_department AS COALESCE(DEPARTMENT, 'UNATTRIBUTED'),
     seats.seat_person AS PERSON_KEY,
+    seats.seat_platform AS PLATFORM_KEY,
+    seats.is_billed AS IS_ACTIVE_IN_PERIOD,
+    seats.seat_currency AS CURRENCY_CODE,
+    spend.entity_kind AS ENTITY_KIND,
+    platforms.supports_activity_depth AS SUPPORTS_ACTIVITY_DEPTH,
 
     platforms.cost_model AS COST_MODEL
       WITH SYNONYMS = ('billing model', 'metered or seat licensed')
@@ -152,11 +159,11 @@ CREATE OR REPLACE SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV
     spend.total_cost AS SUM(spend.allocated_cost_fact)
       WITH SYNONYMS = ('total cost', 'total spend', 'ai spend')
       COMMENT = 'Total allocated cost. ALWAYS break out by allocation_basis -- a single figure mixing metered and seat cost is misleading.',
-    spend.people_with_cost AS COUNT(DISTINCT spend.person)
+    spend.people_with_cost AS COUNT(DISTINCT IFF(spend.entity_kind = 'PERSON' AND spend.person NOT LIKE 'UNRESOLVED:%', spend.person, NULL))
       WITH SYNONYMS = ('people', 'headcount', 'user count')
-      COMMENT = 'Distinct people incurring cost',
-    spend.cost_per_person AS DIV0(SUM(spend.allocated_cost_fact), COUNT(DISTINCT spend.person))
-      COMMENT = 'Average cost per person. Only meaningful when filtered to a single allocation_basis.',
+      COMMENT = 'Distinct resolved PERSON identities incurring cost; excludes unresolved subjects and non-human entities',
+    spend.cost_per_person AS SUM(IFF(spend.entity_kind = 'PERSON' AND spend.person NOT LIKE 'UNRESOLVED:%', spend.allocated_cost_fact, NULL)) / NULLIF(COUNT(DISTINCT IFF(spend.entity_kind = 'PERSON' AND spend.person NOT LIKE 'UNRESOLVED:%', spend.person, NULL)), 0)
+      COMMENT = 'Resolved human cost divided by the same resolved human population; non-human and unresolved cost stays in total_cost, not this numerator. NULL when no resolved people. Filter to one allocation basis and currency.',
     spend.unattributed_cost AS SUM(IFF(spend.department = 'UNATTRIBUTED', spend.allocated_cost_fact, 0))
       WITH SYNONYMS = ('unattributed', 'unallocated cost')
       COMMENT = 'Cost that could not be attributed to a department. Report this beside any department breakdown.',
@@ -167,11 +174,11 @@ CREATE OR REPLACE SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV
     engagement.avg_active_days AS AVG(engagement.active_days_fact)
       COMMENT = 'Average active days in the trailing 28-day window',
 
-    seats.seat_count AS COUNT(DISTINCT seats.seat_person)
+    seats.seat_count AS COUNT(DISTINCT IFF(seats.is_billed, seats.seat_person, NULL))
       WITH SYNONYMS = ('licences', 'seats', 'seat count')
-      COMMENT = 'Distinct licensed people',
-    seats.total_seat_cost AS SUM(seats.seat_cost_fact)
-      COMMENT = 'Total monthly licence cost',
+      COMMENT = 'Distinct billed people within one platform and month; not additive headcount across months or platforms',
+    seats.total_seat_cost AS SUM(IFF(seats.is_billed, seats.seat_cost_fact, 0))
+      COMMENT = 'Billed monthly licence cost; group by seat_month, seat_platform and seat_currency',
     seats.total_reclaimable AS SUM(seats.reclaimable_fact)
       WITH SYNONYMS = ('wasted spend', 'recoverable cost', 'savings opportunity')
       COMMENT = 'Cost of licences billed and never used. The clearest savings opportunity available.'
@@ -183,26 +190,26 @@ CREATE OR REPLACE SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV
 When reporting cost, ALWAYS group by or filter on allocation_basis. METERED cost varies with consumption; AMORTIZED_SEAT cost is a fixed licence spread across days. A total that mixes them changes for reasons unrelated to the invoice, so never present a blended figure without labelling that it blends two cost types.
 Never compare native quantities across platforms. Credits, tokens, messages, and interactions have no exchange rate. Compare platforms on currency cost or on people counts only.
 Whenever you report cost or usage by department, also report the UNATTRIBUTED share. Treating unattributed spend as zero makes department totals disagree with the invoice.
-Never sum cost across different values of currency. If more than one currency appears, group by currency and present the totals separately.
+Never sum cost across different values of currency. If more than one currency appears, group by currency and present the totals separately. Seat reports must group by seat_month, seat_platform and seat_currency; distinct billed people are not a count of licences across platforms or months.
 Engagement tiers are ranked WITHIN a platform. Never state that a person is a power user "overall" or compare tiers across platforms.
 A utilization_band of UNKNOWN_NO_USAGE_SIGNAL is not a dormant seat. It means the platform cannot report per-user usage, so never include those seats in a reclaim or savings figure.
-If a question needs per-user cost for a platform where supports_user_cost is FALSE, say that platform cannot report per-user cost rather than returning zero. The same applies to engagement tiers where supports_user_grain is FALSE.'
+If a question needs per-user cost for a platform where supports_user_cost is FALSE, say that platform cannot report per-user cost rather than returning zero. The same applies to engagement tiers where supports_activity_depth is FALSE. All UNKNOWN utilization bands are unqualified, not dormant. Allocated totals omit unpriced amounts; operator health and coverage validation are required before claiming complete spend. Forecast, anomaly and weekly adoption tables are not exposed by this semantic view.'
 
   AI_QUESTION_CATEGORIZATION 'This model reports usage metadata and cost. It contains no prompts, no completions, and no file contents, so it cannot answer questions about what anyone asked an AI tool or what any tool replied. Say so plainly.
 Individual rows describe named people. Answer aggregate and cost-attribution questions freely. If a question appears to seek an individual performance judgement -- ranking people for evaluation, identifying who to discipline, or who is underperforming -- answer the usage question factually and note that AI tool usage is not a performance measure and that light usage of a licence is a reclaim question, not a conduct question.
 If a cost question does not specify a period, ask which month or date range.'
 
+  -- Query templates: qualify results in the deployment before recording a
+  -- VERIFIED_AT timestamp or a real steward contact. No invented attestation.
   AI_VERIFIED_QUERIES (
 
     spend_by_department_split AS (
       QUESTION 'What did each department spend on AI last month, split by metered and seat cost?'
-      VERIFIED_AT 1773100800
       ONBOARDING_QUESTION TRUE
-      VERIFIED_BY '(STEWARD = ai_spend_owner)'
-      SQL 'SELECT * FROM SEMANTIC_VIEW(
+      SQL 'SELECT usage_month, department, allocation_basis, currency, total_cost, people_with_cost FROM SEMANTIC_VIEW(
              AI_SPEND.GOLD.AI_SPEND_SV
              METRICS spend.total_cost, spend.people_with_cost
-             DIMENSIONS spend.usage_month, spend.department, spend.allocation_basis
+             DIMENSIONS spend.usage_month, spend.department, spend.allocation_basis, spend.currency
            )
            WHERE usage_month = DATE_TRUNC(''month'', DATEADD(''month'', -1, CURRENT_DATE()))
            ORDER BY total_cost DESC NULLS LAST'
@@ -213,13 +220,11 @@ If a cost question does not specify a period, ask which month or date range.'
        for it in the usage fact finds nothing. */
     dormant_seats AS (
       QUESTION 'Which licences are we paying for that nobody used, and what would we save?'
-      VERIFIED_AT 1773100800
       ONBOARDING_QUESTION TRUE
-      VERIFIED_BY '(STEWARD = ai_spend_owner)'
-      SQL 'SELECT * FROM SEMANTIC_VIEW(
+      SQL 'SELECT seat_month, seat_platform, utilization_band, seat_department, seat_currency, seat_count, total_reclaimable FROM SEMANTIC_VIEW(
              AI_SPEND.GOLD.AI_SPEND_SV
              METRICS seats.seat_count, seats.total_reclaimable
-             DIMENSIONS seats.seat_month, seats.utilization_band, seats.seat_department
+             DIMENSIONS seats.seat_month, seats.seat_platform, seats.utilization_band, seats.seat_department, seats.seat_currency
            )
            WHERE utilization_band = ''DORMANT''
            ORDER BY total_reclaimable DESC NULLS LAST'
@@ -227,10 +232,8 @@ If a cost question does not specify a period, ask which month or date range.'
 
     engagement_distribution AS (
       QUESTION 'How many power, medium, and low users does each platform have?'
-      VERIFIED_AT 1773100800
       ONBOARDING_QUESTION TRUE
-      VERIFIED_BY '(STEWARD = ai_spend_owner)'
-      SQL 'SELECT * FROM SEMANTIC_VIEW(
+      SQL 'SELECT engagement_platform, engagement_tier, people_in_tier, avg_active_days FROM SEMANTIC_VIEW(
              AI_SPEND.GOLD.AI_SPEND_SV
              METRICS engagement.people_in_tier, engagement.avg_active_days
              DIMENSIONS engagement.engagement_platform, engagement.engagement_tier
@@ -242,12 +245,10 @@ If a cost question does not specify a period, ask which month or date range.'
        metered cost trends with behaviour; a combined line hides which moved. */
     monthly_trend_by_basis AS (
       QUESTION 'How has AI spend trended by month for each platform?'
-      VERIFIED_AT 1773100800
-      VERIFIED_BY '(STEWARD = ai_spend_owner)'
-      SQL 'SELECT * FROM SEMANTIC_VIEW(
+      SQL 'SELECT usage_month, platform, allocation_basis, currency, total_cost, people_with_cost FROM SEMANTIC_VIEW(
              AI_SPEND.GOLD.AI_SPEND_SV
              METRICS spend.total_cost, spend.people_with_cost
-             DIMENSIONS spend.usage_month, spend.platform, spend.allocation_basis
+             DIMENSIONS spend.usage_month, spend.platform, spend.allocation_basis, spend.currency
            )
            ORDER BY usage_month, platform, allocation_basis'
     ),
@@ -255,12 +256,10 @@ If a cost question does not specify a period, ask which month or date range.'
     /* Data-quality question. Publish this beside any allocation chart. */
     unattributed_share AS (
       QUESTION 'How much AI spend could not be attributed to a department?'
-      VERIFIED_AT 1773100800
-      VERIFIED_BY '(STEWARD = ai_spend_owner)'
-      SQL 'SELECT * FROM SEMANTIC_VIEW(
+      SQL 'SELECT usage_month, platform, allocation_basis, currency, total_cost, unattributed_cost FROM SEMANTIC_VIEW(
              AI_SPEND.GOLD.AI_SPEND_SV
              METRICS spend.total_cost, spend.unattributed_cost
-             DIMENSIONS spend.usage_month, spend.platform
+             DIMENSIONS spend.usage_month, spend.platform, spend.allocation_basis, spend.currency
            )
            ORDER BY usage_month DESC NULLS LAST, unattributed_cost DESC NULLS LAST'
     )
@@ -275,6 +274,7 @@ If a cost question does not specify a period, ask which month or date range.'
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE AGENT AI_SPEND.GOLD.AI_SPEND_AGENT
+  COPY GRANTS
   COMMENT = 'Answers cross-platform AI usage and cost questions over AI_SPEND_SV'
   PROFILE = '{"display_name": "AI Spend Analyst"}'
   FROM SPECIFICATION
@@ -306,7 +306,7 @@ CREATE OR REPLACE AGENT AI_SPEND.GOLD.AI_SPEND_AGENT
       memory and do not carry a figure from an earlier turn without re-querying.
 
       Route by question type:
-        cost, budget, forecast, chargeback  -> spend metrics, always split by
+        historical cost, chargeback       -> spend metrics, always split by
                                               allocation_basis
         unused or wasted licences, savings  -> seats metrics filtered to DORMANT
         adoption, power users, who uses it  -> engagement metrics
@@ -314,6 +314,8 @@ CREATE OR REPLACE AGENT AI_SPEND.GOLD.AI_SPEND_AGENT
                                               supports_user_cost and
                                               supports_user_grain
 
+      Forecasts, anomaly flags and weekly adoption trends are not available through
+      this tool. Do not improvise them from spend or engagement metrics.
       A dormant seat produces no usage row, so questions about unused licences must
       go to the seats table and never to spend.
 
@@ -341,18 +343,17 @@ CREATE OR REPLACE AGENT AI_SPEND.GOLD.AI_SPEND_AGENT
 -- ---------------------------------------------------------------------------
 -- Grants
 --
--- REFERENCES and SELECT on the semantic view are BOTH required for a role that
--- does not own it to use it through an agent. SELECT alone is enough to query the
--- view directly but not enough for agent use -- a confusing failure to debug.
---
--- Note the governance opportunity: granting on the semantic view does not require
--- granting on SHAPED.UNIFIED_AI_USAGE. Aggregate reporting access and row-level
--- access to individual people stay genuinely separate, which is what the privacy
--- gate in the README asks for.
+-- This is a PERSON-LEVEL semantic view. SELECT permits public person dimensions
+-- and facts even without base-table privileges. Agent instructions are NOT an
+-- access-control boundary. Grant only to roles approved for individual records.
+-- For aggregate-only users publish a separate view over approved aggregate tables
+-- with no person identifiers/facts; review small-cohort disclosure before grants.
+-- SELECT is the query privilege; grant REFERENCES only when metadata access is
+-- separately needed. Verify effective access using a non-owner test role.
 -- ---------------------------------------------------------------------------
 
--- GRANT REFERENCES, SELECT ON SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV TO ROLE <reporting_role>;
--- GRANT USAGE ON AGENT AI_SPEND.GOLD.AI_SPEND_AGENT TO ROLE <reporting_role>;
+-- GRANT SELECT ON SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV TO ROLE <person_reporting_role>;
+-- GRANT USAGE ON AGENT AI_SPEND.GOLD.AI_SPEND_AGENT TO ROLE <person_reporting_role>;
 
 -- ---------------------------------------------------------------------------
 -- Verify
@@ -361,13 +362,17 @@ CREATE OR REPLACE AGENT AI_SPEND.GOLD.AI_SPEND_AGENT
 DESCRIBE SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV;
 
 SHOW AGENTS LIKE 'AI_SPEND_AGENT' IN SCHEMA AI_SPEND.GOLD;
+SHOW GRANTS ON SEMANTIC VIEW AI_SPEND.GOLD.AI_SPEND_SV;
+SHOW GRANTS ON AGENT AI_SPEND.GOLD.AI_SPEND_AGENT;
+-- https://docs.snowflake.com/en/sql-reference/sql/create-agent documents COPY GRANTS.
+-- Grant preservation does not replace a non-owner person-level access review.
 
 /* Smoke test the boundary the whole model exists to protect. Metered and seat cost
    must come back on SEPARATE rows. If they collapse into one, allocation_basis has
    been dropped somewhere and the agent will be able to blend them. */
-SELECT * FROM SEMANTIC_VIEW(
+SELECT platform, allocation_basis, currency, total_cost, people_with_cost FROM SEMANTIC_VIEW(
     AI_SPEND.GOLD.AI_SPEND_SV
     METRICS spend.total_cost, spend.people_with_cost
-    DIMENSIONS spend.platform, spend.allocation_basis
+    DIMENSIONS spend.platform, spend.allocation_basis, spend.currency
 )
 ORDER BY platform, allocation_basis;

@@ -1,12 +1,12 @@
 /* Cross-platform AI spend consolidation — network rules and credentials
    Pair-programmed by SE Community + Cortex Code
-   Expires: 2027-03-10
+   Expires: 2026-11-09
 
    Creates network rules for each vendor host and one external access integration.
    SECRET creation is left COMMENTED on purpose -- running this file must never be
    the thing that puts a credential into a shell history, a worksheet history, or a
-   git diff. Copy the template you need, fill it in interactively, and run that one
-   statement by itself.
+   git diff. Use an approved secret-provisioning workflow; running SQL containing
+   a literal credential interactively does not guarantee it is absent from history.
 
    Only add hosts for platforms you are actually ingesting. An external access
    integration is an egress allowlist, and an unused entry is an unnecessary hole.
@@ -16,26 +16,27 @@ USE ROLE ACCOUNTADMIN;
 USE WAREHOUSE AI_SPEND_WH;
 
 -- ---------------------------------------------------------------------------
--- Network rules, one per vendor
+-- Network rules, one per vendor. IF NOT EXISTS preserves approved custom hosts
+-- on rerun; review existing rules and use an explicit ALTER for policy changes.
 --
 -- Kept separate rather than merged into one rule so a platform can be revoked by
 -- detaching a single rule, and so the allowlist reads as documentation of exactly
 -- which vendors this pipeline talks to.
 -- ---------------------------------------------------------------------------
 
-CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.GITHUB_API_RULE
+CREATE NETWORK RULE IF NOT EXISTS AI_SPEND.CONTROL.GITHUB_API_RULE
   MODE = EGRESS
   TYPE = HOST_PORT
   VALUE_LIST = ('api.github.com:443')
   COMMENT = 'GitHub Copilot usage metrics and user-management APIs';
 
-CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.OPENAI_API_RULE
+CREATE NETWORK RULE IF NOT EXISTS AI_SPEND.CONTROL.OPENAI_API_RULE
   MODE = EGRESS
   TYPE = HOST_PORT
   VALUE_LIST = ('api.openai.com:443')
   COMMENT = 'OpenAI admin, analytics, and cost endpoints';
 
-CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.MICROSOFT_GRAPH_RULE
+CREATE NETWORK RULE IF NOT EXISTS AI_SPEND.CONTROL.MICROSOFT_GRAPH_RULE
   MODE = EGRESS
   TYPE = HOST_PORT
   -- login.microsoftonline.com is required for the OAuth token exchange, separately
@@ -44,16 +45,17 @@ CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.MICROSOFT_GRAPH_RULE
   VALUE_LIST = ('graph.microsoft.com:443', 'login.microsoftonline.com:443')
   COMMENT = 'Microsoft Graph Copilot usage reports plus Entra token endpoint';
 
-CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.BOX_API_RULE
+CREATE NETWORK RULE IF NOT EXISTS AI_SPEND.CONTROL.BOX_API_RULE
   MODE = EGRESS
   TYPE = HOST_PORT
   -- api.box.com serves the enterprise events and reporting endpoints;
-  -- upload.box.com is needed only if you also fetch report files Box has
-  -- delivered into a Box folder rather than reading events directly.
-  VALUE_LIST = ('api.box.com:443', 'upload.box.com:443')
+  -- File downloads redirect to a separate download host (for example
+  -- dl.boxcloud.com). Approve the exact current host before adding it; reject
+  -- unapproved redirects and never forward the API bearer token to downloads.
+  VALUE_LIST = ('api.box.com:443')
   COMMENT = 'Box enterprise events, AI reporting, and report file retrieval';
 
-CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.ANTHROPIC_API_RULE
+CREATE NETWORK RULE IF NOT EXISTS AI_SPEND.CONTROL.ANTHROPIC_API_RULE
   MODE = EGRESS
   TYPE = HOST_PORT
   -- One host serves three separate API families with three non-interchangeable key
@@ -62,13 +64,13 @@ CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.ANTHROPIC_API_RULE
   VALUE_LIST = ('api.anthropic.com:443')
   COMMENT = 'Anthropic Admin API and Claude Enterprise Analytics API';
 
-CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.CURSOR_API_RULE
+CREATE NETWORK RULE IF NOT EXISTS AI_SPEND.CONTROL.CURSOR_API_RULE
   MODE = EGRESS
   TYPE = HOST_PORT
   VALUE_LIST = ('api.cursor.com:443')
   COMMENT = 'Cursor Admin API: members, daily usage, spend, usage events';
 
-CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.GOOGLE_API_RULE
+CREATE NETWORK RULE IF NOT EXISTS AI_SPEND.CONTROL.GOOGLE_API_RULE
   MODE = EGRESS
   TYPE = HOST_PORT
   -- Four hosts because the three Google surfaces do not share one API:
@@ -94,24 +96,16 @@ CREATE OR REPLACE NETWORK RULE AI_SPEND.CONTROL.GOOGLE_API_RULE
 -- is static DDL -- adding a platform means re-running this ALTER, which is the same
 -- structural reason the SECRETS clause on each procedure cannot be data-driven.
 --
--- Start with only the platforms you have credentials for. ENABLED = TRUE with an
--- empty secret list is valid and useful while you are still testing connectivity.
+-- Start disabled, with only GitHub's API host and no usable secrets. Approve
+-- exact download hosts and provision credentials before explicitly enabling it.
 -- ---------------------------------------------------------------------------
 
-CREATE EXTERNAL ACCESS INTEGRATION AI_SPEND_EAI
+CREATE EXTERNAL ACCESS INTEGRATION IF NOT EXISTS AI_SPEND_EAI
   ALLOWED_NETWORK_RULES = (
-    AI_SPEND.CONTROL.GITHUB_API_RULE,
-    AI_SPEND.CONTROL.OPENAI_API_RULE,
-    AI_SPEND.CONTROL.MICROSOFT_GRAPH_RULE,
-    AI_SPEND.CONTROL.BOX_API_RULE,
-    AI_SPEND.CONTROL.ANTHROPIC_API_RULE,
-    AI_SPEND.CONTROL.CURSOR_API_RULE,
-    AI_SPEND.CONTROL.GOOGLE_API_RULE
+    AI_SPEND.CONTROL.GITHUB_API_RULE
   )
-  ALLOWED_AUTHENTICATION_SECRETS = (
-    AI_SPEND.CONTROL.GITHUB_COPILOT_CREDENTIALS
-  )
-  ENABLED = TRUE
+  ALLOWED_AUTHENTICATION_SECRETS = (none)
+  ENABLED = FALSE
   COMMENT = 'Egress for AI platform admin API pulls';
 
 GRANT USAGE ON INTEGRATION AI_SPEND_EAI TO ROLE AI_SPEND_RL;
@@ -120,23 +114,30 @@ GRANT USAGE ON INTEGRATION AI_SPEND_EAI TO ROLE AI_SPEND_RL;
    CREDENTIAL TEMPLATES -- run these interactively, one at a time.
 
    Do not uncomment these and run the file. Do not paste real values into a file
-   that git can see. Fill in the placeholder, run the single statement, and let it
-   scroll out of your history.
+   that git can see. Use your approved secret-provisioning workflow. Scrolling a
+   value out of view does not remove it from worksheet or shell history.
 
-   Every secret below needs GRANT READ ... TO ROLE AI_SPEND_RL, or the procedure
-   fails at execution with a message that reads like a network problem.
+   The procedure creator needs READ on each bound secret, USAGE on its schema,
+   and USAGE on the EAI. Missing grants or a secret absent from the integration
+   can fail CREATE PROCEDURE; verify these before creation, not just at runtime.
+   https://docs.snowflake.com/en/developer-guide/external-network-access/creating-using-external-network-access
    =========================================================================== */
 
 /* ---------------------------------------------------------------------------
    GitHub Copilot -- the one worked adapter in sql/03
 
-   Needs a token with organization or enterprise scope carrying BOTH:
-     - permission to read Copilot usage metrics
-     - permission to read Copilot seat assignments (a separate API)
+   Uses organization endpoints. A fine-grained token needs BOTH:
+     - Organization Copilot metrics (read) for users-1-day
+     - GitHub Copilot Business (read) or Administration (read) for seats
+   Classic PAT/OAuth support is documented with read:org for both endpoints.
+   Verify the principal's organization access and the enabled metrics policy.
+   Seat-management endpoints are public preview and subject to change.
+   https://docs.github.com/en/rest/copilot/copilot-usage-metrics
+   https://docs.github.com/en/rest/copilot/copilot-user-management
 
-   A fine-grained PAT or a GitHub App installation token both work. A GitHub App
-   is the better long-term choice: it is not tied to a leaving employee, which is
-   the failure mode that silently kills these pipelines six months in.
+   Verify token support and permissions for EACH endpoint and scope. The worked
+   connector uses a single organization; enterprise metrics and enterprise seat
+   inventory are not interchangeable with the organization APIs.
 
    TYPE = GENERIC_STRING because a token is one value, not a username/password pair.
    --------------------------------------------------------------------------- */
@@ -146,6 +147,17 @@ GRANT USAGE ON INTEGRATION AI_SPEND_EAI TO ROLE AI_SPEND_RL;
 --   SECRET_STRING = '<YOUR_GITHUB_TOKEN>'  -- pragma: allowlist secret
 --   COMMENT = 'GitHub Copilot usage metrics + seat assignment read token';
 -- GRANT READ ON SECRET AI_SPEND.CONTROL.GITHUB_COPILOT_CREDENTIALS TO ROLE AI_SPEND_RL;
+-- After creating the secret, qualify report download URLs and configure the same
+-- exact hosts in DOWNLOAD_HOSTS in sql/03. Never paste a signed URL into DDL.
+-- CREATE NETWORK RULE AI_SPEND.CONTROL.GITHUB_REPORT_DOWNLOAD_RULE
+--   MODE = EGRESS TYPE = HOST_PORT VALUE_LIST = ('<approved-download-host>:443');
+-- ALTER EXTERNAL ACCESS INTEGRATION AI_SPEND_EAI SET
+--   ALLOWED_NETWORK_RULES = (AI_SPEND.CONTROL.GITHUB_API_RULE,
+--                           AI_SPEND.CONTROL.GITHUB_REPORT_DOWNLOAD_RULE)
+--   ALLOWED_AUTHENTICATION_SECRETS = (AI_SPEND.CONTROL.GITHUB_COPILOT_CREDENTIALS)
+--   ENABLED = TRUE;
+-- IF NOT EXISTS above preserves existing integration settings; explicitly review
+-- and ALTER an older integration that still permits unnecessary vendor hosts.
 
 /* ---------------------------------------------------------------------------
    OpenAI -- ChatGPT Enterprise and the API Platform
@@ -227,9 +239,9 @@ GRANT USAGE ON INTEGRATION AI_SPEND_EAI TO ROLE AI_SPEND_RL;
        x-api-key, not as a bearer token. A WORKSPACE-SCOPED key will not work --
        the key must be org-scoped or the request fails on privilege, not on syntax.
 
-   You need BOTH to reconcile to an invoice. The per-user Enterprise endpoints
-   deliberately exclude direct API-key and automation traffic, so per-user cost and
-   organization total legitimately disagree until you ingest both.
+   These are separate billing scopes. Enterprise parent organizations do not have
+   Console Admin API keys. Reconcile Enterprise per-user amounts to Enterprise
+   organization totals; ingest Console only for a separately identified API scope.
 
    Every request on both families needs an anthropic-version header. It is now
    documented as required on surfaces that previously tolerated its absence, which
@@ -307,9 +319,9 @@ GRANT USAGE ON INTEGRATION AI_SPEND_EAI TO ROLE AI_SPEND_RL;
 -- ---------------------------------------------------------------------------
 -- Verify: which secrets exist and which the integration will actually permit
 --
--- A secret that exists but is absent from ALLOWED_AUTHENTICATION_SECRETS produces
--- a runtime failure, not a creation-time one. Check both sides here rather than
--- discovering the mismatch inside a Python traceback.
+-- Check secret bindings, creator privileges and ALLOWED_AUTHENTICATION_SECRETS
+-- before CREATE PROCEDURE. Host allowlisting is a separate runtime requirement;
+-- this inventory does not prove connectivity or expose credential values.
 -- ---------------------------------------------------------------------------
 
 SHOW SECRETS IN SCHEMA AI_SPEND.CONTROL;

@@ -27,10 +27,10 @@ Pair-programmed by SE Community + Cortex Code
 
 > [!IMPORTANT]
 > **No support provided.** Reference only; validate before production use. The Snowflake-side SQL
-> here was executed on the created date above. The **vendor API details were correct on that date
-> and will drift** — every vendor in this guide changed a relevant endpoint during 2026. Treat the
-> vendor sections as a worked illustration of the pattern, and the vendor's own documentation as
-> the source of truth.
+> has been revised since its original baseline; these revisions are not a claim of live vendor
+> or end-to-end deployment validation. Vendor APIs and billing semantics change. Qualify the
+> source contracts, permissions, and result reconciliation in your own environment before use.
+> The existing review baseline and November 9 expiry are unchanged.
 
 ---
 
@@ -42,7 +42,7 @@ Pair-programmed by SE Community + Cortex Code
 | [Start Here](#start-here) | Build-vs-buy, then what grain each of 11 platforms can actually give you |
 | [The Two Decisions That Matter](#the-two-decisions-that-matter) | Cost-model discriminator, identity spine. **The design.** |
 | [Architecture](#architecture) | Diagram, and why raw payloads land verbatim |
-| [What Is In This Guide](#what-is-in-this-guide) | The eleven SQL files, in run order |
+| [What Is In This Guide](#what-is-in-this-guide) | The ten SQL files and their execution boundaries |
 | [The Five Decisions It Supports](#the-five-decisions-it-supports) | Gold objects, and the caveat to state with each |
 | [Extending the Model](#extending-the-model) | Per-agent cost, and joining usage to outcomes |
 | [If You Already Run dbt](#if-you-already-run-dbt) | Coexistence patterns, and the tests worth stealing |
@@ -60,13 +60,13 @@ Pair-programmed by SE Community + Cortex Code
 
 | Term | In plain words |
 | --- | --- |
-| **Metered** | The vendor charges per unit consumed — credits, tokens, requests. Cost varies with behavior. Snowflake Cortex, OpenAI credits, Anthropic tokens, and GitHub AI credits work this way. |
+| **Metered** | The contract charges for qualified billable units, such as credits or tokens. A consumption counter is not automatically that billable quantity: GitHub usage credits explicitly are not invoicing totals. |
 | **Seat** | The vendor charges a fixed amount per licensed person per month. Microsoft 365 Copilot is the only platform here that is *purely* this — a heavy user and an untouched license cost the same. |
 | **Seat plus meter** | The common shape, and the one that breaks naive models. GitHub Copilot, Cursor, and Claude Enterprise all charge a seat *and* meter consumption. The two are not simply additive, and the relationship differs per vendor: a Cursor seat **includes** a usage pool, while a current Claude Enterprise seat includes **no usage at all**. |
 | **Native quantity** | The unit the vendor actually reports — credits, tokens, messages, AI Units, interactions. Preserved rather than converted, because there is no honest exchange rate between them. Box's "AI Unit" is the clearest case: a vendor-proprietary composite that means nothing outside Box. |
 | **Identity spine** | The mapping from each vendor's subject key to one person, plus that person's department and cost centre. Sourced from your IdP or HR system, not from any AI vendor. |
 | **Unresolved** | A usage row whose subject could not be matched to a person. Kept as a visible bucket, never dropped. |
-| **Restatement** | Re-loading a window of dates the vendor may still revise, rather than appending once and trusting it. Anthropic revises a given date's cost for up to 30 days, so append-only ingestion there produces numbers that quietly stop matching the vendor. |
+| **Restatement** | Re-publishing complete source partitions the vendor may still revise. Claude Enterprise cost/usage can change until about seven days after calendar month-end, so reload open months through settlement rather than a fixed rolling 30-day window. |
 | **Adapter** | The per-vendor code that pulls from an admin API and lands it in the shared contract. The disposable layer. |
 | **Engagement tier** | A classification of users by activity depth — commonly low / medium / power. Every vendor defines this differently, so this guide computes its own and says so. |
 
@@ -160,16 +160,16 @@ it in the form people assume, and another delivers it only through a route most 
 | Platform | User-level rows? | Per-user cost? | The constraint that will surprise you |
 | --- | --- | --- | --- |
 | **Snowflake Cortex** | Yes | Yes, in credits | Four separate `ACCOUNT_USAGE` views with inconsistent column names. Cortex Code reports `USAGE_TIME` where the others report `START_TIME`, and as `TIMESTAMP_TZ` rather than `TIMESTAMP_LTZ` — but it *does* carry `USER_NAME`, along with a first-class `INTERFACE` column the others bury in `METADATA`. The view with no `USER_NAME` is `CORTEX_AI_FUNCTIONS_USAGE_HISTORY`, and that is the only one needing a join to `ACCOUNT_USAGE.USERS`. |
-| **GitHub Copilot** | Yes — user-level NDJSON report and API | Partly — AI credits are metered, the seat is a license | The legacy metrics API was **shut down in April 2026**. Seats come from a *different* API than usage. Team rollup needs a second report, and teams with fewer than five seated users are excluded from it. |
+| **GitHub Copilot** | Yes — user-level NDJSON reports | Not from usage credits; seats are allocated separately | `ai_credits_used` is consumption analysis, **not invoicing**. The worked adapter uses one organization for usage and seats. A separate qualified billable-overage source is required for metered money; overlapping organizations must not be summed. |
 | **ChatGPT Enterprise** | Yes | Yes — credits by user, product, and model | The ChatGPT workspace and the OpenAI API Platform are **separate products with separate billing**. Summing them into one "OpenAI spend" number is the most common error on this path. The stateful conversation route was removed in June 2026. |
-| **Claude Enterprise** | Yes | Yes — cost per user, with both effective and list amounts | The seat includes **no usage**, so metered token cost is the larger, more volatile half of the bill. Two structural limits: **no data exists before 2026-01-01**, and a date's value can be **revised for up to 30 days**, so this platform must be restated rather than appended. Per-user cost also *excludes* API-key and automation traffic, so it cannot reconcile to invoice alone. |
-| **Anthropic Console (API)** | No | No | Grain is API key, workspace, and model. There is no user dimension at all. Ingested anyway, because it holds the traffic the per-user Claude Enterprise endpoints deliberately exclude. |
+| **Claude Enterprise** | Yes | Plan-dependent: monetary cost on usage-based plans; usage credits on seat-based plans | Analytics starts **2026-01-01**. Cost/usage may revise until **about seven days after month-end**. Reconcile per-user amounts to Enterprise organization totals, not Console billing. Confirm the plan and effective-versus-list amount before reporting money. |
+| **Anthropic Console (API)** | Not in general usage/cost reports | No measured general per-user bill | Usage can group by API key/workspace/model; cost has its own grouping. This is a separate billing scope, not the missing half of Enterprise totals. Enterprise parent organizations do not have Console Admin API keys. |
 | **Cursor** | Yes — per user per day, keyed by email | Yes — in cents, but read the right field | The seat **includes** a usage pool, so seat and metered cost overlap and must not be added. Two feeds, not one: activity has no cost fields, cost has no activity. And without explicit pagination the activity endpoint returns **active users only** — silently omitting the idle seats you are trying to find. |
-| **Box AI** | Yes | Yes — AI Units by user *and by agent* | Metered since **20 October 2025** — anyone still modelling Box AI as a bundled seat cost is a year out of date. The per-user cost view is a **console report**, not a JSON endpoint; the programmatic path is the Enterprise Events API, which has a hard retention cliff of **two weeks** on the streaming feed and **one year** on `admin_logs`. Miss the window and the data is gone. |
+| **Box AI** | Yes | AI Units by user; currency needs a qualified rate | The dated **AI Units CSV** includes product/capability/category breakdowns and fractional or zero units, not just monthly totals. Events are a separate activity feed, not another AI Units charge. Event retention is two weeks streaming / one year `admin_logs`. |
 | **Gemini in Workspace** | Yes — but as audit events | **No** | There is no Gemini user usage report. Per-user data is an activity feed with an actor and an action, carrying **no tokens and no cost**. Baseline Gemini is bundled into the plan price, so there is no separable per-user cost to compute. Retention is 180 days rolling with nothing before 2025-06-20. |
-| **Gemini Code Assist** | Yes — Cloud Logging carries the user's email | No — seat cost, allocated | The best per-user signal Google offers, and the easiest to miss: the Cloud *Monitoring* metrics for the same product are aggregate-only. Logging is **off by default** and there is no backfill. |
+| **Gemini Code Assist** | Yes — metadata logs carry the user's email | No — seat cost, allocated | Select `MetadataLog` **and** the `%2Fmetadata` log name, plus `code_assist` product, before landing. Request/response logs contain prompts and source context. Cloud Monitoring is aggregate-only; logging requires enablement with no backfill. |
 | **Vertex AI / Agent Platform** | No | **No, and not achievable** | Billing attribution stops at project, service, and SKU. Labels are the only request-level mechanism, and a label key is capped at roughly a thousand distinct values *for the life of the billing account* — so labelling by user email breaks permanently above that headcount, and Google warns against putting PII there anyway. |
-| **Microsoft 365 Copilot** | Nominally | **No** | User principal name and display name are **pseudonymized by default**, and the payload is last-activity dates rather than usage volume. Without a tenant-level change this platform answers "is this seat being touched" and nothing more. |
+| **Microsoft 365 Copilot** | Yes, pseudonymized by default | No metered per-user currency | Default **v2 CSV** adds prompts submitted and active usage days. D7/D28/D90/D180/ALL are report periods, not daily facts. Identity joins need approved mapping; period-aware reporting still needs implementation. |
 
 Four consequences worth stating out loud to whoever asked for this:
 
@@ -177,17 +177,17 @@ Four consequences worth stating out loud to whoever asked for this:
    them do not meter per user at all. What *is* obtainable is metered cost per user for most of
    them, plus seat utilization for the rest. That is a better answer anyway — an unused seat is the
    cheapest saving available.
-2. **Microsoft 365 Copilot and Gemini in Workspace will not support the engagement-tier analysis**
-   they liked from ChatGPT Enterprise. Last-activity dates and bucketed usage levels cannot
-   distinguish a light user from a power user on a definition you control.
+2. **Activity depth and daily grain are separate capabilities.** M365 v2 prompts and active days
+   support period-based depth analysis, but overlapping D28 snapshots cannot be summed into daily
+   tiers. Workspace Gemini's bucketed console levels are not interchangeable with those counts.
 3. **Google is not one platform and must not be modelled as one.** It gives you user-level *usage*
    nearly everywhere and user-level *cost* almost nowhere, and the three surfaces have different
    APIs, different auth, and different retention. The registry carries them as three rows for that
    reason.
-4. **Box AI adds a dimension the others mostly lack: cost per *agent*.** AI Units are consumed by
-   configured agents as well as by people, so "which agent is expensive" becomes answerable — and
-   that is closer to "where should we invest next" than any per-person number. Snowflake Cortex
-   carries the same idea in its agent name; see [Extending the model](#extending-the-model).
+4. **Agent attribution needs an actual agent key.** Box AI Insights provides agent-oriented views,
+   but the documented AI Units CSV's Box Agents capability is not a unique agent identifier.
+   Snowflake agent usage carries an agent name; retaining it is an extension, not something the
+   current person/day model already delivers.
 
 ---
 
@@ -208,10 +208,11 @@ adds a metered credit to a fixed seat produces a total that moves for the wrong 
 And the split is not simply one column per vendor, because most vendors are *both*. Three shapes
 appear in this guide and each needs different handling:
 
-- **Pure seat.** Microsoft 365 Copilot. Cost is fixed; usage is a touched / not-touched signal.
+- **Pure seat.** Licensed Microsoft 365 Copilot in this model. Cost is fixed; v2 usage reports
+  provide prompts and active usage days, but those counters do not determine the seat charge.
 - **Seat that includes usage.** Cursor, GitHub Copilot. Seat and metered cost **overlap** — part of
   the metered figure is already paid for by the seat. Adding the two double-counts.
-- **Seat that includes no usage.** Claude Enterprise. Seat and metered cost are genuinely additive,
+- **Seat that includes no usage.** Usage-based Claude Enterprise plans. Seat and metered cost are genuinely additive,
   and the metered half is the volatile one that grows with adoption.
 
 Anyone who models all three the same way will be wrong on two of them, in opposite directions.
@@ -219,12 +220,16 @@ Anyone who models all three the same way will be wrong on two of them, in opposi
 `SHAPED.UNIFIED_AI_USAGE` carries an explicit discriminator:
 
 ```text
-usage_date, platform, subject_key, person_key, identity_confidence,
+usage_date, platform_key, subject_key, person_key, identity_confidence,
 cost_model              METERED | SEAT
-native_qty              credits | tokens | messages | interactions
+native_qty              consumption quantity, not necessarily billable
 native_unit             the vendor's own unit, preserved
-cost_amount             NULL when cost_model = 'SEAT'
-source_billing_context  e.g. CHATGPT_WORKSPACE vs OPENAI_API_PLATFORM
+cost_basis              ACTIVITY_ONLY | BILLABLE_NATIVE | REPORTED_CURRENCY | UNKNOWN
+cost_amount             NULL for SEAT/activity-only or unqualified cost
+currency_code           explicit currency; never mix currencies
+cost_status             PRICED | NOT_APPLICABLE | MISSING_RATE | INVALID_COST_INPUT
+entity_kind             PERSON | SERVICE | SYSTEM | UNKNOWN
+billing_context         e.g. CHATGPT_WORKSPACE vs OPENAI_API_ORG
 ```
 
 Seat cost lives separately in `CONTROL.SEAT_ENTITLEMENT`, keyed by platform, person, and period.
@@ -232,14 +237,16 @@ This split makes the two useful questions answerable independently: *what did co
 and *are we paying for licenses nobody touches*.
 
 Budgeting still needs one blended number, so the guide provides one — in
-`GOLD.AI_SPEND_ALLOCATED`, a clearly named view that applies seat amortization and **exposes the
+`GOLD.AI_SPEND_ALLOCATED`, a clearly named Dynamic Table that applies seat amortization and **exposes the
 allocation rule as a column**. The invented precision stays visible instead of hiding inside a
 `SUM`. That is the whole trick: allocate deliberately in one labelled place, rather than
-accidentally everywhere.
+accidentally everywhere. It includes **priced** metered rows and seat allocations; missing or
+ambiguous rates leave amounts unknown and excluded, not zero. Publish unpriced-row counts and
+source health alongside its totals, and never sum across currencies.
 
-`source_billing_context` exists for one specific reason. ChatGPT Enterprise and the OpenAI API
-Platform are separate contracts with separate meters. Keeping the context on every row makes it
-impossible to accidentally produce a combined "OpenAI" figure that matches neither invoice. Anthropic
+`BILLING_CONTEXT` exists for one specific reason. ChatGPT Enterprise and the OpenAI API
+Platform are separate contracts with separate meters. Retaining the context makes the boundary
+visible; queries must still preserve it rather than treating a combined vendor total as one invoice. Anthropic
 repeats the pattern exactly — Claude Enterprise and the Claude Console are separate products with
 non-interchangeable admin credentials — which is why they are two registry rows rather than one.
 
@@ -253,7 +260,7 @@ Every platform names people differently:
 
 | Platform | Subject key you get |
 | --- | --- |
-| Snowflake | numeric `USER_ID`, resolvable to a login name |
+| Snowflake | `USER_ID`, normalized to VARCHAR for joins across native views and `USERS` |
 | GitHub | GitHub login — often not the corporate email |
 | ChatGPT Enterprise | workspace member identifier |
 | Claude Enterprise | both a stable user ID and an email — join on the ID, display the email |
@@ -263,11 +270,16 @@ Every platform names people differently:
 | Microsoft 365 Copilot | pseudonymized UPN hash, unless the tenant disables concealment |
 
 There is no natural join key. `CONTROL.IDENTITY_MAP` is the spine, seeded from your IdP or HR
-system — never from an AI vendor — and it carries the department and cost centre that make
-allocation possible at all.
+system for corporate attribution; vendor rosters identify source subjects but do not establish
+department or cost centre. The Snowflake seeder bootstraps user/email mappings, leaving those
+organizational attributes to the approved directory feed.
 
-Two rules keep it honest:
+Three rules keep it honest:
 
+- **Use dated mappings and entity types.** Resolve usage at its usage date and seat allocation
+  at month-start, the declared allocation convention. Close old validity intervals rather than
+  applying today's department to history. Keep `SERVICE`, `SYSTEM`, and `UNKNOWN` spend, but
+  exclude it from human engagement/adoption ranks; `PERSON` is not implied by having an ID.
 - **Record confidence per row.** `identity_confidence` distinguishes a verified IdP match from a
   heuristic email-prefix guess. Allocation built on guesses should be visibly built on guesses.
 - **Never drop unmatched rows.** They land in an `UNRESOLVED` bucket. Unattributed spend must stay
@@ -292,10 +304,10 @@ flowchart LR
   end
 
   subgraph ctl [CONTROL]
-    reg["PLATFORM_REGISTRY"]
-    log["PULL_RUN_LOG"]
+    reg["PLATFORM_REGISTRY<br/>+ REPORT_REGISTRY"]
+    log["PULL_RUN_LOG<br/>+ REPORT_SNAPSHOT"]
     idmap["IDENTITY_MAP"]
-    seats["SEAT_ENTITLEMENT"]
+    seats["SEAT_RATE + SEAT_ENTITLEMENT<br/>+ ACTIVITY_COVERAGE"]
   end
 
   subgraph rawlayer [RAW]
@@ -328,53 +340,76 @@ flowchart LR
   reg --> landing
   landing --> log
   landing --> fact
+  log --> fact
   SF --> fact
   idmap --> fact
-  seats --> fact
+  seats --> alloc
   fact --> eng
   fact --> dept
   fact --> fcst
   fact --> anom
   fact --> alloc
-  goldlayer --> agent["Semantic view + Cortex Agent"]
+  alloc --> agent["Person-level semantic view + Cortex Agent"]
+  eng --> agent
 ```
 
-**Raw payloads land as `VARIANT` and are shredded in SQL** rather than schematized on ingest. A
-shredding bug is then fixed with `CREATE OR REPLACE` over data you already hold, rather than a
-connector redeploy and a re-pull from an API with rate limits and a short retention window.
+**Approved metadata records land as `VARIANT` and are shredded in SQL.** Preserve source field
+values and provenance so a parsing fix can use retained records rather than re-pull expired data.
+The GitHub adapter re-serializes records into JSONL; it does not retain byte-identical HTTP bodies.
+CSV adapters must preserve the original files and headers and implement their own parser.
+Privacy filtering happens **before** staging: especially for Code Assist, verbatim landing of
+request/response logs would ingest prompts and source files, violating the metadata-only scope.
+
+**Completion, not row recency, controls publication.** `REPORT_REGISTRY` declares required reports.
+Every external partition has a `REPORT_SNAPSHOT` manifest, every landed row has a `RUN_ID`, and
+only a run logged `SUCCEEDED` can publish. The latest complete successful partition replaces the
+previous partition, including removed subjects and valid empty reports. Preserve **all** its
+records before aggregation: latest-row-per-person/day would lose model/product breakdowns and
+multiple events. [The adapter contract](docs/adapter-contract.md) specifies failure and retry behavior.
 
 > [!CAUTION]
 > That retention point is not hypothetical. Box's streaming event feed holds **two weeks**, its
 > `admin_logs` feed **one year**, and anything older exists only as a console export. A shredding
-> bug discovered three weeks late is unrecoverable if you did not keep the raw payload. Landing the
-> vendor's bytes verbatim is the cheapest insurance in this design.
+> bug discovered late may require a different export route or be unrecoverable if the relevant
+> source window has expired. Retaining approved metadata records avoids that dependency.
 
 ---
 
 ## What Is In This Guide
 
-Run the SQL in numbered order. There is no `deploy_all.sql` — this is a reference implementation
-you adapt, not a demo you deploy.
+Adapt `sql/01` through `sql/09` in numbered order, qualifying prerequisites before each step.
+`sql/04` is specifications plus a registry inspection, not implemented connectors; the GitHub
+procedure requires its secret and approved download hosts from `sql/02` before creation/use.
+`sql/99` is destructive decommissioning and is **not part of that run order**.
+There is no `deploy_all.sql` — this is a reference implementation you adapt, not a demo you deploy.
 
 | File | What it does |
 | --- | --- |
-| [docs/adapter-contract.md](docs/adapter-contract.md) | **Read this second.** The landing contract every adapter satisfies, so a new vendor is a registry row and one procedure rather than a redesign. |
-| [sql/01_landing.sql](sql/01_landing.sql) | Role, database, four schemas, warehouse, stage, and the four control tables. |
+| [docs/adapter-contract.md](docs/adapter-contract.md) | **Read this second.** Report registration, complete-partition publication, privacy, pricing, and qualification obligations for every adapter. |
+| [sql/01_landing.sql](sql/01_landing.sql) | Infrastructure; platform/report registries, runs and snapshot manifests, dated identity/rates, seats, and explicit activity coverage. |
 | [sql/02_network_secrets.sql](sql/02_network_secrets.sql) | Network rules per vendor host, external access integration, and `CREATE SECRET` templates left commented. |
-| [sql/03_pull_github_copilot.sql](sql/03_pull_github_copilot.sql) | The one fully worked adapter. Watermarked, logged on both success and failure paths, `QUERY_TAG`ged. |
+| [sql/03_pull_github_copilot.sql](sql/03_pull_github_copilot.sql) | Single-organization GitHub NDJSON usage plus completely paginated seats; publication manifests, failure propagation, per-statement tags, and scheduled current-month seat projection. |
 | [sql/04_adapter_stubs.sql](sql/04_adapter_stubs.sql) | Build specifications for ChatGPT Enterprise, Box AI, Microsoft 365 Copilot, Anthropic Claude, Cursor, and the three Google surfaces: endpoint family, auth shape, report list, required fields, and the trap each one hides. |
-| [sql/05_snowflake_native.sql](sql/05_snowflake_native.sql) | The Snowflake side. No credentials, no API, works immediately. |
+| [sql/05_snowflake_native.sql](sql/05_snowflake_native.sql) | Four native usage surfaces, no vendor credential. Bounded source history, not the whole AI bill or a durable archive. |
 | [sql/06_normalize.sql](sql/06_normalize.sql) | `UNIFIED_AI_USAGE` plus identity resolution and the unresolved bucket. |
-| [sql/07_gold_dts.sql](sql/07_gold_dts.sql) | Dynamic Tables for the five decisions, plus the labelled allocation view. |
-| [sql/08_semantic_view_agent.sql](sql/08_semantic_view_agent.sql) | Semantic view and Cortex Agent, so leadership asks in English. |
-| [sql/09_monitoring.sql](sql/09_monitoring.sql) | Freshness per platform, unresolved-identity rate, adapter drift detection. |
-| [sql/99_teardown.sql](sql/99_teardown.sql) | Reverse-order removal. |
+| [sql/07_gold_dts.sql](sql/07_gold_dts.sql) | Dynamic Tables for the five decisions, plus labelled cost allocation and coverage-gated seat utilization. |
+| [sql/08_semantic_view_agent.sql](sql/08_semantic_view_agent.sql) | Person-level semantic view and agent for allocated spend, engagement and seats. Not an aggregate-only access boundary or a tool for every gold output. |
+| [sql/09_monitoring.sql](sql/09_monitoring.sql) | Required-report health (including never-pulled feeds), native quiet/stale checks, source/fact lag, pricing, identity and shape drift. |
+| [sql/99_teardown.sql](sql/99_teardown.sql) | Destructive decommissioning only, never part of forward-only remediation. |
 
 **Only one adapter is fully implemented on purpose.** Nine hand-maintained vendor connectors would
 be stale within two quarters. During 2026 alone: GitHub retired its legacy Copilot metrics API in
 April, OpenAI removed a conversation log route in June, Box switched Box AI to metered AI Units with
 the per-user report landing mid-year, Cursor tightened its usage range cap and rebuilt Teams
 pricing, and Google renamed Vertex AI outright.
+
+The native adapter covers **AI Functions, Cortex Agents, CoWork, and CoCo**, not the whole Snowflake
+AI bill (for example, it is not an inventory of all direct Analyst or Search charges). Source
+retention is bounded to 365 days for these views; refreshing gold recomputes the retained window
+rather than preserving aged-out history. Archive qualified source partitions in owned tables
+before expiry if longer history is required. `METERING_RECORD_COUNT` counts hourly/query/function/
+model metering records, **not requests**. `REQUEST_COUNT` uses distinct source IDs; for AI Functions
+that means query IDs, not function calls or input rows.
 
 The contract, the identity spine, and the gold layer are the durable parts, and they are what the
 numbered files after `05` protect. `04` gives each remaining platform a build specification precise
@@ -393,9 +428,29 @@ The reporting layer is built backwards from what leadership asked for.
 | **Departmental allocation** | `GOLD.AI_SPEND_BY_DEPARTMENT` | Only as good as `IDENTITY_MAP`. Always publish the unresolved percentage next to the allocation, or someone will quietly assume it is zero. |
 | **High and low usage populations** | `GOLD.AI_ENGAGEMENT_TIERS` | Tier thresholds are a **choice**, not a fact. This guide computes percentile-based tiers and documents the cut points. Do not silently inherit a vendor's definition — OpenAI's power-user definition, for instance, is top-20-percent by message volume using three or more tools, which is specific to their product surface and not portable. |
 | **Anomalous consumption** | `GOLD.AI_USAGE_ANOMALIES` | Deviation against each user's own trailing baseline, not a global threshold. Flags for review, not enforcement. Snowflake-side *enforcement* is a different mechanism entirely: `SNOWFLAKE.CORE.QUOTA`, which sets per-user credit limits and blocks on breach. This guide reports; quotas enforce. |
-| **Adoption trend by platform** | `GOLD.AI_ADOPTION_TREND` | Active-user counts are only comparable within a platform. Reporting Copilot last-activity next to Cortex request volume as though they are the same measure is the trap. |
+| **Adoption trend by platform** | `GOLD.AI_ADOPTION_TREND` | Active-person counts are comparable within a platform only. M365 period prompts, GitHub acceptance events and native query IDs have different grain; none is a universal request count. |
 
 ---
+
+The semantic view exposes allocated spend, engagement and seat utilization; forecast, anomaly
+and weekly-adoption outputs need separate queries. A smoke test for an already qualified deployment
+keeps both allocation basis and currency explicit:
+
+```sql
+SELECT platform, allocation_basis, currency, total_cost, people_with_cost
+FROM SEMANTIC_VIEW(
+  AI_SPEND.GOLD.AI_SPEND_SV
+  METRICS spend.total_cost, spend.people_with_cost
+  DIMENSIONS spend.platform, spend.allocation_basis, spend.currency
+)
+ORDER BY platform, allocation_basis, currency;
+```
+
+Seat savings require a **closed month**, actual billed entitlement, resolved identity and an
+explicit complete `CONTROL.ACTIVITY_COVERAGE` record. Missing events do not establish dormancy.
+Current GitHub roster estimates remain `UNKNOWN_BILLING_ESTIMATE`; incomplete coverage and identity
+also remain `UNKNOWN_*`. Forecasts use observed source dates rather than future seat-allocation
+dates, but still require coverage/pricing review and are not invoice forecasts.
 
 ## Extending the Model
 
@@ -404,7 +459,7 @@ than to retrofit.
 
 ### Cost per agent, not just per person
 
-The model as shipped attributes cost to **people**. But AI spend is increasingly consumed by
+The model as shipped distinguishes **people from non-person subjects**. But AI spend is increasingly consumed by
 *configured things* rather than by humans typing: a Box AI agent processing an inbox, a Cortex Agent
 answering questions, a scheduled extraction job. Two platforms already report this natively —
 Box AI breaks AI Units down by agent, and `CORTEX_AGENT_USAGE_HISTORY` carries `AGENT_NAME`.
@@ -415,15 +470,17 @@ adoption; per-agent spend tells you where to invest next.
 
 The change is small and deliberate:
 
-1. Add `ENTITY_KEY` and `ENTITY_KIND` (`PERSON` | `AGENT` | `SERVICE`) to `SHAPED.UNIFIED_AI_USAGE`.
-   `RAW.V_SNOWFLAKE_NATIVE_USAGE` already computes the value as `ENTITY_NAME` and discards it.
+1. Add a distinct `ENTITY_KEY` for the consumed agent, separate from actor `PERSON_KEY` and the
+   existing `ENTITY_KIND` classification. The native view computes `ENTITY_NAME` internally but
+   aggregates it away; retain the key before aggregation. Qualify a Box source with a real agent
+   key rather than treating the CSV's Box Agents capability as a unique agent.
 2. Add a `GOLD.AI_SPEND_BY_AGENT` Dynamic Table alongside `AI_SPEND_BY_DEPARTMENT`.
-3. Keep the person grain as-is. A single row should not try to be both — an agent has no department,
-   and forcing one produces exactly the fake attribution this guide argues against.
+3. Keep person activity and agent attribution separate in reporting. Do not count an agent as an
+   employee or duplicate the same charge across actor and agent totals.
 
-The reason it is not in the base model: an agent is not a person, so it does not belong in
-engagement tiers, seat utilization, or departmental allocation. Adding the dimension without
-thinking about which gold objects it applies to is how a clean model becomes a confusing one.
+Agent-level attribution is not implemented in the base model. Non-person spend must remain in
+financial totals, but not human engagement ranks. Preserve actor and consumed-agent dimensions
+separately so an agent's cost is not silently counted twice or treated as employee performance.
 
 ### Value, not just cost
 
@@ -431,9 +488,10 @@ Everything here measures consumption. None of it measures whether the consumptio
 and no vendor telemetry can tell you that — the signal lives in your own systems: tickets closed,
 cycle time, deal velocity, code merged.
 
-The join key already exists. `PERSON_KEY` is a corporate identity, so `GOLD.PERSON_DAY_USAGE` joins
-directly to any operational fact keyed by employee. That is the whole argument for building this in
-Snowflake rather than buying a dashboard: a vendor tool cannot join to data it does not have.
+The join key exists for **resolved PERSON rows**. `GOLD.PERSON_DAY_USAGE` contains multiple platforms,
+units and currencies per person/day, so aggregate to the intended join grain before joining an
+employee-keyed outcome fact. Keep unresolved and non-person populations separate to avoid fan-out
+or fabricated performance attribution.
 
 Treat that as the phase-2 conversation, and be honest that it is correlation. "Power users close
 tickets faster" may mean the tool helps, or that fast people adopt tools early. Worth measuring,
@@ -446,19 +504,20 @@ not worth over-claiming.
 > [!NOTE]
 > Short answer: **Pattern A** — leave the pipeline as-is, point dbt at `AI_SPEND.GOLD` as sources,
 > and steal the [tests](#what-dbt-genuinely-adds-here-tests). dbt is not filling an empty seat in
-> the transform layer here, but its test framework is a genuine upgrade over prose invariants.
+> the transform layer here, but its tests help protect the publication and reporting contracts.
 
 Nothing in this guide requires dbt, and nothing in it forbids dbt. But most organizations big
 enough to be consolidating seven AI vendors already have a mandated transform layer, so the
 question arrives early: does this land inside our dbt project or beside it?
 
-Read the overlap honestly first. The transform half of this design is already declarative and
-already incremental:
+Read the overlap honestly first. The transform half is declarative; this reference deliberately
+uses **FULL refresh** for its native `ACCOUNT_USAGE` dependency chain, not a promise of an
+incremental DAG:
 
 | What dbt is usually adopted for | What this guide already uses instead |
 | --- | --- |
 | DAG construction and dependency ordering | Dynamic Table lineage, inferred from the SQL itself |
-| Incremental materialization | `REFRESH_MODE = ADAPTIVE` on the gold layer, `FULL` where the definition needs it |
+| Materialization | `CREATE OR ALTER DYNAMIC TABLE` with explicit `REFRESH_MODE = FULL`; qualify any incremental redesign against the entire dependency chain |
 | Scheduling and orchestration | `TARGET_LAG` per object, `DOWNSTREAM` on intermediates — no external scheduler |
 | Templating one model across many sources | `CONTROL.PLATFORM_REGISTRY` plus one shredding view per adapter |
 
@@ -469,34 +528,32 @@ API pagination. That code stays where it is under every option below.
 
 ### The two coexistence patterns
 
-**Pattern A — dbt reads the gold layer as sources.** Leave `sql/01` through `sql/09` exactly as
-shipped. Declare `AI_SPEND.GOLD` tables in `sources.yml` and build your own downstream models
+**Pattern A — dbt reads the gold layer as sources.** Keep ownership of the adapted `sql/01` through
+`sql/09` pipeline outside dbt. Declare `AI_SPEND.GOLD` tables in `sources.yml` and build downstream models
 from them. This is the low-friction option and the one to default to.
 
 - Snowflake owns freshness; dbt owns the models your analysts write on top.
-- Do **not** rely on dbt's default freshness fallback here. Dynamic Tables do report as
-  `BASE TABLE` with a `last_altered` that advances, but it advances on *every refresh* whether or
-  not any row changed — so a stalled vendor pull leaves freshness green indefinitely. Give each
-  source an explicit `loaded_at_field` of `max(usage_date)::timestamp_ntz`, which only moves when
-  data actually lands.
-- Cost attribution stays clean: the pipeline's credits are all on `AI_SPEND_WH` and tagged by the
-  `QUERY_TAG` set in `sql/03`. Note that tag covers ingestion only — it is set by `ALTER SESSION`
-  inside the pull procedure, so refresh credits are attributable by object through
-  `DYNAMIC_TABLE_REFRESH_HISTORY` instead.
+- Do **not** confuse object freshness with source completeness. A refreshed Dynamic Table can
+  still contain stale vendor data. Use a row expression such as `usage_date::timestamp_ntz` for
+  `loaded_at_field` where that column actually exists; dbt wraps it in `MAX`. Use `loaded_at_query`
+  for a complete aggregate SQL query instead. Do not put `max(usage_date)` in `loaded_at_field`,
+  and do not configure both. Not every gold table has `USAGE_DATE`; no single field proves all
+  required reports completed. Test `V_REPORT_HEALTH`, source watermarks and coverage separately.
+- `sql/03` uses **per-statement** `QUERY_TAG` parameters, not owner-rights `ALTER SESSION`.
+  Those tags cover ingestion, not every Dynamic Table refresh or every warehouse credit.
+  Use refresh history for object attribution and warehouse metering for the compute total.
 
 **Pattern B — port the transform layer into dbt models.** Move `sql/06_normalize.sql` and
 `sql/07_gold_dts.sql` into `models/`, keeping `sql/01` through `sql/05` as pre-dbt setup. Choose
 this when a governance policy genuinely requires that all transforms live in version-controlled
 dbt, and understand what it costs:
 
-- `materialized="dynamic_table"` in dbt-snowflake emits the DDL and, **when you set `target_lag`**,
-  steps out of the refresh path. dbt becomes a deployment tool for these objects, not the engine
-  that runs them, and a `dbt build` does not mean the data moved. Omit `target_lag`, or set
-  `scheduler: DISABLE`, and dbt refreshes the object itself during `dbt run` — the opposite of what
-  this design wants. Check the config keys your adapter version actually
-  supports — `target_lag` and `snowflake_warehouse` are long-standing, `refresh_mode` and
-  `initialize` arrived later — and confirm with `SHOW DYNAMIC TABLES IN SCHEMA AI_SPEND.GOLD`
-  rather than trusting the run log.
+- Pin and check the dbt-snowflake version. In **v1.12**, `target_lag` enables Snowflake-managed
+  scheduling; with no lag, the default `scheduler: DISABLE` leaves refresh to dbt. Specifying
+  **both `target_lag` and `scheduler: DISABLE` is invalid**. Choose one ownership model, not both.
+  A successful `dbt build` with Snowflake-managed scheduling is not proof that every source is
+  current. Inspect emitted DDL and `SHOW DYNAMIC TABLES IN SCHEMA AI_SPEND.GOLD`, including actual
+  refresh mode and scheduling state.
 - Converting to `materialized="incremental"` instead throws away the lag semantics this design
   depends on. `TARGET_LAG = DOWNSTREAM` on the intermediates exists so they refresh only when a
   leaf needs them. The lag semantics themselves survive Pattern B — dbt-snowflake accepts
@@ -506,35 +563,60 @@ dbt, and understand what it costs:
   A `dbt_utils.union_relations` or a `for` loop over the registry replaces hand-edited branches,
   and adding a platform stops being an edit to a 300-line view.
 
-Do not split the difference by putting some gold objects in dbt and leaving others in
-`sql/07_gold_dts.sql`. Dynamic Table lineage crosses the boundary invisibly, and it bites twice.
-First, `CREATE OR REPLACE` on an upstream object forces a full **reinitialization** of everything
-downstream — the dbt-managed model keeps working, but it silently rebuilds from scratch on its next
-refresh, and dbt will not report that it happened. Second, an `ADAPTIVE` or `INCREMENTAL` model can
-only sit downstream of a `FULL`-refresh table under specific conditions, and `AI_SPEND_ALLOCATED`
-is deliberately `REFRESH_MODE = FULL`, so a dbt model built on top of it can fail at creation
-rather than merely refresh inefficiently.
+Give each transform one deployment owner. The reference uses `CREATE OR ALTER`: an unchanged
+rerun is a no-op, while definition changes preserve the existing object/data for readers and
+reinitialize that table on its next refresh without cascading reinitialization downstream.
+Property-only lag/warehouse changes do not reinitialize it. This is not a guarantee that a
+changed definition refreshes incrementally.
+
+`CREATE OR REPLACE` recreates the object and causes downstream **incremental** tables to
+reinitialize; downstream **FULL** tables already recompute their contents. An incremental
+consumer of a FULL table needs the documented row-change conditions, such as a system-derived
+unique key or frozen region. Constant `VALUES` is now supported for incremental refresh, so
+`sql/07` uses it for day offsets instead of a sequence generator. That removes one blocker,
+not every restriction in the native-source DAG.
+
+For a specific table, scope refresh history **inside the function**, not just with an outer
+filter after the default 100 account-wide rows have already been selected:
+
+```sql
+USE DATABASE AI_SPEND;
+SELECT NAME, STATE, STATE_MESSAGE, DATA_TIMESTAMP,
+       REFRESH_START_TIME, REFRESH_END_TIME, REFRESH_ACTION
+FROM TABLE(AI_SPEND.INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(
+  NAME => 'AI_SPEND.GOLD.AI_SPEND_ALLOCATED',
+  DATA_TIMESTAMP_START => DATEADD('day', -2, CURRENT_TIMESTAMP()),
+  DATA_TIMESTAMP_END => CURRENT_TIMESTAMP(),
+  RESULT_LIMIT => 10000
+))
+ORDER BY REFRESH_START_TIME DESC;
+```
+
+Inspect `SHOW DYNAMIC TABLES` too: no refresh-history row is not a healthy verdict.
 
 ### What dbt genuinely adds here: tests
 
-Whichever pattern you pick, this is the part worth taking. The design rests on invariants that are
-currently enforced by prose — comment headers in `sql/06` and `sql/07`, plus the monitoring queries
-in `sql/09` that a human has to remember to run. Every one of them is expressible as an assertion
-that fails a build:
+Whichever pattern you pick, this is the part worth taking. SQL enforces publication and pricing
+rules and `sql/09` exposes health, but those mechanisms still need regression assertions and
+operator review. The following tests protect the contract when you extend it:
 
 | Invariant | Why it breaks quietly | Test shape |
 | --- | --- | --- |
 | Never sum `COST_AMOUNT` across `COST_MODEL` outside `AI_SPEND_ALLOCATED` | The number still looks plausible; it just moves for the wrong reason | Singular test asserting `COST_AMOUNT IS NULL` on every `SEAT` row. Do **not** invert it into a blanket `not_null` on all `METERED` rows — activity-only reports such as Box AI's `AI_EVENTS` are metered platforms carrying no cost by design, so that test fails on correct data |
-| Never group or window without `CURRENCY_CODE` | Only shows up once a non-USD platform is onboarded | Singular test: `count(distinct currency_code) = 1` per aggregate grain |
-| `UNRESOLVED:` rows must stay in platform totals | Dropping them makes the total disagree with the invoice, and it disagrees *downwards*, so nobody notices | Reconciliation test: platform total from `UNIFIED_AI_USAGE` equals total from the per-platform shredding view |
-| The `UNRESOLVED:<platform>:<subject>` string is identical in `sql/03` and `sql/06` | If the two drift, seats never join to usage and every unresolved seat reads as `DORMANT` | `relationships` test from seat rows to usage rows on `PERSON_KEY` |
-| Declared grain: one row per person, platform, report, day | A vendor adding a breakdown dimension silently fans out every cost | `dbt_utils.unique_combination_of_columns` on `UNIFIED_AI_USAGE` |
-| Vendor field renames read through `TRY_TO_*` as `NULL` | The chart renders, the line just trends to zero | `not_null` on each shredded field, plus a `dbt_utils.expression_is_true` row-count floor per platform per day |
+| Currency-bearing groups/windows retain `CURRENCY_CODE` | A second currency silently mixes money | Test separate monetary results for two currencies; human engagement/adoption intentionally carry no monetary measure |
+| `UNRESOLVED:` rows must stay in platform totals | Dropping them understates cost | Reconcile native quantities and qualified costs against the **selected successful partitions**, not every historical raw snapshot |
+| Shared unresolved key and dated identity rules | Seat and usage populations diverge; historical departments change | Test month-start seat mapping and usage-date mapping, interval overlaps, and unresolved totals. Do not require every seat to have a usage row |
+| Latest complete partition preserves every source record | Per-person dedup loses breakdowns; empty corrections leave stale records | Test multi-record subjects, removed subjects, valid empty manifests, failed runs, and deterministic snapshot selection |
+| Fact grain includes subject, report, date, entity kind, cost basis and currency | Several vendor subjects can map to one person; person/day uniqueness is false | Test the full declared normalization grain and reconciliation before person-level aggregation |
+| Vendor field renames read through `TRY_TO_*` as `NULL` | A malformed report can look empty | Validate every required source field and completion count; valid empty partitions are allowed, not rejected by a blanket row-count floor |
+| Missing/overlapping rates never create money | Native units can be mistaken for dollars | Assert NULL cost and visible `COST_STATUS`; test `REPORTED_CURRENCY` bypass and billable-only quantities |
+| Dormancy requires affirmative coverage | An outage masquerades as an unused seat | Test closed months, `ACTIVITY_COVERAGE`, resolved identities, and rejection of `GITHUB_ROSTER_ESTIMATE` for reclaim |
+| Every required feed is monitored | One successful sibling hides another that never ran | Test `REPORT_REGISTRY` completeness and per-report never-pulled/failed/source-behind states |
 
 > [!TIP]
-> Prioritize the last row. Schema drift is [gotcha 6](#gotchas-read-before-you-build) and the real
+> Prioritize source-shape and completion checks. Schema drift is [gotcha 6](#gotchas-read-before-you-build) and the real
 > operational risk in this design. A `not_null` test on a shredded column is the cheapest possible
-> detector — it fails the day the field is renamed, rather than the day someone questions the chart.
+> detector for required source fields — not for intentionally NULL cost or optional fields.
 
 If you are on Pattern A, these tests still apply: point them at the gold sources rather than at
 models you own. A test on data you did not build is still a test.
@@ -567,7 +649,14 @@ tenant setting changed by an Entra administrator.
 
 Verify this setting before promising user-level Copilot reporting. In some organizations it is
 deliberately on, and a privacy office may decline to change it — a legitimate answer that removes
-Copilot from user-level scope entirely.
+Copilot from corporate-person attribution while still permitting approved anonymous activity analysis.
+
+The default **v2** report is no longer just last-activity dates: it adds prompts submitted and active
+usage days. The documented endpoint returns a **200 CSV stream**; no JSON pagination contract is
+assumed. Supported v2 periods are **D7, D28, D90, D180, ALL** (D30 belongs to v1). Keep version,
+refresh date and period in the adapter's contract, implement period-aware outputs, and never sum
+overlapping report totals or turn a D28 count into invented daily facts. The API covers licensed
+Copilot users, not unlicensed Copilot Chat. The shipped parser remains inert until qualified.
 
 </details>
 
@@ -575,7 +664,7 @@ Copilot from user-level scope entirely.
 <summary><strong>3. ChatGPT Enterprise and the OpenAI API Platform are different products</strong> — merging them reconciles to no invoice</summary>
 
 Separate organizations, separate entitlements, separate meters, separate agreements. Merging their
-exports produces a number that reconciles to no invoice. `source_billing_context` on every row is
+exports produces a number that reconciles to no invoice. `BILLING_CONTEXT` on every row is
 the guard, and it is worth keeping even if you only ingest one of the two today.
 
 Also separate within OpenAI's own surface: analytics endpoints answer adoption questions, and the
@@ -594,13 +683,19 @@ Box exposes AI usage three ways, and they are not interchangeable:
 | Surface | Grain | Programmatic? | Retention |
 | --- | --- | --- | --- |
 | AI Insights dashboard | AI Units by user, by agent, by capability | No — console | Current period |
-| AI Units Admin Report | AI Units by user and agent, monthly | Export only, can auto-deliver to a Box folder | Historical months |
+| AI Units Admin Report | Date, user/email, capability, product, category, decimal AI Units | CSV export; saved configurations can schedule delivery to a Box folder | Last day/week/month/year or custom range |
 | Enterprise Events API | Individual AI events | Yes — `admin_logs` or `admin_logs_streaming` | **2 weeks streaming, 1 year `admin_logs`, 7 years console export only** |
 
-That splits the work in an awkward but manageable way. The number finance wants — AI Units per user
-per month — comes from a **report**, so the adapter ingests a file Box drops in a folder rather than
-calling a JSON endpoint. The events API gives you granularity and freshness but not the billing
-unit directly.
+The chargeable quantity comes from a **dated CSV report**, not a monthly-only JSON endpoint.
+Read every report file/page, preserve the Date and product/capability/category breakdowns, and
+use decimal quantities: a row can consume less than one AI Unit. Zero-unit rows represent real
+non-chargeable activity and must remain. The dashboard-card download is current-month only;
+the Reports page offers broader date ranges. Currency still requires a qualified contract rate.
+The events API supplies separate activity, not a second AI Units charge.
+
+File retrieval can redirect from `api.box.com` to `dl.boxcloud.com`. Approve the exact download
+host in the adapter and `sql/02`; never forward the API bearer token to a signed download or
+silently permit arbitrary redirects.
 
 The retention cliff is the part that bites. Two weeks on the streaming feed means a pipeline that
 breaks over a holiday loses data permanently, and a watermark that resumes from the last success is
@@ -616,9 +711,27 @@ someone tells you Box AI is bundled into the seat, they are describing the pre-2
 <details>
 <summary><strong>5. GitHub splits usage and licensing across two APIs</strong> — you need both to find unused seats</summary>
 
-Usage metrics do not include seat or license state; that lives in the user management API and is
-the source of truth for entitlement. You need both to answer "who has a seat and is not using it",
-which is the question that pays for the project.
+The worked connector uses **one organization** for both
+`/orgs/{org}/copilot/metrics/reports/users-1-day?day=YYYY-MM-DD` and
+`/orgs/{org}/copilot/billing/seats`. Usage returns `report_day` and **all `download_links`**;
+download every NDJSON file. Exact approved HTTPS download hosts must match the handler allowlist
+and `sql/02`; signed downloads receive **no API Authorization header**, session authentication,
+or implicit environment credentials. Do not automatically follow redirects or log signed URLs.
+
+Seats require complete pagination, stable `total_seats`, count reconciliation, and unique assignees.
+A missing envelope or safety page limit fails the run; it is not an empty roster. Daily report
+publication uses complete manifests, including valid empty reports. The registry activity gate
+applies to pulls and normalized facts; keep the task suspended during controlled qualification.
+
+`PULL_GITHUB_ALL` invokes current-month `PROJECT_GITHUB_SEATS` using exactly one finance-supplied
+`SEAT_RATE`. Missing or ambiguous seat rates fail the task. `GITHUB_ROSTER_ESTIMATE` preserves seats
+observed in that month and is **not** historical invoice reconstruction or a reclaimable-savings
+claim. A qualified billed entitlement plus complete activity coverage is still required.
+
+`ai_credits_used` describes consumption, **not invoicing**. Do not multiply all usage credits by a
+rate and add them to seats. A separately qualified billable-only overage feed is an extension.
+Enterprise scope needs an independently qualified inventory; do not just change the URL prefix or
+sum overlapping organizations.
 
 Two further traps: the legacy metrics API was retired in April 2026, so older sample code and blog
 posts will not run. And team-level rollup requires joining a separate user-teams report which
@@ -634,12 +747,15 @@ These are young admin APIs and they change. An adapter that silently maps a rena
 `NULL` produces a chart that looks fine and is wrong, which is worse than a failed pull.
 
 Make adapters assert on their own payload shape and **fail loudly** when a required field is
-missing. `CONTROL.V_PIPELINE_HEALTH` surfaces per-platform freshness so a quietly dead adapter
-shows up as stale data rather than a plausible flat line. A missing feed should look broken.
+missing. `CONTROL.REPORT_REGISTRY` declares each required feed so `V_REPORT_HEALTH` can expose a
+never-successful sibling rather than only reports that happened to run. `V_PIPELINE_HEALTH`
+combines report health with source/fact freshness, shape drift, identity and unpriced costs.
+Native quiet services require review rather than fabricated failure or complete-zero verdicts.
 
 > [!TIP]
 > This is the trap the [dbt test table](#what-dbt-genuinely-adds-here-tests) above is aimed at. A
-> `not_null` assertion on each shredded column is the cheapest detector that exists for it.
+> `not_null` assertion on each required source field helps detect drift; optional fields and
+> intentionally unknown money must remain nullable.
 
 </details>
 
@@ -660,47 +776,58 @@ Settle four things before the first pull, not after:
 - RBAC that separates aggregate reporting from row-level access, so the department-allocation
   dashboard does not require access to individual rows
 
-Note that this pipeline deliberately handles **usage metadata only** — no prompts, no completions,
+The shipped `AI_SPEND_SV` is **person-level**, not an aggregate security boundary. `SELECT` on
+it permits querying public person dimensions and facts even without base-table `SELECT`.
+Grant it only to roles approved for individual telemetry. Aggregate-only audiences need a
+separate model over approved aggregates, with small-cohort disclosure reviewed. Agent instructions
+do not enforce access. Keep the broad pipeline owner role separate from reader roles and narrow
+its grants to the approved sources when adapting this reference.
+
+This pipeline deliberately handles **usage metadata only** — no prompts, no completions,
 no file contents. That boundary is much easier to defend in a privacy review than "we ingest the
 compliance logs and promise not to look", and it is sufficient for all five decisions above.
 
 </details>
 
 <details>
-<summary><strong>8. Do not convert native units into each other</strong> — and do not seed a rate for Cursor, which already reports currency</summary>
+<summary><strong>8. Native quantities are not automatically money</strong> — reported currency and billable-unit conversion are different paths</summary>
 
 Credits, tokens, messages, and interactions are not interchangeable, and no exchange rate between
 them is defensible. Preserve `native_qty` with `native_unit` and compare platforms on **currency
 cost** or on **user counts**, never on raw quantity. "We sent 40 percent more messages than
 Cortex requests" is not a sentence that means anything.
 
-One exception worth building in deliberately: **Cursor reports cost already in currency**, not as a
-native quantity needing conversion. Do not seed `CONTROL.PLATFORM_RATE` for it. Every other platform
-needs a rate; applying one here multiplies cents by a rate and produces a plausible wrong number in
-the right column, which is the hardest kind of error to notice.
+Use `BILLABLE_NATIVE` only for a qualified chargeable quantity, with exactly one effective-dated
+`PLATFORM_RATE`. Missing rates leave cost NULL with `MISSING_RATE`; overlaps/invalid inputs leave
+NULL with `INVALID_COST_INPUT`. There is no $1 fallback and no default currency for unknown money.
+
+Cursor, qualified Claude monetary cost, and Cloud Billing can instead report **currency**.
+`REPORTED_CURRENCY` bypasses the rate table; cast documented decimal cents in shredding and retain
+the currency. GitHub consumption credits remain `ACTIVITY_ONLY`. Keep currency in every monetary
+aggregate/window and show unpriced-row counts beside allocated totals: those totals omit unknown
+amounts rather than treating them as zero.
 
 </details>
 
 <details>
-<summary><strong>9. Claude Enterprise revises history for 30 days</strong> — append-only ingestion is wrong there, and nothing errors</summary>
+<summary><strong>9. Claude Enterprise settles by calendar month</strong> — a rolling 30-day reload misses revisions</summary>
 
-This is the operational fact that changes the pipeline rather than just a field mapping. A cost or
-usage value for a given date **can be revised for up to 30 days** as late events and reconciliation
-arrive. Responses carry a `data_refreshed_at` timestamp for exactly this reason.
+Cost and usage may revise until **about seven days after calendar month-end**. October 1 can
+change through about November 7. Reload all open months until settlement, splitting requests to
+endpoint limits. For invoicing-grade comparison use months ended at least seven days ago, then
+reconcile to finance. Preserve `data_refreshed_at` and set `ending_at` at or before a previously
+returned value to exclude the incomplete tail. No Analytics data exists before **2026-01-01**.
 
-So for this platform, restate a rolling 30-day window on every run rather than appending once. Key
-stability on `data_refreshed_at` rather than on the date you requested, and treat only dates older
-than 30 days as invoicing-grade. An append-only load produces a number that was correct when
-captured and quietly disagrees with the vendor a week later — the worst failure mode available,
-because nothing errors.
+Reconcile Enterprise per-user amounts against **Enterprise organization totals from the Analytics
+API**. Do not add those totals to the per-user breakdown or substitute Console billing.
+Enterprise parent organizations do not appear in Console and carry no Console Admin API keys.
+Console is a separate API billing scope, not the reconciliation half of the Enterprise invoice.
 
-Two related limits: **no data exists before 2026-01-01**, so there is no backfill conversation to
-have and the Snowflake-side accumulation *is* the history. And per-user cost covers only seat users
-— direct API-key and automation traffic is excluded by design, so per-user cost will not sum to the
-invoice until you also ingest the organization-level cost report. Ingest one and finance finds the
-discrepancy for you.
+Plan qualification matters: usage-based Enterprise cost endpoints provide monetary amounts;
+seat-based plans reflect usage credits only. Retain effective and list amounts separately and
+never label credits as invoiced currency.
 
-Also correct the mental model before forecasting: on current Enterprise plans **the seat includes no
+Also correct the mental model before forecasting: on usage-based Enterprise plans **the seat includes no
 usage at all**. Every token bills separately. Expect three billing generations in one tenant's
 history, because the legacy seat shapes auto-transition at renewal — which silently changes what a
 cost column means mid-history.
@@ -747,7 +874,13 @@ Say this before anyone builds a slide. Three consequences, one per surface:
   that in the gold layer instead of dividing a project total by headcount.
 
 The one bright spot is **Gemini Code Assist**, where Cloud Logging carries the user's email and
-gives real per-user activity. Note the near-miss: the Cloud *Monitoring* metrics for the same
+gives real per-user activity. Filter **before landing** on the `code_assist` product, the
+`type.googleapis.com/google.cloud.cloudaicompanion.logging.v1.MetadataLog` payload type **and**
+the approved project log name ending `cloudaicompanion.googleapis.com%2Fmetadata`. Request and
+response logs contain prompts and source-file context; product-only filtering is insufficient.
+Assert the metadata allowlist again before staging any record.
+
+Note the near-miss: the Cloud *Monitoring* metrics for the same
 product are aggregate-only, and building on them then being asked for a team breakdown is a rewrite
 rather than a filter. Logging is off by default with no backfill, so enabling it is step zero.
 
@@ -764,7 +897,7 @@ endpoint is unchanged, so do not "fix" working calls because the brand moved.
 
 - [Cortex AI functions usage history](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_ai_functions_usage_history) — the Snowflake-native per-user credit source
 - [Snowflake quotas](https://docs.snowflake.com/en/user-guide/quotas) — enforcement for the Snowflake side, once visibility exists
-- [Dynamic Tables](https://docs.snowflake.com/en/user-guide/dynamic-tables-about) — the incremental engine behind the gold layer
+- [Dynamic Tables](https://docs.snowflake.com/en/user-guide/dynamic-tables-about) — declarative refresh behind the gold layer
 - [External access with secrets](https://docs.snowflake.com/en/developer-guide/external-network-access/creating-using-external-network-access) — the credential pattern every adapter uses
 - [Cortex Analyst semantic views](https://docs.snowflake.com/en/user-guide/views-semantic/overview) — the layer the agent reasons over
 
@@ -772,15 +905,19 @@ endpoint is unchanged, so do not "fix" working calls because the brand moved.
 
 - [GitHub Copilot usage metrics data reference](https://docs.github.com/en/copilot/reference/copilot-usage-metrics/copilot-usage-metrics)
 - [GitHub Copilot user management API](https://docs.github.com/en/rest/copilot/copilot-user-management)
+- [GitHub Copilot usage report API](https://docs.github.com/en/rest/copilot/copilot-usage-metrics) — organization users-1-day and download links
 - [OpenAI: Compliance API vs user analytics](https://help.openai.com/en/articles/11327494-compliance-api-vs-user-analytics-in-chatgpt-enterpriseedu)
 - [OpenAI Compliance Platform](https://help.openai.com/en/articles/9261474-openai-compliance-platform-for-enterprise-and-edu-customers)
 - [Microsoft Graph: getMicrosoft365CopilotUsageUserDetail](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/api/admin-settings/reports/copilotreportroot-getmicrosoft365copilotusageuserdetail)
 - [Microsoft 365 admin center report concealment](https://learn.microsoft.com/en-us/microsoft-365/admin/activity-reports/activity-reports)
 - [Box AI Insights dashboard](https://docs.box.com/en/box-admin-tools/reporting-and-insights/ai-insights) — AI Units by user, agent, and capability
+- [Box AI Units report](https://docs.box.com/en/box-admin-tools/reporting-and-insights/ai-units-report) — dated CSV, fractional/zero units and breakdown dimensions
+- [Box file downloads](https://developer.box.com/guides/downloads/file) — signed download redirect
 - [Box Enterprise Events API](https://developer.box.com/guides/events/enterprise-events/for-enterprise) — the programmatic path, and the retention tiers
 - [Box Platform API reference](https://developer.box.com/reference/)
 - [Anthropic Admin API](https://platform.claude.com/docs/en/manage-claude/admin-api) — the metered Console side, and the org-scoped key requirement
-- [Claude Enterprise Analytics API](https://platform.claude.com/docs/en/manage-claude/analytics-api) — per-user cost, the 30-day revision window, and the 2026-01-01 floor
+- [Claude Enterprise Analytics API](https://platform.claude.com/docs/en/manage-claude/analytics-api) — plan-qualified amounts, month-end plus about seven days settlement, and the 2026-01-01 floor
+- [Claude Usage and Cost APIs](https://platform.claude.com/docs/en/manage-claude/usage-cost-api) — Enterprise versus Console billing scopes
 - [Anthropic Claude Code analytics API](https://platform.claude.com/docs/en/manage-claude/claude-code-analytics-api)
 - [How Enterprise plans are billed](https://support.claude.com/en/articles/11526368-how-am-i-billed-for-my-enterprise-plan) — the seat includes no usage
 - [Cursor Admin API](https://cursor.com/docs/account/teams/admin-api) — members, daily usage, spend, and usage events
@@ -792,4 +929,8 @@ endpoint is unchanged, so do not "fix" working calls because the brand moved.
 - [Cloud Billing export to BigQuery](https://docs.cloud.google.com/billing/docs/how-to/export-data-bigquery)
 - [Snowflake: Dynamic table refresh modes](https://docs.snowflake.com/en/user-guide/dynamic-tables/refresh-modes) — what `CREATE OR REPLACE` does to downstream tables
 - [Snowflake: Modifying dynamic tables](https://docs.snowflake.com/en/user-guide/dynamic-tables/modify)
-- [dbt-snowflake configurations](https://docs.getdbt.com/reference/resource-configs/snowflake-configs) — the `dynamic_table` materialization and its config keys
+- [dbt-snowflake configurations](https://docs.getdbt.com/reference/resource-configs/snowflake-configs) — version-specific scheduling and Dynamic Table config
+- [dbt freshness](https://docs.getdbt.com/reference/resource-configs/freshness) — row-level `loaded_at_field` versus aggregate `loaded_at_query`
+- [Supported Dynamic Table queries](https://docs.snowflake.com/en/user-guide/dynamic-tables/supported-queries) — constant `VALUES` support is not whole-DAG qualification
+- [Dynamic Table refresh history](https://docs.snowflake.com/en/sql-reference/functions/dynamic_table_refresh_history) — bounded named function arguments
+- [Semantic view query privileges](https://docs.snowflake.com/en/user-guide/views-semantic/querying) — person dimensions/facts remain queryable
