@@ -22,11 +22,14 @@ Files:
 - All factual claims must trace to a public Snowflake source (blog post, docs page, or clearly attributed third-party)
 - Claims about product availability must include the exact status word Snowflake uses (GA / Public Preview / Private Preview) **and** the dated release note or documentation page that establishes it. Where no such source exists, the status must read "unconfirmed — verify with your account team" rather than asserting a maturity level.
 - Benchmark figures must carry the internal-test label from the source blog
-- Cortex Sense must never be labeled GA: it has no GA release note and no product documentation page
+- Check Cortex Sense availability independently from Horizon Context. Use dated public evidence, not a permanent maturity assumption or an absolute claim that no documentation exists
 - The Cortex Sense tool-scope retrieval question must be re-verified, not merely restated, on every revision, and carry the date it was last checked
 - Use "CoWork" in prose for the interface formerly called Snowflake Intelligence; keep `SNOWFLAKE_INTELLIGENCE` unchanged in any DDL
 - This guide does not carry competitive positioning, vendor comparisons, or objection-handling content
 - No pricing claims for Cortex Sense beyond documented indexing and per-query cost discussion
+- Keep this guide a decision aid: link to official connector inventories, setup steps, privilege tables, and limitations rather than copying them. Retain only distinctions and risk gates needed to choose safely
+- Treat metadata visibility, metadata editing, data access, and delegated tool authority as separate controls. Neither removing SELECT nor narrowing configured tools proves metadata is hidden
+- Date targeted feature updates separately; narrow corrections do not reset the full-guide verification or expiry clock
 
 ## Key Commands
 

@@ -4,43 +4,45 @@ Pair-programmed by SE Community + Cortex Code
 
 ## One-Sentence Version
 
-Snowflake introduced a three-layer stack — inventory (Horizon Catalog), enrichment from outside systems (Horizon Context), and runtime context for CoCo queries (Cortex Sense) — that changes how AI gets the business definitions it needs to answer correctly.
+Snowflake brings data descriptions together, but permission to read those descriptions is different from permission to read the data itself.
 
 ## The Story (analogy-driven)
 
-Imagine a hospital with thousands of patient files. The old filing system (traditional catalogs) was a card index: it told you which drawer to open, but you had to read the file yourself. That worked when humans were the ones looking things up.
+Imagine a library whose books are scattered across several buildings. Its catalog tells you what exists, what each book covers, and which books people trust.
 
-Now AI doctors (agents) are answering questions. They don't browse card indexes — they need the right context handed to them at the moment they're asked. So the hospital builds three new layers:
+Horizon Context adds descriptions from other libraries to that catalog. It also helps people maintain definitions and follow connections between sources. The connectors bring metadata, meaning information about data, rather than copying the underlying business records.
 
-1. **Horizon Catalog** — the filing cabinets themselves. What files exist, who can access them, how they connect. Always existed.
-2. **Horizon Context** — a service that pulls records from partner clinics and labs into the same system, stitches them together, and notes which files are most trusted.
-3. **Cortex Sense** — when CoCo gets a question, retrieves the relevant context instead of making CoCo inspect every possible file one by one. This is the layer where all the access-control questions live.
+Cortex Sense is the separately announced service demonstrated finding relevant context for CoCo, Snowflake's coding assistant. Connecting the catalog does not establish that Sense is available or active.
 
-The result: accuracy went from 24% to 86% on hard questions in Snowflake's internal testing.
+A catalog card and a book have different access rules. Someone might be allowed to read the card but not borrow the book. If the title itself is confidential, locking away the book is not enough.
 
 ## The Cast (concept glossary)
 
-- **Horizon Catalog** — Snowflake's built-in inventory of your data: tables, views, lineage, access policies.
-- **Horizon Context** — The new layer that pulls metadata from systems outside Snowflake (Tableau, Power BI, PostgreSQL, dbt) and enriches it.
-- **Cortex Sense** — A managed context layer demonstrated with CoCo that retrieves relevant catalog context at query time. Public sources do not establish that it is automatically injected into every agent or AI request, and it has no product documentation page.
-- **Semantic View** — A business-friendly description of your tables that tells AI what each metric means. The highest-authority signal Sense uses.
-- **Metadata Connector** — A built-in integration that pulls schemas and definitions from external tools into Horizon Catalog.
-- **Apache Ossie (Incubating)** — The open semantic specification formerly called Open Semantic Interchange (OSI), now incubating at the Apache Software Foundation.
+- **Horizon Catalog** — The inventory of data assets and their descriptions, relationships, and governance information.
+- **Horizon Context** — The capabilities that collect, enrich, and deliver that information to people and tools.
+- **Metadata connector** — A connection that brings descriptions and relationships from an external system into the catalog.
+- **Semantic View** — An explicit definition of business metrics and how to calculate them.
+- **Cortex Sense** — The announced runtime service demonstrated selecting relevant business context for CoCo questions.
 
 ## What Changed
 
-- Before: In Snowflake's internal benchmark, a frontier coding agent with direct SQL access and no context layer reached 24.1% accuracy. Other grounded agent designs already existed; this number is not a baseline for every agent.
-- After: In Snowflake's internal benchmark, CoCo grounded by Cortex Sense retrieved relevant business context at query time and reached ~86% accuracy. Horizon Context is intended to extend that foundation with definitions from systems outside Snowflake.
+- The [October 12 Horizon Context preview](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-12-horizon-context-preview) introduced 18 documented connectors; they are no longer just an announcement.
+- Stewards can edit descriptions without receiving broad modification permissions.
+- Optional description propagation reduces repeated writing where downstream columns keep the same values.
+- [Semantic Studio](https://docs.snowflake.com/en/release-notes/2026/other/2026-09-30-semantic-studio-ga), the semantic-view authoring environment, became generally available on September 30.
 
 ## What to Watch Out For
 
-- **The security boundary question is still open as of 2026-09-29.** Snowflake has not publicly clarified whether Cortex Sense retrieval for a configured Cortex Agent is further limited to that agent's declared tools, or whether it operates at the calling user's full role scope. Because Cortex Sense has no documentation page, there is no source that settles it either way. Agent execution still uses the calling user's default role, and configured tools still require privileges. Use a least-privilege default role, consider Restricted Session Scope as an additional ceiling, and get an answer in writing before enabling sensitive workloads.
-- **The announced initial model used one designated role.** Per-role context differentiation was described as future work. Confirm current Cortex Sense access and behavior with the Snowflake account team.
-- **Maturity varies a lot across the stack.** Semantic views, Autopilot, and external lineage (the OpenLineage path, GA since September 3, 2026) are production-ready. Semantic Studio is public preview. The Horizon Context connectors were announced in private preview, and Cortex Sense has no documentation page or GA release note at all — do not call it GA.
-- **The benchmark caveat:** The 24% to 86% figure is from Snowflake's internal testing on its own data. It is not a general before-and-after result for every agent or customer workload.
+- **Catalog access and data access are separate.** Review who can see names and descriptions, not only who can query rows.
+- **Preview access still has limits.** Follow the [connector catalog](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors) for current sources, setup instructions, and region requirements.
+- **A connection needs a security review.** Read the [network and encryption requirements](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/security) before exposing a source. Stable outbound addresses are not guaranteed.
+- **An agent's tool list is not a universal security fence.** Different tools have different permissions; some programs run with their owner's authority.
+- **Sense's retrieval boundary remains unverified publicly.** The October 13 review found no dedicated public contract explaining whether an agent's declared tools also restrict Sense retrieval.
+- **Horizon Context preview does not establish Sense availability.** Confirm Sense access and behavior before introducing sensitive metadata.
+- **Benchmarks are not promises.** Snowflake reported roughly 24% versus 86% accuracy in an internal comparison. That does not predict a customer's results.
 
 ## The One Thing to Remember
 
-The published result shows the value of relevant business context: in Snowflake's internal test, CoCo grounded by Cortex Sense substantially outperformed a direct-SQL frontier agent. Treat that as evidence for the design, not a promised customer outcome.
+Better descriptions help AI choose the right data, but descriptions need their own access controls too.
 
 > For the full technical details, see the source document.

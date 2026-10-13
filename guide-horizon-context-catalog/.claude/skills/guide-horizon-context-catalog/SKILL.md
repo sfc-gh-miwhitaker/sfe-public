@@ -14,11 +14,9 @@ SE field guide explaining Snowflake's context stack: Horizon Catalog → Horizon
 ## Architecture
 
 ```text
-Horizon Catalog      ← native Snowflake object inventory
-      ↓
-Horizon Context      ← extends to external systems (connectors, OpenLineage)
-      ↓
-Cortex Sense         ← announced context activation for CoCo queries
+Horizon Catalog      ← inventory of native and external assets
+Horizon Context      ← collect, enrich, activate; documented preview capabilities
+Cortex Sense         ← separately qualified runtime context for CoCo queries
 ```
 
 ## Key Files
@@ -37,10 +35,11 @@ Cortex Sense         ← announced context activation for CoCo queries
 
 1. Check each row of the README Availability table against `snowflake_product_docs`, looking for a dated release note or a documentation page
 2. Where no source exists, write "unconfirmed — verify with your account team". Never infer a maturity level from a blog announcement
-3. Update the *changed* markers and the re-verification date in the availability caveat and table intro
+3. Date changed claims and link their sources. Preserve the full-guide verification and expiry dates for narrow updates; renew only after substantive full-guide verification
 4. Re-check the Cortex Sense tool-scope question and update its "Status as of" date, whether or not the answer moved
 5. Update `ELI5.md` and `docs/01-WHAT-CAN-I-DO-NOW.md` to match
-6. Re-run `applyrules` and push
+6. Keep setup instructions, connector lists, detailed grants, and limits in their official documentation. Update this guide's decision points and pointers instead of duplicating those references
+7. Check links, consistency, and public-content safety. Run `applyrules` before publication; commit or push only when explicitly requested
 
 ## Snowflake Objects
 
@@ -48,9 +47,10 @@ None. Documentation-only guide.
 
 ## Gotchas
 
-- Cortex Sense has **no GA release note and no product documentation page** (re-verified 2026-09-29). Never label it GA. The announced initial model used one designated role with per-role contexts as future work. Do not claim transparent Sense injection into every agent or AI request.
+- Qualify Cortex Sense independently from Horizon Context. The October 13, 2026 review found a CoCo release-note reference, but no dedicated public availability or retrieval-access contract. Re-check rather than treating that search outcome as permanent. Do not claim transparent injection into every agent or AI request.
 - Benchmark numbers (24% → 86%, $1.76 → $0.59) are Snowflake's *internal* test results. Always include that qualifier.
-- The question "is Sense retrieval for a configured agent further bounded by its declared tools" is still unanswered publicly. Do not assert either way, and re-verify rather than restate it on each revision. Separately, Agent execution uses the querying user's default role, configured tools require privileges, and Restricted Session Scope can impose an agent-session privilege ceiling.
-- External lineage (the OpenLineage path) is **GA since 2026-09-03** and Semantic Studio is **public preview since 2026-08-26**. Both were previously recorded at lower maturity; check for similar drift on the remaining rows.
+- Re-check whether Sense retrieval for a configured agent is bounded by its declared tools. The documented Horizon Context metadata-access model does not settle that runtime question. Review metadata grants independently from data grants, and owner-rights execution separately from the caller's direct privileges.
+- `tool_not_accessible: reject` checks only the documented tool set, not every tool or underlying dependency. Link to the current inaccessible-tool handling documentation rather than expanding the guarantee.
+- Use the official release notes and feature pages as the availability authority. Do not confuse the GA OpenLineage path, preview metadata connectors, GA Semantic Studio, or separately qualified Cortex Sense. Read feature-specific cloud, region, and source restrictions even when a page says open preview.
 - `SNOWFLAKE.CORE.CERTIFICATION_STATUS` is still supported and **not yet deprecated** — only documented as planned for deprecation. `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` is the public-preview replacement. Do not state that the CORE tag has been removed.
 - Use "CoWork" in prose; the `SNOWFLAKE_INTELLIGENCE` database identifier in DDL is unchanged.
