@@ -8,9 +8,9 @@
 [Horizon Context](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context) collects, enriches, and activates metadata across Snowflake and external systems. Its October 12, 2026 preview adds 18 metadata connectors, external metadata curation, and column description propagation. This guide separates those documented capabilities from the announced [Cortex Sense](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) runtime layer, and explains why metadata visibility, data access, and agent tool configuration are different controls.
 
 **Audience:** Data engineers, data stewards, and platform owners connecting their data estate and evaluating context for AI applications.
-**Created:** 2026-07-09 | **Last updated:** 2026-10-13 | **Expires:** 2026-11-28 | **Status:** ACTIVE
+**Created:** 2026-07-09 | **Last updated:** 2026-10-15 | **Expires:** 2026-11-28 | **Status:** ACTIVE
 
-**Last verified:** 2026-10-13 (October release changes below); full-guide review: 2026-09-29.
+**Last verified:** 2026-10-15 (operational architecture and collection paths); October release changes: 2026-10-13; full-guide review: 2026-09-29.
 
 Pair-programmed by SE Community + Cortex Code
 
@@ -25,7 +25,7 @@ Pair-programmed by SE Community + Cortex Code
 Start with one supported BI or dbt source and a dashboard your team relies on. Check the connector's region, network, and permission requirements, then trace a known dependency and validate its descriptions and metadata visibility before expanding collection.
 
 - **Connect your first source:** [What Can I Do Now?](docs/01-WHAT-CAN-I-DO-NOW.md) links to setup instructions and a validation checklist.
-- **Understand the architecture:** [The Three-Layer Stack](#the-three-layer-stack) explains Horizon Catalog, Horizon Context, and Cortex Sense.
+- **Understand the architecture:** [Horizon as an Operational Catalog](#horizon-as-an-operational-catalog) follows metadata from its sources to discovery, impact analysis, troubleshooting, and AI.
 - **Plan access controls:** [The Agent Security Boundary](#the-agent-security-boundary) separates metadata visibility, data access, and tool permissions.
 - **Check feature availability:** [Availability Summary](#availability-summary) lists release status and requirements.
 
@@ -53,32 +53,82 @@ Start with one supported BI or dbt source and a dashboard your team relies on. C
 
 Your head of sales sees $14.2 million in Q3 revenue. Your CFO sees $12.8 million. Both asked an AI agent the same question this morning. This is metric drift — business logic scattered across a BI model only one team owns, a calculation buried in a dashboard, instructions hardcoded into a prompt. *(Opening scenario from [Snowflake's Horizon Context announcement](https://www.snowflake.com/en/blog/horizon-context-governed-context/).)*
 
-A catalog that is a passive inventory does not fix this. It tells a human where to look. An agent answering a question needs the governed definition handed to it at the moment it is asked, and needs to be told which of several competing definitions is authoritative.
+An inventory alone does not resolve competing definitions. Engineers need to trace which models and dashboards depend on a column before changing it. Analysts need to distinguish trusted assets from sandbox copies. Stewards need somewhere to record definitions and responsible contacts. AI tools need those same signals when selecting data and interpreting a question.
 
-That gap — passive inventory versus active runtime context — is what this stack addresses.
+Horizon Context makes the catalog useful in those workflows: collect metadata, connect dependencies, add business meaning, and put that context to work.
 
 ---
 
-## The Three-Layer Stack
+<a id="the-three-layer-stack"></a>
+
+## Horizon as an Operational Catalog
+
+[Horizon Context is built into Horizon Catalog](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context), not a separate catalog you must copy into before doing useful work. The diagram shows **metadata flow**, not business-data movement or the physical deployment of connector services.
 
 ```mermaid
-flowchart TD
-    HC["Horizon Catalog\n(GA)\nSnowflake-native objects:\ntables, views, lineage,\naccess policies, tags"]
-    HCtx["Horizon Context\n(Preview — October 12, 2026)\n18 external metadata connectors\nCollect → Enrich → Activate"]
-    CS["Cortex Sense\n(Summit 2026 — maturity unconfirmed)\nManaged context activation\ndemonstrated with CoCo"]
+flowchart TB
+    EXT["External databases, BI, dbt\nMetadata and build artifacts"]
+    NATIVE["Snowflake objects\nNative metadata and history"]
+    PRODUCER["OpenLineage producers\nLineage events"]
 
-    HC --> HCtx --> CS
+    CONNECT["Metadata connectors — Preview\nPull / artifact upload"]
+    REST["External lineage — GA\nPush to REST endpoint"]
 
-    SV["Semantic Views\n(GA)\nhighest-authority signal"] -.->|"authoritative input"| CS
+    EXT -->|"source-specific collection"| CONNECT
+    PRODUCER --> REST
+
+    subgraph CATALOG["Horizon Catalog"]
+        subgraph CONTEXT["Horizon Context — collect, enrich, activate"]
+            GRAPH["Connected assets and lineage\nUsage and available health signals\nDescriptions, tags, contacts, certification"]
+        end
+    end
+
+    CONNECT --> GRAPH
+    NATIVE -->|"native collection"| GRAPH
+    REST -->|"lineage events"| GRAPH
+
+    CURATE["Authorized stewards\nCurate catalog metadata"]
+    CURATE --> GRAPH
+    PEOPLE["Snowsight / Search\nFind trusted assets\nand responsible contacts"]
+    COCO["CoCo\nImpact analysis\nand upstream tracing"]
+    CONSUMERS["Analyst / Agents / BI\nGoverned metrics through\nconfigured semantic views"]
+
+    GRAPH --> PEOPLE
+    GRAPH --> COCO
+    GRAPH -->|"separate semantic authoring"| CONSUMERS
+
+    classDef source fill:#f8f9fc,stroke:#3a414a,color:#3a414a
+    classDef collect fill:#edf5ff,stroke:#1071e5,color:#11325d
+    classDef catalog fill:#edf5ff,stroke:#1071e5,color:#11325d
+    classDef consumer fill:#f4f9ff,stroke:#29b5e8,color:#11325d
+    class EXT,NATIVE,PRODUCER source
+    class CONNECT,REST collect
+    class GRAPH,CURATE catalog
+    class PEOPLE,COCO,CONSUMERS consumer
+    style CATALOG fill:#ffffff,stroke:#1071e5,color:#11325d
+    style CONTEXT fill:#f4f9ff,stroke:#29b5e8,color:#11325d
 ```
 
-Each layer has a distinct job:
+**Read the inputs separately.** Snowflake gathers native metadata from your account. [Metadata connectors](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors) collect supported information from explicitly configured external sources; collected fields and refresh behavior depend on the source. [dbt Cloud](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/dbt) supplies build artifacts through scheduled API pulls, while dbt Core artifacts must be regenerated and uploaded manually. Both attach to an existing warehouse source. [OpenLineage](https://docs.snowflake.com/en/user-guide/external-lineage) is a separate producer-push path into the lineage graph, not another connector polling a database.
 
-- **Horizon Catalog** — the governed inventory of everything Snowflake knows about your data.
-- **Horizon Context** — expands that inventory to external systems and enriches raw metadata into business meaning.
-- **Cortex Sense** — the layer Snowflake demonstrated making enriched context active at query time for CoCo, retrieving relevant context instead of inspecting the estate table by table.
+**The catalog supports decisions, not just searches.** Follow a column downstream before changing it, trace a dashboard upstream when a number looks wrong, or inspect certification and contacts before choosing an asset. Usage helps establish which consumers may be affected; available freshness and quality signals add context. Coverage depends on connected sources and supported lineage paths. A missing edge is not proof that nothing depends on the column.
 
-This diagram is a conceptual separation, not a required product dependency chain. You can use Horizon Context for catalog discovery, CoCo, semantic-view-backed agents, and BI consumers without depending on Cortex Sense. Permissions matter at every stage: what is collected, who can see or edit metadata, and what each execution tool can read or change.
+**Stewardship closes the loop.** When investigation exposes an unclear description or missing contact, an authorized steward can curate that metadata in Horizon Catalog. This is not a source-system writeback or automatic-remediation path. Semantic views are a separately authored or imported business-definition layer; collecting a BI dashboard does not automatically create a governed semantic view. See [Enrich](#enrich) for the supported authoring paths.
+
+**Cortex Sense is a separately qualified extension.** The [announced runtime layer](#cortex-sense-the-runtime-activation-layer) retrieves relevant enriched context for CoCo. It is not required for the catalog workflows above, and its availability and retrieval boundary must be confirmed independently.
+
+**Metadata visibility is not data access.** Reading the catalog does not grant permission to query the underlying Snowflake rows or external system. Metadata collection, visibility, editing, and tool execution have separate authorization requirements; see [The Agent Security Boundary](#the-agent-security-boundary).
+
+### Example: Before Changing a Column
+
+Suppose an orders column feeds a dbt model in Snowflake and a Tableau dashboard. With those sources connected and the relevant lineage captured:
+
+1. **Trace impact:** start at the column in the catalog, or ask CoCo which downstream models and dashboards depend on it.
+2. **Assess exposure:** inspect the connected consumers, available usage information, and recorded contacts to identify who needs to validate the change.
+3. **Make the change through your normal workflow:** update and test the models and dashboards in their own systems. The catalog informs this work; it does not perform it automatically.
+4. **Refresh and curate:** allow the configured collection to refresh, re-upload dbt Core artifacts if applicable, then verify the known dependency path and update catalog descriptions or contacts as needed.
+
+The same graph works in reverse during troubleshooting: start at the dashboard and follow its dependencies upstream. These are the [cross-platform impact-analysis and troubleshooting workflows](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context#example-use-cases) documented for Horizon Context.
 
 ---
 
@@ -229,7 +279,7 @@ Therefore, **removing SELECT does not establish that an object's existence or de
 
 > *Does Cortex Sense context retrieval respect an agent's configured tool scope (for example, limited to `sv_regional_sales`), or does it operate at the calling user's full RBAC role scope?*
 
-**As of 2026-10-13, tool-scoped Sense retrieval remains unconfirmed.** The [Sense announcement](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) describes role-scoped access, not filtering by an agent's declared tools. Horizon Context's metadata grants alone do not answer this question.
+**As of 2026-10-15, tool-scoped Sense retrieval remains unconfirmed.** The [Sense announcement](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) describes role-scoped access, not filtering by an agent's declared tools. Horizon Context's metadata grants alone do not answer this question.
 
 Why this matters in practice: if a use case requires that an agent not merely be unable to *query* certain data but be unaware of its *existence* — deal rooms, pre-announcement financials, segregated client books — then role-scoped retrieval and tool-scoped retrieval are materially different security postures. Metadata leakage (a table name, a column name, a metric definition) can be the disclosure.
 
