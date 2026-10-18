@@ -4,7 +4,10 @@
   "projects": {
     "guide-external-harness-coco": {
       "date": "2026-10-09",
-      "successors": ["guide-claude-code-coco", "guide-codex-coco"],
+      "successors": [
+        "guide-claude-code-coco",
+        "guide-codex-coco"
+      ],
       "routes": [
         "/guide-external-harness-coco/",
         "/guide-external-harness-coco/README.html",
@@ -16,17 +19,29 @@
     "demo-streams-cdc-workshop": {
       "date": "2026-09-21",
       "reason": "Removed previously; stale catalog references cleaned up October 6.",
-      "routes": ["/demo-streams-cdc-workshop/", "/demo-streams-cdc-workshop/README.html", "/demo-streams-cdc-workshop/README.md"]
+      "routes": [
+        "/demo-streams-cdc-workshop/",
+        "/demo-streams-cdc-workshop/README.html",
+        "/demo-streams-cdc-workshop/README.md"
+      ]
     },
     "demo-cortex-ai-cost-controls": {
       "date": "2026-09-21",
       "reason": "Removed previously; stale catalog references cleaned up October 6.",
-      "routes": ["/demo-cortex-ai-cost-controls/", "/demo-cortex-ai-cost-controls/README.html", "/demo-cortex-ai-cost-controls/README.md"]
+      "routes": [
+        "/demo-cortex-ai-cost-controls/",
+        "/demo-cortex-ai-cost-controls/README.html",
+        "/demo-cortex-ai-cost-controls/README.md"
+      ]
     },
     "demo-restaurant-recovery-explorer": {
       "date": "2026-09-21",
       "reason": "Removed previously; stale catalog references cleaned up October 6.",
-      "routes": ["/demo-restaurant-recovery-explorer/", "/demo-restaurant-recovery-explorer/README.html", "/demo-restaurant-recovery-explorer/README.md"]
+      "routes": [
+        "/demo-restaurant-recovery-explorer/",
+        "/demo-restaurant-recovery-explorer/README.html",
+        "/demo-restaurant-recovery-explorer/README.md"
+      ]
     },
     "guide-openflow-shopify-multistore": {
       "date": "2026-09-21",
@@ -277,6 +292,17 @@
         "/guide-vscode-copilot-cortex/path-2-subagent-skill.md",
         "/guide-vscode-copilot-cortex/path-3-mcp.html",
         "/guide-vscode-copilot-cortex/path-3-mcp.md"
+      ]
+    },
+    "guide-org-reporting": {
+      "date": "2026-10-18",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-org-reporting/",
+        "/guide-org-reporting/ELI5.html",
+        "/guide-org-reporting/ELI5.md",
+        "/guide-org-reporting/README.html",
+        "/guide-org-reporting/README.md"
       ]
     }
   }

@@ -109,8 +109,6 @@ compute rightsizing. Reading order within this path matters.
 1. `guide-snowflake-cost-visibility` — foundational: Budget objects, METERING_DAILY_HISTORY,
    Resource Monitors
 2. `guide-cortex-access-control` — AI access, per-user limits, and usage observability
-3. `guide-org-reporting` — multi-account visibility: ORGANIZATION_USAGE two-path decision,
-   application/database roles, query discipline, materialization pattern
 4. `guide-ai-spend-consolidation` — beyond Snowflake: consolidating ChatGPT Enterprise,
    Claude Enterprise, GitHub Copilot, Cursor, Box AI, M365 Copilot, and the Google AI
    surfaces alongside Cortex at user-level grain, with metered-versus-seat cost modeling
@@ -147,7 +145,6 @@ order — pick based on area of interest.
 - `guide-horizon-context-catalog` — Horizon Context, Cortex Sense, Apache Ossie, and documented vs unresolved agent security boundaries (Summit 2026)
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake zero-copy directions, V2 migration, and connector decision framework (also in Path 1)
 - `guide-cowork-easter-eggs` — status-aware CoWork feature surface: Deep Research, Artifacts and shared conversations, chart policies, User Skills, Automations, MCP, document generation, mobile, and cost controls
-- `guide-org-reporting` — ORGANIZATION_USAGE primer: two access paths, premium vs non-premium, query discipline
 - `guide-cube-snowflake-semantic-layer` — bi-directional Snowflake Semantic Views sync with Cube, push limitations, decoupled vs warehouse-native decision (also in Path 1)
 - `guide-otel-to-snowflake` — observability data in Snowflake: what event tables are and are not, why the collector-contrib Snowflake component points the wrong way, and Observe as the first-party buy-side option (also in Path 1 and Path 2)
 - `guide-shopify-multistore-snowflake` — the Openflow Shopify connector is Preview while
