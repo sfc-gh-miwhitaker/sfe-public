@@ -304,6 +304,19 @@
         "/guide-org-reporting/README.html",
         "/guide-org-reporting/README.md"
       ]
+    },
+    "guide-cube-snowflake-semantic-layer": {
+      "date": "2026-10-19",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-cube-snowflake-semantic-layer/",
+        "/guide-cube-snowflake-semantic-layer/ELI5.html",
+        "/guide-cube-snowflake-semantic-layer/ELI5.md",
+        "/guide-cube-snowflake-semantic-layer/README.html",
+        "/guide-cube-snowflake-semantic-layer/README.md",
+        "/guide-cube-snowflake-semantic-layer/sql/external_oauth_setup.sql",
+        "/guide-cube-snowflake-semantic-layer/sql/observability.sql"
+      ]
     }
   }
 }

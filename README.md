@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-19-blue)
+![Projects](https://img.shields.io/badge/Projects-18-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -71,7 +71,6 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | [Claude Desktop with CoCo](guide-claude-desktop-coco/) | Call CoCo from Claude Desktop through local MCP, with a print-only configuration helper and explicit approval boundaries. | CoCo, Claude Desktop, MCP, delegation |
 | [Salesforce zero copy](guide-salesforce-v2-zero-copy/) | Choose the right direction and connector for Salesforce zero-copy access. | Salesforce, zero copy |
 | [Delta Sharing behind an IP allowlist](guide-delta-sharing-ip-allowlist/) | Consume a vendor Delta Sharing feed when the provider only accepts allowlisted IP addresses. | Delta Sharing, egress IPs |
-| [Cube semantic layer](guide-cube-snowflake-semantic-layer/) | Configure Cube authentication, pre-aggregations, and semantic-view synchronization. | Cube, semantic layer |
 | [Advertising platforms](guide-ad-platform-integrations/) | Separate Google and Meta outbound activation from inbound reporting. | Google Ads, Meta Ads |
 | [Dozens of Shopify stores into Snowflake](guide-shopify-multistore-snowflake/) | Land orders, line items, shipments, and fulfillments from many stores via either the Openflow connector or a native Bulk API pipeline, publishing one shared analytics contract. | Shopify, Openflow, Bulk API, Dynamic Tables |
 
