@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-18-blue)
+![Projects](https://img.shields.io/badge/Projects-17-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -25,7 +25,7 @@ Pick a goal. Each project's README has its prerequisites and next steps.
 | I need to... | Start with | Next steps |
 | --- | --- | --- |
 | **Connect an external tool to Snowflake** | [Integration guides](#integrations) | [Claude Code](guide-claude-code-coco/), [Codex](guide-codex-coco/), or [Claude Desktop](guide-claude-desktop-coco/); for VS Code itself, start with the [official Snowflake extension](https://marketplace.visualstudio.com/items?itemName=snowflake.snowflake-vsc). |
-| **Build Snowflake data pipelines** | [Debezium CDC](guide-debezium-to-snowflake/) | Or [OpenTelemetry](guide-otel-to-snowflake/) and [AI spend ingestion](guide-ai-spend-consolidation/), depending on your source. |
+| **Build Snowflake data pipelines** | Debezium CDC (retired; see current catalog) | Or [OpenTelemetry](guide-otel-to-snowflake/) and [AI spend ingestion](guide-ai-spend-consolidation/), depending on your source. |
 | **Build a production Cortex Agent** | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | Then [AI access control](guide-cortex-access-control/) for access and usage boundaries. |
 | **Govern Snowflake costs and usage** | [Cost visibility](guide-snowflake-cost-visibility/) | [AI access and limits](guide-cortex-access-control/), organization reporting (retired; see current catalog), or [cross-platform AI spend](guide-ai-spend-consolidation/). |
 | **Secure Snowflake and build an audit trail** | [Security guides](#security) | Pick the access boundary or audit requirement you need. |
@@ -78,7 +78,6 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 
 | Guide | What it helps you do | Topics |
 | --- | --- | --- |
-| [Debezium to Snowflake](guide-debezium-to-snowflake/) | Land database changes through Kafka and model them in Snowflake. | Debezium, Kafka, CDC |
 | [OpenTelemetry to Snowflake](guide-otel-to-snowflake/) | Choose an ingestion path for external logs, metrics, and traces. | OpenTelemetry, observability |
 | [AI spend consolidation](guide-ai-spend-consolidation/) | Model cross-platform AI spend and adoption without mixing incompatible billing measures. | AI FinOps, identity, workbook |
 | [Snowflake cost visibility](guide-snowflake-cost-visibility/) | Use budgets, usage views, and resource monitors appropriately. | Credits, budgets |

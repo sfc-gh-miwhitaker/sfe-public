@@ -49,7 +49,6 @@ authenticate and communicate with Snowflake.
 - `guide-claude-desktop-coco` — Claude Desktop chat delegation through local CoCo MCP: print-only configuration helper, absolute executable paths, independent child calls, approval boundaries, and official VS Code extension routing
 - `guide-snowflake-mcp-role-controls` — Snowflake-managed MCP primary-role OAuth controls and secondary-role session-policy restrictions
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake bidirectional zero copy: V2 Data Share, query/file federation, legacy V1/BYOL, Openflow and MCP boundaries
-- `guide-debezium-to-snowflake` — Debezium CDC pipeline: Debezium + Kafka + Snowflake Kafka Connector v4 + Dynamic Table flattening (all GA)
 - `guide-delta-sharing-ip-allowlist` — Databricks Delta Sharing feeds whose provider restricts access to allowlisted IPs and asks for one to three addresses. Answer-first: run the Delta Sharing client in your own cloud account behind a NAT gateway with a static IP and land via external stage, because it is the only design needing nothing new from the provider. Then the four provider questions (accept a shared CIDR, OIDC federation, OAuth2 client credentials, waive the allowlist for a federated recipient) that collapse it to the native `CATALOG_SOURCE = DELTA_SHARING` integration's two statements, the protocol-version-1 credential-vending failure and its external-volume fallback, why outbound private connectivity is documented for Iceberg REST but not Delta Sharing, Data Connectivity Proxy as the answer to the inverse problem, the SPCS client as the inside-Snowflake alternative if they accept a shared `/24`, the shared-`/24` and expiry realities, and the two-allowlist-entry onboarding trap
 - `guide-ad-platform-integrations` — Advertising data by direction: Google Ads Data Manager outbound (Snowflake as native first-party source, PAT auth, Customer Match), the Meta ads MCP + Conversions API skill pairing (CAPI skill public on GitHub, MCP by request), and the Openflow connectors for Meta Ads and Google Ads inbound (Preview connectors on a GA platform)
 - `guide-shopify-multistore-snowflake` — Shopify (dozens of stores) into Snowflake by either of two paths: the Preview Openflow Shopify connector on a GA Openflow Snowflake Deployment, or a deterministic native Bulk API pipeline (Python procedure + Task + SECRET/EAI) operated through CoCo. Shared store registry, one reconciled `DAILY_SHOP_ACTIVITY` analytics contract published under a single view name so a path switch touches no report, honest readiness and cost-floor section, ELT cutover pattern
@@ -67,7 +66,6 @@ capture, orchestration, and incremental processing.
 
 **Current members:**
 
-- `guide-debezium-to-snowflake` — database CDC through Kafka into Snowflake
 - `guide-otel-to-snowflake` — inbound OpenTelemetry pipelines: four ingestion patterns, the
   shared OTLP shredding layer, and a Dynamic Table gold layer (also in Path 1 and Path 6)
 - `guide-ai-spend-consolidation` — multi-vendor admin-API ingestion: watermarked Python

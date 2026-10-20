@@ -317,6 +317,15 @@
         "/guide-cube-snowflake-semantic-layer/sql/external_oauth_setup.sql",
         "/guide-cube-snowflake-semantic-layer/sql/observability.sql"
       ]
+    },
+    "guide-debezium-to-snowflake": {
+      "date": "2026-10-20",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-debezium-to-snowflake/",
+        "/guide-debezium-to-snowflake/README.html",
+        "/guide-debezium-to-snowflake/README.md"
+      ]
     }
   }
 }
