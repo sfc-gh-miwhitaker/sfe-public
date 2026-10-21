@@ -14,6 +14,7 @@ maintained collaboratively with AI coding assistants (Cortex Code, Claude Code, 
 sfe-public/
   guide-<name>/        Reference guides — no deploy script required
   demo-<name>/         Runnable demos — single deploy_all.sql entry point
+  tool-<name>/         Account tools — single deploy_all.sql entry point
   shared/              Shared setup scripts and pre-commit config templates
   _archive/            Retired projects (do not link to these)
 ```
@@ -106,12 +107,12 @@ compute rightsizing. Reading order within this path matters.
 1. `guide-snowflake-cost-visibility` — foundational: Budget objects, METERING_DAILY_HISTORY,
    Resource Monitors
 2. `guide-cortex-access-control` — AI access, per-user limits, and usage observability
-4. `guide-ai-spend-consolidation` — beyond Snowflake: consolidating ChatGPT Enterprise,
+3. `guide-ai-spend-consolidation` — beyond Snowflake: consolidating ChatGPT Enterprise,
    Claude Enterprise, GitHub Copilot, Cursor, Box AI, M365 Copilot, and the Google AI
    surfaces alongside Cortex at user-level grain, with metered-versus-seat cost modeling
    (including the two seat-plus-meter shapes that break naive totals), departmental
    allocation, and seat utilization (also in Path 1 and Path 2)
-5. `guide-snowflake-ml-lifecycle` — deployed-model cost: compute pool idle time versus service
+4. `guide-snowflake-ml-lifecycle` — deployed-model cost: compute pool idle time versus service
    scale-to-zero, warehouse inference, training, monitor refresh, storage (also in Path 6)
 
 **Belongs here if:** the guide's primary job is monitoring, alerting on, or limiting
@@ -128,6 +129,8 @@ Each guide in this path is standalone — no required reading order.
 - `guide-cortex-access-control` — Who gets which part of the Cortex surface: `CORTEX_USER` vs `AI_FUNCTIONS_USER` vs `CORTEX_AGENT_USER` vs per-function grants vs model application roles, the secondary-role and IMPORTED PRIVILEGES bypasses, progressive rollout, per-surface spend limits, usage observability queries
 - `guide-cortex-model-policy` — Approved-model-only policy: read-only inventory, catalog-generated commands, both PUBLIC grant paths, explicit approval of future models, non-admin verification, execution-context checks, and targeted recovery
 - `guide-delta-sharing-ip-allowlist` — stable egress IP allowlisting for a third-party data feed: which Snowflake features have an allowlistable egress range and which do not, the shared-`/24` disclosure, the credential-retrieval versus data-plane allowlist distinction, and the customer-controlled NAT address as the alternative when a provider will not accept a shared range (also in Path 1 and Path 2)
+
+- `guide-cross-cloud-account-replication` — business continuity and cloud migration: one failover group plus one client-redirect connection replicating a whole account from AWS to Azure, cross-cloud integration fix-ups, reversible cutover, and target-billed replication cost
 
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
 identity federation, or feeding an audit or SIEM system.
@@ -171,7 +174,7 @@ never hand-edit `site/.build/`. `site/publication.json` controls reader-only pub
 and enhanced reader pages. Run the site build, link checks, and browser tests
 documented in `site/README.md` when changing navigation or publication rules.
 Do not add agent instructions or hidden tooling to the published artifact.
-Project retrieval discovers top-level guide/demo READMEs without a static allowlist.
+Project retrieval discovers top-level guide/demo/tool READMEs without a static allowlist.
 Contributor setup belongs in CONTRIBUTING.md and must never run during retrieval.
 Archive operations must record retirement routes in `site/retired.json` before moving
 files; never remove old URLs without a reader-facing notice.

@@ -19,7 +19,7 @@ const staging = path.join(build, 'source');
 
 export function discover(repository = root) {
   return fs.readdirSync(repository, {withFileTypes: true})
-    .filter(entry => entry.isDirectory() && /^(guide|demo)-[a-z0-9-]+$/.test(entry.name)
+    .filter(entry => entry.isDirectory() && /^(guide|demo|tool)-[a-z0-9-]+$/.test(entry.name)
       && fs.existsSync(path.join(repository, entry.name, 'README.md')))
     .map(entry => entry.name).sort();
 }

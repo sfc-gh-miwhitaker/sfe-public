@@ -9,10 +9,10 @@ PROJECT="${1:---list}"
 fail() { printf '%s\n' "$*" >&2; exit 1; }
 
 if [[ $# -gt 1 ]]; then
-  fail "Usage: bash get-project.sh [--list | guide-name | demo-name]"
+  fail "Usage: bash get-project.sh [--list | guide-name | demo-name | tool-name]"
 fi
-if [[ "$PROJECT" != '--list' && ! "$PROJECT" =~ ^(guide|demo)-[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
-  fail "Invalid project name. Run with --list and choose a listed guide or demo."
+if [[ "$PROJECT" != '--list' && ! "$PROJECT" =~ ^(guide|demo|tool)-[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+  fail "Invalid project name. Run with --list and choose a listed guide, demo, or tool."
 fi
 command -v git >/dev/null || fail "Git is required. Install Git, then run this command again."
 
@@ -24,7 +24,7 @@ REVISION=$(git --git-dir="$TEMP_ROOT/source.git" rev-parse HEAD)
 BRANCH=$(git --git-dir="$TEMP_ROOT/source.git" symbolic-ref --short HEAD)
 PROJECTS=()
 while IFS= read -r entry; do
-  if [[ "$entry" =~ ^(guide|demo)-[a-z0-9]+(-[a-z0-9]+)*$ ]] && \
+  if [[ "$entry" =~ ^(guide|demo|tool)-[a-z0-9]+(-[a-z0-9]+)*$ ]] && \
     [[ "$(git --git-dir="$TEMP_ROOT/source.git" cat-file -t "$REVISION:$entry/README.md" 2>/dev/null || true)" == blob ]]; then
     PROJECTS+=("$entry")
   fi

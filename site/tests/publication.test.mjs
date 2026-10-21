@@ -18,12 +18,14 @@ test('static badges preserve labels, values, and escaped separators locally', ()
 test('publication includes reader files and excludes development files', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sfe-publication-'));
   try {
-    for (const file of ['guide-fixture/README.md', 'guide-fixture/AGENTS.md', 'guide-fixture/.claude/SKILL.md', 'guide-fixture/docs/guide.md', 'guide-fixture/tests/test.md', 'guide-fixture/sql/example.sql', 'guide-fixture/app/package.json']) {
+    for (const file of ['tool-fixture/README.md', 'tool-fixture/deploy_all.sql', 'tool-fixture/app/secret.ts', 'tool-fixture/AGENTS.md', 'tool-fixture/.claude/skills/tool/SKILL.md', 'guide-fixture/README.md', 'guide-fixture/AGENTS.md', 'guide-fixture/.claude/SKILL.md', 'guide-fixture/docs/guide.md', 'guide-fixture/tests/test.md', 'guide-fixture/sql/example.sql', 'guide-fixture/app/package.json']) {
       fs.mkdirSync(path.dirname(path.join(root, file)), {recursive: true});
       fs.writeFileSync(path.join(root, file), 'Fixture');
     }
-    assert.deepEqual(discover(root), ['guide-fixture']);
+    assert.deepEqual(discover(root), ['guide-fixture', 'tool-fixture']);
     const files = publicationFiles(root);
+    assert(files.includes('tool-fixture/deploy_all.sql'));
+    assert(!files.some(file => file.includes('/app/')));
     assert(files.includes('guide-fixture/docs/guide.md'));
     assert(files.includes('guide-fixture/sql/example.sql'));
     assert(!files.some(file => /AGENTS|SKILL|test|package/.test(file)));

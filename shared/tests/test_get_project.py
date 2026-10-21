@@ -23,7 +23,7 @@ class RetrievalTests(unittest.TestCase):
                         GIT_CONFIG_GLOBAL=os.devnull, SFE_REPOSITORY=str(self.source),
                         SFE_DESTINATION=str(self.destination))
         self.git("init", "-b", "main", str(self.source), cwd=self.root)
-        for project in ("guide-first", "guide-new", "demo-test", "shared"):
+        for project in ("guide-first", "guide-new", "demo-test", "tool-test", "shared"):
             (self.source / project).mkdir()
             (self.source / project / "README.md").write_text("# Fixture\n")
         (self.source / "guide-no-readme").mkdir()
@@ -47,7 +47,7 @@ class RetrievalTests(unittest.TestCase):
     def test_list_and_new_project(self):
         result = self.run_helper("--list")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.splitlines(), ["demo-test", "guide-first", "guide-new"])
+        self.assertEqual(result.stdout.splitlines(), ["demo-test", "guide-first", "guide-new", "tool-test"])
         self.assertFalse(self.destination.exists())
 
     def test_invalid_and_unknown(self):
@@ -58,7 +58,7 @@ class RetrievalTests(unittest.TestCase):
         self.assertFalse(self.destination.exists())
 
     def test_fresh_repeat_and_update(self):
-        for name in ("guide-new", "demo-test"):
+        for name in ("guide-new", "demo-test", "tool-test"):
             result = self.run_helper(name)
             self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((self.destination / "guide-new/README.md").exists())

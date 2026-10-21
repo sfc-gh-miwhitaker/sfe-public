@@ -42,7 +42,7 @@ node guide-ai-spend-consolidation/tests/workbook.browser.cjs
 ## Publication Boundary
 
 `publication.json` is the allowlist. Git-tracked root-level reader Markdown, docs/diagrams,
-and SQL example files in guide/demo directories are permitted by explicit patterns;
+and SQL example files in guide/demo/tool directories are permitted by explicit patterns;
 the workbook, CoWork action menu, and selected example files are named exceptions. Agent instructions,
 hidden paths, tests, applications, and dependencies are not published. Links to
 excluded source files point to their GitHub viewer instead. `.build/inventory.json`
@@ -89,7 +89,7 @@ Replacements that later retire are omitted; the catalog link remains available.
 
 ## Adding Content
 
-Add an active guide/demo and its one-sentence root README catalog row. Project
+Add an active guide/demo/tool and its one-sentence root README catalog row. Project
 retrieval discovers it without an allowlist edit. Update AGENTS.md intent paths.
 Only add publication patterns when the files are intended for readers. Add a pilot
 slug to `publication.json` only after checking its diagrams, links, and formatting.

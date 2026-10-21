@@ -34,6 +34,7 @@ Desktop.ini
 
 # ---- Snowflake CLI / Cortex Code plans ----
 .snowflake/cortex/plans/
+.snowflake/cortex/cost-visibility-probe/
 
 # ---- Secrets & Credentials (CRITICAL) ----
 .env

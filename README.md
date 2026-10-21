@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-17-blue)
+![Projects](https://img.shields.io/badge/Projects-18-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -28,7 +28,7 @@ Pick a goal. Each project's README has its prerequisites and next steps.
 | **Build Snowflake data pipelines** | Debezium CDC (retired; see current catalog) | Or [OpenTelemetry](guide-otel-to-snowflake/) and [AI spend ingestion](guide-ai-spend-consolidation/), depending on your source. |
 | **Build a production Cortex Agent** | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | Then [AI access control](guide-cortex-access-control/) for access and usage boundaries. |
 | **Govern Snowflake costs and usage** | [Cost visibility](guide-snowflake-cost-visibility/) | [AI access and limits](guide-cortex-access-control/), organization reporting (retired; see current catalog), or [cross-platform AI spend](guide-ai-spend-consolidation/). |
-| **Secure Snowflake and build an audit trail** | [Security guides](#security) | Pick the access boundary or audit requirement you need. |
+| **Secure Snowflake and build an audit trail** | [Security guides](#security) | Pick the access boundary or audit requirement you need; for disaster recovery or a cloud move, see [cross-cloud replication](guide-cross-cloud-account-replication/). |
 | **Understand new Snowflake capabilities** | [Capability guides](#capabilities) | Pick a topic; check availability and review dates. |
 
 ## Quick Start
@@ -95,6 +95,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | [MCP role controls](guide-snowflake-mcp-role-controls/) | Separate primary-role OAuth boundaries from secondary-role restrictions. | MCP, OAuth, roles |
 | [Cortex AI access control](guide-cortex-access-control/) | Decide who gets which part of the Cortex surface, apply and verify the grants, and monitor usage. | Cortex, RBAC, roles, models, spend limits |
 | [Choose approved AI models](guide-cortex-model-policy/) | Keep an explicit approved-model list, remove broad access, and verify that excluded and newly released models stay opt-in. | Model approval, model filtering, RBAC, CoCo |
+| [Cross-cloud account replication](guide-cross-cloud-account-replication/) | Replicate a whole account from AWS to Azure with one failover group and one connection, then cut over when ready. | Replication, failover, client redirect, DR |
 
 ### Capabilities
 
