@@ -22,6 +22,8 @@ Pair-programmed by SE Community + Cortex Code
 4. Run Cortex Analyst evaluations to diagnose semantic-view SQL problems, then gate releases on end-to-end Cortex Agent evaluations — an Analyst pass does not prove the Agent's SQL is correct.
 5. Compare committed Agent and exact evaluation metric versions, measuring quality, latency, and consumption across repeated runs.
 
+**See it assembled:** The [Sales Performance Assistant worked example](WORKED-EXAMPLE.md) takes one business question through a source contract, complete semantic-view and Agent configurations, and fixture-backed acceptance cases. It uses one structured-data tool rather than demonstrating every feature.
+
 ## The Mental Model
 
 > Reliable Cortex Agents minimize how much correctness depends on model-specific reasoning.
@@ -60,6 +62,8 @@ Do not blend a canonical semantic-view metric with a custom reconstruction witho
 The semantic view is the largest controllable lever for structured-data accuracy. A well-built semantic view reduces how much the system must infer from names, schemas, and user phrasing.
 
 The mechanism is straightforward: Cortex Analyst generates SQL by following rules defined in the semantic view — descriptions, verified queries, metrics, filters, and custom instructions. When those rules are precise, the search space for valid SQL collapses. When they're vague, the model has to reason its way to an answer, and different models reason differently.
+
+For a complete configuration, see the worked example's [semantic-view YAML](WORKED-EXAMPLE.md#3-configure-the-semantic-view), including explicit grain, a channel relationship, completed-only metrics, and three VQR patterns.
 
 ### Descriptions are model behavior, not documentation
 
@@ -147,6 +151,8 @@ Avoid auto-generated synonym lists. Current guidance is to add synonyms only for
 
 The orchestrator plans, selects tools, reflects on results, and decides when to respond or continue. Clear configuration reduces the model judgment required at each step, especially during tool selection.
 
+The worked example's [Agent specification](WORKED-EXAMPLE.md#4-configure-the-agent) shows these choices together: one tool, clear scope, clarification behavior, and response instructions.
+
 ### Narrow scope is a trust strategy
 
 A narrow agent that's right 98% of the time on sales questions earns more user adoption than a broad agent that's right 80% on "anything." Scope isn't a limitation — it's how you build reliability that earns trust.
@@ -232,6 +238,8 @@ Snowflake's evaluation metrics follow the Goal-Plan-Action (GPA) framework. Inst
 | **Logical Consistency** | Is reasoning consistent across instructions, planning, and tool calls? (reference-free) | Inspect contradictions in the trace rather than assuming an instruction conflict |
 
 These metrics identify where to investigate, not a unique root cause. Tool Selection Accuracy scores supported tool-call matches deterministically, without an LLM judge; the other system metrics use judges. See [Cortex Agent evaluation metrics](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
+
+The worked example includes [acceptance questions and ground-truth JSON](WORKED-EXAMPLE.md#5-define-what-a-correct-answer-looks-like) with literal expected amounts, held-out questions, and clarification and refusal cases.
 
 ### Ground truth design is where most teams under-invest
 

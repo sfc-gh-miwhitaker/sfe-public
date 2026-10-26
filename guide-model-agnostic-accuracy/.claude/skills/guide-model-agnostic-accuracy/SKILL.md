@@ -32,6 +32,8 @@ provenance, and policy scope.
 | README.md | The complete guide with five sections, trust guidance, and appendix |
 | AGENTS.md | Project-specific editing conventions |
 | ELI5.md | Plain-language companion for non-technical stakeholders |
+| WORKED-EXAMPLE.md | Complete sales configuration, synthetic fixture, and acceptance cases |
+| tests/test_worked_example.py | Local parsing, reference, metric, and fixture regression checks |
 
 ## Snowflake Objects
 
@@ -39,13 +41,17 @@ None. This is a documentation-only guide with no deployed infrastructure.
 
 ## Workflow
 
-1. Read README.md, ELI5.md, and AGENTS.md in this project before proposing edits.
+1. Read README.md, ELI5.md, WORKED-EXAMPLE.md, and AGENTS.md before proposing edits.
 2. Check the affected feature in current official Snowflake documentation, including
    release notes for pending evaluation-default changes and judge retirements.
 3. Report the exact correction and its source. Apply edits when the user has
    authorized them; keep evaluation advice distinct from executable configuration.
 4. Update affected practice summaries, appendix items, and plain-language explanations.
-5. Run the repository checks listed in AGENTS.md and inspect the scoped diff.
+5. When changing the worked example, keep source grain, eligibility, date boundaries,
+   NULL behavior, VQRs, Agent references, and acceptance answers aligned. Keep the
+   complete configurations in Markdown rather than maintaining duplicate YAML files.
+6. Run the repository checks listed in AGENTS.md and inspect the scoped diff. Local
+   arithmetic/configuration checks are not proof of Snowflake deployment or Agent accuracy.
 
 ## Adding a New Section or Practice
 
