@@ -326,6 +326,19 @@
         "/guide-debezium-to-snowflake/README.html",
         "/guide-debezium-to-snowflake/README.md"
       ]
+    },
+    "guide-ad-platform-integrations": {
+      "date": "2026-10-27",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-ad-platform-integrations/",
+        "/guide-ad-platform-integrations/ELI5.html",
+        "/guide-ad-platform-integrations/ELI5.md",
+        "/guide-ad-platform-integrations/README.html",
+        "/guide-ad-platform-integrations/README.md",
+        "/guide-ad-platform-integrations/sql/google_ads_data_manager_setup.sql",
+        "/guide-ad-platform-integrations/sql/openflow_ads_connectors_setup.sql"
+      ]
     }
   }
 }
