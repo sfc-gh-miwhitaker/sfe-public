@@ -339,6 +339,51 @@
         "/guide-ad-platform-integrations/sql/google_ads_data_manager_setup.sql",
         "/guide-ad-platform-integrations/sql/openflow_ads_connectors_setup.sql"
       ]
+    },
+    "guide-shopify-multistore-snowflake": {
+      "date": "2026-11-02",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-shopify-multistore-snowflake/",
+        "/guide-shopify-multistore-snowflake/ELI5.html",
+        "/guide-shopify-multistore-snowflake/ELI5.md",
+        "/guide-shopify-multistore-snowflake/README.html",
+        "/guide-shopify-multistore-snowflake/README.md",
+        "/guide-shopify-multistore-snowflake/coco/BUILD_PLAYBOOK.html",
+        "/guide-shopify-multistore-snowflake/coco/BUILD_PLAYBOOK.md",
+        "/guide-shopify-multistore-snowflake/coco/MAINTENANCE_PLAYBOOK.html",
+        "/guide-shopify-multistore-snowflake/coco/MAINTENANCE_PLAYBOOK.md",
+        "/guide-shopify-multistore-snowflake/coco/TROUBLESHOOTING_PLAYBOOK.html",
+        "/guide-shopify-multistore-snowflake/coco/TROUBLESHOOTING_PLAYBOOK.md",
+        "/guide-shopify-multistore-snowflake/coco/automation_daily.html",
+        "/guide-shopify-multistore-snowflake/coco/automation_daily.md",
+        "/guide-shopify-multistore-snowflake/coco/automation_monthly.html",
+        "/guide-shopify-multistore-snowflake/coco/automation_monthly.md",
+        "/guide-shopify-multistore-snowflake/coco/automation_weekly.html",
+        "/guide-shopify-multistore-snowflake/coco/automation_weekly.md",
+        "/guide-shopify-multistore-snowflake/path-native-coco.html",
+        "/guide-shopify-multistore-snowflake/path-native-coco.md",
+        "/guide-shopify-multistore-snowflake/path-openflow.html",
+        "/guide-shopify-multistore-snowflake/path-openflow.md",
+        "/guide-shopify-multistore-snowflake/sql/native/01_landing.sql",
+        "/guide-shopify-multistore-snowflake/sql/native/02_network_secrets.sql",
+        "/guide-shopify-multistore-snowflake/sql/native/03_pull_procedure.sql",
+        "/guide-shopify-multistore-snowflake/sql/native/04_schedule.sql",
+        "/guide-shopify-multistore-snowflake/sql/native/05_analytics_layer.sql",
+        "/guide-shopify-multistore-snowflake/sql/native/06_monitoring.sql",
+        "/guide-shopify-multistore-snowflake/sql/native/07_teardown.sql",
+        "/guide-shopify-multistore-snowflake/sql/openflow/01_core_snowflake.sql",
+        "/guide-shopify-multistore-snowflake/sql/openflow/02_deployment.sql",
+        "/guide-shopify-multistore-snowflake/sql/openflow/03_execute_as_role_eai.sql",
+        "/guide-shopify-multistore-snowflake/sql/openflow/04_runtime.sql",
+        "/guide-shopify-multistore-snowflake/sql/openflow/05_store_schemas.sql",
+        "/guide-shopify-multistore-snowflake/sql/openflow/06_analytics_layer.sql",
+        "/guide-shopify-multistore-snowflake/sql/openflow/07_monitoring.sql",
+        "/guide-shopify-multistore-snowflake/sql/openflow/08_teardown.sql",
+        "/guide-shopify-multistore-snowflake/sql/shared/01_store_registry.sql",
+        "/guide-shopify-multistore-snowflake/sql/shared/02_analytics_contract.sql",
+        "/guide-shopify-multistore-snowflake/sql/shared/03_monitoring.sql"
+      ]
     }
   }
 }

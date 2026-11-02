@@ -51,7 +51,6 @@ authenticate and communicate with Snowflake.
 - `guide-snowflake-mcp-role-controls` — Snowflake-managed MCP primary-role OAuth controls and secondary-role session-policy restrictions
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake bidirectional zero copy: V2 Data Share, query/file federation, legacy V1/BYOL, Openflow and MCP boundaries
 - `guide-delta-sharing-ip-allowlist` — Databricks Delta Sharing feeds whose provider restricts access to allowlisted IPs and asks for one to three addresses. Answer-first: run the Delta Sharing client in your own cloud account behind a NAT gateway with a static IP and land via external stage, because it is the only design needing nothing new from the provider. Then the four provider questions (accept a shared CIDR, OIDC federation, OAuth2 client credentials, waive the allowlist for a federated recipient) that collapse it to the native `CATALOG_SOURCE = DELTA_SHARING` integration's two statements, the protocol-version-1 credential-vending failure and its external-volume fallback, why outbound private connectivity is documented for Iceberg REST but not Delta Sharing, Data Connectivity Proxy as the answer to the inverse problem, the SPCS client as the inside-Snowflake alternative if they accept a shared `/24`, the shared-`/24` and expiry realities, and the two-allowlist-entry onboarding trap
-- `guide-shopify-multistore-snowflake` — Shopify (dozens of stores) into Snowflake by either of two paths: the Preview Openflow Shopify connector on a GA Openflow Snowflake Deployment, or a deterministic native Bulk API pipeline (Python procedure + Task + SECRET/EAI) operated through CoCo. Shared store registry, one reconciled `DAILY_SHOP_ACTIVITY` analytics contract published under a single view name so a path switch touches no report, honest readiness and cost-floor section, ELT cutover pattern
 - `guide-otel-to-snowflake` — External OpenTelemetry logs, metrics, and traces into Snowflake: four ingestion patterns (Openflow ListenOTLP, Collector→Kafka→Connector v4, custom exporter→Snowpipe Streaming HP, files→stage→COPY/Iceberg) plus the shared event-table-shaped shredding layer and Dynamic Table reporting gold layer
 - `guide-ai-spend-consolidation` — Cross-platform AI usage and cost consolidation at user-level grain: pluggable adapter contract over vendor admin APIs (GitHub Copilot fully worked; ChatGPT Enterprise, Box AI, M365 Copilot, Anthropic Claude Enterprise and Claude Console, Cursor, and the three Google surfaces — Workspace Gemini, Code Assist, Vertex AI — as build specifications), Snowflake-native ACCOUNT_USAGE adapter needing no credentials, cost-model-aware unified fact distinguishing pure seat from seat-includes-usage from seat-includes-nothing, per-platform revision windows so restated feeds are not appended, identity spine, gold layer for five leadership decisions, semantic view and Cortex Agent, plus designed-in extensions for per-agent cost attribution and joining usage to operational outcomes
 
@@ -76,11 +75,6 @@ capture, orchestration, and incremental processing.
   full-refresh overwrite-and-swap publication, plus the customer-NAT variant's external-stage
   landing, `_SUCCESS`-marker gating across two schedulers, and `COPY INTO` load
   (also in Path 1 and Path 5)
-- `guide-shopify-multistore-snowflake` — multi-store Shopify ingestion: registry-driven
-  per-store extraction on either path, watermarked Bulk API pulls with SECRET + EAI on the
-  native path, and a Dynamic Table analytics layer conforming to one shared column contract
-  (also in Path 1 and Path 6)
-
 **Belongs here if:** the project's primary job is building or operating a
 Snowflake-native data pipeline rather than configuring an external integration.
 
@@ -145,10 +139,6 @@ order — pick based on area of interest.
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake zero-copy directions, V2 migration, and connector decision framework (also in Path 1)
 - `guide-cowork-easter-eggs` — status-aware CoWork feature surface: Deep Research, Artifacts and shared conversations, chart policies, User Skills, Automations, MCP, document generation, mobile, and cost controls
 - `guide-otel-to-snowflake` — observability data in Snowflake: what event tables are and are not, why the collector-contrib Snowflake component points the wrong way, and Observe as the first-party buy-side option (also in Path 1 and Path 2)
-- `guide-shopify-multistore-snowflake` — the Openflow Shopify connector is Preview while
-  Openflow Snowflake Deployments are GA; covers what that split means for a production
-  commitment, the always-on cost floor, and why no non-CDC sizing heuristic exists
-  (also in Path 1 and Path 2)
 - `guide-snowflake-ml-lifecycle` — Snowflake ML end to end for teams evaluating against AWS:
   Feature Store, ML Jobs, Model Registry, warehouse and SPCS inference, task-graph retraining,
   ML Lineage, model monitors, a serving bake-off protocol instead of parity claims, cross-cloud
