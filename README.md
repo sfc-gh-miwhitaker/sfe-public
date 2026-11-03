@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-15-blue)
+![Projects](https://img.shields.io/badge/Projects-17-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -26,7 +26,7 @@ Pick a goal. Each project's README has its prerequisites and next steps.
 | --- | --- | --- |
 | **Connect an external tool to Snowflake** | [Integration guides](#integrations) | [Claude Code](guide-claude-code-coco/), [Codex](guide-codex-coco/), or [Claude Desktop](guide-claude-desktop-coco/); for VS Code itself, start with the [official Snowflake extension](https://marketplace.visualstudio.com/items?itemName=snowflake.snowflake-vsc). |
 | **Build Snowflake data pipelines** | Debezium CDC (retired; see current catalog) | Or [OpenTelemetry](guide-otel-to-snowflake/) and [AI spend ingestion](guide-ai-spend-consolidation/), depending on your source. |
-| **Build a production Cortex Agent** | Model-agnostic accuracy (retired; see current catalog) | Then [AI access control](guide-cortex-access-control/) for access and usage boundaries. |
+| **Build a production Cortex Agent** | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | Then [AI access control](guide-cortex-access-control/) for access and usage boundaries. |
 | **Govern Snowflake costs and usage** | [Cost visibility](guide-snowflake-cost-visibility/) | [AI access and limits](guide-cortex-access-control/), organization reporting (retired; see current catalog), or [cross-platform AI spend](guide-ai-spend-consolidation/). |
 | **Secure Snowflake and build an audit trail** | [Security guides](#security) | Pick the access boundary or audit requirement you need; for disaster recovery or a cloud move, see [cross-cloud replication](guide-cross-cloud-account-replication/). |
 | **Understand new Snowflake capabilities** | [Capability guides](#capabilities) | Pick a topic; check availability and review dates. |
@@ -84,6 +84,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 
 | Guide | What it helps you do | Topics |
 | --- | --- | --- |
+| [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | Improve answer quality through semantic models, instructions, and evaluation. | Accuracy, semantic views |
 
 ### Security
 
@@ -99,6 +100,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | Guide | What it helps you do | Topics |
 | --- | --- | --- |
 | [Horizon Context and Cortex Sense](guide-horizon-context-catalog/) | Understand the context stack and its documented boundaries. | Catalog, context |
+| [CoWork features](guide-cowork-easter-eggs/) | Find less-visible CoWork capabilities, prerequisites, and limitations. | CoWork, productivity |
 | [Snowflake ML lifecycle](guide-snowflake-ml-lifecycle/) | Evaluate Snowflake ML end to end against an AWS stack: design, monitoring, serving bake-off, registry, and cost. | ML, Model Registry, SPCS, monitoring |
 | [Snowflake Dashboards for admins](guide-snowflake-dashboards/) | Decide who can share dashboard artifacts, prepare viewer data access and compute, and plan around preview lifecycle gaps. | Dashboards, artifacts, sharing, CoWork |
 
