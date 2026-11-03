@@ -384,6 +384,32 @@
         "/guide-shopify-multistore-snowflake/sql/shared/02_analytics_contract.sql",
         "/guide-shopify-multistore-snowflake/sql/shared/03_monitoring.sql"
       ]
+    },
+    "guide-cowork-easter-eggs": {
+      "date": "2026-11-03",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-cowork-easter-eggs/",
+        "/guide-cowork-easter-eggs/ELI5.html",
+        "/guide-cowork-easter-eggs/ELI5.md",
+        "/guide-cowork-easter-eggs/README.html",
+        "/guide-cowork-easter-eggs/README.md",
+        "/guide-cowork-easter-eggs/WHAT-CAN-I-DO-NOW.html",
+        "/guide-cowork-easter-eggs/WHAT-CAN-I-DO-NOW.md"
+      ]
+    },
+    "guide-model-agnostic-accuracy": {
+      "date": "2026-11-03",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-model-agnostic-accuracy/",
+        "/guide-model-agnostic-accuracy/ELI5.html",
+        "/guide-model-agnostic-accuracy/ELI5.md",
+        "/guide-model-agnostic-accuracy/README.html",
+        "/guide-model-agnostic-accuracy/README.md",
+        "/guide-model-agnostic-accuracy/WORKED-EXAMPLE.html",
+        "/guide-model-agnostic-accuracy/WORKED-EXAMPLE.md"
+      ]
     }
   }
 }

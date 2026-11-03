@@ -85,8 +85,6 @@ Reading order within this path matters.
 
 **Current members (in recommended reading order):**
 
-1. `guide-model-agnostic-accuracy` — semantic view and agent configuration foundations
-
 **Belongs here if:** the guide's primary job is building, configuring, deploying, or
 extending a Cortex Agent or its supporting objects (semantic views, tools, search).
 
@@ -137,7 +135,6 @@ order — pick based on area of interest.
 
 - `guide-horizon-context-catalog` — Horizon Context, Cortex Sense, Apache Ossie, and documented vs unresolved agent security boundaries (Summit 2026)
 - `guide-salesforce-v2-zero-copy` — Salesforce and Snowflake zero-copy directions, V2 migration, and connector decision framework (also in Path 1)
-- `guide-cowork-easter-eggs` — status-aware CoWork feature surface: Deep Research, Artifacts and shared conversations, chart policies, User Skills, Automations, MCP, document generation, mobile, and cost controls
 - `guide-otel-to-snowflake` — observability data in Snowflake: what event tables are and are not, why the collector-contrib Snowflake component points the wrong way, and Observe as the first-party buy-side option (also in Path 1 and Path 2)
 - `guide-snowflake-ml-lifecycle` — Snowflake ML end to end for teams evaluating against AWS:
   Feature Store, ML Jobs, Model Registry, warehouse and SPCS inference, task-graph retraining,
