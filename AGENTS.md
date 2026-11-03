@@ -121,6 +121,8 @@ Each guide in this path is standalone — no required reading order.
 - `guide-cortex-model-policy` — Approved-model-only policy: read-only inventory, catalog-generated commands, both PUBLIC grant paths, explicit approval of future models, non-admin verification, execution-context checks, and targeted recovery
 - `guide-delta-sharing-ip-allowlist` — stable egress IP allowlisting for a third-party data feed: which Snowflake features have an allowlistable egress range and which do not, the shared-`/24` disclosure, the credential-retrieval versus data-plane allowlist distinction, and the customer-controlled NAT address as the alternative when a provider will not accept a shared range (also in Path 1 and Path 2)
 
+- `guide-snowflake-dashboards` — who may share dashboard and other artifacts: account sharing parameter, per-type `MANAGE ACCESS` privileges granted to PUBLIC, per-artifact grants, and snapshot-artifact data exposure (also in Path 6)
+
 - `guide-cross-cloud-account-replication` — business continuity and cloud migration: one failover group plus one client-redirect connection replicating a whole account from AWS to Azure, cross-cloud integration fix-ups, reversible cutover, and target-billed replication cost
 
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
@@ -140,6 +142,9 @@ order — pick based on area of interest.
   Feature Store, ML Jobs, Model Registry, warehouse and SPCS inference, task-graph retraining,
   ML Lineage, model monitors, a serving bake-off protocol instead of parity claims, cross-cloud
   registry patterns, and deployed-model cost drivers (also in Path 4)
+- `guide-snowflake-dashboards` — administrator rollout of Snowflake Dashboards (Open Preview):
+  sharing controls, caller's-rights viewer access and per-viewer compute, artifact lifecycle
+  gaps, and Legacy Dashboards upgrade (also in Path 5)
 
 **Belongs here if:** the guide's primary job is explaining a new Snowflake feature or
 capability rather than configuring or building something.

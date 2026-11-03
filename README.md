@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-14-blue)
+![Projects](https://img.shields.io/badge/Projects-15-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -100,6 +100,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | --- | --- | --- |
 | [Horizon Context and Cortex Sense](guide-horizon-context-catalog/) | Understand the context stack and its documented boundaries. | Catalog, context |
 | [Snowflake ML lifecycle](guide-snowflake-ml-lifecycle/) | Evaluate Snowflake ML end to end against an AWS stack: design, monitoring, serving bake-off, registry, and cost. | ML, Model Registry, SPCS, monitoring |
+| [Snowflake Dashboards for admins](guide-snowflake-dashboards/) | Decide who can share dashboard artifacts, prepare viewer data access and compute, and plan around preview lifecycle gaps. | Dashboards, artifacts, sharing, CoWork |
 
 ## First-Time Setup
 
