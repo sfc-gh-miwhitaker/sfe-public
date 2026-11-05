@@ -127,6 +127,8 @@ Each guide in this path is standalone — no required reading order.
 
 - `guide-cross-cloud-account-replication` — business continuity and cloud migration: one failover group plus one client-redirect connection replicating a whole account from AWS to Azure, cross-cloud integration fix-ups, reversible cutover, and target-billed replication cost
 
+- `guide-pii-auto-classification`: new-administrator path to native sensitive data classification: classification profile on a database or schema, system tags, tag map to a company sensitivity tag, custom regex classifier, tag-based masking, Trust Center and SQL side by side, exclusions, cost, and troubleshooting (also in Path 6)
+
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
 identity federation, or feeding an audit or SIEM system.
 
@@ -148,6 +150,8 @@ order — pick based on area of interest.
 - `guide-snowflake-dashboards` — administrator rollout of Snowflake Dashboards (Open Preview):
   sharing controls, caller's-rights viewer access and per-viewer compute, artifact lifecycle
   gaps, and Legacy Dashboards upgrade (also in Path 5)
+- `guide-pii-auto-classification`: Autopilot scheduling and AI mode (both Open Preview) in
+  sensitive data classification, explained for a new administrator (also in Path 5)
 
 **Belongs here if:** the guide's primary job is explaining a new Snowflake feature or
 capability rather than configuring or building something.

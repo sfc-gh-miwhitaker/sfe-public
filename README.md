@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-17-blue)
+![Projects](https://img.shields.io/badge/Projects-18-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -94,6 +94,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | [Cortex AI access control](guide-cortex-access-control/) | Decide who gets which part of the Cortex surface, apply and verify the grants, and monitor usage. | Cortex, RBAC, roles, models, spend limits |
 | [Choose approved AI models](guide-cortex-model-policy/) | Keep an explicit approved-model list, remove broad access, and verify that excluded and newly released models stay opt-in. | Model approval, model filtering, RBAC, CoCo |
 | [Cross-cloud account replication](guide-cross-cloud-account-replication/) | Replicate a whole account from AWS to Azure with one failover group and one connection, then cut over when ready. | Replication, failover, client redirect, DR |
+| [Find, tag, and mask PII automatically](guide-pii-auto-classification/) | Classify sensitive columns with native classification, map findings to your own tag, and mask every tagged column, in the Trust Center or SQL. | Classification, PII, tags, masking, Trust Center |
 
 ### Capabilities
 
