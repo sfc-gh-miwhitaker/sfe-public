@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-18-blue)
+![Projects](https://img.shields.io/badge/Projects-16-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -69,7 +69,6 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | [Claude Code with CoCo](guide-claude-code-coco/) | Route bounded Snowflake assignments from Claude Code with AI Kit first, or use native MCP as a direct alternative. | CoCo, Claude Code, AI Kit, delegation |
 | [Codex with CoCo](guide-codex-coco/) | Delegate bounded Snowflake assignments from Codex with native MCP first and evaluate AI Kit's Codex-specific controls separately. | CoCo, Codex, MCP, delegation |
 | [Claude Desktop with CoCo](guide-claude-desktop-coco/) | Call CoCo from Claude Desktop through local MCP, with a print-only configuration helper and explicit approval boundaries. | CoCo, Claude Desktop, MCP, delegation |
-| [Salesforce zero copy](guide-salesforce-v2-zero-copy/) | Choose the right direction and connector for Salesforce zero-copy access. | Salesforce, zero copy |
 | [Delta Sharing behind an IP allowlist](guide-delta-sharing-ip-allowlist/) | Consume a vendor Delta Sharing feed when the provider only accepts allowlisted IP addresses. | Delta Sharing, egress IPs |
 
 ### Pipelines and Cost Governance
@@ -90,7 +89,6 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 
 | Guide | What it helps you do | Topics |
 | --- | --- | --- |
-| [MCP role controls](guide-snowflake-mcp-role-controls/) | Separate primary-role OAuth boundaries from secondary-role restrictions. | MCP, OAuth, roles |
 | [Cortex AI access control](guide-cortex-access-control/) | Decide who gets which part of the Cortex surface, apply and verify the grants, and monitor usage. | Cortex, RBAC, roles, models, spend limits |
 | [Choose approved AI models](guide-cortex-model-policy/) | Keep an explicit approved-model list, remove broad access, and verify that excluded and newly released models stay opt-in. | Model approval, model filtering, RBAC, CoCo |
 | [Cross-cloud account replication](guide-cross-cloud-account-replication/) | Replicate a whole account from AWS to Azure with one failover group and one connection, then cut over when ready. | Replication, failover, client redirect, DR |

@@ -384,6 +384,32 @@
         "/guide-shopify-multistore-snowflake/sql/shared/02_analytics_contract.sql",
         "/guide-shopify-multistore-snowflake/sql/shared/03_monitoring.sql"
       ]
+    },
+    "guide-salesforce-v2-zero-copy": {
+      "date": "2026-11-07",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-salesforce-v2-zero-copy/",
+        "/guide-salesforce-v2-zero-copy/ELI5.html",
+        "/guide-salesforce-v2-zero-copy/ELI5.md",
+        "/guide-salesforce-v2-zero-copy/README.html",
+        "/guide-salesforce-v2-zero-copy/README.md"
+      ]
+    },
+    "guide-snowflake-mcp-role-controls": {
+      "date": "2026-11-07",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-snowflake-mcp-role-controls/",
+        "/guide-snowflake-mcp-role-controls/ELI5.html",
+        "/guide-snowflake-mcp-role-controls/ELI5.md",
+        "/guide-snowflake-mcp-role-controls/README.html",
+        "/guide-snowflake-mcp-role-controls/README.md",
+        "/guide-snowflake-mcp-role-controls/sql/01_create_mcp_access_role.sql",
+        "/guide-snowflake-mcp-role-controls/sql/02_configure_oauth_roles.sql",
+        "/guide-snowflake-mcp-role-controls/sql/03_restrict_secondary_roles.sql",
+        "/guide-snowflake-mcp-role-controls/sql/04_validate_role_behavior.sql"
+      ]
     }
   }
 }
