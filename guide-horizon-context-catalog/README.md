@@ -5,12 +5,12 @@
 
 # Horizon Context + Cortex Sense: The Context Stack Explained
 
-[Horizon Context](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context) collects, enriches, and activates metadata across Snowflake and external systems. Its October 12, 2026 preview adds 18 metadata connectors, external metadata curation, and column description propagation. This guide separates those documented capabilities from the announced [Cortex Sense](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) runtime layer, and explains why metadata visibility, data access, and agent tool configuration are different controls.
+[Horizon Context](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context) collects, enriches, and activates metadata across Snowflake and external systems. Its October 12, 2026 preview adds 18 metadata connectors and external metadata curation. This guide separates those documented capabilities from the announced [Cortex Sense](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) runtime layer, and explains why metadata visibility, data access, and agent tool configuration are different controls.
 
 **Audience:** Data engineers, data stewards, and platform owners connecting their data estate and evaluating context for AI applications.
-**Created:** 2026-07-09 | **Last updated:** 2026-10-15 | **Expires:** 2026-11-28 | **Status:** ACTIVE
+**Created:** 2026-07-09 | **Last updated:** 2026-11-05 | **Expires:** 2026-11-28 | **Status:** ACTIVE
 
-**Last verified:** 2026-10-15 (operational architecture and collection paths); October release changes: 2026-10-13; full-guide review: 2026-09-29.
+**Last verified:** 2026-10-15 (operational architecture and collection paths); release-status changes through 2026-11-05 (certification tag GA, LOD preview, connector refresh and cost, comment propagation documentation removed); full-guide review: 2026-09-29.
 
 Pair-programmed by SE Community + Cortex Code
 
@@ -109,7 +109,7 @@ flowchart TB
     style CONTEXT fill:#f4f9ff,stroke:#29b5e8,color:#11325d
 ```
 
-**Read the inputs separately.** Snowflake gathers native metadata from your account. [Metadata connectors](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors) collect supported information from explicitly configured external sources; collected fields and refresh behavior depend on the source. [dbt Cloud](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/dbt) supplies build artifacts through scheduled API pulls, while dbt Core artifacts must be regenerated and uploaded manually. Both attach to an existing warehouse source. [OpenLineage](https://docs.snowflake.com/en/user-guide/external-lineage) is a separate producer-push path into the lineage graph, not another connector polling a database.
+**Read the inputs separately.** Snowflake gathers native metadata from your account. [Metadata connectors](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors) collect supported information from explicitly configured external sources; collected fields depend on the source, and Horizon Catalog refreshes each connected source every 24 hours. [dbt Cloud](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/dbt) supplies build artifacts through scheduled API pulls, while dbt Core artifacts must be regenerated and uploaded manually. Both attach to an existing warehouse source. [OpenLineage](https://docs.snowflake.com/en/user-guide/external-lineage) is a separate producer-push path into the lineage graph, not another connector polling a database.
 
 **The catalog supports decisions, not just searches.** Follow a column downstream before changing it, trace a dashboard upstream when a number looks wrong, or inspect certification and contacts before choosing an asset. Usage helps establish which consumers may be affected; available freshness and quality signals add context. Coverage depends on connected sources and supported lineage paths. A missing edge is not proof that nothing depends on the column.
 
@@ -140,7 +140,7 @@ Horizon Context organizes its work into three phases. Its documentation distingu
 
 The [October 12 preview](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-12-horizon-context-preview) introduced **18 metadata connectors in open preview**, covering BI tools, databases, and dbt. Use the maintained [connector catalog](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors) for the current list and source-specific setup. These are metadata connections, not business-data replication pipelines, and nothing connects automatically.
 
-**Check eligibility before designing around a connector.** The release lists AWS/Azure commercial regions, not every Snowflake region. Source permissions and refresh behavior vary by connector. Read the [security requirements](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/security) before onboarding: they do not guarantee stable egress IPs or uniform TLS enforcement across source types. Do not broaden database network access just to complete setup.
+**Check eligibility before designing around a connector.** The release lists AWS/Azure commercial regions, not every Snowflake region. The connector catalog states "Available to all accounts"; treat the release note's region list as the boundary until the two agree. Source permissions vary by connector. Snowflake does not charge for connectors or for ingesting and storing collected metadata, but your warehouse and the source system's compute still bill for the queries involved. Read the [security requirements](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/security) before onboarding: they do not guarantee stable egress IPs or uniform TLS enforcement across source types. Do not broaden database network access just to complete setup.
 
 Separately, **[external lineage](https://docs.snowflake.com/en/user-guide/external-lineage)** — the OpenLineage ingestion path — reached **GA on September 3, 2026**. Use it when your producer already emits lineage events; use metadata connectors when you need source-specific catalog collection. Check the external-lineage documentation for edition requirements, authorization, supported events, and capacity limits.
 
@@ -152,10 +152,10 @@ Once collected, raw metadata is enriched into usable business context:
 
 - **End-to-end column-level lineage** — stitched from Snowflake query logs, external system logs, BI definitions, and OpenLineage feeds. Column-level mappings arrive through the OpenLineage `columnLineage` facet and are resolved best-effort: an unresolvable column is skipped rather than failing the event.
 - **Popularity signals** — query and access frequency used to distinguish authoritative assets from experimental ones.
-- **Certification status** — the explicit human signal that an asset is trusted. Note the tag moved: `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` arrived in public preview on August 31, 2026 and is now the recommended tag. `SNOWFLAKE.CORE.CERTIFICATION_STATUS` is **still supported and has not been deprecated**, but Snowflake documents it as planned for deprecation in a future release. New work should use the `SNOWFLAKE.TAGS` tag, whose allowed values are fixed by Snowflake and cannot be modified by account administrators — which is what lets governance and AI workflows interpret it consistently.
+- **Certification status** — the explicit human signal that an asset is trusted. Note the tag moved: `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` arrived in public preview on August 31, 2026, became [generally available on October 20, 2026](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-20-snowflake-provided-tags-ga), and is the recommended tag. `SNOWFLAKE.CORE.CERTIFICATION_STATUS` is **still supported and has not been deprecated**, but Snowflake documents it as planned for deprecation in a future release. New work should use the `SNOWFLAKE.TAGS` tag, whose allowed values are fixed by Snowflake and cannot be modified by account administrators — which is what lets governance and AI workflows interpret it consistently.
 - **AI-generated documentation** — table and column descriptions generated from metadata and optionally sample data.
 - **Metadata curation without ownership** — use [`APPLY COMMENT`](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control#apply-comment) for comment-only stewardship rather than granting broad modification rights. Within Horizon Catalog, stewards can edit descriptions and apply tags and contacts to external assets such as Power BI and Tableau dashboards. Follow the [documented permissions](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control) for each operation.
-- **Column comment propagation (open preview)** — [opt-in propagation](https://docs.snowflake.com/en/user-guide/comment-propagation) reduces repeated descriptions where values pass through unchanged. It does not replace documentation for transformed metrics or overwrite manual downstream comments. Check supported objects, lineage eligibility, and disable behavior before enabling it.
+- **Column comment propagation — documentation removed** — the opt-in propagation page published with the October preview is no longer in Snowflake's documentation. Confirm with your account team whether the feature is still available before relying on it. The separate [`COPY = ( COMMENTS )`](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-27-copy-metadata-carry-over) option keeps comments when an object is recreated with `CREATE OR REPLACE`; it does not propagate comments along lineage.
 - **Semantic Views** — the governed business definition layer. [Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot) can generate a view from selected tables plus example SQL, and can ingest Tableau `.twb`, `.twbx`, `.tds`, and `.tdsx` files. [Power BI ingestion became GA on August 18, 2026](https://docs.snowflake.com/en/release-notes/2026/other/2026-08-18-semantic-views-power-bi-ingestion-ga) and supports `.pbit` and `.pbix`; report-level measures and time-intelligence functions such as `PREVIOUSMONTH` and `SAMEPERIODLASTYEAR` are not yet fully supported.
 
 ### Lineage coverage and limits
@@ -307,7 +307,7 @@ This is not a new risk introduced by Horizon Context or Cortex Sense. It is a pr
 
 ## Availability Summary
 
-Baseline snapshot: **2026-09-29**; October feature updates: **2026-10-13**. Follow the linked documentation for current availability and requirements.
+Baseline snapshot: **2026-09-29**; feature-status updates: **2026-11-05**. Follow the linked documentation for current availability and requirements.
 
 | Feature | Status | Requirements / details |
 | --- | --- | --- |
@@ -319,16 +319,17 @@ Baseline snapshot: **2026-09-29**; October feature updates: **2026-10-13**. Foll
 | Semantic Studio (semantic view authoring environment) | **GA (September 30, 2026)** | [Release details](https://docs.snowflake.com/en/release-notes/2026/other/2026-09-30-semantic-studio-ga) |
 | Horizon Context / metadata connectors | **Preview / open preview (October 12, 2026)** | 18 documented sources; AWS/Azure commercial regions, excluding government and China. See source-specific setup and security requirements |
 | Metadata access control / `APPLY COMMENT` | **Open preview** | Separate metadata visibility and comment-only curation privileges |
-| Column comment propagation | **Open preview** | [opt-in behavior and limitations](https://docs.snowflake.com/en/user-guide/comment-propagation) |
+| Column comment propagation | **Documentation removed — status unconfirmed** | Published with the October preview; the page no longer exists. Confirm availability with your account team. `COPY = ( COMMENTS )` preserves comments on replacement only |
 | Temporary-object lineage preservation | **GA (September 21, 2026)** | [supported paths and limitations](https://docs.snowflake.com/en/user-guide/lineage-temporary-objects) |
-| Advanced Semantics (LOD calculations, composable definitions) | **Partially documented — status unconfirmed** | Confirm authoring support for LOD metrics and composable definitions before use. Tableau ingestion does not import Tableau LOD calculations |
+| Level of detail (LOD) expressions in semantic views | **Preview (November 2, 2026)** | `FIXED`, `INCLUDE`, and `EXCLUDE DIMENSIONS` in DDL, YAML, and Semantic Studio. Work in SQL queries only: **Cortex Analyst and Cortex Agents don't use LOD metrics yet**. Tableau ingestion does not import Tableau LOD calculations. [Release details](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-02-semantic-views-lod-metrics-preview) |
+| Composable semantic definitions | **Status unconfirmed** | Named in the Summit announcement; confirm authoring support before use |
 | Cortex Sense | **Availability unconfirmed** | Confirm account availability, supported clients, and metadata access controls separately from Horizon Context |
 | Cortex Sense — per-role context differentiation | **Announced as future work — unconfirmed** | Confirm support for separate role-specific contexts before planning a deployment |
 | Power BI semantic view interop | **Unconfirmed — verify with your account team** | Named in the Summit announcement; confirm support for your intended integration |
 | Excel semantic view interop | **Unconfirmed — verify with your account team** | Named in the Summit announcement; confirm support for your intended integration |
 | Cortex Agents | **GA (November 4, 2025)** | Asynchronous API reached GA August 30, 2026 |
 | Cortex Search | **GA (October 4, 2024)** | [Search service documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search/cortex-search-overview) |
-| `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` | **Public Preview (August 31, 2026)** | Recommended replacement; allowed values fixed by Snowflake and not modifiable |
+| `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` | **GA (October 20, 2026)** | Recommended replacement; allowed values fixed by Snowflake and not modifiable |
 | `SNOWFLAKE.CORE.CERTIFICATION_STATUS` | **Still supported; not yet deprecated** | Documented as planned for deprecation in a future release. Migrate new work to the `SNOWFLAKE.TAGS` tag |
 
 ---
@@ -351,7 +352,8 @@ Baseline snapshot: **2026-09-29**; October feature updates: **2026-10-13**. Foll
 - [Horizon Catalog connectors](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors)
 - [Metadata access control](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control)
 - [Connector security and data protection](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/security)
-- [Column comment propagation](https://docs.snowflake.com/en/user-guide/comment-propagation)
+- [Carry over comments, tags, and privileges with COPY = ( … ) (October 27, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-27-copy-metadata-carry-over)
+- [Level of detail expressions in semantic views — Preview (November 2, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-02-semantic-views-lod-metrics-preview)
 - [Temporary-object lineage preservation](https://docs.snowflake.com/en/user-guide/lineage-temporary-objects)
 - [Expanded lineage relationships (October 6, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-06-lineage-integrations-monitors-search)
 
@@ -370,5 +372,6 @@ Baseline snapshot: **2026-09-29**; October feature updates: **2026-10-13**. Foll
 - [External lineage — GA release note (September 3, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-09-03-external-lineage-ga)
 - [Snowflake-provided tags](https://docs.snowflake.com/en/user-guide/object-tagging/snowflake-provided-tags)
 - [Snowflake-provided tags — Public Preview release note (August 31, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-08-31-snowflake-provided-tags-preview)
+- [Snowflake-provided tags — GA release note (October 20, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-20-snowflake-provided-tags-ga)
 - [Apache Ossie (Incubating), formerly Open Semantic Interchange](https://www.snowflake.com/en/blog/apache-ossie-open-semantic-interchange-incubator/)
 - [P0 Security: Snowflake Cortex agents and privilege inheritance (April 2026)](https://p0.dev/blog/when-your-snowflake-ai-agent-can-query-everything-you-can-query/) — external security research, not a Snowflake statement

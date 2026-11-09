@@ -28,7 +28,7 @@ A catalog card and a book have different access rules. Someone might be allowed 
 
 - The [October 12 Horizon Context preview](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-12-horizon-context-preview) introduced 18 metadata connectors for BI tools, databases, and dbt.
 - Stewards can edit descriptions without receiving broad modification permissions. They can also maintain descriptions, tags, and contacts for external dashboards within Horizon Catalog.
-- Optional description propagation reduces repeated writing where downstream columns keep the same values.
+- Keeping descriptions when you rebuild a table is now an option, so stewards do not have to rewrite them.
 - [Semantic Studio](https://docs.snowflake.com/en/release-notes/2026/other/2026-09-30-semantic-studio-ga), the semantic-view authoring environment, became generally available on September 30.
 
 ## What to Watch Out For
