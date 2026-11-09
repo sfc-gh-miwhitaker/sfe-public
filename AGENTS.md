@@ -162,8 +162,8 @@ files; never remove old URLs without a reader-facing notice.
 ### When you add a new guide or demo
 
 1. Determine which path(s) above it belongs to. A guide can appear in multiple paths
-   if it genuinely serves multiple reader intents (e.g., `guide-ai-spend-consolidation`
-   belongs in Paths 1, 2, and 4).
+   if it genuinely serves multiple reader intents (e.g., `guide-delta-sharing-ip-allowlist`
+   belongs in Paths 1, 2, and 5).
 2. Add it to the **Current members** list in the relevant path section(s) above.
 3. Ensure the `## Start Here` routing table leads to its catalog category; add a direct
    link only when the project changes a recommended reading sequence.

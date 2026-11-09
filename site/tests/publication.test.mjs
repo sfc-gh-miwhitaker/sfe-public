@@ -41,7 +41,7 @@ test('stable routes distinguish rendered guides from raw downloads', () => {
 
 test('real publication boundary excludes hidden and agent files', () => {
   const files = publicationFiles();
-  assert(files.includes('guide-ai-spend-consolidation/workbook.html'));
+  assert(files.some(file => /^(guide|demo|tool)-[^/]+\/.+\.(html|sql|py|json|ya?ml|csv)$/.test(file)));
   assert(!files.some(file => /(^|\/)(\.|tests\/|AGENTS.md|CLAUDE.md|SKILL.md)/.test(file)));
   assert(discover().length > 0);
 });

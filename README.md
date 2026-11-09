@@ -33,9 +33,7 @@ Pick a goal. Each project's README has its prerequisites and next steps.
 
 ## Quick Start
 
-**Reading needs no installation.** Open a guide below or try the
-[AI spend planning workbook](https://sfc-gh-miwhitaker.github.io/sfe-public/guide-ai-spend-consolidation/workbook.html)
-in your browser.
+**Reading needs no installation.** Open a guide below in your browser.
 
 **To work with the files**, clone the repository:
 
@@ -50,7 +48,7 @@ Snowflake connection. Review [the script](shared/get-project.sh) before running 
 ```bash
 curl --fail --silent --show-error --location https://raw.githubusercontent.com/sfc-gh-miwhitaker/sfe-public/main/shared/get-project.sh -o get-project.sh
 bash get-project.sh --list
-bash get-project.sh guide-ai-spend-consolidation
+bash get-project.sh guide-snowflake-cost-visibility
 ```
 
 Open the selected project in your editor and follow its README. If using an AI

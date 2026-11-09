@@ -35,8 +35,6 @@ Open `http://127.0.0.1:4173/sfe-public/`. With that server running:
 ```bash
 npm --prefix site run test:browser
 python3 -m unittest discover -s shared/tests -v
-node --test guide-ai-spend-consolidation/tests/workbook.test.cjs
-node guide-ai-spend-consolidation/tests/workbook.browser.cjs
 ```
 
 ## Publication Boundary
