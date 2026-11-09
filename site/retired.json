@@ -410,6 +410,49 @@
         "/guide-snowflake-mcp-role-controls/sql/03_restrict_secondary_roles.sql",
         "/guide-snowflake-mcp-role-controls/sql/04_validate_role_behavior.sql"
       ]
+    },
+    "guide-ai-spend-consolidation": {
+      "date": "2026-11-09",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-ai-spend-consolidation/",
+        "/guide-ai-spend-consolidation/README.html",
+        "/guide-ai-spend-consolidation/README.md",
+        "/guide-ai-spend-consolidation/docs/adapter-contract.html",
+        "/guide-ai-spend-consolidation/docs/adapter-contract.md",
+        "/guide-ai-spend-consolidation/sql/01_landing.sql",
+        "/guide-ai-spend-consolidation/sql/02_network_secrets.sql",
+        "/guide-ai-spend-consolidation/sql/03_pull_github_copilot.sql",
+        "/guide-ai-spend-consolidation/sql/04_adapter_stubs.sql",
+        "/guide-ai-spend-consolidation/sql/05_snowflake_native.sql",
+        "/guide-ai-spend-consolidation/sql/06_normalize.sql",
+        "/guide-ai-spend-consolidation/sql/07_gold_dts.sql",
+        "/guide-ai-spend-consolidation/sql/08_semantic_view_agent.sql",
+        "/guide-ai-spend-consolidation/sql/09_monitoring.sql",
+        "/guide-ai-spend-consolidation/sql/99_teardown.sql",
+        "/guide-ai-spend-consolidation/workbook.html"
+      ]
+    },
+    "guide-otel-to-snowflake": {
+      "date": "2026-11-09",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-otel-to-snowflake/",
+        "/guide-otel-to-snowflake/ELI5.html",
+        "/guide-otel-to-snowflake/ELI5.md",
+        "/guide-otel-to-snowflake/README.html",
+        "/guide-otel-to-snowflake/README.md",
+        "/guide-otel-to-snowflake/pattern-1-openflow-listenotlp.html",
+        "/guide-otel-to-snowflake/pattern-1-openflow-listenotlp.md",
+        "/guide-otel-to-snowflake/pattern-2-kafka-connector.html",
+        "/guide-otel-to-snowflake/pattern-2-kafka-connector.md",
+        "/guide-otel-to-snowflake/pattern-3-snowpipe-streaming.html",
+        "/guide-otel-to-snowflake/pattern-3-snowpipe-streaming.md",
+        "/guide-otel-to-snowflake/pattern-4-batch-stage-iceberg.html",
+        "/guide-otel-to-snowflake/pattern-4-batch-stage-iceberg.md",
+        "/guide-otel-to-snowflake/shredding-and-reporting.html",
+        "/guide-otel-to-snowflake/shredding-and-reporting.md"
+      ]
     }
   }
 }

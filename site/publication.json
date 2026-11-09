@@ -1,9 +1,7 @@
 {
   "attribution": "Pair-programmed by SE Community + Cortex Code",
   "baseurl": "/sfe-public",
-  "pilot": [
-    "guide-ai-spend-consolidation"
-  ],
+  "pilot": [],
   "readerPatterns": [
     "*.md",
     "docs/**/*.md",
@@ -20,7 +18,6 @@
   "extraFiles": [
     "guide-claude-desktop-coco/tools/generate_config.py",
     "guide-cowork-easter-eggs/WHAT-CAN-I-DO-NOW.md",
-    "guide-ai-spend-consolidation/workbook.html",
     "guide-snowflake-ml-lifecycle/python/reference_pipeline.py"
   ]
 }

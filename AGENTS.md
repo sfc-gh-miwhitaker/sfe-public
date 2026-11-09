@@ -49,9 +49,6 @@ authenticate and communicate with Snowflake.
 - `guide-codex-coco` — Codex delegation: native CoCo MCP first, AI Kit alternative with Codex-specific approval and child-MCP limitations, bounded context and evidence; VS Code users default to the official Snowflake extension
 - `guide-claude-desktop-coco` — Claude Desktop chat delegation through local CoCo MCP: print-only configuration helper, absolute executable paths, independent child calls, approval boundaries, and official VS Code extension routing
 - `guide-delta-sharing-ip-allowlist` — Databricks Delta Sharing feeds whose provider restricts access to allowlisted IPs and asks for one to three addresses. Answer-first: run the Delta Sharing client in your own cloud account behind a NAT gateway with a static IP and land via external stage, because it is the only design needing nothing new from the provider. Then the four provider questions (accept a shared CIDR, OIDC federation, OAuth2 client credentials, waive the allowlist for a federated recipient) that collapse it to the native `CATALOG_SOURCE = DELTA_SHARING` integration's two statements, the protocol-version-1 credential-vending failure and its external-volume fallback, why outbound private connectivity is documented for Iceberg REST but not Delta Sharing, Data Connectivity Proxy as the answer to the inverse problem, the SPCS client as the inside-Snowflake alternative if they accept a shared `/24`, the shared-`/24` and expiry realities, and the two-allowlist-entry onboarding trap
-- `guide-otel-to-snowflake` — External OpenTelemetry logs, metrics, and traces into Snowflake: four ingestion patterns (Openflow ListenOTLP, Collector→Kafka→Connector v4, custom exporter→Snowpipe Streaming HP, files→stage→COPY/Iceberg) plus the shared event-table-shaped shredding layer and Dynamic Table reporting gold layer
-- `guide-ai-spend-consolidation` — Cross-platform AI usage and cost consolidation at user-level grain: pluggable adapter contract over vendor admin APIs (GitHub Copilot fully worked; ChatGPT Enterprise, Box AI, M365 Copilot, Anthropic Claude Enterprise and Claude Console, Cursor, and the three Google surfaces — Workspace Gemini, Code Assist, Vertex AI — as build specifications), Snowflake-native ACCOUNT_USAGE adapter needing no credentials, cost-model-aware unified fact distinguishing pure seat from seat-includes-usage from seat-includes-nothing, per-platform revision windows so restated feeds are not appended, identity spine, gold layer for five leadership decisions, semantic view and Cortex Agent, plus designed-in extensions for per-agent cost attribution and joining usage to operational outcomes
-
 **Belongs here if:** the guide's primary job is configuring a named external product
 to connect to Snowflake. Authentication setup, endpoint configuration, and integration
 troubleshooting are the signals.
@@ -63,11 +60,6 @@ capture, orchestration, and incremental processing.
 
 **Current members:**
 
-- `guide-otel-to-snowflake` — inbound OpenTelemetry pipelines: four ingestion patterns, the
-  shared OTLP shredding layer, and a Dynamic Table gold layer (also in Path 1 and Path 6)
-- `guide-ai-spend-consolidation` — multi-vendor admin-API ingestion: watermarked Python
-  procedures, registry-driven adapters, VARIANT landing with SQL shredding, short-retention
-  feed handling, and a Dynamic Table gold layer (also in Path 1 and Path 4)
 - `guide-delta-sharing-ip-allowlist` — batch pull from a Delta Sharing provider into native
   tables: job service on a compute pool, freshness gating on the provider's own refresh marker,
   full-refresh overwrite-and-swap publication, plus the customer-NAT variant's external-stage
@@ -98,11 +90,6 @@ compute rightsizing. Reading order within this path matters.
 1. `guide-snowflake-cost-visibility` — foundational: Budget objects, METERING_DAILY_HISTORY,
    Resource Monitors
 2. `guide-cortex-access-control` — AI access, per-user limits, and usage observability
-3. `guide-ai-spend-consolidation` — beyond Snowflake: consolidating ChatGPT Enterprise,
-   Claude Enterprise, GitHub Copilot, Cursor, Box AI, M365 Copilot, and the Google AI
-   surfaces alongside Cortex at user-level grain, with metered-versus-seat cost modeling
-   (including the two seat-plus-meter shapes that break naive totals), departmental
-   allocation, and seat utilization (also in Path 1 and Path 2)
 4. `guide-snowflake-ml-lifecycle` — deployed-model cost: compute pool idle time versus service
    scale-to-zero, warehouse inference, training, monitor refresh, storage (also in Path 6)
 
@@ -138,7 +125,6 @@ order — pick based on area of interest.
 
 - `guide-horizon-context-catalog` — Horizon Context, Cortex Sense, Apache Ossie, and documented vs unresolved agent security boundaries (Summit 2026)
 - `guide-cowork-easter-eggs`: status-aware CoWork feature surface: Deep Research and web research, Artifacts and shared conversations, chart policies, User Skills, Automations, MCP, document generation, user memory, mobile, and cost controls
-- `guide-otel-to-snowflake` — observability data in Snowflake: what event tables are and are not, why the collector-contrib Snowflake component points the wrong way, and Observe as the first-party buy-side option (also in Path 1 and Path 2)
 - `guide-snowflake-ml-lifecycle` — Snowflake ML end to end for teams evaluating against AWS:
   Feature Store, ML Jobs, Model Registry, warehouse and SPCS inference, task-graph retraining,
   ML Lineage, model monitors, a serving bake-off protocol instead of parity claims, cross-cloud
