@@ -113,6 +113,8 @@ Each guide in this path is standalone — no required reading order.
 
 - `guide-pii-auto-classification`: new-administrator path to native sensitive data classification: classification profile on a database or schema, system tags, tag map to a company sensitivity tag, custom regex classifier, tag-based masking, Trust Center and SQL side by side, exclusions, cost, and troubleshooting (also in Path 6)
 
+- `guide-strong-auth-network-policies`: single-factor password deprecation for service users: find at-risk users, inventory client IPs per user from LOGIN_HISTORY, draft one reviewed network rule and policy per user, use the Network Policy Advisor and dry run safely, attach before swapping credentials, issue a PAT (which needs a network policy by default) or key pair, cut over to TYPE=SERVICE, and monitor blocks and token expiry
+
 **Belongs here if:** the guide's primary job is enforcing access boundaries, establishing
 identity federation, or feeding an audit or SIEM system.
 
