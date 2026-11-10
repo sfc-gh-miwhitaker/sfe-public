@@ -49,6 +49,7 @@ authenticate and communicate with Snowflake.
 - `guide-codex-coco` — Codex delegation: native CoCo MCP first, AI Kit alternative with Codex-specific approval and child-MCP limitations, bounded context and evidence; VS Code users default to the official Snowflake extension
 - `guide-claude-desktop-coco` — Claude Desktop chat delegation through local CoCo MCP: print-only configuration helper, absolute executable paths, independent child calls, approval boundaries, and official VS Code extension routing
 - `guide-delta-sharing-ip-allowlist` — Databricks Delta Sharing feeds whose provider restricts access to allowlisted IPs and asks for one to three addresses. Answer-first: run the Delta Sharing client in your own cloud account behind a NAT gateway with a static IP and land via external stage, because it is the only design needing nothing new from the provider. Then the four provider questions (accept a shared CIDR, OIDC federation, OAuth2 client credentials, waive the allowlist for a federated recipient) that collapse it to the native `CATALOG_SOURCE = DELTA_SHARING` integration's two statements, the protocol-version-1 credential-vending failure and its external-volume fallback, why outbound private connectivity is documented for Iceberg REST but not Delta Sharing, Data Connectivity Proxy as the answer to the inverse problem, the SPCS client as the inside-Snowflake alternative if they accept a shared `/24`, the shared-`/24` and expiry realities, and the two-allowlist-entry onboarding trap
+- `guide-sigma-writeback-snowflake`: Sigma input tables on Snowflake for a first-time user of both: what the `SIGDS_` data tables, edit logs, and audit views are, connection setup (dedicated write schema, service user, `QUOTED_IDENTIFIERS_IGNORE_CASE`), warehouse view behavior observed live (version-pinned, rewritten after edits, filters carry over), and a typed contract view in front (also in Path 2)
 **Belongs here if:** the guide's primary job is configuring a named external product
 to connect to Snowflake. Authentication setup, endpoint configuration, and integration
 troubleshooting are the signals.
@@ -65,6 +66,9 @@ capture, orchestration, and incremental processing.
   full-refresh overwrite-and-swap publication, plus the customer-NAT variant's external-stage
   landing, `_SUCCESS`-marker gating across two schedulers, and `COPY INTO` load
   (also in Path 1 and Path 5)
+- `guide-sigma-writeback-snowflake`: consuming BI-tool writeback as a pipeline source: contract
+  view over a vendor-managed view, why not a dynamic table on an object that is replaced on every
+  edit, scheduled history snapshots, and write-schema inventory (also in Path 1)
 **Belongs here if:** the project's primary job is building or operating a
 Snowflake-native data pipeline rather than configuring an external integration.
 
