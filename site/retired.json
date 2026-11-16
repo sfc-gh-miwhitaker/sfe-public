@@ -453,6 +453,17 @@
         "/guide-otel-to-snowflake/shredding-and-reporting.html",
         "/guide-otel-to-snowflake/shredding-and-reporting.md"
       ]
+    },
+    "guide-delta-sharing-ip-allowlist": {
+      "date": "2026-11-16",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-delta-sharing-ip-allowlist/",
+        "/guide-delta-sharing-ip-allowlist/ELI5.html",
+        "/guide-delta-sharing-ip-allowlist/ELI5.md",
+        "/guide-delta-sharing-ip-allowlist/README.html",
+        "/guide-delta-sharing-ip-allowlist/README.md"
+      ]
     }
   }
 }
