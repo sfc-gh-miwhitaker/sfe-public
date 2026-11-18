@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-16-blue)
+![Projects](https://img.shields.io/badge/Projects-17-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -73,6 +73,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 
 | Guide | What it helps you do | Topics |
 | --- | --- | --- |
+| [MongoDB change streams in one notebook](guide-mongodb-change-streams-notebook/) | Snapshot MongoDB collections, then apply change streams from a saved resume token on a schedule, without Kafka or Openflow. | MongoDB, CDC, change streams, notebooks |
 | [Snowflake cost visibility](guide-snowflake-cost-visibility/) | Use budgets, usage views, and resource monitors appropriately. | Credits, budgets |
 
 ### Cortex Agents

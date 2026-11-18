@@ -63,6 +63,9 @@ capture, orchestration, and incremental processing.
 - `guide-sigma-writeback-snowflake`: consuming BI-tool writeback as a pipeline source: contract
   view over a vendor-managed view, why not a dynamic table on an object that is replaced on every
   edit, scheduled history snapshots, and write-schema inventory (also in Path 1)
+- `guide-mongodb-change-streams-notebook`: MongoDB to Snowflake in one scheduled Workspaces notebook:
+  initial snapshot, change streams from a saved resume token, current-state table, generated typed
+  views, and lag reporting, without Kafka or Openflow
 **Belongs here if:** the project's primary job is building or operating a
 Snowflake-native data pipeline rather than configuring an external integration.
 
