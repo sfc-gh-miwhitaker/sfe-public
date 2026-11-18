@@ -1,4 +1,4 @@
-![Guide](https://img.shields.io/badge/Type-Guide-blue) ![No Deploy](https://img.shields.io/badge/Deploy-Notebook-lightgrey) ![Expires](https://img.shields.io/badge/Expires-2027--01--11-orange) ![Status](https://img.shields.io/badge/Status-ACTIVE-green)
+![Guide](https://img.shields.io/badge/Type-Guide-blue) ![No Deploy](https://img.shields.io/badge/Deploy-Notebook-lightgrey) ![Expires](https://img.shields.io/badge/Expires-2026--12--18-orange) ![Status](https://img.shields.io/badge/Status-ACTIVE-green)
 
 # MongoDB Change Streams to Snowflake in One Notebook
 
@@ -11,7 +11,7 @@ how far behind it is.
 
 Pair-programmed by SE Community + Cortex Code
 
-**Created:** 2026-11-12 | **Expires:** 2027-01-11 | **Status:** ACTIVE
+**Created:** 2026-11-12 | **Last verified:** 2026-11-18 | **Expires:** 2026-12-18 | **Status:** ACTIVE
 
 > **No support provided.** Reference only; validate before production use.
 
