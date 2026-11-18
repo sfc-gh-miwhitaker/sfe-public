@@ -8,9 +8,9 @@
 [Horizon Context](https://docs.snowflake.com/en/user-guide/snowflake-horizon/horizon-context) collects, enriches, and activates metadata across Snowflake and external systems. Its October 12, 2026 preview adds 18 metadata connectors and external metadata curation. This guide separates those documented capabilities from the announced [Cortex Sense](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) runtime layer, and explains why metadata visibility, data access, and agent tool configuration are different controls.
 
 **Audience:** Data engineers, data stewards, and platform owners connecting their data estate and evaluating context for AI applications.
-**Created:** 2026-07-09 | **Last updated:** 2026-11-05 | **Expires:** 2026-11-28 | **Status:** ACTIVE
+**Created:** 2026-07-09 | **Last updated:** 2026-11-17 | **Expires:** 2026-11-28 | **Status:** ACTIVE
 
-**Last verified:** 2026-10-15 (operational architecture and collection paths); release-status changes through 2026-11-05 (certification tag GA, LOD preview, connector refresh and cost, comment propagation documentation removed); full-guide review: 2026-09-29.
+**Last verified:** 2026-10-15 (operational architecture and collection paths); release-status changes through 2026-11-17 (certification tag GA, LOD preview, connector refresh and cost, comment propagation documentation restored, metadata connector privileges, many-to-many relationships preview, `SHOW GRANTS ... INCLUDE HIERARCHY` GA); full-guide review: 2026-09-29.
 
 Pair-programmed by SE Community + Cortex Code
 
@@ -154,8 +154,8 @@ Once collected, raw metadata is enriched into usable business context:
 - **Popularity signals** — query and access frequency used to distinguish authoritative assets from experimental ones.
 - **Certification status** — the explicit human signal that an asset is trusted. Note the tag moved: `SNOWFLAKE.TAGS.CERTIFICATION_STATUS` arrived in public preview on August 31, 2026, became [generally available on October 20, 2026](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-20-snowflake-provided-tags-ga), and is the recommended tag. `SNOWFLAKE.CORE.CERTIFICATION_STATUS` is **still supported and has not been deprecated**, but Snowflake documents it as planned for deprecation in a future release. New work should use the `SNOWFLAKE.TAGS` tag, whose allowed values are fixed by Snowflake and cannot be modified by account administrators — which is what lets governance and AI workflows interpret it consistently.
 - **AI-generated documentation** — table and column descriptions generated from metadata and optionally sample data.
-- **Metadata curation without ownership** — use [`APPLY COMMENT`](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control#apply-comment) for comment-only stewardship rather than granting broad modification rights. Within Horizon Catalog, stewards can edit descriptions and apply tags and contacts to external assets such as Power BI and Tableau dashboards. Follow the [documented permissions](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control) for each operation.
-- **Column comment propagation — documentation removed** — the opt-in propagation page published with the October preview is no longer in Snowflake's documentation. Confirm with your account team whether the feature is still available before relying on it. The separate [`COPY = ( COMMENTS )`](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-27-copy-metadata-carry-over) option keeps comments when an object is recreated with `CREATE OR REPLACE`; it does not propagate comments along lineage.
+- **Metadata curation without ownership:** for Snowflake objects, use [`APPLY COMMENT`](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control#apply-comment) for comment-only stewardship and `APPLY TAG` for tags, rather than granting `MODIFY` or `OWNERSHIP`. External assets that a connector ingests, such as Power BI and Tableau dashboards, are not covered by `APPLY COMMENT`; editing their descriptions, tags, and contacts requires `MODIFY EXTERNAL METADATA` on the connector, plus view access to it. Follow the [documented permissions](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control) for each operation.
+- **Column comment propagation (open preview):** [comment propagation](https://docs.snowflake.com/en/user-guide/comment-propagation) copies a column comment to downstream columns that reproduce it unchanged, and stops at any transformation, combination, or aggregation. It is opt-in through the account-level `FEATURE_COMMENT_PROPAGATION` parameter, which is `DISABLED` by default, and follows only lineage recorded from October 2026 onward; existing objects join only after they are recreated. Propagation is asynchronous and best effort (up to 10 minutes) and never overwrites a user-written comment. [`SYSTEM$GET_COLUMN_COMMENT_PROPAGATION_SOURCE`](https://docs.snowflake.com/en/sql-reference/functions/system_get_column_comment_propagation_source) reports which column a propagated comment came from. Recreate production objects only under normal change control. The separate [`COPY = ( COMMENTS )`](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-27-copy-metadata-carry-over) option keeps an object's own comments when it is recreated with `CREATE OR REPLACE`; it does not propagate comments along lineage.
 - **Semantic Views** — the governed business definition layer. [Semantic View Autopilot](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot) can generate a view from selected tables plus example SQL, and can ingest Tableau `.twb`, `.twbx`, `.tds`, and `.tdsx` files. [Power BI ingestion became GA on August 18, 2026](https://docs.snowflake.com/en/release-notes/2026/other/2026-08-18-semantic-views-power-bi-ingestion-ga) and supports `.pbit` and `.pbix`; report-level measures and time-intelligence functions such as `PREVIOUSMONTH` and `SAMEPERIODLASTYEAR` are not yet fully supported.
 
 ### Lineage coverage and limits
@@ -270,10 +270,11 @@ Cortex Agents provide four relevant controls:
 The [Horizon Context access-control documentation](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control) now explicitly separates metadata from data access. A role can see names, descriptions, and lineage without permission to query the underlying rows.
 
 - **Native metadata:** parent `USAGE` plus object privileges such as `REFERENCES` can expose metadata without `SELECT`.
-- **Connector metadata:** connector `USAGE`, with the documented parent and lineage privileges, permits visibility into collected metadata. It does not reveal stored credentials or grant external-system access.
-- **Curation:** `APPLY COMMENT` permits comment-only changes, not arbitrary DDL or data changes. Tag editing is a separate permission.
+- **Connector metadata:** `READ EXTERNAL METADATA` or `USAGE` on a connector, plus `USAGE` on its database and schema, gives the same visibility into collected metadata; `READ EXTERNAL METADATA` states view-only intent. Viewing lineage also requires `VIEW LINEAGE`, which is granted to PUBLIC by default. None of these reveal stored credentials or grant external-system access.
+- **Curation:** `APPLY COMMENT` permits comment-only changes on Snowflake objects, not arbitrary DDL or data changes, and `APPLY TAG` is a separate permission. `MODIFY EXTERNAL METADATA` governs edits to connector-ingested assets.
+- **Connector administration:** creating a connector requires `MANAGE METADATA CONNECTORS` on the account (formerly named `MANAGE METADATA INGESTION`) and `CREATE METADATA CONNECTOR` on the schema, held by the primary role you select. Configuring, syncing, or deleting a connector requires owning it. A recreated connector does not inherit the old connector's grants; `FUTURE` grants on the schema cover that case.
 
-Therefore, **removing SELECT does not establish that an object's existence or description is hidden**. Inventory metadata grants independently, including connector access. Separating databases alone is insufficient if roles retain metadata visibility through other authorized paths.
+Therefore, **removing SELECT does not establish that an object's existence or description is hidden**. Inventory metadata grants independently, including connector access. [`SHOW GRANTS TO ROLE ... INCLUDE HIERARCHY`](https://docs.snowflake.com/en/sql-reference/sql/show-grants) (GA November 16, 2026) lists grants held through nested account, database, and application roles and PUBLIC, with the holding role in `grantee_name`; it omits grants held by instance, service, and class roles, so review those separately. Separating databases alone is insufficient if roles retain metadata visibility through other authorized paths.
 
 ### The Open Question
 
@@ -299,7 +300,7 @@ This is not a new risk introduced by Horizon Context or Cortex Sense. It is a pr
 | --- | --- |
 | Discovery and analytics | Use documented catalog and semantic-view capabilities now; evaluate Sense separately after confirming the supported client and retrieval contract. |
 | Regulated workload with an auditability requirement | Keep explicit semantic view tools; use `reject` for mandatory named, checked tools and test remaining tools and dependencies separately. Do not treat Sense retrieval as a scope control. |
-| Workload where metadata itself is sensitive | Audit metadata grants separately from data grants, including connector `USAGE` and native metadata visibility. Neither removing SELECT nor narrowing tool configuration proves object existence is hidden. |
+| Workload where metadata itself is sensitive | Audit metadata grants separately from data grants, including connector `USAGE` or `READ EXTERNAL METADATA`, `MODIFY EXTERNAL METADATA`, and native metadata visibility through `REFERENCES`. Use `SHOW GRANTS ... INCLUDE HIERARCHY` to see inherited grants. Neither removing SELECT nor narrowing tool configuration proves object existence is hidden. |
 | Any agent deployment | Use a purpose-built, minimal-privilege default role; consider Restricted Session Scope as an additional ceiling. |
 | MCP-connected agents | Inventory every downstream system that can receive agent output. The data path extends beyond the warehouse. |
 
@@ -307,7 +308,7 @@ This is not a new risk introduced by Horizon Context or Cortex Sense. It is a pr
 
 ## Availability Summary
 
-Baseline snapshot: **2026-09-29**; feature-status updates: **2026-11-05**. Follow the linked documentation for current availability and requirements.
+Baseline snapshot: **2026-09-29**; feature-status updates: **2026-11-17**. Follow the linked documentation for current availability and requirements.
 
 | Feature | Status | Requirements / details |
 | --- | --- | --- |
@@ -318,10 +319,10 @@ Baseline snapshot: **2026-09-29**; feature-status updates: **2026-11-05**. Follo
 | External lineage / OpenLineage ingestion | **GA (September 3, 2026)** | Follow the [current requirements and limits](https://docs.snowflake.com/en/user-guide/external-lineage) |
 | Semantic Studio (semantic view authoring environment) | **GA (September 30, 2026)** | [Release details](https://docs.snowflake.com/en/release-notes/2026/other/2026-09-30-semantic-studio-ga) |
 | Horizon Context / metadata connectors | **Preview / open preview (October 12, 2026)** | 18 documented sources; AWS/Azure commercial regions, excluding government and China. See source-specific setup and security requirements |
-| Metadata access control / `APPLY COMMENT` | **Open preview** | Separate metadata visibility and comment-only curation privileges |
-| Column comment propagation | **Documentation removed — status unconfirmed** | Published with the October preview; the page no longer exists. Confirm availability with your account team. `COPY = ( COMMENTS )` preserves comments on replacement only |
+| Metadata access control / `APPLY COMMENT` | **Open preview** | Separate metadata visibility and curation privileges: `READ EXTERNAL METADATA`, `MODIFY EXTERNAL METADATA`, `APPLY COMMENT`, `MANAGE METADATA CONNECTORS` |
+| Column comment propagation | **Open preview** | Opt-in via `FEATURE_COMMENT_PROPAGATION` (default `DISABLED`); unchanged columns only; lineage recorded from October 2026. [Documentation](https://docs.snowflake.com/en/user-guide/comment-propagation). `COPY = ( COMMENTS )` preserves comments on replacement only |
 | Temporary-object lineage preservation | **GA (September 21, 2026)** | [supported paths and limitations](https://docs.snowflake.com/en/user-guide/lineage-temporary-objects) |
-| Level of detail (LOD) expressions in semantic views | **Preview (November 2, 2026)** | `FIXED`, `INCLUDE`, and `EXCLUDE DIMENSIONS` in DDL, YAML, and Semantic Studio. Work in SQL queries only: **Cortex Analyst and Cortex Agents don't use LOD metrics yet**. Tableau ingestion does not import Tableau LOD calculations. [Release details](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-02-semantic-views-lod-metrics-preview) |
+| Level of detail (LOD) expressions in semantic views | **Preview (November 2, 2026)** | `FIXED`, `INCLUDE`, and `EXCLUDE DIMENSIONS` in DDL, YAML, and Semantic Studio. Work in SQL queries only: **Cortex Analyst and Cortex Agents don't use LOD metrics yet**. Tableau ingestion does not import Tableau LOD calculations. Queries that traverse [many-to-many relationships](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-13-semantic-views-many-to-many-preview) (preview, November 13, 2026) can't use LOD metrics. [Release details](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-02-semantic-views-lod-metrics-preview) |
 | Composable semantic definitions | **Status unconfirmed** | Named in the Summit announcement; confirm authoring support before use |
 | Cortex Sense | **Availability unconfirmed** | Confirm account availability, supported clients, and metadata access controls separately from Horizon Context |
 | Cortex Sense — per-role context differentiation | **Announced as future work — unconfirmed** | Confirm support for separate role-specific contexts before planning a deployment |
@@ -352,6 +353,9 @@ Baseline snapshot: **2026-09-29**; feature-status updates: **2026-11-05**. Follo
 - [Horizon Catalog connectors](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors)
 - [Metadata access control](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control)
 - [Connector security and data protection](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/security)
+- [Column comment propagation](https://docs.snowflake.com/en/user-guide/comment-propagation)
+- [Many-to-many relationships in semantic views: Preview (November 13, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-13-semantic-views-many-to-many-preview)
+- [SHOW GRANTS … INCLUDE HIERARCHY: GA release note (November 16, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-16-show-grants-include-hierarchy)
 - [Carry over comments, tags, and privileges with COPY = ( … ) (October 27, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-27-copy-metadata-carry-over)
 - [Level of detail expressions in semantic views — Preview (November 2, 2026)](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-02-semantic-views-lod-metrics-preview)
 - [Temporary-object lineage preservation](https://docs.snowflake.com/en/user-guide/lineage-temporary-objects)

@@ -1,4 +1,4 @@
-![Guide](https://img.shields.io/badge/Type-Guide-blue) ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey) ![Expires](https://img.shields.io/badge/Expires-2027--01--02-orange) ![Status](https://img.shields.io/badge/Status-ACTIVE-brightgreen)
+![Guide](https://img.shields.io/badge/Type-Guide-blue) ![No Deploy](https://img.shields.io/badge/Deploy-None-lightgrey) ![Expires](https://img.shields.io/badge/Expires-2027--01--16-orange) ![Status](https://img.shields.io/badge/Status-ACTIVE-brightgreen)
 
 # Model-Agnostic Accuracy: Configuring Semantic Views and Cortex Agents
 
@@ -6,7 +6,7 @@ A best practices guide for building Snowflake Cortex Agents that reduce avoidabl
 
 Pair-programmed by SE Community + Cortex Code
 
-**Created:** 2026-07-29 | **Last verified:** 2026-11-03 | **Expires:** 2027-01-02 | **Status:** ACTIVE
+**Created:** 2026-07-29 | **Last verified:** 2026-11-17 | **Expires:** 2027-01-16 | **Status:** ACTIVE
 
 **Audience:** Data engineers, analytics engineers, and Agent owners building reliable structured-data experiences.
 
@@ -180,6 +180,10 @@ These are natural-language instructions, not deterministic program rules or auth
 
 `orchestration.budget` limits the seconds and tokens available to one Agent request; if both are set, whichever is hit first ends the request. Use it to bound latency and consumption, then evaluate whether the limit leaves enough room for representative multi-step questions. Budget exhaustion can reflect an undersized budget, an overly broad request, slow tools, or unclear configuration; it is not a semantic-quality test by itself.
 
+### Make tool failures explicit in configuration
+
+The top-level `orchestration` object also accepts `tool_not_accessible` (`accept`, `reject`, or `legacy`), which controls whether a missing tool privilege aborts the request. Choose it deliberately rather than relying only on an instruction such as "report failures; never convert them into zero." See [inaccessible tool handling](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-inaccessible-tool-handling).
+
 ### Separate document search from literal resolution
 
 A Cortex Search tool retrieves unstructured content for the Agent. Configure its resource fields: `search_service` and, when appropriate, `title_column`, `id_column`, and `filter`. This is distinct from attaching a Cortex Search service to a semantic-view dimension so SQL generation can resolve literal values. See the [Agent REST schema](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-rest-api).
@@ -214,6 +218,8 @@ Without measurement, you're tuning blind. A wrong answer could mean SQL generati
 
 - Selecting every VQR (the default when none are listed) runs the evaluation with no VQR guidance at all. That measures generalization from descriptions, metrics, filters, and instructions alone, which is a different context from production, where all VQRs are present.
 - Changing the selected set changes both what is scored and what guides generation. Keep the selection fixed when comparing runs, and record it with the run.
+
+**Grant everything to one primary role.** Analyst evaluation runs execute as Snowflake tasks, which ignore secondary roles, so the role that starts the run must hold every required privilege directly, including `EXECUTE TASK`, the AI functions privilege, `SELECT` on the semantic view and its tables, and access to the judge model. See [access control requirements](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst-evaluations).
 
 **Treat this as a semantic-view diagnostic, not a release gate for the Agent.** Since [April 13, 2026](https://docs.snowflake.com/en/release-notes/2026/other/2026-04-13-cortex-agents-agentic-analyst), Cortex Agents generate SQL directly rather than delegating to the Cortex Analyst service, so the SQL an Agent runs can differ from the SQL an Analyst evaluation scored. A clean Analyst baseline does not tell you the Agent will query the view correctly. Gate promotion on Agent evaluations that check the SQL and results the Agent actually produced: for example, `tool_execution_accuracy` with expected SQL or result rows in `tool_output`, plus `answer_correctness` against literal values.
 
@@ -262,11 +268,13 @@ Evaluate a committed Agent version such as `VERSION$3`, not mutable `LIVE`, when
 
 Pinning fixes the configuration, not the result. Each run re-invokes the Agent and scores a newly generated trace, and orchestration is non-deterministic, so the same pinned Agent version and metric version can take different tool paths and score differently. Snowflake notes that `answer_correctness` is usually the most stable; `tool_selection_accuracy`, `tool_execution_accuracy`, and `logical_consistency` read the trace and expose path variability. Before gating CI/CD on a threshold, run the same dataset several times with fixed inputs, the same role, and a stable data snapshot to learn its normal range, then gate on that range. For the committed version you gate on, Snowflake recommends naming the orchestration model rather than `auto`, so a model change behind `auto` is not mistaken for agent variance; `auto` remains the right starting point while you are still choosing a model (Section 4). See [Interpret score variance across runs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
 
-**Judge lifecycle: the `v1` judge has reached end-of-life.** `claude-4-sonnet`, the only `v1` judge and the default judge for custom metrics, entered the legacy state on 2026-08-12 and reached end-of-life on 2026-10-14 (`SHOW CORTEX BASE MODELS` reports `lifecycle_status = EOL`). After end-of-life no account can run a metric version or custom metric that depends on it, and pinned versions fail rather than roll forward. Snowflake's [announced behavior change BCR-2442](https://docs.snowflake.com/en/release-notes/bcr-bundles/un-bundled/bcr-2442) moves unversioned system metrics, Analyst `sql_correctness`, and `version: auto` from `v1` to `v3`, and moves custom metrics with an omitted model or `model: auto` to `claude-sonnet-4-6`, falling back to `openai-gpt-5.4` when that model isn't allowed or available. Explicit settings don't change. Do not depend on the default: set an exact supported version, such as `v3_0`, on every system metric and an explicit `model` on every custom metric.
+**Judge lifecycle: the `v1` judge has reached end-of-life.** `claude-4-sonnet`, the only `v1` judge and the default judge for custom metrics, entered the legacy state on 2026-08-12 and reached end-of-life on 2026-10-14 (`SHOW CORTEX BASE MODELS` reports `lifecycle_status = EOL`). After end-of-life no account can run a metric version or custom metric that depends on it, and pinned versions fail rather than roll forward. Snowflake's [behavior change BCR-2442](https://docs.snowflake.com/en/release-notes/bcr-bundles/un-bundled/bcr-2442), still marked Pending in the documentation, is announced to move unversioned system metrics, Analyst `sql_correctness`, and `version: auto` from `v1` to `v3`, and to move custom metrics with an omitted model or `model: auto` to `claude-sonnet-4-6`, falling back to `openai-gpt-5.4` when that model isn't allowed or available. Explicit settings don't change. The evaluation pages still describe `v1` as the current default, so an omitted version or model can resolve to the end-of-life judge and fail. Do not depend on the default: set an exact supported version, such as `v3_0`, on every system metric and an explicit `model` on every custom metric.
 
 Scores from different metric versions aren't directly comparable. Re-baseline and recalibrate thresholds when you move off `v1`, and track judge consumption in `CORTEX_REST_API_USAGE_HISTORY`, because judge models have different credit rates. Tool Selection Accuracy uses no judge, so its scores don't change. Keep earlier `v1` results for reference only.
 
 Confirm that the evaluation role can use the judge models through an approved cross-region scope: `v3` uses `claude-sonnet-4-6` or `openai-gpt-5.4`, and no judge model runs on Google Cloud, so accounts there need `ANY_REGION`. `SHOW CORTEX BASE MODELS IN SCHEMA SNOWFLAKE.MODELS;` reports lifecycle status, `legacy_date`, and `eol_date`; catalog visibility alone does not prove permission to run a model. Keep the schema qualifier so the command searches the model catalog rather than the session's current schema. Snowflake recommends `v3` for long traces because its judges have context windows of about one million tokens.
+
+**A uniform score of 0 can be an access failure.** When the account enforces model-level access control, the evaluation role needs access to the judge model of every pinned metric version and to any model named in a custom metric. If it lacks that access, Snowflake documents that the judge call is denied and the evaluation returns scores of 0 with no actionable error, even when direct `AI_COMPLETE` calls to the model succeed. Check judge-model grants before treating an all-zero run as an accuracy regression. See [Cortex LLM role-based access control](https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql-privileges-and-access).
 
 Upgrade exact metric versions deliberately when judge changes or model deprecations are announced, then establish a new baseline.
 
@@ -362,6 +370,10 @@ Snowflake surfaces [suggestions](https://docs.snowflake.com/en/user-guide/views-
 
 Query-history suggestions appear only after the view has accumulated enough query activity.
 
+### Use Cortex Code for evaluation workflow
+
+The Cortex Code `agent-studio` skill can generate or curate evaluation datasets, run Agent evaluations, investigate completed runs, and propose configuration changes. Treat its suggestions like optimization suggestions: review them and re-run the same pinned evaluation before promotion. See [Cortex Agent evaluations](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations).
+
 ### Validate incrementally
 
 > "Test each table addition separately. When it breaks, you know exactly what caused it."
@@ -424,6 +436,7 @@ For practitioners who have read the guide and want a reminder during implementat
 
 ### Evaluation
 
+- [ ] Analyst evaluation privileges are granted to a single primary role (tasks ignore secondary roles)
 - [ ] Evaluation dataset created with absolute dates
 - [ ] Ground truth includes expected values with tolerance
 - [ ] Ground truth includes what response should NOT contain
@@ -433,6 +446,7 @@ For practitioners who have read the guide and want a reminder during implementat
 - [ ] Applicable Agent metrics are enabled; TSA and TEA are treated as Public Preview
 - [ ] Comparable runs target a committed Agent version and pin the same exact metric version (for example, `v3_0`)
 - [ ] No system metric or custom metric depends on the end-of-life `v1` judge or on the default
+- [ ] The evaluation role has model access to every pinned judge; an all-zero run is checked for access before it is treated as a regression
 - [ ] CI/CD thresholds are set from the score range of repeated runs, not a single run
 - [ ] Judge upgrades get a new baseline
 - [ ] Evaluations automated in CI/CD pipeline
@@ -505,4 +519,5 @@ Cortex Code and other coding assistants can use [AGENTS.md](AGENTS.md) for this 
 | ------- | ------ |
 | Cortex Sense for Enterprise AI Agents | [snowflake.com](https://www.snowflake.com/en/blog/enterprise-ai-agents-grounded-context/) |
 | Using AI to Improve AI with Cortex Analyst | [snowflake.com](https://www.snowflake.com/en/engineering-blog/using-ai-improving-ai/) |
+| Best Practices for Evaluating Cortex Agents | [snowflake.com](https://www.snowflake.com/en/developers/guides/best-practices-for-evaluating-cortex-agents/) |
 | Best Practices for Creating Semantic Views (Quickstart) | [snowflake.com](https://www.snowflake.com/en/developers/guides/best-practices-semantic-views-cortex-analyst/) |

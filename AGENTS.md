@@ -74,6 +74,7 @@ Reading order within this path matters.
 **Current members (in recommended reading order):**
 
 1. `guide-model-agnostic-accuracy`: semantic view and agent configuration foundations
+2. `demo-subscription-media-ltv`: runnable CoWork demo of a governed semantic view and agent for subscription member value, CAC payback, true versus reported ROAS, and Snowflake ML churn scores, next to a no-context agent over the same tables
 
 **Belongs here if:** the guide's primary job is building, configuring, deploying, or
 extending a Cortex Agent or its supporting objects (semantic views, tools, search).

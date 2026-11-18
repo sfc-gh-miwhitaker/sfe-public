@@ -1,4 +1,4 @@
-![Projects](https://img.shields.io/badge/Projects-15-blue)
+![Projects](https://img.shields.io/badge/Projects-16-blue)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 # Snowflake SE Community Guides and Examples
@@ -80,6 +80,7 @@ Each project is listed once below. Some serve more than one goal in Start Here.
 | Guide | What it helps you do | Topics |
 | --- | --- | --- |
 | [Model-agnostic accuracy](guide-model-agnostic-accuracy/) | Improve answer quality through semantic models, instructions, and evaluation. | Accuracy, semantic views |
+| [Subscription member value in CoWork](demo-subscription-media-ltv/) | Run a CoWork demo where a governed agent answers LTV, payback, true ROAS, and churn risk questions next to an agent with no business context. | Demo, CoWork, semantic views, Snowflake ML, subscriptions |
 
 ### Security
 

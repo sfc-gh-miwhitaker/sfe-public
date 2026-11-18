@@ -1,0 +1,33 @@
+/*==============================================================================
+TEARDOWN - Subscription Media LTV
+Pair-programmed by SE Community + Cortex Code | Expires: 2027-01-16
+WARNING: Deletes every object this demo created. Cannot be undone.
+Run All in Snowsight. Safe to run more than once.
+==============================================================================*/
+
+USE ROLE ACCOUNTADMIN;
+EXECUTE IMMEDIATE $$
+BEGIN
+    ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT
+        DROP AGENT SNOWFLAKE_EXAMPLE.SUBSCRIPTION_MEDIA_LTV.MEMBER_VALUE_AGENT;
+    ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT
+        DROP AGENT SNOWFLAKE_EXAMPLE.SUBSCRIPTION_MEDIA_LTV.RAW_DATA_AGENT;
+    RETURN 'Agents removed from CoWork.';
+EXCEPTION
+    WHEN OTHER THEN
+        RETURN 'CoWork detach skipped (' || SQLERRM || '). Dropping the schema removes the agents.';
+END;
+$$;
+
+USE ROLE SYSADMIN;
+DROP SEMANTIC VIEW IF EXISTS SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_SUBSCRIPTION_MEDIA_LTV_MEMBER_VALUE;
+DROP SEMANTIC VIEW IF EXISTS SNOWFLAKE_EXAMPLE.SEMANTIC_MODELS.SV_SUBSCRIPTION_MEDIA_LTV_RAW;
+DROP SCHEMA IF EXISTS SNOWFLAKE_EXAMPLE.SUBSCRIPTION_MEDIA_LTV CASCADE;
+DROP WAREHOUSE IF EXISTS SFE_SUBSCRIPTION_MEDIA_LTV_WH;
+
+-- PROTECTED - never dropped (shared with other demos):
+--   SNOWFLAKE_EXAMPLE database
+--   SNOWFLAKE_EXAMPLE.GIT_REPOS, SEMANTIC_MODELS, TOOLS schemas
+--   SFE_GIT_API_INTEGRATION, SFE_DEMOS_REPO
+
+SELECT 'Teardown complete' AS status, CURRENT_TIMESTAMP() AS completed_at;

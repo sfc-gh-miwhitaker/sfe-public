@@ -6,7 +6,7 @@ Choose a capability below, then follow the linked Snowflake setup instructions. 
 
 > **No support provided.** Reference only; validate before production use.
 
-**Status update: 2026-11-05.** Horizon Context connectors are open preview; Semantic Studio and Snowflake-provided tags are GA; LOD expressions in semantic views are in preview. Confirm Cortex Sense availability separately for your account. See the [parent guide](../README.md) for the context stack and security distinctions.
+**Status update: 2026-11-17.** Horizon Context connectors and column comment propagation are open preview; Semantic Studio and Snowflake-provided tags are GA; LOD expressions and many-to-many relationships in semantic views are in preview. Confirm Cortex Sense availability separately for your account. See the [parent guide](../README.md) for the context stack and security distinctions.
 
 ## Start Here
 
@@ -14,23 +14,23 @@ Choose a capability below, then follow the linked Snowflake setup instructions. 
 - **Reuse BI business logic:** use [Autopilot file ingestion](https://docs.snowflake.com/en/user-guide/views-semantic/autopilot). Importing a model file into a semantic view is different from connecting a BI system's metadata to the catalog.
 - **Collect external metadata:** choose a source from the [Horizon Catalog connector catalog](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors). The [October 12 preview release](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-12-horizon-context-preview) defines the hosting-region boundary; do not assume every Snowflake cloud or region is supported.
 - **Ingest lineage your tools already emit:** use [external lineage](https://docs.snowflake.com/en/user-guide/external-lineage), a GA path distinct from the preview connectors.
-- **Delegate documentation work:** review [metadata access control and APPLY COMMENT](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control) instead of granting broad modification privileges.
-- **Reduce repeated column descriptions:** the column comment propagation documentation published in October has been removed; confirm availability with your account team. To keep comments when recreating an object, use [`COPY = ( COMMENTS )`](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-27-copy-metadata-carry-over) on `CREATE OR REPLACE`.
+- **Delegate documentation work:** review [metadata access control](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control) instead of granting broad modification privileges. `APPLY COMMENT` covers Snowflake objects; `MODIFY EXTERNAL METADATA` covers dashboards and other connector-ingested assets.
+- **Reduce repeated column descriptions:** [column comment propagation](https://docs.snowflake.com/en/user-guide/comment-propagation) copies a comment to downstream columns that pass the value through unchanged, once an administrator enables it. To keep an object's own comments when recreating it, use [`COPY = ( COMMENTS )`](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-27-copy-metadata-carry-over) on `CREATE OR REPLACE`.
 - **Evaluate Cortex Sense:** confirm availability, supported clients, and metadata access controls with your Snowflake account team before starting.
 
 ## Before Connecting a Source
 
 1. **Check source and region eligibility.** Follow the source's page in the [connector catalog](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors), including required permissions. Source setup is not uniform; every connected source refreshes every 24 hours, and the source system bills for the metadata queries it runs.
 2. **Approve the network and TLS design.** Read [connector security requirements](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/security). Stable egress IPs are not guaranteed, and TLS enforcement depends on source type. Do not open a database broadly merely to complete setup.
-3. **Separate metadata visibility from data access.** Follow [metadata access control](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control). A role without SELECT can still be allowed to see descriptions and lineage. Test both an intended viewer and a role that must not see the metadata.
+3. **Separate metadata visibility from data access.** Follow [metadata access control](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control). A role without SELECT can still be allowed to see descriptions and lineage. Grant view-only access with `READ EXTERNAL METADATA`, and use `FUTURE` grants so a recreated connector does not silently lose them. Test both an intended viewer and a role that must not see the metadata; `SHOW GRANTS TO ROLE ... INCLUDE HIERARCHY` shows what each role inherits.
 4. **Validate a bounded example.** Trace a known source-to-report dependency, inspect descriptions, and confirm who can see and edit the result before expanding collection.
 
 For an OpenLineage producer, use the [external-lineage workflow and limitations](https://docs.snowflake.com/en/user-guide/external-lineage) instead. Do not substitute metadata-connector grants or setup steps for that API's authorization contract.
 
 ## Before Enabling Enrichment or Expanding Agent Access
 
-- **Comment propagation:** its documentation has been removed. Do not enable or plan around it until your account team confirms its status. If it was already enabled, existing propagated comments remain on downstream objects.
-- **LOD metrics:** [now in preview](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-02-semantic-views-lod-metrics-preview) for SQL queries against semantic views. Cortex Analyst and Cortex Agents don't use them yet, so an agent will not return LOD-based answers.
+- **Comment propagation:** [open preview](https://docs.snowflake.com/en/user-guide/comment-propagation), off by default (`FEATURE_COMMENT_PROPAGATION`). It follows only lineage recorded from October 2026, so existing views and dynamic tables join only after recreation; schedule that through change control. It runs asynchronously, never overwrites a user-written comment, and disabling it leaves already-propagated comments in place.
+- **LOD metrics:** [now in preview](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-02-semantic-views-lod-metrics-preview) for SQL queries against semantic views. Cortex Analyst and Cortex Agents don't use them yet, so an agent will not return LOD-based answers. Queries across [many-to-many relationships](https://docs.snowflake.com/en/release-notes/2026/other/2026-11-13-semantic-views-many-to-many-preview) can't use them either.
 - **Lineage:** check [temporary-object preservation](https://docs.snowflake.com/en/user-guide/lineage-temporary-objects) and [October 6 expanded coverage](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-06-lineage-integrations-monitors-search). A missing historical edge does not prove there is no dependency.
 - **Agents:** review [execution identity and tool privileges](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-setup), [inaccessible-tool handling](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-inaccessible-tool-handling), and [Restricted Session Scope](https://docs.snowflake.com/en/user-guide/restricted-session-scope). `reject` checks only the documented tool set, not every execution dependency. Audit owner-rights tools separately.
 
@@ -54,6 +54,7 @@ Use semantic views for explicit business definitions, lineage or metadata connec
 - [Horizon Catalog connectors](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors)
 - [Metadata access control](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/access-control)
 - [Connector security](https://docs.snowflake.com/en/user-guide/snowflake-horizon/connectors/security)
+- [Column comment propagation](https://docs.snowflake.com/en/user-guide/comment-propagation)
 - [COPY = ( … ) metadata carry-over](https://docs.snowflake.com/en/release-notes/2026/other/2026-10-27-copy-metadata-carry-over)
 - [External lineage](https://docs.snowflake.com/en/user-guide/external-lineage)
 - [Semantic Studio](https://docs.snowflake.com/en/user-guide/views-semantic/semantic-studio)

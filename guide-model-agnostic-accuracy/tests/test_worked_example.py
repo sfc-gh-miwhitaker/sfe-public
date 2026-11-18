@@ -244,8 +244,8 @@ class WorkedExampleTest(unittest.TestCase):
             self.assertNotRegex(block, r"<[A-Za-z_][A-Za-z0-9_ -]*>|\[TBD\]|\{\{.*?\}\}", language)
         self.assertIn("Pair-programmed by SE Community + Cortex Code", DOCUMENT)
         self.assertEqual(len(re.findall(r"^## [1-5]\. ", readme, re.MULTILINE)), 5)
-        self.assertIn("**Last verified:** 2026-11-03 | **Expires:** 2027-01-02", readme)
-        self.assertIn("Expires-2027--01--02", readme)
+        self.assertIn("**Last verified:** 2026-11-17 | **Expires:** 2027-01-16", readme)
+        self.assertIn("Expires-2027--01--16", readme)
 
 
 if __name__ == "__main__":
