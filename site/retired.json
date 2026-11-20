@@ -464,6 +464,33 @@
         "/guide-delta-sharing-ip-allowlist/README.html",
         "/guide-delta-sharing-ip-allowlist/README.md"
       ]
+    },
+    "guide-cortex-access-control": {
+      "date": "2026-11-20",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-cortex-access-control/",
+        "/guide-cortex-access-control/ELI5.html",
+        "/guide-cortex-access-control/ELI5.md",
+        "/guide-cortex-access-control/README.html",
+        "/guide-cortex-access-control/README.md",
+        "/guide-cortex-access-control/sql/ai_functions_user_rbac.sql",
+        "/guide-cortex-access-control/sql/observability.sql"
+      ]
+    },
+    "guide-snowflake-cost-visibility": {
+      "date": "2026-11-20",
+      "reason": "Verification lease expired; no renewal approved.",
+      "routes": [
+        "/guide-snowflake-cost-visibility/",
+        "/guide-snowflake-cost-visibility/ELI5.html",
+        "/guide-snowflake-cost-visibility/ELI5.md",
+        "/guide-snowflake-cost-visibility/README.html",
+        "/guide-snowflake-cost-visibility/README.md",
+        "/guide-snowflake-cost-visibility/sql/account_usage_queries.sql",
+        "/guide-snowflake-cost-visibility/sql/budget_setup.sql",
+        "/guide-snowflake-cost-visibility/sql/resource_monitors.sql"
+      ]
     }
   }
 }

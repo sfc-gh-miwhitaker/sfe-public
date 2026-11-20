@@ -89,9 +89,6 @@ compute rightsizing. Reading order within this path matters.
 
 **Current members (in recommended reading order):**
 
-1. `guide-snowflake-cost-visibility` — foundational: Budget objects, METERING_DAILY_HISTORY,
-   Resource Monitors
-2. `guide-cortex-access-control` — AI access, per-user limits, and usage observability
 4. `guide-snowflake-ml-lifecycle` — deployed-model cost: compute pool idle time versus service
    scale-to-zero, warehouse inference, training, monitor refresh, storage (also in Path 6)
 
@@ -105,7 +102,6 @@ Each guide in this path is standalone — no required reading order.
 
 **Current members:**
 
-- `guide-cortex-access-control` — Who gets which part of the Cortex surface: `CORTEX_USER` vs `AI_FUNCTIONS_USER` vs `CORTEX_AGENT_USER` vs per-function grants vs model application roles, the secondary-role and IMPORTED PRIVILEGES bypasses, progressive rollout, per-surface spend limits, usage observability queries
 - `guide-cortex-model-policy` — Approved-model-only policy: read-only inventory, catalog-generated commands, both PUBLIC grant paths, explicit approval of future models, non-admin verification, execution-context checks, and targeted recovery
 - `guide-snowflake-dashboards` — who may share dashboard and other artifacts: account sharing parameter, per-type `MANAGE ACCESS` privileges granted to PUBLIC, per-artifact grants, and snapshot-artifact data exposure (also in Path 6)
 
